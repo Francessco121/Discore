@@ -3,29 +3,49 @@ using System.Threading;
 
 namespace Discore.Audio
 {
+    /// <summary>
+    /// An interface for interacting with a voice connection to Discord.
+    /// </summary>
     public class DiscordVoiceClient : IDisposable
     {
-        public const int PCM_BLOCK_SIZE = 3840;
+        /// <summary>
+        /// Called when this <see cref="DiscordVoiceClient"/> finishes connecting to Discord.
+        /// </summary>
+        public event EventHandler<VoiceClientEventArgs> OnConnected;
+        /// <summary>
+        /// Called when this <see cref="DiscordVoiceClient"/> is disposed and is no longer valid.
+        /// </summary>
+        public event EventHandler<VoiceClientEventArgs> OnDisposed;
 
         /// <summary>
-        /// The guild this client is in.
+        /// The <see cref="DiscordGuild"/> this voice client is connected to.
         /// </summary>
         public DiscordGuild Guild { get; }
         /// <summary>
-        /// The guild member this client is communicating through.
+        /// The <see cref="DiscordGuildMember"/> this client is communicating through.
         /// </summary>
         public DiscordGuildMember GuildMember { get { return voiceSocket.Member; } }
+        /// <summary>
+        /// The <see cref="DiscordClient"/> that created this voice client.
+        /// </summary>
+        public DiscordClient Client { get; }
 
-        public event EventHandler<VoiceClientEventArgs> OnConnected;
-        public event EventHandler<VoiceClientEventArgs> OnDisposed;
-
-        public readonly DiscordClient Client;
-
+        /// <summary>
+        /// Current number of queued bytes not yet sent.
+        /// </summary>
         public int BytesToSend { get { return audioBuffer.Count; } }
 
+        /// <summary>
+        /// Gets whether or not this <see cref="DiscordVoiceClient"/> is available to use.
+        /// </summary>
         public bool IsValid { get { return !disposed; } }
+        /// <summary>
+        /// Gets whether or not this <see cref="DiscordVoiceClient"/> is connected to a <see cref="DiscordGuild"/>.
+        /// </summary>
         public bool IsConnected { get { return isConnected; } }
 
+        // TODO: Make prebuffer configuration available publically
+        const int PCM_BLOCK_SIZE = 3840;
         const int AUDIO_FRAMES_TO_PREBUFFER = 64;
         const int AUDIO_FRAMES_TO_BUFFER = 96;
         const int AUDIO_BUFFER_SIZE = PCM_BLOCK_SIZE * AUDIO_FRAMES_TO_BUFFER;
@@ -43,7 +63,7 @@ namespace Discore.Audio
         {
             Client = client;
             Guild = guild;
-
+            
             audioBuffer = new CircularBuffer(AUDIO_BUFFER_SIZE);
 
             audioSendThread = new Thread(AudioSendLoop);
@@ -65,6 +85,18 @@ namespace Discore.Audio
             OnConnected?.Invoke(this, new VoiceClientEventArgs(this));
         }
 
+        /// <summary>
+        /// Queues a section of PCM voice data to be sent.
+        /// </summary>
+        /// <param name="data">The array of voice data to read from.</param>
+        /// <param name="offset">Where to start reading from the voice data array.</param>
+        /// <param name="count">How many bytes to read from the voice data array.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the number of bytes to be queued 
+        /// would exceed the buffer size of this <see cref="DiscordVoiceClient"/>.</exception>
+        /// <remarks>
+        /// Should be used along side <see cref="CanSendVoiceData(int)"/>
+        /// to ensure the voice buffer is not overflowed.
+        /// </remarks>
         public void SendVoiceData(byte[] data, int offset, int count)
         {
             if (audioBuffer.MaxLength - audioBuffer.Count < count)
@@ -74,11 +106,20 @@ namespace Discore.Audio
             audioBuffer.Write(data, offset, count);
         }
 
+        /// <summary>
+        /// Gets whether or not the specified number of bytes can be queued
+        /// in this <see cref="DiscordVoiceClient"/>.
+        /// </summary>
+        /// <param name="size"></param>
+        /// <returns></returns>
         public bool CanSendVoiceData(int size)
         {
             return audioBuffer.MaxLength - audioBuffer.Count >= size;
         }
 
+        /// <summary>
+        /// Disconnects this <see cref="DiscordVoiceClient"/>.
+        /// </summary>
         public void Disconnect()
         {
             if (isConnected)
@@ -90,24 +131,35 @@ namespace Discore.Audio
             Dispose();
         }
 
-        public void SetSpeaking(bool speaking, bool resetAudioBuffer = true)
+        /// <summary>
+        /// Sets the speaking state of the <see cref="GuildMember"/>.
+        /// Must be set to true for this <see cref="DiscordVoiceClient"/> to send any voice data.
+        /// </summary>
+        /// <param name="speaking">The speaking state.</param>
+        /// <remarks>
+        /// Safe to use before this <see cref="DiscordVoiceClient"/> is fully connected,
+        /// the last set speaking state will be set upon connecting.
+        /// </remarks>
+        public void SetSpeaking(bool speaking)
         {
             voiceSocket?.SetSpeaking(speaking);
             isSpeaking = speaking;
-
-            if (resetAudioBuffer)
-            {
-                // Reset for next time.
-                gotFirstBlock = false;
-                audioBuffer.Reset();
-            }
         }
 
+        /// <summary>
+        /// Clears any queued voice data.
+        /// </summary>
         public void ClearVoiceBuffer()
         {
+            gotFirstBlock = false;
             audioBuffer.Reset();
         }
 
+        /// <summary>
+        /// Signals that this <see cref="DiscordVoiceClient"/> should send all
+        /// remaining queued audio without worrying about the speaking state
+        /// or pre-buffering.
+        /// </summary>
         public void FlushVoiceBuffer()
         {
             isFlushing = true;
@@ -170,6 +222,9 @@ namespace Discore.Audio
             }
         }
 
+        /// <summary>
+        /// Disposes and disconnects this <see cref="DiscordVoiceClient"/>.
+        /// </summary>
         public void Dispose()
         {
             if (!disposed)

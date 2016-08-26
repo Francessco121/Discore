@@ -6,6 +6,7 @@ namespace Discore.Audio
     // Shamefully stolen from
     // https://github.com/RogueException/Discord.Net/blob/a357a06d33c5631f5fb7181e7e231d960bf7a3f3/src/Discord.Net.Audio/VoiceBuffer.cs
     // for now...
+    // TODO: Custom original implementation.
     internal class VoiceBuffer
     {
         private readonly int _frameSize, _frameCount, _bufferSize;

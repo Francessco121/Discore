@@ -5,21 +5,65 @@ using System.Collections.Generic;
 
 namespace Discore
 {
+    /// <summary>
+    /// Guild channels represent an isolated set of users and messages within a <see cref="DiscordGuild"/>.
+    /// </summary>
     public class DiscordGuildChannel : DiscordChannel
     {
+        /// <summary>
+        /// Gets the guild this channel is in.
+        /// </summary>
         public DiscordGuild Guild { get; private set; }
+        /// <summary>
+        /// Gets the name of this channel.
+        /// </summary>
         public string Name { get; private set; }
+        /// <summary>
+        /// Gets the type of this guild channel.
+        /// </summary>
         public DiscordGuildChannelType GuildChannelType { get; private set; }
+        /// <summary>
+        /// Gets the ordering position of this channel.
+        /// </summary>
         public int Position { get; private set; }
+        /// <summary>
+        /// Gets whether or not this channel is private.
+        /// </summary>
         public bool IsPrivate { get; private set; }
+        /// <summary>
+        /// All <see cref="DiscordOverwrite"/>s for the <see cref="DiscordRole"/>s in this channel.
+        /// </summary>
         public Dictionary<string, DiscordOverwrite> RolePermissionOverwrites { get; private set; }
+        /// <summary>
+        /// All <see cref="DiscordOverwrite"/>s for the <see cref="DiscordGuildMember"/>s in this channel's guild.
+        /// </summary>
         public Dictionary<string, DiscordOverwrite> MemberPermissionOverwrites { get; private set; }
+        /// <summary>
+        /// Gets every <see cref="DiscordOverwrite"/> specified by this channel.
+        /// </summary>
         public DiscordOverwrite[] AllPermissionOverwrites { get; private set; }
+        /// <summary>
+        /// Gets the topic of this channel.
+        /// </summary>
         public string Topic { get; private set; }
+        /// <summary>
+        /// Gets the id of the last message sent in this channel (if a text channel).
+        /// </summary>
         public string LastMessageId { get; private set; }
+        /// <summary>
+        /// Gets the bitrate of this channel (if a voice channel).
+        /// </summary>
         public int Bitrate { get; private set; }
+        /// <summary>
+        /// Gets the user limit of this channel (if a voice channel).
+        /// </summary>
         public int UserLimit { get; private set; }
 
+        /// <summary>
+        /// Creates a new <see cref="DiscordGuildChannel"/> instance.
+        /// </summary>
+        /// <param name="client">The <see cref="IDiscordClient"/> associated with this channel.</param>
+        /// <param name="guild">The <see cref="DiscordGuild"/> this channel is in.</param>
         public DiscordGuildChannel(IDiscordClient client, DiscordGuild guild)
             : base(client, DiscordChannelType.Guild)
         {
@@ -28,6 +72,10 @@ namespace Discore
             MemberPermissionOverwrites = new Dictionary<string, DiscordOverwrite>();
         }
 
+        /// <summary>
+        /// Changes the properties of this channel.
+        /// </summary>
+        /// <param name="modifyParams">The changed properties.</param>
         public void Modify(DiscordGuildChannelModifyParams modifyParams)
         {
             if (modifyParams.Type != GuildChannelType)
@@ -49,6 +97,10 @@ namespace Discore
             Client.Rest.Channels.Modify(this, modifyParams);
         }
 
+        /// <summary>
+        /// Updates this channel with the specified <see cref="DiscordApiData"/>.
+        /// </summary>
+        /// <param name="data">The data to update this channel with.</param>
         public override void Update(DiscordApiData data)
         {
             Id            = data.GetString("id") ?? Id;
@@ -97,6 +149,10 @@ namespace Discore
             return Client.Gateway.ConnectToVoice(this);
         }
 
+        /// <summary>
+        /// Gets a string representation of this channel.
+        /// </summary>
+        /// <returns>Returns the string representation of this channel.</returns>
         public override string ToString()
         {
             return $"{GuildChannelType}:{Name}";

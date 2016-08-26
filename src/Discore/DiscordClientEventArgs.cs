@@ -2,6 +2,8 @@
 using System;
 using System.Runtime.ExceptionServices;
 
+#pragma warning disable 1591
+
 namespace Discore
 {
     public class IntegrationEventArgs : EventArgs
@@ -114,3 +116,5 @@ namespace Discore
         }
     }
 }
+
+#pragma warning restore 1591

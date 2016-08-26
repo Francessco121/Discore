@@ -1,7 +1,7 @@
 ﻿
 namespace Discore.Net
 {
-    public enum GatewayOPCode : int
+    enum GatewayOPCode : int
     {
         /// <summary>
         /// C←S - Used to send most events.

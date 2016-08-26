@@ -1,7 +1,10 @@
 ﻿
 namespace Discore.Net
 {
-    enum GatewayDisconnectCode : int
+    /// <summary>
+    /// A disconnect code sent by the Discord gateway.
+    /// </summary>
+    public enum GatewayDisconnectCode : int
     {
         /// <summary>
         /// Unknown error occured, try reconnecting.

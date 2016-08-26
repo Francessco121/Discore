@@ -220,6 +220,11 @@ namespace Discore.Audio
                 return SecretBoxEasy(outPtr + outputOffset, input, inputLength, nonce, secret);
         }
 
+        /// <summary>
+        /// Modified directly from:
+        /// https://github.com/RogueException/Discord.Net/blob/master/src/Discord.Net.Audio/Net/VoiceSocket.cs#L263
+        /// TODO: Custom original implementation.
+        /// </summary>
         async void SendLoop()
         {
             try

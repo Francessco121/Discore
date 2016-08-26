@@ -5,18 +5,47 @@ using System.Linq;
 
 namespace Discore
 {
+    /// <summary>
+    /// A guild member represents a <see cref="DiscordUser"/> that belongs to a <see cref="DiscordGuild"/>.
+    /// </summary>
     public class DiscordGuildMember : IDiscordObject, ICacheable
     {
+        /// <summary>
+        /// Gets the id of the user.
+        /// </summary>
         public string Id { get { return User?.Id; } }
+        /// <summary>
+        /// Gets the guild this member is in.
+        /// </summary>
         public DiscordGuild Guild { get; private set; }
+        /// <summary>
+        /// Gets the actual user.
+        /// </summary>
         public DiscordUser User { get; private set; }
+        /// <summary>
+        /// Gets the guild-wide nickname of the user.
+        /// </summary>
         public string Nickname { get; private set; }
+        /// <summary>
+        /// Gets all the roles this member has.
+        /// </summary>
         public DiscordRole[] Roles { get; private set; }
+        /// <summary>
+        /// Gets the time this member joined the guild.
+        /// </summary>
         public DateTime JoinedAt { get; private set; }
+        /// <summary>
+        /// Gets the current voice state of this member.
+        /// </summary>
         public DiscordVoiceState VoiceState { get; private set; }
 
         DiscordApiCache cache;
 
+        /// <summary>
+        /// Creates a new <see cref="DiscordGuildMember"/> instance.
+        /// </summary>
+        /// <param name="client">The associated <see cref="IDiscordClient"/>.</param>
+        /// <param name="guild">The <see cref="DiscordGuild"/> this member belongs to.</param>
         public DiscordGuildMember(IDiscordClient client, DiscordGuild guild)
         {
             cache = client.Cache;
@@ -25,6 +54,11 @@ namespace Discore
             VoiceState = new DiscordVoiceState(client);
         }
 
+        /// <summary>
+        /// Gets whether or not this member has the specified permissions.
+        /// </summary>
+        /// <param name="permission">The permissions to check.</param>
+        /// <returns>Returns whether or not the member has permission.</returns>
         public bool HasPermission(DiscordPermission permission)
         {
             // Calculate permissions from member roles
@@ -36,6 +70,13 @@ namespace Discore
             return userPermissions.HasFlag(DiscordPermission.Administrator) || userPermissions.HasFlag(permission);
         }
 
+        /// <summary>
+        /// Gets whether or not this member has the specified permissions in the context of
+        /// the specified <see cref="DiscordGuildChannel"/>.
+        /// </summary>
+        /// <param name="permission">The permissions to check.</param>
+        /// <param name="forChannel">The channel to check permissions for.</param>
+        /// <returns>Returns whether or not the member has permission.</returns>
         public bool HasPermission(DiscordPermission permission, DiscordGuildChannel forChannel)
         {
             if (forChannel.Guild != Guild)
@@ -83,18 +124,36 @@ namespace Discore
             return userPermissions.HasFlag(DiscordPermission.Administrator) | userPermissions.HasFlag(permission);
         }
 
-        public void AssertPermission(DiscordPermission permission, DiscordGuild guild)
+        /// <summary>
+        /// Checks if this member has the specified permissions,
+        /// if not a <see cref="DiscordPermissionException"/> is thrown.
+        /// </summary>
+        /// <param name="permission">The permissions to check.</param>
+        public void AssertPermission(DiscordPermission permission)
         {
             if (!HasPermission(permission))
                 throw new DiscordPermissionException(this, permission);
         }
 
+        /// <summary>
+        /// Checks if this member has the specified permissions in the context 
+        /// of the specified <see cref="DiscordGuildChannel"/>,
+        /// if not a <see cref="DiscordPermissionException"/> is thrown.
+        /// </summary>
+        /// <param name="permission">The permissions to check.</param>
+        /// <param name="channel">The channel to check permissions for.</param>
         public void AssertPermission(DiscordPermission permission, DiscordGuildChannel channel)
         {
             if (!HasPermission(permission, channel))
                 throw new DiscordPermissionException(this, channel, permission);
         }
 
+        /// <summary>
+        /// Gets whether or not this member has the 
+        /// specified role by its name.
+        /// </summary>
+        /// <param name="roleName">The name of the role to check for.</param>
+        /// <returns>Returns whether or not this member has the specified role.</returns>
         public bool HasRole(string roleName)
         {
             for (int i = 0; i < Roles.Length; i++)
@@ -104,6 +163,10 @@ namespace Discore
             return false;
         }
 
+        /// <summary>
+        /// Updates this guild member with the specified <see cref="DiscordApiData"/>.
+        /// </summary>
+        /// <param name="data">The data to update this guild member with.</param>
         public void Update(DiscordApiData data)
         {
             Nickname = data.GetString("nick") ?? Nickname;
@@ -140,6 +203,10 @@ namespace Discore
             VoiceState.Update(data);
         }
 
+        /// <summary>
+        /// Gets the username of this member.
+        /// </summary>
+        /// <returns>Returns the username of this member.</returns>
         public override string ToString()
         {
             return User.Username;

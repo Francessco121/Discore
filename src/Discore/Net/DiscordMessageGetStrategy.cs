@@ -1,5 +1,8 @@
 ﻿namespace Discore.Net
 {
+    /// <summary>
+    /// Specifies the way messages should be retrieved from an <see cref="IDiscordRestMessagesService"/> instance.
+    /// </summary>
     public enum DiscordMessageGetStrategy
     {
         /// <summary>

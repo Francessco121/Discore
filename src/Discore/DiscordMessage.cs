@@ -3,38 +3,104 @@ using System.Collections.Generic;
 
 namespace Discore
 {
+    /// <summary>
+    /// Represents a message sent in a channel within Discord.
+    /// </summary>
     public class DiscordMessage : IDiscordObject, ICacheable
     {
+        /// <summary>
+        /// Gets the id of this message.
+        /// </summary>
         public string Id { get; private set; }
+        /// <summary>
+        /// Gets the channel this message is in.
+        /// </summary>
         public DiscordChannel Channel { get; private set; }
+        /// <summary>
+        /// Gets the author of this message.
+        /// </summary>
         public DiscordUser Author { get; private set; }
+        /// <summary>
+        /// Gets the guild member instance of the author of this message
+        /// if it was sent in a <see cref="DiscordGuildChannel"/>.
+        /// </summary>
         public DiscordGuildMember AuthorMember { get; private set; }
+        /// <summary>
+        /// Gets the contents of this message.
+        /// </summary>
         public string Content { get; private set; }
+        /// <summary>
+        /// Gets the time this message was first sent.
+        /// </summary>
         public DateTime Timestamp { get; private set; }
+        /// <summary>
+        /// Gets the time of the last edit to this message.
+        /// </summary>
         public DateTime? EditedTimestamp { get; private set; }
+        /// <summary>
+        /// Gets whether or not this message was sent with the /tts command.
+        /// </summary>
         public bool TextToSpeech { get; private set; }
+        /// <summary>
+        /// Gets whether or not this message mentioned everyone via @everyone.
+        /// </summary>
         public bool MentionEveryone { get; private set; }
+        /// <summary>
+        /// Gets a list of all user-specific mentions in this message.
+        /// </summary>
         public DiscordUser[] Mentions { get; private set; }
+        /// <summary>
+        /// Gets a list of all attachments in this message.
+        /// </summary>
         public DiscordAttachment[] Attachments { get; private set; }
+        /// <summary>
+        /// Gets a list of all embedded attachments in this message.
+        /// </summary>
         public DiscordEmbed[] Embeds { get; private set; }
+        /// <summary>
+        /// Used for validating if a message was sent.
+        /// </summary>
         public string Nonce { get; private set; }
+        /// <summary>
+        /// Gets whether or not this message is pinned in the containing channel.
+        /// </summary>
         public bool IsPinned { get; private set; }
 
         IDiscordClient client;
         DiscordApiCache cache;
 
+        /// <summary>
+        /// Creates
+        /// </summary>
+        /// <param name="client"></param>
         public DiscordMessage(IDiscordClient client)
         {
             this.client = client;
             cache = client.Cache;
         }
 
+        /// <summary>
+        /// Changes the contents of this message.
+        /// </summary>
+        /// <param name="newContent">The new contents.</param>
         public void Edit(string newContent)
         {
             Content = newContent;
             client.Rest.Messages.Edit(Channel, Id, newContent);
         }
 
+        /// <summary>
+        /// Deletes this message.
+        /// </summary>
+        public void Delete()
+        {
+            client.Rest.Messages.Delete(Channel, Id);
+        }
+
+        /// <summary>
+        /// Updates this message with the specified <see cref="DiscordApiData"/>.
+        /// </summary>
+        /// <param name="data">The data to update this message with.</param>
         public void Update(DiscordApiData data)
         {
             Id              = data.GetString("id") ?? Id;
@@ -107,11 +173,6 @@ namespace Discore
                     Embeds[i] = embed;
                 }
             }
-        }
-
-        public void Delete()
-        {
-            client.Rest.Messages.Delete(Channel, Id);
         }
     }
 }

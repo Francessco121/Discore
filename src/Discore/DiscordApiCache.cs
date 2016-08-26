@@ -4,13 +4,22 @@ using System.Collections.Generic;
 
 namespace Discore
 {
+    /// <summary>
+    /// A client-side cache for data coming from the Discord API.
+    /// </summary>
     public class DiscordApiCache
     {
+        /// <summary>
+        /// Gets a new empty <see cref="DiscordApiCache"/>.
+        /// </summary>
         public static DiscordApiCache Empty { get { return new DiscordApiCache(); } }
 
         ConcurrentDictionary<Type, ConcurrentDictionary<string, ICacheable>> cache;
         ConcurrentDictionary<Type, ConcurrentDictionary<string, DiscordApiCache>> innerCaches;
 
+        /// <summary>
+        /// Creates a new <see cref="DiscordApiCache"/> instance.
+        /// </summary>
         public DiscordApiCache()
         {
             cache = new ConcurrentDictionary<Type, ConcurrentDictionary<string, ICacheable>>();
@@ -18,6 +27,11 @@ namespace Discore
         }
 
         #region GetList
+        /// <summary>
+        /// Gets a list of all <see cref="ICacheable"/>s of the specified type.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/>.</typeparam>
+        /// <returns>Returns all <see cref="ICacheable"/>s of the given type.</returns>
         public IReadOnlyList<KeyValuePair<string, T>> GetList<T>()
             where T : class, ICacheable
         {
@@ -34,6 +48,14 @@ namespace Discore
             return list;
         }
 
+        /// <summary>
+        /// Gets a list of all <see cref="ICacheable"/>s of the specified type nested
+        /// in the given parent <see cref="ICacheable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/>.</typeparam>
+        /// <typeparam name="U">The type of the parent <see cref="ICacheable"/>.</typeparam>
+        /// <param name="parentCacheable">The <see cref="ICacheable"/> parent to search under.</param>
+        /// <returns>Returns all <see cref="ICacheable"/>s of the given type nested under the given parent.</returns>
         public IReadOnlyList<KeyValuePair<string, T>> GetList<T, U>(U parentCacheable)
             where T : class, ICacheable
             where U : class, ICacheable
@@ -52,6 +74,13 @@ namespace Discore
         #endregion
 
         #region TryGet
+        /// <summary>
+        /// Attempts to find the specified <see cref="ICacheable"/> by its id.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/>.</typeparam>
+        /// <param name="id">The id of the <see cref="ICacheable"/>.</param>
+        /// <param name="cacheable">The found <see cref="ICacheable"/>.</param>
+        /// <returns>Returns whether or not the <see cref="ICacheable"/> was found.</returns>
         public bool TryGet<T>(string id, out T cacheable)
             where T : class, ICacheable
         {
@@ -71,6 +100,16 @@ namespace Discore
             return false;
         }
 
+        /// <summary>
+        /// Attempts to find the specified <see cref="ICacheable"/> nested under 
+        /// the given parent <see cref="ICacheable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/>.</typeparam>
+        /// <typeparam name="U">The type of the parent <see cref="ICacheable"/>.</typeparam>
+        /// <param name="parentCacheable">The <see cref="ICacheable"/> parent to search under.</param>
+        /// <param name="childId">The id of the child <see cref="ICacheable"/> to locate.</param>
+        /// <param name="cacheable">The found <see cref="ICacheable"/>.</param>
+        /// <returns>Returns whether or not the <see cref="ICacheable"/> was found.</returns>
         public bool TryGet<T, U>(U parentCacheable, string childId, out T cacheable)
             where T : class, ICacheable
             where U : class, ICacheable
@@ -90,6 +129,14 @@ namespace Discore
         #endregion
 
         #region GetAndTryUpdate
+        /// <summary>
+        /// Attempts to get and update the specified <see cref="ICacheable"/> simultaneously.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to get and update.</typeparam>
+        /// <param name="id">The id of the <see cref="ICacheable"/> to get and update.</param>
+        /// <param name="data">The <see cref="DiscordApiData"/> to update the <see cref="ICacheable"/> with.</param>
+        /// <param name="cacheable">The found <see cref="ICacheable"/>.</param>
+        /// <returns>Returns whether or not the <see cref="ICacheable"/> was found and updated.</returns>
         public bool GetAndTryUpdate<T>(string id, DiscordApiData data, out T cacheable)
             where T : class, ICacheable
         {
@@ -105,11 +152,22 @@ namespace Discore
                     return true;
                 }
             }
-
+            
             cacheable = null;
             return false;
         }
 
+        /// <summary>
+        /// Attempts to get and update the specified <see cref="ICacheable"/>
+        /// nested under the given parent <see cref="ICacheable"/> simultaneously.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to get and update.</typeparam>
+        /// <typeparam name="U">The type of the parent <see cref="ICacheable"/>.</typeparam>
+        /// <param name="parentCacheable">The <see cref="ICacheable"/> parent to search under.</param>
+        /// <param name="childId">The id of the <see cref="ICacheable"/> to get and update.</param>
+        /// <param name="data">The <see cref="DiscordApiData"/> to update the <see cref="ICacheable"/> with.</param>
+        /// <param name="cacheable">The found <see cref="ICacheable"/>.</param>
+        /// <returns>Returns whether or not the <see cref="ICacheable"/> was found and updated.</returns>
         public bool GetAndTryUpdate<T, U>(U parentCacheable, string childId, DiscordApiData data, out T cacheable)
             where T : class, ICacheable
             where U : class, ICacheable
@@ -129,6 +187,14 @@ namespace Discore
         #endregion
 
         #region AddOrUpdate
+        /// <summary>
+        /// Attempts to add or update an existing <see cref="ICacheable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to add or update.</typeparam>
+        /// <param name="id">The id of the <see cref="ICacheable"/>.</param>
+        /// <param name="data">The data to update the <see cref="ICacheable"/> with.</param>
+        /// <param name="createCallback">A callback used to create the <see cref="ICacheable"/> if it does not exist.</param>
+        /// <returns>Returns the added or updated <see cref="ICacheable"/>.</returns>
         public T AddOrUpdate<T>(string id, DiscordApiData data, Func<T> createCallback)
             where T : class, ICacheable
         {
@@ -169,6 +235,18 @@ namespace Discore
             }
         }
 
+        /// <summary>
+        /// Attempts to add or update an existing <see cref="ICacheable"/> nested under a parent <see cref="ICacheable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to add or update.</typeparam>
+        /// <typeparam name="U">The type of the parent <see cref="ICacheable"/>.</typeparam>
+        /// <param name="parentCacheable">The <see cref="ICacheable"/> parent to search under.</param>
+        /// <param name="childId">The id of the <see cref="ICacheable"/>.</param>
+        /// <param name="data">The data to update the <see cref="ICacheable"/> with.</param>
+        /// <param name="createCallback">A callback used to create the <see cref="ICacheable"/> if it does not exist.</param>
+        /// <param name="makeGlobalAlias">Whether or not a global reference to the <see cref="ICacheable"/> 
+        /// without the parent should be set.</param>
+        /// <returns>Returns the added or updated <see cref="ICacheable"/>.</returns>
         public T AddOrUpdate<T, U>(U parentCacheable, string childId, DiscordApiData data, Func<T> createCallback, 
             bool makeGlobalAlias = false)
             where T : class, ICacheable
@@ -206,6 +284,13 @@ namespace Discore
         #endregion
 
         #region TryRemove
+        /// <summary>
+        /// Attempts to removed a <see cref="ICacheable"/> by its id.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to remove.</typeparam>
+        /// <param name="id">The id of the <see cref="ICacheable"/> to remove.</param>
+        /// <param name="cacheable">The removed <see cref="ICacheable"/>.</param>
+        /// <returns>Returns whether or not the <see cref="ICacheable"/> was deleted.</returns>
         public bool TryRemove<T>(string id, out T cacheable)
             where T : class, ICacheable
         {
@@ -225,6 +310,15 @@ namespace Discore
             return false;
         }
 
+        /// <summary>
+        /// Attempts to removed a <see cref="ICacheable"/> nested under a parent <see cref="ICacheable"/> by its id.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to remove.</typeparam>
+        /// <typeparam name="U">The type of the parent <see cref="ICacheable"/>.</typeparam>
+        /// <param name="parentCacheable">The <see cref="ICacheable"/> parent to search under.</param>
+        /// <param name="childId">The id of the <see cref="ICacheable"/> to remove.</param>
+        /// <param name="cacheable">The removed <see cref="ICacheable"/>.</param>
+        /// <returns>Returns whether or not the <see cref="ICacheable"/> was deleted.</returns>
         public bool TryRemove<T, U>(U parentCacheable, string childId, out T cacheable)
             where T : class, ICacheable
             where U : class, ICacheable
@@ -256,6 +350,18 @@ namespace Discore
         #endregion
 
         #region Aliases
+        /// <summary>
+        /// Sets an alias in the cache that will point to the specified <see cref="ICacheable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to make an alias for.</typeparam>
+        /// <param name="cacheable">The <see cref="ICacheable"/> to make an alias for.</param>
+        /// <remarks>
+        /// This is used to have data available at multiple levels. For instance, if you had
+        /// data cached under a parent, you could use this method to make an alias-reference to that
+        /// nested data that would not be nested under a parent.
+        /// This should only be used when the nested data has a globally unique id that is not
+        /// reliant on its parent.
+        /// </remarks>
         public void SetAlias<T>(T cacheable)
             where T : class, ICacheable
         {
@@ -289,6 +395,12 @@ namespace Discore
             }
         }
 
+        /// <summary>
+        /// Attempts to remove an alias to an <see cref="ICacheable"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of <see cref="ICacheable"/> to remove the reference to.</typeparam>
+        /// <param name="id">The id of the <see cref="ICacheable"/> alias.</param>
+        /// <returns>Returns whether or not the alias was removed.</returns>
         public bool TryRemoveAlias<T>(string id)
            where T : class, ICacheable
         {
@@ -305,6 +417,9 @@ namespace Discore
         }
         #endregion
 
+        /// <summary>
+        /// Clears all data in this <see cref="DiscordApiCache"/>.
+        /// </summary>
         public void Clear()
         {
             cache.Clear();

@@ -1,13 +1,19 @@
 ﻿namespace Discore.Net
 {
-    public class DiscordGatewayException : DiscordioSocketException
+    /// <summary>
+    /// An exception thrown by an <see cref="IDiscordGateway"/> instance.
+    /// </summary>
+    public class DiscordGatewayException : DiscoreSocketException
     {
-        public int DisconnectCode { get; }
+        /// <summary>
+        /// The disconnect code sent by the <see cref="IDiscordGateway"/>.
+        /// </summary>
+        public GatewayDisconnectCode DisconnectCode { get; }
 
         internal DiscordGatewayException(GatewayDisconnectCode dcCode, string message)
             : base($"[{dcCode}:{(int)dcCode}] {message}")
         {
-            DisconnectCode = (int)dcCode;
+            DisconnectCode = dcCode;
         }
     }
 }
