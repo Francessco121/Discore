@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0-*",
+  "dependencies": {
+    "Microsoft.CSharp": "4.0.1",
+    "NETStandard.Library": "1.6.0",
+    "Newtonsoft.Json": "9.0.1",
+    "System.Net.NameResolution": "4.0.0",
+    "System.Net.WebSockets": "4.0.0",
+    "System.Net.WebSockets.Client": "4.0.0",
+    "System.Threading": "4.0.11",
+    "System.Threading.Thread": "4.0.0"
+  },
+  "frameworks": {
+    "netstandard1.6": {
+      "imports": "dnxcore50"
+    }
+  },
+  "buildOptions": {
+    "define": [],
+    "allowUnsafe": true
+  }
+}

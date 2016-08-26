@@ -1,0 +1,7 @@
+*.swp
+*.*~
+bin/
+obj/
+.vs/
+project.lock.json
+.DS_Store

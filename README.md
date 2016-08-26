@@ -1,1 +1,1 @@
-Discore
+# Discord + .NET Core = Discore #
