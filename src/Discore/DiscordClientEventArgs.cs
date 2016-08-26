@@ -4,6 +4,16 @@ using System.Runtime.ExceptionServices;
 
 namespace Discore
 {
+    public class IntegrationEventArgs : EventArgs
+    {
+        public DiscordIntegration Integration { get; }
+
+        public IntegrationEventArgs(DiscordIntegration integration)
+        {
+            Integration = integration;
+        }
+    }
+
     public class TypingStartEventArgs : EventArgs
     {
         public DiscordUser User { get; }

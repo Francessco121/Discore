@@ -105,7 +105,6 @@ namespace Discore.Audio
                 this.endpoint = endpoint;
                 this.token = token;
 
-                // TODO: query discord api for this url
                 string uri = $"wss://{endpoint}";
                 log.LogVerbose($"Connecting to voice websocket {uri}...");
                 if (await socket.Connect(uri))

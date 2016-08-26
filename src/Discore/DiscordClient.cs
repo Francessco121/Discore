@@ -25,7 +25,7 @@ namespace Discore
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdd;
         public event EventHandler<GuildUserEventArgs> OnGuildBanRemove;
         public event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
-        public event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
+        public event EventHandler<IntegrationEventArgs> OnGuildIntegrationsUpdated;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
@@ -418,10 +418,10 @@ namespace Discore
         {
             try
             {
-                DiscordGuild guild = CacheHelper.UpdateGuildIntegrations(data);
+                DiscordIntegration integration = CacheHelper.UpdateGuildIntegrations(data);
 
-                OnGuildIntegrationsUpdated?.Invoke(this, new GuildEventArgs(guild));
-                log.LogVerbose($"[GUILD_INTEGRATIONS_UPDATE] Updated integrations for guild '{guild.Name}'");
+                OnGuildIntegrationsUpdated?.Invoke(this, new IntegrationEventArgs(integration));
+                log.LogVerbose($"[GUILD_INTEGRATIONS_UPDATE] Updated integration '{integration.Name}' for guild '{integration.Guild.Name}'");
             }
             catch (DiscordApiCacheHelperException ex)
             {

@@ -179,15 +179,17 @@ namespace Discore
                 throw new DiscordApiCacheHelperException($"Received emoji update for unknown guild with id {guildId}");
         }
 
-        public DiscordGuild UpdateGuildIntegrations(DiscordApiData data)
+        public DiscordIntegration UpdateGuildIntegrations(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
             DiscordGuild guild;
             if (cache.GetAndTryUpdate(guildId, data, out guild))
             {
-                // TODO: ??
+                string integrationId = data.GetString("id");
+                DiscordIntegration integration = cache.AddOrUpdate(guild, integrationId, data, 
+                    () => { return new DiscordIntegration(client, guild); });
 
-                return guild;
+                return integration;
             }
             else
                 throw new DiscordApiCacheHelperException($"Received guild integrations update for unknown guild with id {guildId}");

@@ -9,18 +9,20 @@ namespace Discore
         public string Type { get; private set; }
         public bool Enabled { get; private set; }
         public bool Syncing { get; private set; }
-        public string RoleId { get; private set; }
+        public DiscordRole Role { get; private set; }
         public int ExpireBehavior { get; private set; }
         public int ExpireGracePeriod { get; private set; }
         public DiscordUser User { get; private set; }
         public DiscordIntegrationAccount Account { get; private set; }
         public DateTime SyncedAt { get; private set; }
+        public DiscordGuild Guild { get; private set; }
 
         DiscordApiCache cache;
 
-        public DiscordIntegration(IDiscordClient client)
+        public DiscordIntegration(IDiscordClient client, DiscordGuild guild)
         {
             cache = client.Cache;
+            Guild = guild;
         }
 
         public void Update(DiscordApiData data)
@@ -30,10 +32,17 @@ namespace Discore
             Type = data.GetString("type") ?? Type;
             Enabled = data.GetBoolean("enabled") ?? Enabled;
             Syncing = data.GetBoolean("syncing") ?? Syncing;
-            RoleId = data.GetString("role_id") ?? RoleId; // TODO: grab actual role
             ExpireBehavior = data.GetInteger("expire_behavior") ?? ExpireBehavior;
             ExpireGracePeriod = data.GetInteger("expire_grace_period") ?? ExpireGracePeriod;
             SyncedAt = data.GetDateTime("synced_at") ?? SyncedAt;
+
+            string roleId = data.GetString("role_id");
+            if (roleId != null)
+            {
+                DiscordRole role;
+                if (cache.TryGet(Guild, roleId, out role))
+                    Role = role;
+            }
 
             DiscordApiData userData = data.Get("user");
             if (userData != null)
