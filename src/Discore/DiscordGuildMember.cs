@@ -206,13 +206,57 @@ namespace Discore
             VoiceState.Update(data);
         }
 
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordGuildMember"/> is equal 
+        /// to the current member.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordGuildMember"/> to check.</param>
+        public bool Equals(DiscordGuildMember other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current member.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordGuildMember other = obj as DiscordGuildMember;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this member.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
         /// <summary>
         /// Gets the username of this member.
         /// </summary>
-        /// <returns>Returns the username of this member.</returns>
         public override string ToString()
         {
             return User.Username;
         }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordGuildMember a, DiscordGuildMember b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordGuildMember a, DiscordGuildMember b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

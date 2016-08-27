@@ -151,13 +151,57 @@ namespace Discore
             return Client.Gateway.ConnectToVoice(this);
         }
 
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordGuildChannel"/> is equal 
+        /// to the current channel.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordGuildChannel"/> to check.</param>
+        public bool Equals(DiscordGuildChannel other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current channel.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordGuildChannel other = obj as DiscordGuildChannel;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this channel.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
         /// <summary>
         /// Gets a string representation of this channel.
         /// </summary>
-        /// <returns>Returns the string representation of this channel.</returns>
         public override string ToString()
         {
             return $"{GuildChannelType}:{Name}";
         }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordGuildChannel a, DiscordGuildChannel b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordGuildChannel a, DiscordGuildChannel b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

@@ -24,5 +24,50 @@
             Id = data.GetString("id") ?? Id;
             Unavailable = data.GetBoolean("unavailable") ?? Unavailable;
         }
+
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordUnavailableGuild"/> is equal 
+        /// to the current unavailable guild.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordUnavailableGuild"/> to check.</param>
+        public bool Equals(DiscordUnavailableGuild other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current unavailable guild.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordUnavailableGuild other = obj as DiscordUnavailableGuild;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this unavailable guild.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordUnavailableGuild a, DiscordUnavailableGuild b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordUnavailableGuild a, DiscordUnavailableGuild b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

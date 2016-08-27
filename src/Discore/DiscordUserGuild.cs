@@ -41,5 +41,58 @@
             if (permissions.HasValue)
                 Permissions = (DiscordPermission)permissions.Value;
         }
+
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordUserGuild"/> is equal 
+        /// to the current user guild.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordUserGuild"/> to check.</param>
+        public bool Equals(DiscordUserGuild other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current user guild.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordUserGuild other = obj as DiscordUserGuild;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this user guild.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns the name of this user guild.
+        /// </summary>
+        public override string ToString()
+        {
+            return Name;
+        }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordUserGuild a, DiscordUserGuild b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordUserGuild a, DiscordUserGuild b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

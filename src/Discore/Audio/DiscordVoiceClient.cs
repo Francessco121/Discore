@@ -186,23 +186,29 @@ namespace Discore.Audio
                         // if we are flushing and we have data
                         || (isFlushing && audioBuffer.Count > 0)))
                     {
-                        int read = audioBuffer.Read(blockBuffer, 0, blockBuffer.Length);
-                        voiceSocket.SendPCMData(blockBuffer, 0, read);
-                        gotFirstBlock = true;
+                        if (voiceSocket.CanSendData(blockBuffer.Length))
+                        {
+                            int read = audioBuffer.Read(blockBuffer, 0, blockBuffer.Length);
+                            voiceSocket.SendPCMData(blockBuffer, 0, read);
+                            gotFirstBlock = true;
+                        }
                     }
                     else if (gotFirstBlock && isSpeaking)
                     {
-                        // 5 frames of silence
-                        byte[] opusSilence = new byte[]
+                        if (voiceSocket.CanSendData(3))
                         {
-                            0xF8,
-                            0xFF,
-                            0xFE
-                        };
+                            // 5 frames of silence
+                            byte[] opusSilence = new byte[]
+                            {
+                                0xF8,
+                                0xFF,
+                                0xFE
+                            };
 
-                        voiceSocket.SendPCMData(opusSilence, 0, opusSilence.Length);
-                        isFlushing = false;
-                        Thread.Sleep(1);
+                            voiceSocket.SendPCMData(opusSilence, 0, opusSilence.Length);
+                            isFlushing = false;
+                            Thread.Sleep(1);
+                        }
                     }
                     else
                     {

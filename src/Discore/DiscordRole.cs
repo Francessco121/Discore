@@ -63,13 +63,57 @@
                 Permissions = (DiscordPermission)permissions.Value;
         }
 
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordRole"/> is equal 
+        /// to the current role.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordRole"/> to check.</param>
+        public bool Equals(DiscordRole other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current role.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordRole other = obj as DiscordRole;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this role.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
         /// <summary>
         /// Gets the name of this role.
         /// </summary>
-        /// <returns>Returns the name of this role.</returns>
         public override string ToString()
         {
             return Name;
         }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordRole a, DiscordRole b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordRole a, DiscordRole b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

@@ -13,7 +13,6 @@ namespace Discore
             Line = line;
         }
     }
-#pragma warning restore 1591
 
     /// <summary>
     /// Represents a single logged line.
@@ -41,35 +40,15 @@ namespace Discore
     /// </summary>
     public enum DiscordLogType
     {
-        /// <summary>
-        /// A heartbeat log.
-        /// </summary>
         Heartbeat,
-        /// <summary>
-        /// An unncessary log.
-        /// </summary>
         Unnecessary,
-        /// <summary>
-        /// A verbose log.
-        /// </summary>
         Verbose,
-        /// <summary>
-        /// An info log.
-        /// </summary>
         Info,
-        /// <summary>
-        /// An important log.
-        /// </summary>
         Important,
-        /// <summary>
-        /// A warning log.
-        /// </summary>
         Warning,
-        /// <summary>
-        /// An error log.
-        /// </summary>
         Error
     }
+#pragma warning restore 1591
 
     /// <summary>
     /// A filter for a <see cref="DiscordLogger"/>.

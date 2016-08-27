@@ -43,5 +43,58 @@
             VIPOnly = data.GetBoolean("vip") ?? VIPOnly;
             Optimal = data.GetBoolean("optimal") ?? Optimal;
         }
+
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordVoiceRegion"/> is equal 
+        /// to the current voice region.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordVoiceRegion"/> to check.</param>
+        public bool Equals(DiscordVoiceRegion other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current voice region.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordVoiceRegion other = obj as DiscordVoiceRegion;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this voice region.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns the name of this voice region.
+        /// </summary>
+        public override string ToString()
+        {
+            return Name;
+        }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordVoiceRegion a, DiscordVoiceRegion b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordVoiceRegion a, DiscordVoiceRegion b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

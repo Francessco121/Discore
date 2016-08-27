@@ -108,5 +108,58 @@ namespace Discore
                 Account.Update(accountData);
             }
         }
+
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordIntegration"/> is equal 
+        /// to the current integration.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordIntegration"/> to check.</param>
+        public bool Equals(DiscordIntegration other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current integration.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordIntegration other = obj as DiscordIntegration;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this integration.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns the name of this integration.
+        /// </summary>
+        public override string ToString()
+        {
+            return Name;
+        }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordIntegration a, DiscordIntegration b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordIntegration a, DiscordIntegration b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

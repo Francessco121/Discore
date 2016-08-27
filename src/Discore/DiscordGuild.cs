@@ -259,13 +259,57 @@ namespace Discore
             }
         }
 
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordGuild"/> is equal 
+        /// to the current guild.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordGuild"/> to check.</param>
+        public bool Equals(DiscordGuild other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current guild.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordGuild other = obj as DiscordGuild;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this guild.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
         /// <summary>
         /// Returns the name of this guild.
         /// </summary>
-        /// <returns></returns>
         public override string ToString()
         {
             return Name;
         }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordGuild a, DiscordGuild b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordGuild a, DiscordGuild b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

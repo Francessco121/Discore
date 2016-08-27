@@ -174,5 +174,58 @@ namespace Discore
                 }
             }
         }
+
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordMessage"/> is equal 
+        /// to the current message.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordMessage"/> to check.</param>
+        public bool Equals(DiscordMessage other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current message.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordMessage other = obj as DiscordMessage;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this message.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+        /// <summary>
+        /// Returns the id of this message.
+        /// </summary>
+        public override string ToString()
+        {
+            return Id;
+        }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordMessage a, DiscordMessage b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordMessage a, DiscordMessage b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }

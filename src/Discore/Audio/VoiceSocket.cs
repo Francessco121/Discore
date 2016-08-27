@@ -25,7 +25,7 @@ namespace Discore.Audio
         bool readyToSendVoice;
 
         OpusEncoder encoder;
-        VoiceBuffer sendBuffer;
+        CircularBuffer sendBuffer;
 
         const int FRAME_LENGTH = 20;
         const int BITS_PER_SAMPLE = 16;
@@ -66,7 +66,7 @@ namespace Discore.Audio
             sampleSize = (BITS_PER_SAMPLE / 8) * encoder.InputChannels;
             frameSize = samplesPerFrame * sampleSize;
 
-            sendBuffer = new VoiceBuffer((int)Math.Ceiling(BUFFER_LENGTH / (double)FRAME_LENGTH), frameSize);
+            sendBuffer = new CircularBuffer((int)Math.Ceiling(BUFFER_LENGTH / (double)FRAME_LENGTH) * frameSize);
 
             socket.OnMessageReceived += VoiceSocket_OnMessageReceived;
 
@@ -122,7 +122,13 @@ namespace Discore.Audio
         /// <exception cref="OperationCanceledException"></exception>
         public void SendPCMData(byte[] data, int offset, int count)
         {
-            sendBuffer.Push(data, offset, count, cancelTokenSource.Token);
+            //sendBuffer.Push(data, offset, count, cancelTokenSource.Token);
+            sendBuffer.Write(data, offset, count);
+        }
+
+        public bool CanSendData(int size)
+        {
+            return sendBuffer.MaxLength - sendBuffer.Count >= size;
         }
 
         void SendPayload(VoiceSocketOPCode op, DiscordApiData data)
@@ -262,8 +268,10 @@ namespace Discore.Audio
                 bool hasFrame = false;
                 while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                 {
-                    if (!hasFrame && sendBuffer.Pop(frame))
+                    if (!hasFrame && sendBuffer.Count >= frame.Length)
                     {
+                        int read = sendBuffer.Read(frame, 0, frame.Length);
+
                         ushort sequence = unchecked(this.sequence++);
                         voicePacket[2] = (byte)(sequence >> 8);
                         voicePacket[3] = (byte)(sequence >> 0);

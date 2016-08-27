@@ -160,5 +160,50 @@ namespace Discore
         /// </summary>
         /// <param name="data">The data to update this channel with.</param>
         public abstract void Update(DiscordApiData data);
+
+        #region Object Overrides
+        /// <summary>
+        /// Determines whether the specified <see cref="DiscordChannel"/> is equal 
+        /// to the current channel.
+        /// </summary>
+        /// <param name="other">The other <see cref="DiscordChannel"/> to check.</param>
+        public bool Equals(DiscordChannel other)
+        {
+            return Id == other.Id;
+        }
+
+        /// <summary>
+        /// Determines whether the specified object is equal to the current channel.
+        /// </summary>
+        /// <param name="obj">The other object to check.</param>
+        public override bool Equals(object obj)
+        {
+            DiscordChannel other = obj as DiscordChannel;
+            if (ReferenceEquals(other, null))
+                return false;
+            else
+                return Equals(other);
+        }
+
+        /// <summary>
+        /// Returns the hash of this DiscordChannel.
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+
+#pragma warning disable 1591
+        public static bool operator ==(DiscordChannel a, DiscordChannel b)
+        {
+            return a.Id == b.Id;
+        }
+
+        public static bool operator !=(DiscordChannel a, DiscordChannel b)
+        {
+            return a.Id != b.Id;
+        }
+#pragma warning restore 1591
+        #endregion
     }
 }
