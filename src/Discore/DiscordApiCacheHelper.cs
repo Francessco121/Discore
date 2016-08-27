@@ -45,6 +45,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> to use to create the <see cref="DiscordChannel"/>.</param>
         /// <returns>Returns the created <see cref="DiscordChannel"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild could not be found.</exception>
         public DiscordChannel CreateChannel(DiscordApiData data)
         {
             if (data.ContainsKey("recipient"))
@@ -81,6 +82,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> to update the <see cref="DiscordGuildChannel"/> with.</param>
         /// <returns>Returns the updated <see cref="DiscordGuildChannel"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public DiscordGuildChannel UpdateChannel(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -102,6 +104,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> describing the deletion.</param>
         /// <returns>Returns the deleted <see cref="DiscordChannel"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the channel is not found.</exception>
         public DiscordChannel DeleteChannel(DiscordApiData data)
         {
             if (data.ContainsKey("recipient"))
@@ -171,6 +174,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> describing the deletion.</param>
         /// <returns>Returns the deleted <see cref="DiscordGuild"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public DiscordGuild DeleteGuild(DiscordApiData data)
         {
             string guildId = data.GetString("id");
@@ -186,6 +190,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the add.</param>
         /// <returns>Returns the <see cref="DiscordGuild"/> and <see cref="DiscordUser"/> involved in the ban.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public Tuple<DiscordGuild, DiscordUser> AddGuildBan(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -206,6 +211,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> describing the ban removal.</param>
         /// <returns>Returns the <see cref="DiscordGuild"/> and <see cref="DiscordUser"/> involved in the ban.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public Tuple<DiscordGuild, DiscordUser> RemoveGuildBan(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -226,6 +232,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the <see cref="DiscordGuild"/> that had it's emojis updated.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public DiscordGuild UpdateEmoji(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -247,6 +254,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the <see cref="DiscordIntegration"/> updated.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public DiscordIntegration UpdateGuildIntegrations(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -268,6 +276,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the add.</param>
         /// <returns>Returns the added <see cref="DiscordGuildMember"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public DiscordGuildMember AddGuildMember(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -291,6 +300,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the updated <see cref="DiscordGuildMember"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild or user is not found.</exception>
         public DiscordGuildMember UpdateGuildMember(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -314,6 +324,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the removal.</param>
         /// <returns>Returns the removed <see cref="DiscordGuildMember"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild or user is not found.</exception>
         public DiscordGuildMember RemoveGuildMember(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -337,6 +348,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> containing the <see cref="DiscordGuildMember"/>s.</param>
         /// <returns>Returns the involved <see cref="DiscordGuild"/> and the added/updated <see cref="DiscordGuildMember"/>s.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild or user is not found.</exception>
         public Tuple<DiscordGuild, DiscordGuildMember[]> GuildMembersChunk(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -362,6 +374,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the create.</param>
         /// <returns>Returns the involved <see cref="DiscordGuild"/> and the created <see cref="DiscordRole"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public Tuple<DiscordGuild, DiscordRole> CreateGuildRole(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -383,6 +396,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the involved <see cref="DiscordGuild"/> and the updated <see cref="DiscordRole"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild is not found.</exception>
         public Tuple<DiscordGuild, DiscordRole> UpdateGuildRole(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -404,6 +418,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the removal.</param>
         /// <returns>Returns the involved <see cref="DiscordGuild"/> and the deleted <see cref="DiscordRole"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild or role is not found.</exception>
         public Tuple<DiscordGuild, DiscordRole> DeleteGuildRole(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -444,6 +459,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the updated <see cref="DiscordMessage"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the channel is not found.</exception>
         public DiscordMessage UpdateMessage(DiscordApiData data)
         {
             string channelId = data.GetString("channel_id");
@@ -470,6 +486,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the deletion.</param>
         /// <returns>Returns the deleted <see cref="DiscordMessage"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the channel is not found.</exception>
         public DiscordMessage DeleteMessage(DiscordApiData data)
         {
             string channelId = data.GetString("channel_id");
@@ -495,6 +512,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the deletion.</param>
         /// <returns>Returns the deleted <see cref="DiscordMessage"/>s.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the channel is not found.</exception>
         public DiscordMessage[] DeleteMessageBulk(DiscordApiData data)
         {
             string channelId = data.GetString("channel_id");
@@ -537,6 +555,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the updated <see cref="DiscordGuildMember"/>.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild or user is not found.</exception>
         public DiscordGuildMember UpdatePresence(DiscordApiData data)
         {
             string guildId = data.GetString("guild_id");
@@ -560,6 +579,7 @@ namespace Discore
         /// </summary>
         /// <param name="data">The <see cref="DiscordApiData"/> specifying the update.</param>
         /// <returns>Returns the <see cref="DiscordGuildMember"/> whose <see cref="DiscordVoiceState"/> was updated.</returns>
+        /// <exception cref="DiscordApiCacheHelperException">Thrown if the guild or user is not found.</exception>
         public DiscordGuildMember UpdateVoiceState(DiscordApiData data)
         {
             string userId = data.GetString("user_id");

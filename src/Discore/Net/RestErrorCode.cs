@@ -1,8 +1,10 @@
-﻿namespace Discore.Net
+﻿#pragma warning disable 1591
+
+namespace Discore.Net
 {
     /// <summary>
     /// Error codes returned by the discord HTTP Api.
-    /// <see cref="https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/RESPONSE_CODES.md#json-error-response"/>
+    /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/RESPONSE_CODES.md#json-error-response
     /// </summary>
     public enum RestErrorCode
     {
@@ -60,3 +62,5 @@
         MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019
     }
 }
+
+#pragma warning restore 1591

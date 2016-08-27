@@ -4,7 +4,7 @@ namespace Discore
 {
     /// <summary>
     /// Permission types for user abilities.
-    /// <see cref="https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/PERMISSIONS.md"/>
+    /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/PERMISSIONS.md
     /// </summary>
     [Flags]
     public enum DiscordPermission : long

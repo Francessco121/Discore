@@ -77,6 +77,7 @@ namespace Discore
         /// <param name="permission">The permissions to check.</param>
         /// <param name="forChannel">The channel to check permissions for.</param>
         /// <returns>Returns whether or not the member has permission.</returns>
+        /// <exception cref="ArgumentException">Thrown if the guild channel is not in the same guild as this member.</exception>
         public bool HasPermission(DiscordPermission permission, DiscordGuildChannel forChannel)
         {
             if (forChannel.Guild != Guild)
@@ -129,6 +130,7 @@ namespace Discore
         /// if not a <see cref="DiscordPermissionException"/> is thrown.
         /// </summary>
         /// <param name="permission">The permissions to check.</param>
+        /// <exception cref="DiscordPermissionException">Thrown if the member does not have the specified permissions.</exception>
         public void AssertPermission(DiscordPermission permission)
         {
             if (!HasPermission(permission))
@@ -142,6 +144,7 @@ namespace Discore
         /// </summary>
         /// <param name="permission">The permissions to check.</param>
         /// <param name="channel">The channel to check permissions for.</param>
+        /// <exception cref="DiscordPermissionException">Thrown if the member does not have the specified permissions.</exception>
         public void AssertPermission(DiscordPermission permission, DiscordGuildChannel channel)
         {
             if (!HasPermission(permission, channel))

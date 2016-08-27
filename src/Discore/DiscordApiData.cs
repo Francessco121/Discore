@@ -40,6 +40,7 @@ namespace Discore
         /// <summary>
         /// If a container type, contains all properties in this DiscordApiData container.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public IReadOnlyDictionary<string, DiscordApiData> Properties
         {
             get
@@ -52,6 +53,7 @@ namespace Discore
         /// <summary>
         /// If a value type, contains the stored value of this DiscordApiData.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a value.</exception>
         public object Value
         {
             get
@@ -64,6 +66,7 @@ namespace Discore
         /// <summary>
         /// If an array type, contains the stored list of DiscordApiData objects.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not an array.</exception>
         public IReadOnlyList<DiscordApiData> Values
         {
             get
@@ -180,6 +183,7 @@ namespace Discore
         /// <summary>
         /// If a container type, returns whether this container contains the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public bool ContainsKey(string key)
         {
             AssertContainer();
@@ -190,6 +194,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the api data at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public DiscordApiData Get(string key)
         {
             AssertContainer();
@@ -204,6 +209,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the object at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public object GetObject(string key)
         {
             AssertContainer();
@@ -218,6 +224,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the string at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public string GetString(string key)
         {
             AssertContainer();
@@ -232,6 +239,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the boolean at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public bool? GetBoolean(string key)
         {
             AssertContainer();
@@ -246,6 +254,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the integer at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public int? GetInteger(string key)
         {
             AssertContainer();
@@ -260,6 +269,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the int64 at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public long? GetInt64(string key)
         {
             AssertContainer();
@@ -274,6 +284,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the double floating-point number at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public double? GetDouble(string key)
         {
             AssertContainer();
@@ -288,6 +299,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the datetime at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public DateTime? GetDateTime(string key)
         {
             AssertContainer();
@@ -302,6 +314,7 @@ namespace Discore
         /// <summary>
         /// If a container type, gets the array at the given key.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public IReadOnlyList<DiscordApiData> GetArray(string key)
         {
             AssertContainer();
@@ -318,10 +331,10 @@ namespace Discore
         /// <summary>
         /// Sets a value in this api data container.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public DiscordApiData Set(string key, object value)
         {
-            if (Type != DiscordApiDataType.Container)
-                throw new InvalidOperationException("This DiscordApiData is not a container!");
+            AssertContainer();
 
             DiscordApiData apiValue = new DiscordApiData(value);
             data[key] = apiValue;
@@ -331,10 +344,10 @@ namespace Discore
         /// <summary>
         /// Sets a value in this api data container.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public DiscordApiData Set(string key, DiscordApiData value)
         {
-            if (Type != DiscordApiDataType.Container)
-                throw new InvalidOperationException("This DiscordApiData is not a container!");
+            AssertContainer();
 
             data[key] = value ?? new DiscordApiData(value);
             return value;
@@ -343,10 +356,10 @@ namespace Discore
         /// <summary>
         /// Sets a value in this api data container.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public DiscordApiData Set<T>(string key, T[] array)
         {
-            if (Type != DiscordApiDataType.Container)
-                throw new InvalidOperationException("This DiscordApiData is not a container!");
+            AssertContainer();
 
             DiscordApiData[] dataArray = new DiscordApiData[array.Length];
             for (int i = 0; i < array.Length; i++)
@@ -360,10 +373,10 @@ namespace Discore
         /// <summary>
         /// Creates a nested DiscordApiData that can hold its own data.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
         public DiscordApiData CreateNestedContainer(string key)
         {
-            if (Type != DiscordApiDataType.Container)
-                throw new InvalidOperationException("This DiscordApiData is not a container!");
+            AssertContainer();
 
             DiscordApiData nestedData = new DiscordApiData();
             data[key] = nestedData;

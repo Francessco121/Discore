@@ -11,7 +11,7 @@ namespace Discore.Net
     class RestClientRateLimitManager
     {
         /// <summary>
-        /// <see cref="https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/RATE_LIMITS.md"/>
+        /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/RATE_LIMITS.md
         /// </summary>
         /// <remarks>
         /// The way this works is, on RateLimiter.Wait(), if there is no remaining calls for the specified action 
