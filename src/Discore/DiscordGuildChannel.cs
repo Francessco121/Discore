@@ -76,6 +76,7 @@ namespace Discore
         /// Changes the properties of this channel.
         /// </summary>
         /// <param name="modifyParams">The changed properties.</param>
+        /// <exception cref="ArgumentException">Thrown if the params are for a different type of guild channel.</exception>
         public void Modify(DiscordGuildChannelModifyParams modifyParams)
         {
             if (modifyParams.Type != GuildChannelType)
@@ -141,6 +142,7 @@ namespace Discore
         /// <summary>
         /// Attempts to connect to this voice channel. This is a non-blocking call.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this channel is not a voice channel.</exception>
         public DiscordVoiceClient ConnectToVoice()
         {
             if (GuildChannelType != DiscordGuildChannelType.Voice)
