@@ -1,4 +1,4 @@
-# Discore
+# [Discore](https://bundledsticksinkorperated.github.io/Discore/)
 ### _Discord + .NET Core = Discore_
 
 Discore is library written in pure [.NET Core](https://dotnet.github.io/) for creating various kinds of bots for the popular communications client [Discord](https://discordapp.com/)
