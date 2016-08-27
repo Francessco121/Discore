@@ -9,48 +9,146 @@ using System.Threading.Tasks;
 
 namespace Discore
 {
+    /// <summary>
+    /// The main interface with the Discord API.
+    /// </summary>
     public sealed class DiscordClient : IDiscordClient, IDisposable
     {
+        #region Events
+        /// <summary>
+        /// Called when an error occurs in this client.
+        /// </summary>
         public event EventHandler<ExceptionDispathEventArgs> OnError;
+        /// <summary>
+        /// Called when this client connects to the Discord API.
+        /// </summary>
         public event EventHandler OnConnected;
+        /// <summary>
+        /// Called when a voice connection is established.
+        /// </summary>
         public event EventHandler<VoiceClientEventArgs> OnVoiceClientConnected;
+        /// <summary>
+        /// Called when a voice connection is terminated.
+        /// </summary>
         public event EventHandler<VoiceClientEventArgs> OnVoiceClientDisconnected;
 
+        /// <summary>
+        /// Called when a <see cref="DiscordChannel"/> is created.
+        /// </summary>
         public event EventHandler<ChannelEventArgs> OnChannelCreated;
+        /// <summary>
+        /// Called when a <see cref="DiscordGuildChannel"/> is updated.
+        /// </summary>
         public event EventHandler<ChannelEventArgs> OnChannelUpdated;
+        /// <summary>
+        /// Called when a <see cref="DiscordChannel"/> is deleted/closed.
+        /// </summary>
         public event EventHandler<ChannelEventArgs> OnChannelDeleted;
+        /// <summary>
+        /// Called when a <see cref="DiscordGuild"/> is created.
+        /// </summary>
         public event EventHandler<GuildEventArgs> OnGuildCreated;
+        /// <summary>
+        /// Called when a <see cref="DiscordGuild"/> is updated.
+        /// </summary>
         public event EventHandler<GuildEventArgs> OnGuildUpdated;
+        /// <summary>
+        /// Called when a <see cref="DiscordGuild"/> is deleted.
+        /// </summary>
         public event EventHandler<GuildEventArgs> OnGuildDeleted;
+        /// <summary>
+        /// Called when a <see cref="DiscordUser"/> is banned from a <see cref="DiscordGuild"/>.
+        /// </summary>
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdd;
+        /// <summary>
+        /// Called when a <see cref="DiscordUser"/> is unbanned from a <see cref="DiscordGuild"/>.
+        /// </summary>
         public event EventHandler<GuildUserEventArgs> OnGuildBanRemove;
+        /// <summary>
+        /// Called the the <see cref="DiscordEmoji"/>s of a <see cref="DiscordGuild"/> are updated.
+        /// </summary>
         public event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
+        /// <summary>
+        /// Called when an <see cref="DiscordIntegration"/> of a <see cref="DiscordGuild"/> is updated.
+        /// </summary>
         public event EventHandler<IntegrationEventArgs> OnGuildIntegrationsUpdated;
+        /// <summary>
+        /// Called when a <see cref="DiscordUser"/> joins a <see cref="DiscordGuild"/>.
+        /// </summary>
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
+        /// <summary>
+        /// Called when a <see cref="DiscordGuildMember"/> is updated. 
+        /// </summary>
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
+        /// <summary>
+        /// Called when a <see cref="DiscordUser"/> leaves or is removed from a <see cref="DiscordGuild"/>.
+        /// </summary>
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
+        /// <summary>
+        /// Called when a <see cref="DiscordRole"/> is created.
+        /// </summary>
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
+        /// <summary>
+        /// Called when a <see cref="DiscordRole"/> is updated.
+        /// </summary>
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
+        /// <summary>
+        /// Called when a <see cref="DiscordRole"/> is deleted.
+        /// </summary>
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
+        /// <summary>
+        /// Called when a <see cref="DiscordUser"/> sends a <see cref="DiscordMessage"/>.
+        /// </summary>
         public event EventHandler<MessageEventArgs> OnMessageCreated;
+        /// <summary>
+        /// Called when a <see cref="DiscordUser"/> edits a <see cref="DiscordMessage"/>.
+        /// </summary>
         public event EventHandler<MessageEventArgs> OnMessageUpdated;
+        /// <summary>
+        /// Called when a <see cref="DiscordMessage"/> is deleted.
+        /// </summary>
         public event EventHandler<MessageEventArgs> OnMessageDeleted;
+        /// <summary>
+        /// Called when a <see cref="DiscordGuildMember"/> starts typing.
+        /// </summary>
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
+        #endregion
 
+        /// <summary>
+        /// Gets all <see cref="DiscordGuild"/>s known to this client.
+        /// </summary>
         public IReadOnlyList<KeyValuePair<string, DiscordGuild>> Guilds
         {
             get { return cache.GetList<DiscordGuild>(); }
         }
+        /// <summary>
+        /// Gets all <see cref="DiscordUser"/>s known to this client.
+        /// </summary>
         public IReadOnlyList<KeyValuePair<string, DiscordUser>> Users
         {
             get { return cache.GetList<DiscordUser>(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="DiscordUser"/> authenticated with this <see cref="DiscordClient"/>.
+        /// </summary>
         public DiscordUser User { get; private set; }
+        /// <summary>
+        /// Gets whether or not this <see cref="DiscordClient"/> is connected to the Discord API.
+        /// </summary>
         public bool IsConnected { get { return running && GatewaySocket.IsConnected; } }
 
+        /// <summary>
+        /// Gets the data cache of this <see cref="DiscordClient"/>.
+        /// </summary>
         public DiscordApiCache Cache { get { return cache; } }
+        /// <summary>
+        /// Gets the Discord gateway interface used by this <see cref="DiscordClient"/>.
+        /// </summary>
         public IDiscordGateway Gateway { get { return GatewaySocket; } }
+        /// <summary>
+        /// Gets the Discord REST interface used by this <see cref="DiscordClient"/>.
+        /// </summary>
         public IDiscordRestClient Rest { get { return RestClient; } }
 
         internal ConcurrentDictionary<DiscordGuild, DiscordVoiceClient> VoiceClients { get; }
@@ -68,6 +166,9 @@ namespace Discore
         DiscordLogger log;
         DiscordApiCache cache;
 
+        /// <summary>
+        /// Creates a new <see cref="DiscordClient"/> instance.
+        /// </summary>
         public DiscordClient()
         {
             log = new DiscordLogger("DiscordClient");
@@ -162,6 +263,12 @@ namespace Discore
                 log.LogWarning($"[Unhandled Gateway Event] {eventName}");
         }
 
+        /// <summary>
+        /// Attempts to connect to the Discord API with the token 
+        /// of the user/bot to authenticate as.
+        /// </summary>
+        /// <param name="token">The token of the user/bot to authenticate as.</param>
+        /// <returns>Returns whether or not the client successfully connected.</returns>
         public async Task<bool> Connect(string token)
         {
             if (!running)
@@ -181,6 +288,10 @@ namespace Discore
                 return false;
         }
 
+        /// <summary>
+        /// Disconnects this client from the Discord API.
+        /// </summary>
+        /// <returns>Returns an awaitable <see cref="Task"/>.</returns>
         public async Task Disconnect()
         {
             if (running)
@@ -194,8 +305,12 @@ namespace Discore
             }
         }
 
-        public void UpdateStatus(object game, DiscordGameType gameType = DiscordGameType.Default, int? idleSince = null)
-            => UpdateStatus(game.ToString(), gameType, idleSince);
+        /// <summary>
+        /// Updates the status of the currently authenticated user.
+        /// </summary>
+        /// <param name="game">The game currently being played.</param>
+        /// <param name="gameType">The type of game currently being played.</param>
+        /// <param name="idleSince">The time in seconds the user has been idle.</param>
         public void UpdateStatus(string game, DiscordGameType gameType = DiscordGameType.Default, int? idleSince = null)
         {
             if (running)
@@ -217,31 +332,61 @@ namespace Discore
             }
         }
 
-        public void EnqueueError(Exception e)
+        internal void EnqueueError(Exception e)
         {
             errors.Enqueue(ExceptionDispatchInfo.Capture(e));
         }
 
+        /// <summary>
+        /// Attempts to get a <see cref="DiscordUser"/> by their id.
+        /// </summary>
+        /// <param name="id">The id of the <see cref="DiscordUser"/>.</param>
+        /// <param name="user">The found <see cref="DiscordUser"/>.</param>
+        /// <returns>Returns whether or not the <see cref="DiscordUser"/> was found.</returns>
         public bool TryGetUser(string id, out DiscordUser user)
         {
             return cache.TryGet(id, out user);
         }
 
+        /// <summary>
+        /// Attempts to get a <see cref="DiscordGuild"/> by its id.
+        /// </summary>
+        /// <param name="id">The id of the <see cref="DiscordGuild"/>.</param>
+        /// <param name="guild">The found <see cref="DiscordGuild"/>.</param>
+        /// <returns>Returns whether or not the <see cref="DiscordGuild"/> was found.</returns>
         public bool TryGetGuild(string id, out DiscordGuild guild)
         {
             return cache.TryGet(id, out guild);
         }
 
+        /// <summary>
+        /// Attempts to get a <see cref="DiscordDMChannel"/> by its id.
+        /// </summary>
+        /// <param name="id">The id of the <see cref="DiscordDMChannel"/>.</param>
+        /// <param name="dmChannel">The found <see cref="DiscordDMChannel"/>.</param>
+        /// <returns>Returns whether or not the <see cref="DiscordDMChannel"/> was found.</returns>
         public bool TryGetDirectMessageChannel(string id, out DiscordDMChannel dmChannel)
         {
             return cache.TryGet(id, out dmChannel);
         }
 
+        /// <summary>
+        /// Attempts to get a <see cref="DiscordChannel"/> by its id.
+        /// </summary>
+        /// <param name="id">The id of the <see cref="DiscordChannel"/>.</param>
+        /// <param name="channel">The found <see cref="DiscordChannel"/>.</param>
+        /// <returns>Returns whether or not the <see cref="DiscordChannel"/> was found.</returns>
         public bool TryGetChannel(string id, out DiscordChannel channel)
         {
             return cache.TryGet(id, out channel);
         }
 
+        /// <summary>
+        /// Attempts to get a <see cref="DiscordVoiceClient"/> by the <see cref="DiscordGuild"/> it is in.
+        /// </summary>
+        /// <param name="guild">The <see cref="DiscordGuild"/> the <see cref="DiscordVoiceClient"/> is in.</param>
+        /// <param name="voiceClient">The found <see cref="DiscordVoiceClient"/>.</param>
+        /// <returns>Returns where or not the <see cref="DiscordVoiceClient"/> was found.</returns>
         public bool TryGetVoiceClient(DiscordGuild guild, out DiscordVoiceClient voiceClient)
         {
             return VoiceClients.TryGetValue(guild, out voiceClient);
@@ -663,6 +808,9 @@ namespace Discore
         #endregion
         #endregion
 
+        /// <summary>
+        /// Disposes of the client and disconnects from the Discord API.
+        /// </summary>
         public void Dispose()
         {
             Disconnect().Wait();

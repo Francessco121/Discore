@@ -1,24 +1,62 @@
 ﻿namespace Discore.Audio
 {
+    /// <summary>
+    /// Used to represent a user's voice connection status.
+    /// </summary>
     public class DiscordVoiceState : IDiscordObject
     {
+        /// <summary>
+        /// Gets the guild the user of this voice state is in.
+        /// </summary>
         public DiscordGuild Guild { get; internal set; }
+        /// <summary>
+        /// Gets the voice channel this user is in.
+        /// </summary>
         public DiscordGuildChannel Channel { get; internal set; }
+        /// <summary>
+        /// Gets the user this voice state is for.
+        /// </summary>
         public DiscordUser User { get; internal set; }
+        /// <summary>
+        /// Gets the current session id of this voice state.
+        /// </summary>
         public string SessionId { get; internal set; }
+        /// <summary>
+        /// Gets whether or not this user is server deaf.
+        /// </summary>
         public bool IsServerDeaf { get; internal set; }
+        /// <summary>
+        /// Gets whether or not this user is server mute.
+        /// </summary>
         public bool IsServerMute { get; internal set; }
+        /// <summary>
+        /// Gets whether or not this user has deafened themself.
+        /// </summary>
         public bool IsSelfDeaf { get; internal set; }
+        /// <summary>
+        /// Gets whether or not this user has muted themself.
+        /// </summary>
         public bool IsSelfMute { get; internal set; }
+        /// <summary>
+        /// Gets whether or not this user is muted by the active user connected to the API.
+        /// </summary>
         public bool IsSuppressed { get; internal set; }
 
         DiscordApiCache cache;
 
+        /// <summary>
+        /// Creates a new <see cref="DiscordVoiceState"/> instance.
+        /// </summary>
+        /// <param name="client">The associated <see cref="IDiscordClient"/>.</param>
         public DiscordVoiceState(IDiscordClient client)
         {
             cache = client.Cache;
         }
 
+        /// <summary>
+        /// Updates this voice state with the specified <see cref="DiscordApiData"/>.
+        /// </summary>
+        /// <param name="data">The data to update this voice state with.</param>
         public void Update(DiscordApiData data)
         {
             SessionId = data.GetString("session_id") ?? SessionId;
@@ -59,6 +97,10 @@
                 User = user;
         }
 
+        /// <summary>
+        /// Serializes this voice state into a <see cref="DiscordApiData"/> object.
+        /// </summary>
+        /// <returns>Returns a new <see cref="DiscordApiData"/> object with the properties of this voice state.</returns>
         public DiscordApiData Serialize()
         {
             DiscordApiData data = new DiscordApiData();
