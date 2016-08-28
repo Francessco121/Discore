@@ -127,9 +127,38 @@ namespace Discore
         /// Sends a message to this channel.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        public async Task<DiscordMessage> SendMessage(string message)
+        /// <param name="splitIfTooLong">Whether to split this call into multiple messages if above 2000 characters.</param>
+        /// <remarks>
+        /// If <code>splitIfTooLong</code> is set to true, the message returned will be the first chunk sent.
+        /// </remarks>
+        public async Task<DiscordMessage> SendMessage(string message, bool splitIfTooLong = false)
         {
-            return await Client.Rest.Messages.Send(this, message);
+            if (splitIfTooLong && message.Length > 2000)
+            {
+                DiscordMessage firstMsg = null;
+
+                int i = 0;
+                while (i < message.Length)
+                {
+                    int maxChars = Math.Min(2000, message.Length - i - 1);
+                    int lastNewLine = message.LastIndexOf('\n', i + maxChars, maxChars);
+                    string subMessage;
+                    if (lastNewLine > -1)
+                        subMessage = message.Substring(i, lastNewLine - i);
+                    else
+                        subMessage = message.Substring(i, maxChars);
+
+                    DiscordMessage msg = await Client.Rest.Messages.Send(this, subMessage);
+                    i += subMessage.Length;
+
+                    if (firstMsg == null)
+                        firstMsg = msg;
+                }
+
+                return firstMsg;
+            }
+            else
+                return await Client.Rest.Messages.Send(this, message);
         }
 
         /// <summary>
