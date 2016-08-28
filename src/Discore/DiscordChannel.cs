@@ -130,6 +130,7 @@ namespace Discore
         /// <param name="splitIfTooLong">Whether to split this call into multiple messages if above 2000 characters.</param>
         /// <remarks>
         /// If <code>splitIfTooLong</code> is set to true, the message returned will be the first chunk sent.
+        /// The message will be split by using newlines if possible to ensure the middle of a sentence isn't broken.
         /// </remarks>
         public async Task<DiscordMessage> SendMessage(string message, bool splitIfTooLong = false)
         {
