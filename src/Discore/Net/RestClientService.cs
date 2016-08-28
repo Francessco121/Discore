@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,10 +30,27 @@ namespace Discore.Net
                 return data;
             else
             {
-                long code = data.GetInt64("code") ?? 0;
-                string message = data.GetString("message");
+                IList<DiscordApiData> content = data.GetArray("content");
+                if (content != null)
+                {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < content.Count; i++)
+                    {
+                        sb.Append(content[i]);
 
-                throw new DiscordRestClientException(message, (RestErrorCode)code);
+                        if (i < content.Count - 1)
+                            sb.Append(", ");
+                    }
+
+                    throw new DiscordRestClientException(sb.ToString(), RestErrorCode.BadRequest);
+                }
+                else
+                {
+                    long code = data.GetInt64("code") ?? 0;
+                    string message = data.GetString("message");
+
+                    throw new DiscordRestClientException(message, (RestErrorCode)code);
+                }
             }
         }
 

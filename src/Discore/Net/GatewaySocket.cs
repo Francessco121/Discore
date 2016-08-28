@@ -28,6 +28,9 @@ namespace Discore.Net
 
         Thread heartbeatThread;
 
+        int connectionTimeOutAfterMs;
+        int lastHeartbeatAckMs;
+
         public GatewaySocket(DiscordClient client)
         {
             this.client = client;
@@ -37,7 +40,7 @@ namespace Discore.Net
             heartbeatThread = new Thread(HeartbeatLoop);
             heartbeatThread.Name = "GatewaySocket Heartbeat Thread";
             heartbeatThread.IsBackground = true;
-
+            
             socket = new DiscordClientWebSocket(client);
             cancelTokenSource = new CancellationTokenSource();
 
@@ -97,7 +100,7 @@ namespace Discore.Net
 
         public async Task Disconnect()
         {
-            await socket.Close(1000, "Disconnecting...");
+            await socket.Close(WebSocketCloseStatus.NormalClosure, "Disconnecting...");
             log.LogVerbose("Disconnecting from gateway socket...");
         }
 
@@ -139,6 +142,7 @@ namespace Discore.Net
                     break;
                 case GatewayOPCode.Heartbeat:
                 case GatewayOPCode.HeartbeatACK:
+                    lastHeartbeatAckMs = Environment.TickCount;
                     log.LogHeartbeat("Got heartbeat ack");
                     break;
                 default:
@@ -235,7 +239,13 @@ namespace Discore.Net
         #region HandlePayload*
         void HandleHelloPayload(DiscordApiData data)
         {
-            heartbeatInterval = data.GetInteger("heartbeat_interval") ?? 0;
+            int heartbeatInterval = data.GetInteger("heartbeat_interval") ?? 0;
+
+            // If we miss 5 heartbeat acknowledgments, it's safe to assume we timed out.
+            connectionTimeOutAfterMs = heartbeatInterval * 5;
+            lastHeartbeatAckMs = Environment.TickCount;
+
+            this.heartbeatInterval = heartbeatInterval;
             log.LogVerbose($"[HELLO] Heartbeat interval: {heartbeatInterval}ms");
         }
 
@@ -331,8 +341,16 @@ namespace Discore.Net
 
                 while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                 {
-                    SendHeartbeat();
-                    Thread.Sleep(heartbeatInterval);
+                    if (Environment.TickCount >= lastHeartbeatAckMs + connectionTimeOutAfterMs)
+                    {
+                        log.LogError($"Failed to receive heartbeat acknowledgement after {connectionTimeOutAfterMs}ms, disconnecting...");
+                        Disconnect().Wait();
+                    }
+                    else
+                    {
+                        SendHeartbeat();
+                        Thread.Sleep(heartbeatInterval);
+                    }
                 }
             }
             catch (Exception e)

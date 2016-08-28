@@ -13,6 +13,8 @@ namespace Discore.Audio
     {
         public DiscordGuildMember Member { get { return member; } }
 
+        public event EventHandler<Exception> OnFatalError;
+
         DiscordClientWebSocket socket;
         DiscordClient client;
         DiscordGuildMember member;
@@ -69,9 +71,15 @@ namespace Discore.Audio
             sendBuffer = new CircularBuffer((int)Math.Ceiling(BUFFER_LENGTH / (double)FRAME_LENGTH) * frameSize);
 
             socket.OnMessageReceived += VoiceSocket_OnMessageReceived;
+            socket.OnFatalError += Socket_OnFatalError;
 
             heartbeatThread.Start();
             sendThread.Start();
+        }
+
+        private void Socket_OnFatalError(object sender, Exception e)
+        {
+            OnFatalError?.Invoke(this, e);
         }
 
         private async void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)

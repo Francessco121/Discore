@@ -156,7 +156,7 @@ namespace Discore
         /// <param name="other">The other <see cref="DiscordUser"/> to check.</param>
         public bool Equals(DiscordUser other)
         {
-            return Id == other.Id;
+            return Id == other?.Id;
         }
 
         /// <summary>
@@ -191,12 +191,12 @@ namespace Discore
 #pragma warning disable 1591
         public static bool operator ==(DiscordUser a, DiscordUser b)
         {
-            return a.Id == b.Id;
+            return a?.Id == b?.Id;
         }
 
         public static bool operator !=(DiscordUser a, DiscordUser b)
         {
-            return a.Id != b.Id;
+            return a?.Id != b?.Id;
         }
 #pragma warning restore 1591
         #endregion

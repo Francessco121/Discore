@@ -15,6 +15,8 @@ namespace Discore.Net
 
         public event EventHandler<DiscordApiData> OnMessageReceived;
         public event EventHandler OnOpened;
+        public event EventHandler OnClosed;
+        public event EventHandler<Exception> OnFatalError;
 
         const int SEND_BUFFER_SIZE = 4 * 1024; // 4kb
         const int RECEIVE_BUFFER_SIZE = 12 * 1024; // 12kb
@@ -33,6 +35,8 @@ namespace Discore.Net
         MemoryStream receiveMs;
         ArraySegment<byte> receiveBuffer;
         byte[] sendBuffer;
+
+        bool isDisposed;
 
         public DiscordClientWebSocket(DiscordClient client)
         {
@@ -78,10 +82,10 @@ namespace Discore.Net
             return false;
         }
 
-        public async Task Close(int statusCode, string reason)
+        public async Task Close(WebSocketCloseStatus statusCode, string reason)
         {
             if (socket != null && socket.State == WebSocketState.Open)
-                await socket.CloseAsync((WebSocketCloseStatus)statusCode, reason, cancelTokenSource.Token);
+                await socket.CloseAsync(statusCode, reason, cancelTokenSource.Token);
         }
 
         public void Send(string json)
@@ -144,9 +148,25 @@ namespace Discore.Net
                     receiveMs.SetLength(0);
                 }
             }
+            catch (WebSocketException ex)
+            {
+                if (IsWebSocketErrorCodeFatal(ex.WebSocketErrorCode))
+                {
+                    log.LogError($"[{GetType().Name}:{ex.WebSocketErrorCode} ({(int)ex.WebSocketErrorCode})] "
+                        + "Socket encountered a fatal error, shutting down...");
+
+                    socket.Abort();
+                    OnFatalError?.Invoke(this, ex);
+                    client.EnqueueError(ex);
+                }
+            }
             catch (Exception e)
             {
                 client.EnqueueError(e);
+            }
+            finally
+            {
+                Dispose();
             }
         }
 
@@ -184,10 +204,33 @@ namespace Discore.Net
                         Thread.Sleep(100);
                 }
             }
-            catch (Exception e)
+            catch (WebSocketException ex)
             {
-                client.EnqueueError(e);
+                if (IsWebSocketErrorCodeFatal(ex.WebSocketErrorCode))
+                {
+                    log.LogError($"[{GetType().Name}:{ex.WebSocketErrorCode} ({(int)ex.WebSocketErrorCode})] "
+                        + "Socket encountered a fatal error, shutting down...");
+
+                    socket.Abort();
+                    OnFatalError?.Invoke(this, ex);
+                    client.EnqueueError(ex);
+                }
             }
+            catch (Exception ex)
+            {
+                client.EnqueueError(ex);
+            }
+            finally
+            {
+                Dispose();
+            }
+        }
+
+        bool IsWebSocketErrorCodeFatal(WebSocketError error)
+        {
+            return error == WebSocketError.ConnectionClosedPrematurely
+                || error == WebSocketError.Faulted
+                || error == WebSocketError.NativeError;
         }
 
         void InvokeOnMessageReceived(DiscordApiData data)
@@ -204,8 +247,14 @@ namespace Discore.Net
 
         public void Dispose()
         {
-            cancelTokenSource.Cancel();
-            socket.Dispose();
+            if (!isDisposed)
+            {
+                isDisposed = true;
+                cancelTokenSource.Cancel();
+                socket.Dispose();
+
+                OnClosed?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 }

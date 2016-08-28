@@ -186,7 +186,10 @@ namespace Discore
         /// </summary>
         public override string ToString()
         {
-            return value?.ToString() ?? base.ToString();
+            if (Type == DiscordApiDataType.Array)
+                return $"DiscordApiData[{values.Count}]";
+            else
+                return value?.ToString() ?? base.ToString();
         }
         #endregion
 

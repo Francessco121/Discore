@@ -117,7 +117,7 @@ namespace Discore
         /// <param name="other">The other <see cref="DiscordIntegration"/> to check.</param>
         public bool Equals(DiscordIntegration other)
         {
-            return Id == other.Id;
+            return Id == other?.Id;
         }
 
         /// <summary>
@@ -152,12 +152,12 @@ namespace Discore
 #pragma warning disable 1591
         public static bool operator ==(DiscordIntegration a, DiscordIntegration b)
         {
-            return a.Id == b.Id;
+            return a?.Id == b?.Id;
         }
 
         public static bool operator !=(DiscordIntegration a, DiscordIntegration b)
         {
-            return a.Id != b.Id;
+            return a?.Id != b?.Id;
         }
 #pragma warning restore 1591
         #endregion

@@ -59,7 +59,9 @@ namespace Discore.Net
         /// Must provide at least 2 and fewer than 100 messages to delete.
         /// </summary>
         ProvidedTooFewOrTooManyMessagesToDelete,
-        MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019
+        MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019,
+
+        BadRequest = int.MaxValue
     }
 }
 

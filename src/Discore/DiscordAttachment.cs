@@ -57,7 +57,7 @@
         /// <param name="other">The other <see cref="DiscordAttachment"/> to check.</param>
         public bool Equals(DiscordAttachment other)
         {
-            return Id == other.Id;
+            return Id == other?.Id;
         }
 
         /// <summary>
@@ -92,12 +92,12 @@
 #pragma warning disable 1591
         public static bool operator ==(DiscordAttachment a, DiscordAttachment b)
         {
-            return a.Id == b.Id;
+            return a?.Id == b?.Id;
         }
 
         public static bool operator !=(DiscordAttachment a, DiscordAttachment b)
         {
-            return a.Id != b.Id;
+            return a?.Id != b?.Id;
         }
 #pragma warning restore 1591
         #endregion

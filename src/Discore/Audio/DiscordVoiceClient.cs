@@ -9,13 +9,17 @@ namespace Discore.Audio
     public class DiscordVoiceClient : IDisposable
     {
         /// <summary>
-        /// Called when this <see cref="DiscordVoiceClient"/> finishes connecting to Discord.
+        /// Called when the voice connection finishes connecting to Discord.
         /// </summary>
         public event EventHandler<VoiceClientEventArgs> OnConnected;
         /// <summary>
-        /// Called when this <see cref="DiscordVoiceClient"/> is disposed and is no longer valid.
+        /// Called when the voice connection is disposed and is no longer valid.
         /// </summary>
         public event EventHandler<VoiceClientEventArgs> OnDisposed;
+        /// <summary>
+        /// Called when the voice connection unexpectedly closes.
+        /// </summary>
+        public event EventHandler<VoiceClientExceptionEventArgs> OnUnexpectedError;
 
         /// <summary>
         /// The <see cref="DiscordGuild"/> this voice client is connected to.
@@ -75,6 +79,7 @@ namespace Discore.Audio
         internal void SetSocket(VoiceSocket socket)
         {
             voiceSocket = socket;
+            voiceSocket.OnFatalError += VoiceSocket_OnFatalError;
 
             // Set speaking could have been called before the
             // socket arrived, so set it based on the last call.
@@ -83,6 +88,11 @@ namespace Discore.Audio
             isConnected = true;
 
             OnConnected?.Invoke(this, new VoiceClientEventArgs(this));
+        }
+
+        private void VoiceSocket_OnFatalError(object sender, Exception e)
+        {
+            OnUnexpectedError?.Invoke(this, new VoiceClientExceptionEventArgs(this, e));
         }
 
         /// <summary>

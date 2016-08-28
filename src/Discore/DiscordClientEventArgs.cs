@@ -115,6 +115,18 @@ namespace Discore
             VoiceClient = voiceClient;
         }
     }
+
+    public class VoiceClientExceptionEventArgs : EventArgs
+    {
+        public DiscordVoiceClient VoiceClient { get; }
+        public Exception Exception { get; }
+
+        public VoiceClientExceptionEventArgs(DiscordVoiceClient voiceClient, Exception exception)
+        {
+            VoiceClient = voiceClient;
+            Exception = exception;
+        }
+    }
 }
 
 #pragma warning restore 1591

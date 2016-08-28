@@ -46,55 +46,12 @@
 
         #region Object Overrides
         /// <summary>
-        /// Determines whether the specified <see cref="DiscordDMChannel"/> is equal 
-        /// to the current channel.
-        /// </summary>
-        /// <param name="other">The other <see cref="DiscordDMChannel"/> to check.</param>
-        public bool Equals(DiscordDMChannel other)
-        {
-            return Id == other.Id;
-        }
-
-        /// <summary>
-        /// Determines whether the specified object is equal to the current channel.
-        /// </summary>
-        /// <param name="obj">The other object to check.</param>
-        public override bool Equals(object obj)
-        {
-            DiscordDMChannel other = obj as DiscordDMChannel;
-            if (ReferenceEquals(other, null))
-                return false;
-            else
-                return Equals(other);
-        }
-
-        /// <summary>
-        /// Returns the hash of this channel.
-        /// </summary>
-        public override int GetHashCode()
-        {
-            return Id.GetHashCode();
-        }
-
-        /// <summary>
         /// Returns the name of the recipient of this dm channel.
         /// </summary>
         public override string ToString()
         {
             return Recipient.Username;
         }
-
-#pragma warning disable 1591
-        public static bool operator ==(DiscordDMChannel a, DiscordDMChannel b)
-        {
-            return a.Id == b.Id;
-        }
-
-        public static bool operator !=(DiscordDMChannel a, DiscordDMChannel b)
-        {
-            return a.Id != b.Id;
-        }
-#pragma warning restore 1591
         #endregion
     }
 }

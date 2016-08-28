@@ -52,7 +52,7 @@
         /// <param name="other">The other <see cref="DiscordVoiceRegion"/> to check.</param>
         public bool Equals(DiscordVoiceRegion other)
         {
-            return Id == other.Id;
+            return Id == other?.Id;
         }
 
         /// <summary>
@@ -87,12 +87,12 @@
 #pragma warning disable 1591
         public static bool operator ==(DiscordVoiceRegion a, DiscordVoiceRegion b)
         {
-            return a.Id == b.Id;
+            return a?.Id == b?.Id;
         }
 
         public static bool operator !=(DiscordVoiceRegion a, DiscordVoiceRegion b)
         {
-            return a.Id != b.Id;
+            return a?.Id != b?.Id;
         }
 #pragma warning restore 1591
         #endregion

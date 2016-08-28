@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -126,16 +127,9 @@ namespace Discore
         /// Sends a message to this channel.
         /// </summary>
         /// <param name="message">The message to send.</param>
-        public async void SendMessage(string message)
+        public async Task<DiscordMessage> SendMessage(string message)
         {
-            try
-            {
-                await Client.Rest.Messages.Send(this, message);
-            }
-            catch (Exception ex)
-            {
-                DiscordLogger.Default.LogError($"[DiscordChannel] {ex}");
-            }
+            return await Client.Rest.Messages.Send(this, message);
         }
 
         /// <summary>
@@ -143,16 +137,9 @@ namespace Discore
         /// </summary>
         /// <param name="message">The message to send.</param>
         /// <param name="file">The file data to attach.</param>
-        public async void SendMessage(string message, byte[] file)
+        public async Task<DiscordMessage> SendMessage(string message, byte[] file)
         {
-            try
-            {
-                await Client.Rest.Messages.Send(this, message, file);
-            }
-            catch (Exception ex)
-            {
-                DiscordLogger.Default.LogError($"[DiscordChannel] {ex}");
-            }
+            return await Client.Rest.Messages.Send(this, message, file);
         }
 
         /// <summary>
@@ -169,7 +156,7 @@ namespace Discore
         /// <param name="other">The other <see cref="DiscordChannel"/> to check.</param>
         public bool Equals(DiscordChannel other)
         {
-            return Id == other.Id;
+            return Id == other?.Id;
         }
 
         /// <summary>
@@ -196,12 +183,12 @@ namespace Discore
 #pragma warning disable 1591
         public static bool operator ==(DiscordChannel a, DiscordChannel b)
         {
-            return a.Id == b.Id;
+            return a?.Id == b?.Id;
         }
 
         public static bool operator !=(DiscordChannel a, DiscordChannel b)
         {
-            return a.Id != b.Id;
+            return a?.Id != b?.Id;
         }
 #pragma warning restore 1591
         #endregion
