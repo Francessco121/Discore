@@ -171,7 +171,7 @@ namespace Discore.Audio
         {
             DiscordApiData selectProtocol = new DiscordApiData();
             selectProtocol.Set("protocol", "udp");
-            DiscordApiData data = selectProtocol.CreateNestedContainer("data");
+            DiscordApiData data = selectProtocol.Set("data", DiscordApiData.CreateContainer());
             data.Set("address", ip);
             data.Set("port", port);
             data.Set("mode", "xsalsa20_poly1305");
@@ -207,7 +207,7 @@ namespace Discore.Audio
 
         void HandleSessionDescriptionPayload(DiscordApiData data)
         {
-            IReadOnlyList<DiscordApiData> secretKey = data.GetArray("secret_key");
+            IList<DiscordApiData> secretKey = data.GetArray("secret_key");
             key = new byte[secretKey.Count];
             for (int i = 0; i < secretKey.Count; i++)
                 key[i] = (byte)secretKey[i].ToInteger();

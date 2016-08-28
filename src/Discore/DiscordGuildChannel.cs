@@ -113,7 +113,7 @@ namespace Discore
             Bitrate       = data.GetInteger("bitrate") ?? Bitrate;
             UserLimit     = data.GetInteger("user_limit") ?? UserLimit;
 
-            IReadOnlyList<DiscordApiData> permissionOverwrites = data.GetArray("permission_overwrites");
+            IList<DiscordApiData> permissionOverwrites = data.GetArray("permission_overwrites");
             if (permissionOverwrites != null)
             {
                 RolePermissionOverwrites.Clear();

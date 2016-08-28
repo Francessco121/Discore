@@ -176,7 +176,7 @@ namespace Discore
             JoinedAt = data.GetDateTime("joined_at") ?? JoinedAt;
 
             // Update roles
-            IReadOnlyList<DiscordApiData> rolesData = data.GetArray("roles");
+            IList<DiscordApiData> rolesData = data.GetArray("roles");
             if (rolesData != null)
             {
                 Roles = new DiscordRole[rolesData.Count];

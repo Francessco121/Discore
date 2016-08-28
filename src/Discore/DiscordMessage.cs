@@ -137,7 +137,7 @@ namespace Discore
                 }
             }
 
-            IReadOnlyList<DiscordApiData> mentionsData = data.GetArray("mentions");
+            IList<DiscordApiData> mentionsData = data.GetArray("mentions");
             if (mentionsData != null)
             {
                 Mentions = new DiscordUser[mentionsData.Count];
@@ -150,7 +150,7 @@ namespace Discore
                 }
             }
 
-            IReadOnlyList<DiscordApiData> attachmentsJson = data.GetArray("attachments");
+            IList<DiscordApiData> attachmentsJson = data.GetArray("attachments");
             if (attachmentsJson != null)
             {
                 Attachments = new DiscordAttachment[attachmentsJson.Count];
@@ -162,7 +162,7 @@ namespace Discore
                 }
             }
 
-            IReadOnlyList<DiscordApiData> embedsData = data.GetArray("embeds");
+            IList<DiscordApiData> embedsData = data.GetArray("embeds");
             if (embedsData != null)
             {
                 Embeds = new DiscordEmbed[embedsData.Count];

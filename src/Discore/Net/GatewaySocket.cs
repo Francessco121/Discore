@@ -175,7 +175,7 @@ namespace Discore.Net
 
             if (game != null)
             {
-                DiscordApiData gameData = statusUpdate.CreateNestedContainer("game");
+                DiscordApiData gameData = statusUpdate.Set("game", DiscordApiData.CreateContainer());
                 gameData.Set("name", game);
                 gameData.Set("url", "");
                 gameData.Set("type", (int)gameType);
@@ -203,7 +203,7 @@ namespace Discore.Net
             identify.Set("compress", true);
             identify.Set("large_threshold", 250);
 
-            DiscordApiData properties = identify.CreateNestedContainer("properties");
+            DiscordApiData properties = identify.Set("properties", DiscordApiData.CreateContainer());
             properties.Set("$os", "linux");
             properties.Set("$browser", "discordio_sharp");
             properties.Set("$device", "discordio_sharp");

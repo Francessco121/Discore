@@ -355,7 +355,7 @@ namespace Discore
             DiscordGuild guild;
             if (cache.TryGet(guildId, out guild))
             {
-                IReadOnlyList<DiscordApiData> members = data.GetArray("members");
+                IList<DiscordApiData> members = data.GetArray("members");
                 DiscordGuildMember[] finalMembers = new DiscordGuildMember[members.Count];
                 for (int i = 0; i < members.Count; i++)
                 {
@@ -516,7 +516,7 @@ namespace Discore
         public DiscordMessage[] DeleteMessageBulk(DiscordApiData data)
         {
             string channelId = data.GetString("channel_id");
-            IReadOnlyList<DiscordApiData> ids = data.GetArray("ids");
+            IList<DiscordApiData> ids = data.GetArray("ids");
             DiscordMessage[] messages = new DiscordMessage[ids.Count];
             for (int i = 0; i < ids.Count; i++)
             {

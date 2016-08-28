@@ -67,7 +67,7 @@ namespace Discore
         /// If an array type, contains the stored list of DiscordApiData objects.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not an array.</exception>
-        public IReadOnlyList<DiscordApiData> Values
+        public IList<DiscordApiData> Values
         {
             get
             {
@@ -78,7 +78,17 @@ namespace Discore
 
         Dictionary<string, DiscordApiData> data;
         object value;
-        DiscordApiData[] values;
+        IList<DiscordApiData> values;
+
+        private DiscordApiData(DiscordApiDataType type)
+        {
+            Type = type;
+
+            if (type == DiscordApiDataType.Array)
+                values = new List<DiscordApiData>();
+            else if (type == DiscordApiDataType.Container)
+                data = new Dictionary<string, DiscordApiData>();
+        }
 
         /// <summary>
         /// Creates a new container type DiscordApiData object.
@@ -101,7 +111,7 @@ namespace Discore
         /// <summary>
         /// Creates a new array type DiscordApiData object.
         /// </summary>
-        public DiscordApiData(DiscordApiData[] values)
+        public DiscordApiData(IList<DiscordApiData> values)
         {
             this.values = values;
             Type = DiscordApiDataType.Array;
@@ -315,7 +325,7 @@ namespace Discore
         /// If a container type, gets the array at the given key.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public IReadOnlyList<DiscordApiData> GetArray(string key)
+        public IList<DiscordApiData> GetArray(string key)
         {
             AssertContainer();
 
@@ -368,19 +378,6 @@ namespace Discore
             DiscordApiData arrayValue = new DiscordApiData(dataArray);
             data[key] = arrayValue;
             return arrayValue;
-        }
-
-        /// <summary>
-        /// Creates a nested DiscordApiData that can hold its own data.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData CreateNestedContainer(string key)
-        {
-            AssertContainer();
-
-            DiscordApiData nestedData = new DiscordApiData();
-            data[key] = nestedData;
-            return nestedData;
         }
 
         /// <summary>
@@ -535,12 +532,36 @@ namespace Discore
         /// </summary>
         /// <see cref="Locate(string)"/>
         /// <param name="path">A dot seperated path to the array.</param>
-        public DiscordApiData[] LocateArray(string path)
+        public IList<DiscordApiData> LocateArray(string path)
         {
             DiscordApiData data = Locate(path);
             return data != null ? data.values : null;
         }
         #endregion
+
+        /// <summary>
+        /// Creates a new value-type <see cref="DiscordApiData"/>.
+        /// </summary>
+        public static DiscordApiData CreateValue()
+        {
+            return new DiscordApiData(DiscordApiDataType.Value);
+        }
+
+        /// <summary>
+        /// Creates a new container-type <see cref="DiscordApiData"/>.
+        /// </summary>
+        public static DiscordApiData CreateContainer()
+        {
+            return new DiscordApiData(DiscordApiDataType.Container);
+        }
+
+        /// <summary>
+        /// Creates a new array-type <see cref="DiscordApiData"/>.
+        /// </summary>
+        public static DiscordApiData CreateArray()
+        {
+            return new DiscordApiData(DiscordApiDataType.Array);
+        }
 
         /// <summary>
         /// Serializes this api data object to a JSON string.
@@ -578,11 +599,11 @@ namespace Discore
             writer.WriteEndObject();
         }
 
-        void ApiDataArrayToJson(DiscordApiData[] apiDataArray, JsonTextWriter writer)
+        void ApiDataArrayToJson(IList<DiscordApiData> apiDataArray, JsonTextWriter writer)
         {
             writer.WriteStartArray();
 
-            for (int i = 0; i < apiDataArray.Length; i++)
+            for (int i = 0; i < apiDataArray.Count; i++)
             {
                 DiscordApiData apiData = apiDataArray[i];
                 ApiDataToJson(apiData, writer);
@@ -659,7 +680,7 @@ namespace Discore
             }
         }
 
-        static void JArrayToApiDataArray(DiscordApiData[] apiDataArray, JArray array)
+        static void JArrayToApiDataArray(IList<DiscordApiData> apiDataArray, JArray array)
         {
             for (int i = 0; i < array.Count; i++)
             {

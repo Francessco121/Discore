@@ -180,7 +180,7 @@ namespace Discore
             VerificationLevel = data.GetInteger("verification_level") ?? VerificationLevel;
 
             // Update features
-            IReadOnlyList<DiscordApiData> featuresData = data.GetArray("features");
+            IList<DiscordApiData> featuresData = data.GetArray("features");
             if (featuresData != null)
             {
                 Features = new string[featuresData.Count];
@@ -189,7 +189,7 @@ namespace Discore
             }
 
             // Update roles
-            IReadOnlyList<DiscordApiData> rolesData = data.GetArray("roles");
+            IList<DiscordApiData> rolesData = data.GetArray("roles");
             if (rolesData != null)
             {
                 foreach (DiscordApiData roleData in rolesData)
@@ -204,7 +204,7 @@ namespace Discore
             }
 
             // Update emojis
-            IReadOnlyList<DiscordApiData> emojisData = data.GetArray("emojis");
+            IList<DiscordApiData> emojisData = data.GetArray("emojis");
             if (emojisData != null)
             {
                 foreach (DiscordApiData emojiData in emojisData)
@@ -215,7 +215,7 @@ namespace Discore
             }
 
             // Update channels
-            IReadOnlyList<DiscordApiData> channelsData = data.GetArray("channels");
+            IList<DiscordApiData> channelsData = data.GetArray("channels");
             if (channelsData != null)
             {
                 foreach (DiscordApiData channelData in channelsData)
@@ -229,7 +229,7 @@ namespace Discore
             string ownerId = data.GetString("owner_id");
 
             // Update members
-            IReadOnlyList<DiscordApiData> membersData = data.GetArray("members");
+            IList<DiscordApiData> membersData = data.GetArray("members");
             if (membersData != null)
             {
                 foreach (DiscordApiData memberData in membersData)
@@ -244,7 +244,7 @@ namespace Discore
             }
 
             // Update voice states
-            IReadOnlyList<DiscordApiData> voiceStatesData = data.GetArray("voice_states");
+            IList<DiscordApiData> voiceStatesData = data.GetArray("voice_states");
             if (voiceStatesData != null)
             {
                 foreach (DiscordApiData voiceStateData in voiceStatesData)

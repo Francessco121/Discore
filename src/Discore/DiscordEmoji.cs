@@ -56,7 +56,7 @@ namespace Discore
             RequireColons = data.GetBoolean("require_colons") ?? RequireColons;
             Managed = data.GetBoolean("managed") ?? Managed;
 
-            IReadOnlyList<DiscordApiData> roles = data.GetArray("roles");
+            IList<DiscordApiData> roles = data.GetArray("roles");
             if (roles != null)
             {
                 Roles = new DiscordRole[roles.Count];
