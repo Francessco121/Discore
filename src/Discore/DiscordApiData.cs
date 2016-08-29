@@ -76,6 +76,26 @@ namespace Discore
             }
         }
 
+        /// <summary>
+        /// If a container type, gets all stored entries.
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, DiscordApiData>> Entries
+        {
+            get
+            {
+                AssertContainer();
+                return data;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether the stored data is null.
+        /// </summary>
+        public bool IsNull
+        {
+            get { return Type == DiscordApiDataType.Value ? ReferenceEquals(value, null) : false; }
+        }
+
         Dictionary<string, DiscordApiData> data;
         object value;
         IList<DiscordApiData> values;
@@ -631,6 +651,9 @@ namespace Discore
         /// </summary>
         public static DiscordApiData FromJson(string json)
         {
+            if (string.IsNullOrWhiteSpace(json))
+                return new DiscordApiData(value: null);
+
             JToken jToken = JsonConvert.DeserializeObject<JToken>(json);
 
             DiscordApiData data;

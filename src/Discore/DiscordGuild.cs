@@ -254,7 +254,21 @@ namespace Discore
                     if (cache.TryGet(this, memberId, out member))
                         member.VoiceState.Update(voiceStateData);
                     else
-                        DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}] Failed to locate member with id {memberId}");
+                        DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}:VoiceStates] Failed to locate member with id {memberId}");
+                }
+            }
+
+            IList<DiscordApiData> presences = data.GetArray("presences");
+            if (presences != null)
+            {
+                foreach (DiscordApiData presence in presences)
+                {
+                    string memberId = presence.LocateString("user.id");
+                    DiscordGuildMember member;
+                    if (cache.TryGet(this, memberId, out member))
+                        member.Update(presence);
+                    else
+                        DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}:Presences] Failed to locate member with id {memberId}");
                 }
             }
         }

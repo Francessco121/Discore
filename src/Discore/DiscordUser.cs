@@ -124,10 +124,15 @@ namespace Discore
             DiscordApiData gameData = data.Get("game");
             if (gameData != null)
             {
-                if (Game == null)
-                    Game = new DiscordGame();
+                if (gameData.IsNull)
+                    Game = null;
+                else
+                {
+                    if (Game == null)
+                        Game = new DiscordGame();
 
-                Game.Update(gameData);
+                    Game.Update(gameData);
+                }
             }
 
             string status = data.GetString("status");

@@ -141,19 +141,24 @@ namespace Discore
                 int i = 0;
                 while (i < message.Length)
                 {
-                    int maxChars = Math.Min(2000, message.Length - i - 1);
-                    int lastNewLine = message.LastIndexOf('\n', i + maxChars, maxChars);
+                    int maxChars = Math.Min(2000, message.Length - i);
+                    int lastNewLine = message.LastIndexOf('\n', i + maxChars - 1, maxChars - 1);
+
                     string subMessage;
                     if (lastNewLine > -1)
                         subMessage = message.Substring(i, lastNewLine - i);
                     else
                         subMessage = message.Substring(i, maxChars);
 
-                    DiscordMessage msg = await Client.Rest.Messages.Send(this, subMessage);
-                    i += subMessage.Length;
+                    if (!string.IsNullOrWhiteSpace(subMessage))
+                    {
+                        DiscordMessage msg = await Client.Rest.Messages.Send(this, subMessage);
 
-                    if (firstMsg == null)
-                        firstMsg = msg;
+                        if (firstMsg == null)
+                            firstMsg = msg;
+                    }
+
+                    i += subMessage.Length;
                 }
 
                 return firstMsg;

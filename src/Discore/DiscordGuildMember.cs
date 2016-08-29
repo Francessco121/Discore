@@ -202,6 +202,8 @@ namespace Discore
                 User = cache.AddOrUpdate(userId, userData, () => { return new DiscordUser(); });
             }
 
+            User?.Update(data);
+
             // Update voice state
             VoiceState.Update(data);
         }

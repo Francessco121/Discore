@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -83,18 +84,18 @@ namespace Discore
         /// Changes the contents of this message.
         /// </summary>
         /// <param name="newContent">The new contents.</param>
-        public void Edit(string newContent)
+        public async Task<DiscordMessage> Edit(string newContent)
         {
             Content = newContent;
-            client.Rest.Messages.Edit(Channel, Id, newContent);
+            return await client.Rest.Messages.Edit(Channel, Id, newContent);
         }
 
         /// <summary>
         /// Deletes this message.
         /// </summary>
-        public void Delete()
+        public async Task<bool> Delete()
         {
-            client.Rest.Messages.Delete(Channel, Id);
+            return await client.Rest.Messages.Delete(Channel, Id);
         }
 
         /// <summary>

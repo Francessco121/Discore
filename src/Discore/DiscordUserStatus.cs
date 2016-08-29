@@ -6,16 +6,16 @@
     public enum DiscordUserStatus
     {
         /// <summary>
-        /// The <see cref="DiscordUser"/> is online.
+        /// The <see cref="DiscordUser"/> is offline.
         /// </summary>
-        Online,
+        Offline,
         /// <summary>
         /// The <see cref="DiscordUser"/> is idle.
         /// </summary>
         Idle,
         /// <summary>
-        /// The <see cref="DiscordUser"/> is offline.
+        /// The <see cref="DiscordUser"/> is online.
         /// </summary>
-        Offline
+        Online
     }
 }
