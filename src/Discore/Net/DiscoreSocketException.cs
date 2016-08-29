@@ -1,4 +1,6 @@
-﻿namespace Discore
+﻿using System.Net.WebSockets;
+
+namespace Discore
 {
     /// <summary>
     /// An exception thrown by a socket connection in Discore.
@@ -6,11 +8,19 @@
     public class DiscoreSocketException : DiscoreException
     {
         /// <summary>
+        /// The error code that caused the socket exception.
+        /// </summary>
+        public WebSocketCloseStatus ErrorCode { get; }
+
+        /// <summary>
         /// Creates a <see cref="DiscoreSocketException"/>
         /// </summary>
         /// <param name="message">The message of the <see cref="DiscoreSocketException"/>.</param>
-        public DiscoreSocketException(string message)
-            : base(message)
-        { }
+        /// <param name="errorCode">The error code that caused the exception.</param>
+        public DiscoreSocketException(string message, WebSocketCloseStatus errorCode)
+            : base($"{message} ({(int)errorCode})")
+        {
+            ErrorCode = errorCode;
+        }
     }
 }

@@ -110,8 +110,7 @@ namespace Discore.Net
                         result = socket.ReceiveAsync(receiveBuffer, cancelTokenSource.Token).Result;
 
                         if (result.MessageType == WebSocketMessageType.Close)
-                            throw new DiscordGatewayException((GatewayDisconnectCode)result.CloseStatus.Value,
-                                result.CloseStatusDescription);
+                            throw new DiscoreSocketException(result.CloseStatusDescription, result.CloseStatus.Value);
                         else
                             receiveMs.Write(receiveBuffer.Array, 0, result.Count);
                     }
@@ -160,9 +159,14 @@ namespace Discore.Net
                     client.EnqueueError(ex);
                 }
             }
-            catch (Exception e)
+            catch (DiscoreSocketException ex)
             {
-                client.EnqueueError(e);
+                client.EnqueueError(ex);
+                OnFatalError?.Invoke(this, ex);
+            }
+            catch (Exception ex)
+            {
+                client.EnqueueError(ex);
             }
             finally
             {

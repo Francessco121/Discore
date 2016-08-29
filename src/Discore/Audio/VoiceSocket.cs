@@ -239,7 +239,7 @@ namespace Discore.Audio
         /// https://github.com/RogueException/Discord.Net/blob/master/src/Discord.Net.Audio/Net/VoiceSocket.cs#L263
         /// TODO: Custom original implementation.
         /// </summary>
-        async void SendLoop()
+        void SendLoop()
         {
             try
             {
@@ -310,7 +310,7 @@ namespace Discore.Audio
                     {
                         if (hasFrame)
                         {
-                            await udpSocket.Send(voicePacket, rtpPacketLength).ConfigureAwait(true);
+                            udpSocket.Send(voicePacket, rtpPacketLength).Wait();
                             hasFrame = false;
                         }
 
@@ -331,7 +331,7 @@ namespace Discore.Audio
                                     break;
                                 }
                             }
-                            await udpSocket.Send(pingPacket, pingPacket.Length).ConfigureAwait(true);
+                            udpSocket.Send(pingPacket, pingPacket.Length).Wait();
                             nextPingTicks = currentTicks + 5 * ticksPerSeconds;
                         }
                     }

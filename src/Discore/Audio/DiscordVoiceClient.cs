@@ -92,6 +92,7 @@ namespace Discore.Audio
 
         private void VoiceSocket_OnFatalError(object sender, Exception e)
         {
+            Disconnect();
             OnUnexpectedError?.Invoke(this, new VoiceClientExceptionEventArgs(this, e));
         }
 

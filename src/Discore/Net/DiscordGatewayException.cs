@@ -1,4 +1,6 @@
-﻿namespace Discore.Net
+﻿using System.Net.WebSockets;
+
+namespace Discore.Net
 {
     /// <summary>
     /// An exception thrown by an <see cref="IDiscordGateway"/> instance.
@@ -11,7 +13,7 @@
         public GatewayDisconnectCode DisconnectCode { get; }
 
         internal DiscordGatewayException(GatewayDisconnectCode dcCode, string message)
-            : base($"[{dcCode}:{(int)dcCode}] {message}")
+            : base($"[{dcCode}:{(int)dcCode}] {message}", (WebSocketCloseStatus)dcCode)
         {
             DisconnectCode = dcCode;
         }

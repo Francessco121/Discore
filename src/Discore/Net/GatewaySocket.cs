@@ -46,6 +46,19 @@ namespace Discore.Net
 
             socket.OnMessageReceived += Socket_OnMessageReceived;
             socket.OnOpened += Socket_OnOpened;
+            socket.OnFatalError += Socket_OnFatalError;
+        }
+
+        private void Socket_OnFatalError(object sender, Exception e)
+        {
+            DiscoreSocketException socketEx = e as DiscoreSocketException;
+            if (socketEx != null)
+            {
+                DiscordGatewayException gex = new DiscordGatewayException(
+                    (GatewayDisconnectCode)socketEx.ErrorCode, socketEx.Message);
+
+                log.LogError(gex);
+            }
         }
 
         private void Socket_OnOpened(object sender, EventArgs e)
