@@ -51,7 +51,7 @@ namespace Discore
             cache = client.Cache;
 
             Guild = guild;
-            VoiceState = new DiscordVoiceState(client);
+            VoiceState = new DiscordVoiceState(client, this);
         }
 
         /// <summary>
@@ -205,7 +205,7 @@ namespace Discore
             User?.Update(data);
 
             // Update voice state
-            VoiceState.Update(data);
+            VoiceState.UpdateFromGuildMemberUpdate(data);
         }
 
         #region Object Overrides

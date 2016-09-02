@@ -98,6 +98,16 @@
         }
 
         /// <summary>
+        /// Updates this voice state based on details about a <see cref="DiscordGuildMember"/>.
+        /// </summary>
+        /// <param name="data">The data used to update the <see cref="DiscordGuildMember"/>.</param>
+        public void UpdateFromGuildMemberUpdate(DiscordApiData data)
+        {
+            IsServerDeaf = data.GetBoolean("deaf") ?? IsServerDeaf;
+            IsServerMute = data.GetBoolean("mute") ?? IsServerMute;
+        }
+
+        /// <summary>
         /// Serializes this voice state into a <see cref="DiscordApiData"/> object.
         /// </summary>
         /// <returns>Returns a new <see cref="DiscordApiData"/> object with the properties of this voice state.</returns>
