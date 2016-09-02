@@ -133,7 +133,7 @@ namespace Discore
         /// </summary>
         public DiscordApiData(IList<DiscordApiData> values)
         {
-            this.values = values;
+            this.values = values is Array ? new List<DiscordApiData>(values) : values;
             Type = DiscordApiDataType.Array;
         }
 
@@ -390,15 +390,15 @@ namespace Discore
         /// Sets a value in this api data container.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData Set<T>(string key, T[] array)
+        public DiscordApiData Set<T>(string key, IList<T> array)
         {
             AssertContainer();
 
-            DiscordApiData[] dataArray = new DiscordApiData[array.Length];
-            for (int i = 0; i < array.Length; i++)
-                dataArray[i] = new DiscordApiData(array[i]);
+            List<DiscordApiData> dataList = new List<DiscordApiData>();
+            for (int i = 0; i < array.Count; i++)
+                dataList.Add(new DiscordApiData(array[i]));
 
-            DiscordApiData arrayValue = new DiscordApiData(dataArray);
+            DiscordApiData arrayValue = new DiscordApiData(dataList);
             data[key] = arrayValue;
             return arrayValue;
         }
@@ -698,8 +698,8 @@ namespace Discore
                     JArray array = (JArray)token;
                     DiscordApiData[] dataArray = new DiscordApiData[array.Count];
 
-                    apiData.data[key] = new DiscordApiData(dataArray);
                     JArrayToApiDataArray(dataArray, array);
+                    apiData.data[key] = new DiscordApiData(dataArray);
                 }
                 else
                     apiData.data[key] = new DiscordApiData(token.ToObject<object>());
