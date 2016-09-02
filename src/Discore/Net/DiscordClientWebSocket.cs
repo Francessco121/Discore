@@ -149,20 +149,29 @@ namespace Discore.Net
             }
             catch (WebSocketException ex)
             {
-                if (IsWebSocketErrorCodeFatal(ex.WebSocketErrorCode))
-                {
-                    log.LogError($"[{GetType().Name}:{ex.WebSocketErrorCode} ({(int)ex.WebSocketErrorCode})] "
-                        + "Socket encountered a fatal error, shutting down...");
-
-                    socket.Abort();
-                    OnFatalError?.Invoke(this, ex);
-                    client.EnqueueError(ex);
-                }
+                LogWebSocketError(ex);
             }
             catch (DiscoreSocketException ex)
             {
                 client.EnqueueError(ex);
                 OnFatalError?.Invoke(this, ex);
+            }
+            catch (AggregateException aex)
+            {
+                WebSocketException wse = aex.InnerException as WebSocketException;
+                if (wse != null)
+                {
+                    // InvalidState from an aggregate exception can only come from the socket receive async,
+                    // this is thrown when the socket is canceled. (once the proper .net core websocket implementation
+                    // comes out, this can probably be cleaned up).
+
+                    // TODO: When we move to stable release of dotnet core with linux websocket support,
+                    // clean this up.
+                    if (wse.WebSocketErrorCode != WebSocketError.InvalidState)
+                    {
+                        LogWebSocketError(wse);
+                    }
+                }   
             }
             catch (Exception ex)
             {
@@ -171,6 +180,19 @@ namespace Discore.Net
             finally
             {
                 Dispose();
+            }
+        }
+
+        void LogWebSocketError(WebSocketException ex)
+        {
+            if (IsWebSocketErrorCodeFatal(ex.WebSocketErrorCode))
+            {
+                log.LogError($"[{GetType().Name}:{ex.WebSocketErrorCode} ({(int)ex.WebSocketErrorCode})] "
+                    + "Socket encountered a fatal error, shutting down...");
+
+                socket.Abort();
+                OnFatalError?.Invoke(this, ex);
+                client.EnqueueError(ex);
             }
         }
 
@@ -210,14 +232,23 @@ namespace Discore.Net
             }
             catch (WebSocketException ex)
             {
-                if (IsWebSocketErrorCodeFatal(ex.WebSocketErrorCode))
+                LogWebSocketError(ex);
+            }
+            catch (AggregateException aex)
+            {
+                WebSocketException wse = aex.InnerException as WebSocketException;
+                if (wse != null)
                 {
-                    log.LogError($"[{GetType().Name}:{ex.WebSocketErrorCode} ({(int)ex.WebSocketErrorCode})] "
-                        + "Socket encountered a fatal error, shutting down...");
+                    // InvalidState from an aggregate exception can only come from the socket send async,
+                    // this is thrown when the socket is canceled. (once the proper .net core websocket implementation
+                    // comes out, this can probably be cleaned up).
 
-                    socket.Abort();
-                    OnFatalError?.Invoke(this, ex);
-                    client.EnqueueError(ex);
+                    // TODO: When we move to stable release of dotnet core with linux websocket support,
+                    // clean this up.
+                    if (wse.WebSocketErrorCode != WebSocketError.InvalidState)
+                    {
+                        LogWebSocketError(wse);
+                    }
                 }
             }
             catch (Exception ex)
