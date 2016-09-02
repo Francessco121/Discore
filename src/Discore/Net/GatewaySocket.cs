@@ -176,7 +176,10 @@ namespace Discore.Net
 
         public void SendVoiceStateUpdate(DiscordGuild guild, DiscordGuildChannel voiceChannel)
         {
-            DiscordVoiceState stateUpdate = new DiscordVoiceState(client);
+            DiscordGuildMember member;
+            guild.TryGetMember(client.User.Id, out member);
+
+            DiscordVoiceState stateUpdate = new DiscordVoiceState(client, member);
             stateUpdate.Guild = guild;
             stateUpdate.Channel = voiceChannel;
             stateUpdate.User = client.User;

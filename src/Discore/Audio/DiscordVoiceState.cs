@@ -18,6 +18,10 @@
         /// </summary>
         public DiscordUser User { get; internal set; }
         /// <summary>
+        /// Gets the member this voice state is for.
+        /// </summary>
+        public DiscordGuildMember Member { get; private set; }
+        /// <summary>
         /// Gets the current session id of this voice state.
         /// </summary>
         public string SessionId { get; internal set; }
@@ -48,9 +52,11 @@
         /// Creates a new <see cref="DiscordVoiceState"/> instance.
         /// </summary>
         /// <param name="client">The associated <see cref="IDiscordClient"/>.</param>
-        public DiscordVoiceState(IDiscordClient client)
+        /// <param name="member">The <see cref="DiscordGuildMember"/> this voice state is for.</param>
+        public DiscordVoiceState(IDiscordClient client, DiscordGuildMember member)
         {
             cache = client.Cache;
+            Member = member;
         }
 
         /// <summary>
@@ -85,7 +91,10 @@
                 if (!cache.TryGet(channelId, out voiceChannel))
                     DiscordLogger.Default.LogWarning($"[VOICE_STATE.UPDATE] Failed to locate voice channel with id {channelId}");
                 else
+                {
                     Channel = (DiscordGuildChannel)voiceChannel;
+                    Channel.AddMemberInVoice(Member);
+                }
             }
             else
                 Channel = null;

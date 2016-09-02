@@ -2,6 +2,7 @@
 using Discore.Net;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore
 {
@@ -60,6 +61,52 @@ namespace Discore
         public int UserLimit { get; private set; }
 
         /// <summary>
+        /// Gets the number of members currently connected to this voice channel.
+        /// </summary>
+        /// <remarks>
+        /// This is faster than doing DiscordGuildChannel.UsersInVoice.Count because
+        /// it does not require making a copy of the list of users.
+        /// </remarks>
+        public int ConnectedUserCount
+        {
+            get
+            {
+                if (GuildChannelType != DiscordGuildChannelType.Voice)
+                    throw new InvalidOperationException("This guild channel is not a voice channel!");
+
+                lock (members)
+                {
+                    return members.Count;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of all members currently in this voice channel.
+        /// </summary>
+        public IReadOnlyList<DiscordGuildMember> UsersInVoice
+        {
+            get
+            {
+                if (GuildChannelType != DiscordGuildChannelType.Voice)
+                    throw new InvalidOperationException("This guild channel is not a voice channel!");
+
+                lock (members)
+                {
+                    // We must make a copy of the list so that:
+                    // a. we can return a read only version
+                    // b. read access is seperate from the add/removes (concurrent access doesn't work with hashsets).
+                    DiscordGuildMember[] membersCopy = new DiscordGuildMember[members.Count];
+                    members.CopyTo(membersCopy);
+
+                    return new ReadOnlyCollection<DiscordGuildMember>(membersCopy);
+                }
+            }
+        }
+
+        HashSet<DiscordGuildMember> members;
+
+        /// <summary>
         /// Creates a new <see cref="DiscordGuildChannel"/> instance.
         /// </summary>
         /// <param name="client">The <see cref="IDiscordClient"/> associated with this channel.</param>
@@ -70,6 +117,8 @@ namespace Discore
             Guild = guild;
             RolePermissionOverwrites = new Dictionary<string, DiscordOverwrite>();
             MemberPermissionOverwrites = new Dictionary<string, DiscordOverwrite>();
+
+            members = new HashSet<DiscordGuildMember>();
         }
 
         /// <summary>
@@ -149,6 +198,22 @@ namespace Discore
                 throw new InvalidOperationException("Attempted to voice connect to a non-voice channel");
 
             return Client.Gateway.ConnectToVoice(this);
+        }
+
+        internal void AddMemberInVoice(DiscordGuildMember member)
+        {
+            lock (members)
+            {
+                members.Add(member);
+            }
+        }
+
+        internal void RemoveMemberInVoice(DiscordGuildMember member)
+        {
+            lock (members)
+            {
+                members.Remove(member);
+            }
         }
 
         #region Object Overrides
