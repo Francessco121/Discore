@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using Discore.Audio;
-#if NET45
-using System.Security;
-#endif
 
 namespace Discore.Audio
 {
