@@ -1,7 +1,6 @@
 ﻿using Discore.Net;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -130,7 +129,6 @@ namespace Discore.Audio
         /// <exception cref="OperationCanceledException"></exception>
         public void SendPCMData(byte[] data, int offset, int count)
         {
-            //sendBuffer.Push(data, offset, count, cancelTokenSource.Token);
             sendBuffer.Write(data, offset, count);
         }
 
@@ -234,117 +232,127 @@ namespace Discore.Audio
                 return SecretBoxEasy(outPtr + outputOffset, input, inputLength, nonce, secret);
         }
 
-        /// <summary>
-        /// Modified directly from:
-        /// https://github.com/RogueException/Discord.Net/blob/master/src/Discord.Net.Audio/Net/VoiceSocket.cs#L263
-        /// TODO: Custom original implementation.
-        /// </summary>
         void SendLoop()
         {
+            const int TICKS_PER_S = 1000;
+            const int TICKS_PER_MS = 1;
+
             try
             {
+                // Wait for full connection
                 while ((!readyToSendVoice || socket.State != WebSocketState.Open) && !cancelTokenSource.IsCancellationRequested)
                     Thread.Sleep(1000);
 
                 byte[] frame = new byte[encoder.FrameSize];
                 byte[] encodedFrame = new byte[MAX_OPUS_SIZE];
-                byte[] voicePacket, pingPacket, nonce = null;
+
                 uint timestamp = 0;
-                double nextTicks = 0.0, nextPingTicks = 0.0;
-                long ticksPerSeconds = Stopwatch.Frequency;
-                double ticksPerMillisecond = Stopwatch.Frequency / 1000.0;
-                double ticksPerFrame = ticksPerMillisecond * encoder.FrameLength;
-                double spinLockThreshold = 3 * ticksPerMillisecond;
+                
+                int ticksPerFrame = TICKS_PER_MS * encoder.FrameLength;
                 uint samplesPerFrame = (uint)encoder.SamplesPerFrame;
-                Stopwatch sw = Stopwatch.StartNew();
 
-                nonce = new byte[24];
-                voicePacket = new byte[MAX_OPUS_SIZE + 12 + 16];
-
-                pingPacket = new byte[8];
+                byte[] nonce = new byte[24];
+                byte[] voicePacket = new byte[MAX_OPUS_SIZE + 12 + 16];
+                byte[] pingPacket = new byte[8];
 
                 int rtpPacketLength = 0;
-                voicePacket[0] = 0x80; //Flags;
-                voicePacket[1] = 0x78; //Payload Type
-                voicePacket[8] = (byte)(ssrc >> 24);
+
+                // Setup RTP packet header
+                voicePacket[0] = 0x80; // Packet Type
+                voicePacket[1] = 0x78; // Packet Version
+                voicePacket[8] = (byte)(ssrc >> 24); // ssrc
                 voicePacket[9] = (byte)(ssrc >> 16);
                 voicePacket[10] = (byte)(ssrc >> 8);
                 voicePacket[11] = (byte)(ssrc >> 0);
 
+                // Copy RTP packet header into nonce
                 Buffer.BlockCopy(voicePacket, 0, nonce, 0, 12);
 
+                int nextTicks = Environment.TickCount;
+                int nextPingTicks = Environment.TickCount;
+
+                // Begin send loop
                 bool hasFrame = false;
                 while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                 {
-                    if (!hasFrame && sendBuffer.Count >= frame.Length)
+                    // If we don't have a frame to send and we have a full frame buffered
+                    if (!hasFrame && sendBuffer.Count > 0)
                     {
-                        int read = sendBuffer.Read(frame, 0, frame.Length);
+                        // Read frame from buffer
+                        sendBuffer.Read(frame, 0, frame.Length);
 
-                        ushort sequence = unchecked(this.sequence++);
+                        // Increase the sequence number, use unchecked because wrapping is valid
+                        unchecked { sequence++; };
+
+                        // Set sequence number in RTP packet
                         voicePacket[2] = (byte)(sequence >> 8);
                         voicePacket[3] = (byte)(sequence >> 0);
+                        // Set timestamp in RTP packet
                         voicePacket[4] = (byte)(timestamp >> 24);
                         voicePacket[5] = (byte)(timestamp >> 16);
                         voicePacket[6] = (byte)(timestamp >> 8);
                         voicePacket[7] = (byte)(timestamp >> 0);
 
-
-                        //Encode
+                        // Encode the frame
                         int encodedLength = encoder.EncodeFrame(frame, 0, encodedFrame);
 
-                        // Encrypt
-                        Buffer.BlockCopy(voicePacket, 2, nonce, 2, 6); //Update nonce
-                        int ret = Encrypt(encodedFrame, encodedLength, voicePacket, 12, nonce, key);
-                        if (ret != 0)
-                            continue;
+                        // Update the separately stored nonce from RTP packet
+                        Buffer.BlockCopy(voicePacket, 2, nonce, 2, 6);
 
-                        rtpPacketLength = encodedLength + 12 + 16;
+                        // Encrypt the frame
+                        int encryptStatus = Encrypt(encodedFrame, encodedLength, voicePacket, 12, nonce, key);
+                        if (encryptStatus == 0)
+                        {
+                            // Update timestamp
+                            timestamp = unchecked(timestamp + samplesPerFrame);
 
-                        timestamp = unchecked(timestamp + samplesPerFrame);
-                        hasFrame = true;
+                            rtpPacketLength = encodedLength + 12 + 16;
+                            hasFrame = true;
+                        }
+                        else
+                        {
+                            // Failed to encrypt
+                            log.LogError($"Failed to encrypt RTP packet. encryptStatus: {encryptStatus}");
+                        }
                     }
 
-                    long currentTicks = sw.ElapsedTicks;
-                    double ticksToNextFrame = nextTicks - currentTicks;
-                    if (ticksToNextFrame <= 0.0)
+                    int currentTicks = Environment.TickCount;
+                    int ticksToNextFrame = nextTicks - currentTicks;
+                    // Is it time to send the next frame?
+                    if (ticksToNextFrame <= 0)
                     {
+                        // If we have a frame to send
                         if (hasFrame)
                         {
-                            udpSocket.Send(voicePacket, rtpPacketLength).Wait();
                             hasFrame = false;
+                            // Send the frame across UDP
+                            udpSocket.Send(voicePacket, rtpPacketLength).Wait();
                         }
 
+                        // Calculate the time for next frame
                         nextTicks += ticksPerFrame;
 
-                        //Is it time to send out another ping?
+                        // Is it time to ping?
                         if (currentTicks > nextPingTicks)
                         {
-                            //Increment in LE
+                            // Increment the ping packet
                             for (int i = 0; i < 8; i++)
                             {
-                                var b = pingPacket[i];
-                                if (b == byte.MaxValue)
-                                    pingPacket[i] = 0;
-                                else
+                                unchecked
                                 {
-                                    pingPacket[i] = (byte)(b + 1);
-                                    break;
+                                    pingPacket[i] = (byte)(pingPacket[i] + 1);
                                 }
                             }
+
+                            // Send the ping packet across UDP
                             udpSocket.Send(pingPacket, pingPacket.Length).Wait();
-                            nextPingTicks = currentTicks + 5 * ticksPerSeconds;
+                            nextPingTicks = currentTicks + 5 * TICKS_PER_S;
                         }
                     }
                     else
                     {
-                        if (hasFrame)
-                        {
-                            int time = (int)Math.Floor(ticksToNextFrame / ticksPerMillisecond);
-                            if (time > 0)
-                                Thread.Sleep(time);
-                        }
-                        else
-                            Thread.Sleep(1); //Give as much time to the encrypter as possible
+                        // Nothing to do, so sleep for a bit to avoid burning cpu cycles
+                        Thread.Sleep(1);
                     }
                 }
             }

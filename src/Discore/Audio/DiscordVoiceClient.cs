@@ -204,23 +204,23 @@ namespace Discore.Audio
                             gotFirstBlock = true;
                         }
                     }
-                    else if (gotFirstBlock && isSpeaking)
-                    {
-                        if (voiceSocket.CanSendData(3))
-                        {
-                            // 5 frames of silence
-                            byte[] opusSilence = new byte[]
-                            {
-                                0xF8,
-                                0xFF,
-                                0xFE
-                            };
+                    //else if (gotFirstBlock && isSpeaking)
+                    //{
+                    //    if (voiceSocket.CanSendData(3))
+                    //    {
+                    //        // 5 frames of silence
+                    //        byte[] opusSilence = new byte[]
+                    //        {
+                    //            0xF8,
+                    //            0xFF,
+                    //            0xFE
+                    //        };
 
-                            voiceSocket.SendPCMData(opusSilence, 0, opusSilence.Length);
-                            isFlushing = false;
-                            Thread.Sleep(1);
-                        }
-                    }
+                    //        voiceSocket.SendPCMData(opusSilence, 0, opusSilence.Length);
+                    //        isFlushing = false;
+                    //        Thread.Sleep(1);
+                    //    }
+                    //}
                     else
                     {
                         isFlushing = false;
