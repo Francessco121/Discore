@@ -15,5 +15,9 @@ namespace Discore
         /// Gets an interface to the Discord gateway.
         /// </summary>
         IDiscordGateway Gateway { get; }
+        /// <summary>
+        /// Gets the user authenticated with this client.
+        /// </summary>
+        DiscordUser User { get; }
     }
 }
