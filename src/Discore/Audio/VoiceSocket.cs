@@ -11,6 +11,7 @@ namespace Discore.Audio
     class VoiceSocket : IDisposable
     {
         public DiscordGuildMember Member { get { return member; } }
+        public bool IsConnected { get { return socket.State == WebSocketState.Open; } }
 
         public event EventHandler<Exception> OnFatalError;
 
@@ -49,14 +50,14 @@ namespace Discore.Audio
 
             log = new DiscordLogger($"VoiceSocket:{member.Guild.Name}");
 
-            socket = new DiscordClientWebSocket(client);
+            socket = new DiscordClientWebSocket(client, log.Prefix);
 
             sendThread = new Thread(SendLoop);
-            sendThread.Name = "VoiceSocket Send Thread";
+            sendThread.Name = $"VoiceSocket:{member.Guild.Name} Send Thread";
             sendThread.IsBackground = true;
 
             heartbeatThread = new Thread(HeartbeatLoop);
-            heartbeatThread.Name = "VoiceSocket Heartbeat Thread";
+            heartbeatThread.Name = $"VoiceSocket:{member.Guild.Name} Heartbeat Thread";
             heartbeatThread.IsBackground = true;
 
             cancelTokenSource = new CancellationTokenSource();
@@ -76,12 +77,17 @@ namespace Discore.Audio
             sendThread.Start();
         }
 
-        private void Socket_OnFatalError(object sender, Exception e)
+        private void Socket_OnFatalError(object sender, Exception ex)
         {
-            OnFatalError?.Invoke(this, e);
+            HandleFatalError(ex);
         }
 
-        private /*async*/ void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
+        private void UdpSocket_OnFatalError(object sender, Exception ex)
+        {
+            HandleFatalError(ex);
+        }
+
+        private void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
         {
             VoiceSocketOPCode op = (VoiceSocketOPCode)e.GetInteger("op");
             DiscordApiData d = e.Get("d");
@@ -89,7 +95,6 @@ namespace Discore.Audio
             switch (op)
             {
                 case VoiceSocketOPCode.Ready:
-                    //await HandleReadyPayload(d);
                     HandleReadyPayload(d);
                     break;
                 case VoiceSocketOPCode.SessionDescription:
@@ -170,7 +175,6 @@ namespace Discore.Audio
 
         void SendHeartbeat()
         {
-            //log.LogHeartbeat("Sending heartbeat");
             SendPayload(VoiceSocketOPCode.Heartbeat, null);
         }
 
@@ -187,7 +191,7 @@ namespace Discore.Audio
             SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
         }
 
-        void/*async Task*/ HandleReadyPayload(DiscordApiData data)
+        void HandleReadyPayload(DiscordApiData data)
         {
             ssrc = data.GetInteger("ssrc") ?? 0;
             int port = data.GetInteger("port") ?? 0;
@@ -195,16 +199,17 @@ namespace Discore.Audio
 
             log.LogVerbose($"[READY] ssrc: {ssrc}, port: {port}");
 
-            udpSocket = new VoiceUDPSocket(client, endpoint, port);
+            udpSocket = new VoiceUDPSocket(client, member.Guild, endpoint, port);
             udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
-            //await StartIPDiscovery();
+            udpSocket.OnFatalError += UdpSocket_OnFatalError;
+
             StartIPDiscovery();
         }
 
-        void/*async Task*/ StartIPDiscovery()
+        void StartIPDiscovery()
         {
             log.LogVerbose("[IP_DISCOVERY] Starting ip discovery...");
-            //await udpSocket.StartIPDiscovery(ssrc);
+
             udpSocket.StartIPDiscovery(ssrc);
         }
 
@@ -360,9 +365,10 @@ namespace Discore.Audio
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                client.EnqueueError(e);
+                log.LogError(ex);
+                HandleFatalError(ex);
             }
         }
 
@@ -382,16 +388,31 @@ namespace Discore.Audio
                     Thread.Sleep(heartbeatInterval);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                client.EnqueueError(e);
+                log.LogError(ex);
+                HandleFatalError(ex);
             }
+        }
+
+        void HandleFatalError(Exception ex)
+        {
+            // Cancel any async operations
+            cancelTokenSource.Cancel();
+
+            // Close the socket if the error wasn't directly from the socket.
+            if (socket.State == WebSocketState.Open)
+                socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+
+            // Close the UDP socket if still open
+            if (udpSocket.IsConnected)
+                udpSocket.Disconnect();
+
+            OnFatalError?.Invoke(this, ex);
         }
 
         public void Dispose()
         {
-            log.LogInfo("Closing...");
-
             cancelTokenSource.Cancel();
 
             if (udpSocket != null)

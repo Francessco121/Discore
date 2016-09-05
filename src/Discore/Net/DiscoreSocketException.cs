@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System;
+using System.Net.WebSockets;
 
 namespace Discore
 {
@@ -19,6 +20,18 @@ namespace Discore
         /// <param name="errorCode">The error code that caused the exception.</param>
         public DiscoreSocketException(string message, WebSocketCloseStatus errorCode)
             : base($"{message} ({(int)errorCode})")
+        {
+            ErrorCode = errorCode;
+        }
+
+        /// <summary>
+        /// Creates a <see cref="DiscoreSocketException"/>
+        /// </summary>
+        /// <param name="message">The message of the <see cref="DiscoreSocketException"/>.</param>
+        /// <param name="errorCode">The error code that caused the exception.</param>
+        /// <param name="innerException">The inner exception.</param>
+        public DiscoreSocketException(string message, WebSocketCloseStatus errorCode, Exception innerException)
+            : base($"{message} ({(int)errorCode})", innerException)
         {
             ErrorCode = errorCode;
         }

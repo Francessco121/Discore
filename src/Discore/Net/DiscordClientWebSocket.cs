@@ -38,11 +38,11 @@ namespace Discore.Net
 
         bool isDisposed;
 
-        public DiscordClientWebSocket(DiscordClient client)
+        public DiscordClientWebSocket(DiscordClient client, string loggingName)
         {
             this.client = client;
 
-            log = new DiscordLogger("Client Web Socket");
+            log = new DiscordLogger($"ClientWebSocket:{loggingName}");
             sendQueue = new ConcurrentQueue<string>();
 
             receiveBuffer = new ArraySegment<byte>(new byte[RECEIVE_BUFFER_SIZE]);
@@ -57,11 +57,11 @@ namespace Discore.Net
             cancelTokenSource = new CancellationTokenSource();
 
             sendThread = new Thread(SendLoop);
-            sendThread.Name = "DiscordClientWebSocket Send Thread";
+            sendThread.Name = $"{log.Prefix} Send Thread";
             sendThread.IsBackground = true;
 
             receiveThread = new Thread(ReceiveLoop);
-            receiveThread.Name = "DiscordClientWebSocket Receive Thread";
+            receiveThread.Name = $"{log.Prefix} Receive Thread";
             receiveThread.IsBackground = true;
 
             socket = new ClientWebSocket();
@@ -85,7 +85,14 @@ namespace Discore.Net
         public async Task Close(WebSocketCloseStatus statusCode, string reason)
         {
             if (socket != null && socket.State == WebSocketState.Open)
-                await socket.CloseAsync(statusCode, reason, cancelTokenSource.Token);
+            {
+                // Cancel all async operations
+                cancelTokenSource.Cancel();
+                // Wait for the socket to close
+                await socket.CloseAsync(statusCode, reason, CancellationToken.None);
+
+                OnClosed?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void Send(string json)
@@ -110,7 +117,8 @@ namespace Discore.Net
                         result = socket.ReceiveAsync(receiveBuffer, cancelTokenSource.Token).Result;
 
                         if (result.MessageType == WebSocketMessageType.Close)
-                            throw new DiscoreSocketException(result.CloseStatusDescription, result.CloseStatus.Value);
+                            throw new DiscoreSocketException(result.CloseStatusDescription, 
+                                result.CloseStatus ?? WebSocketCloseStatus.Empty);
                         else
                             receiveMs.Write(receiveBuffer.Array, 0, result.Count);
                     }
@@ -147,14 +155,13 @@ namespace Discore.Net
                     receiveMs.SetLength(0);
                 }
             }
-            catch (WebSocketException ex)
+            catch (WebSocketException wse)
             {
-                LogWebSocketError(ex);
-            }
-            catch (DiscoreSocketException ex)
-            {
-                client.EnqueueError(ex);
-                OnFatalError?.Invoke(this, ex);
+                if (wse.WebSocketErrorCode != WebSocketError.Success)
+                {
+                    log.LogError(wse);
+                    HandleFatalError(wse);
+                }
             }
             catch (AggregateException aex)
             {
@@ -167,32 +174,18 @@ namespace Discore.Net
 
                     // TODO: When we move to stable release of dotnet core with linux websocket support,
                     // clean this up.
-                    if (wse.WebSocketErrorCode != WebSocketError.InvalidState)
+                    if (wse.WebSocketErrorCode != WebSocketError.InvalidState
+                        && wse.WebSocketErrorCode != WebSocketError.Success)
                     {
-                        LogWebSocketError(wse);
+                        log.LogError(aex);
+                        HandleFatalError(aex);
                     }
                 }   
             }
             catch (Exception ex)
             {
-                client.EnqueueError(ex);
-            }
-            finally
-            {
-                Dispose();
-            }
-        }
-
-        void LogWebSocketError(WebSocketException ex)
-        {
-            if (IsWebSocketErrorCodeFatal(ex.WebSocketErrorCode))
-            {
-                log.LogError($"[{GetType().Name}:{ex.WebSocketErrorCode} ({(int)ex.WebSocketErrorCode})] "
-                    + "Socket encountered a fatal error, shutting down...");
-
-                socket.Abort();
-                client.EnqueueError(ex);
-                OnFatalError?.Invoke(this, ex);
+                log.LogError(ex);
+                HandleFatalError(ex);
             }
         }
 
@@ -230,9 +223,13 @@ namespace Discore.Net
                         Thread.Sleep(100);
                 }
             }
-            catch (WebSocketException ex)
+            catch (WebSocketException wse)
             {
-                LogWebSocketError(ex);
+                if (wse.WebSocketErrorCode != WebSocketError.Success)
+                {
+                    log.LogError(wse);
+                    HandleFatalError(wse);
+                }
             }
             catch (AggregateException aex)
             {
@@ -245,27 +242,32 @@ namespace Discore.Net
 
                     // TODO: When we move to stable release of dotnet core with linux websocket support,
                     // clean this up.
-                    if (wse.WebSocketErrorCode != WebSocketError.InvalidState)
+                    if (wse.WebSocketErrorCode != WebSocketError.InvalidState 
+                        && wse.WebSocketErrorCode != WebSocketError.Success)
                     {
-                        LogWebSocketError(wse);
+                        log.LogError(aex);
+                        HandleFatalError(aex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                client.EnqueueError(ex);
-            }
-            finally
-            {
-                Dispose();
+                log.LogError(ex);
+                HandleFatalError(ex);
             }
         }
 
-        bool IsWebSocketErrorCodeFatal(WebSocketError error)
+        void HandleFatalError(Exception ex)
         {
-            return error == WebSocketError.ConnectionClosedPrematurely
-                || error == WebSocketError.Faulted
-                || error == WebSocketError.NativeError;
+            // Cancel any async operations
+            cancelTokenSource.Cancel();
+
+            // Close the socket if the error wasn't directly from the socket.
+            if (socket.State == WebSocketState.Open)
+                socket.CloseAsync(WebSocketCloseStatus.InternalServerError, "An internal error occured",
+                    CancellationToken.None).Wait();
+
+            OnFatalError?.Invoke(this, ex);
         }
 
         void InvokeOnMessageReceived(DiscordApiData data)
@@ -274,9 +276,9 @@ namespace Discore.Net
             {
                 OnMessageReceived?.Invoke(this, data);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                client.EnqueueError(e);
+                log.LogError($"Uncaught Exception on OnMessageReceived: {ex}");
             }
         }
 
@@ -285,10 +287,12 @@ namespace Discore.Net
             if (!isDisposed)
             {
                 isDisposed = true;
-                cancelTokenSource.Cancel();
-                socket.Dispose();
 
-                OnClosed?.Invoke(this, EventArgs.Empty);
+                // Cancel all async operations
+                cancelTokenSource.Cancel();
+
+                // Dispose of the socket
+                socket.Dispose();
             }
         }
     }

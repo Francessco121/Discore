@@ -16,9 +16,9 @@ namespace Discore
     {
         #region Events
         /// <summary>
-        /// Called when an error occurs in this client.
+        /// Called when a fatal error occurs and the client is no longer connected.
         /// </summary>
-        public event EventHandler<ExceptionDispathEventArgs> OnError;
+        public event EventHandler<DiscordClientExceptionEventArgs> OnFatalError;
         /// <summary>
         /// Called when this client connects to the Discord API.
         /// </summary>
@@ -159,8 +159,6 @@ namespace Discore
 
         ConcurrentDictionary<string, Action<DiscordApiData>> gatewayEventHandlers;
 
-        ConcurrentQueue<ExceptionDispatchInfo> errors;
-        Thread errorCheckingThread;
         bool running;
 
         DiscordLogger log;
@@ -178,11 +176,8 @@ namespace Discore
 
             GatewaySocket = new GatewaySocket(this);
             RestClient = new RestClient(this);
-            errors = new ConcurrentQueue<ExceptionDispatchInfo>();
            
             VoiceClients = new ConcurrentDictionary<DiscordGuild, DiscordVoiceClient>();
-
-            errorCheckingThread = new Thread(CheckForErrors);
 
             gatewayEventHandlers = new ConcurrentDictionary<string, Action<DiscordApiData>>();
             gatewayEventHandlers.TryAdd("CHANNEL_CREATE", HandleChannelCreate);
@@ -221,17 +216,33 @@ namespace Discore
             GatewaySocket.OnReadyEvent += Gateway_OnReadyEvent;
             GatewaySocket.OnUnhandledEvent += Gateway_OnUnhandledEvent;
             GatewaySocket.OnVoiceClientConnected += Gateway_OnVoiceClientConnected;
+            GatewaySocket.OnFatalError += GatewaySocket_OnFatalError;
+        }
+
+        private void GatewaySocket_OnFatalError(object sender, Exception ex)
+        {
+            Disconnect().Wait();
+            OnFatalError?.Invoke(this, new DiscordClientExceptionEventArgs(this, ex));
         }
 
         private void Gateway_OnVoiceClientConnected(object sender, VoiceClientEventArgs e)
         {
-            e.VoiceClient.OnDisposed += VoiceClient_OnDisposed;
+            e.VoiceClient.OnDisconnected += VoiceClient_OnDisconnected;
+            e.VoiceClient.OnFatalError += VoiceClient_OnFatalError;
             OnVoiceClientConnected?.Invoke(this, e);
         }
 
-        private void VoiceClient_OnDisposed(object sender, VoiceClientEventArgs e)
+        private void VoiceClient_OnFatalError(object sender, VoiceClientExceptionEventArgs e)
         {
-            e.VoiceClient.OnDisposed -= VoiceClient_OnDisposed;
+            e.VoiceClient.OnDisconnected -= VoiceClient_OnDisconnected;
+            e.VoiceClient.OnFatalError -= VoiceClient_OnFatalError;
+            OnVoiceClientDisconnected?.Invoke(this, new VoiceClientEventArgs(e.VoiceClient));
+        }
+
+        private void VoiceClient_OnDisconnected(object sender, VoiceClientEventArgs e)
+        {
+            e.VoiceClient.OnDisconnected -= VoiceClient_OnDisconnected;
+            e.VoiceClient.OnFatalError -= VoiceClient_OnFatalError;
             OnVoiceClientDisconnected?.Invoke(this, e);
         }
 
@@ -278,7 +289,6 @@ namespace Discore
                     RestClient.SetToken(token);
 
                     running = true;
-                    errorCheckingThread.Start();
                     return true;
                 }
                 else
@@ -315,26 +325,6 @@ namespace Discore
         {
             if (running)
                 GatewaySocket.SendStatusUpdate(game, gameType, idleSince);
-        }
-
-        void CheckForErrors()
-        {
-            while (running)
-            {
-                if (errors.Count > 0)
-                {
-                    ExceptionDispatchInfo e;
-                    if (errors.TryDequeue(out e))
-                        OnError?.Invoke(this, new ExceptionDispathEventArgs(e));
-                }
-
-                Thread.Sleep(100);
-            }
-        }
-
-        internal void EnqueueError(Exception e)
-        {
-            errors.Enqueue(ExceptionDispatchInfo.Capture(e));
         }
 
         /// <summary>

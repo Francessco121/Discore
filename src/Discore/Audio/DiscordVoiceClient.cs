@@ -13,13 +13,13 @@ namespace Discore.Audio
         /// </summary>
         public event EventHandler<VoiceClientEventArgs> OnConnected;
         /// <summary>
-        /// Called when the voice connection is disposed and is no longer valid.
+        /// Called when the voice session is disconnected.
         /// </summary>
-        public event EventHandler<VoiceClientEventArgs> OnDisposed;
+        public event EventHandler<VoiceClientEventArgs> OnDisconnected;
         /// <summary>
         /// Called when the voice connection unexpectedly closes.
         /// </summary>
-        public event EventHandler<VoiceClientExceptionEventArgs> OnUnexpectedError;
+        public event EventHandler<VoiceClientExceptionEventArgs> OnFatalError;
 
         /// <summary>
         /// The <see cref="DiscordGuild"/> this voice client is connected to.
@@ -42,11 +42,11 @@ namespace Discore.Audio
         /// <summary>
         /// Gets whether or not this <see cref="DiscordVoiceClient"/> is available to use.
         /// </summary>
-        public bool IsValid { get { return !disposed; } }
+        public bool IsValid { get { return !isDisposed; } }
         /// <summary>
         /// Gets whether or not this <see cref="DiscordVoiceClient"/> is connected to a <see cref="DiscordGuild"/>.
         /// </summary>
-        public bool IsConnected { get { return isConnected; } }
+        public bool IsConnected { get { return isConnected && !isDisposed; } }
 
         // TODO: Make prebuffer configuration available publically
         const int PCM_BLOCK_SIZE = 3840;
@@ -54,9 +54,11 @@ namespace Discore.Audio
         const int AUDIO_FRAMES_TO_BUFFER = 96;
         const int AUDIO_BUFFER_SIZE = PCM_BLOCK_SIZE * AUDIO_FRAMES_TO_BUFFER;
 
+        DiscordLogger log;
+
         CircularBuffer audioBuffer;
         VoiceSocket voiceSocket;
-        bool disposed;
+        bool isDisposed;
         bool isSpeaking;
         bool isFlushing;
         bool isConnected;
@@ -67,11 +69,13 @@ namespace Discore.Audio
         {
             Client = client;
             Guild = guild;
-            
+
+            log = new DiscordLogger($"DiscordVoiceClient:{guild.Name}");
+
             audioBuffer = new CircularBuffer(AUDIO_BUFFER_SIZE);
 
             audioSendThread = new Thread(AudioSendLoop);
-            audioSendThread.Name = "Audio Send Thread";
+            audioSendThread.Name = $"{log.Prefix} Audio Send Thread";
             audioSendThread.IsBackground = true;
             audioSendThread.Start();
         }
@@ -87,13 +91,15 @@ namespace Discore.Audio
 
             isConnected = true;
 
+            log.LogVerbose("VoiceSocket received");
+
             OnConnected?.Invoke(this, new VoiceClientEventArgs(this));
         }
 
         private void VoiceSocket_OnFatalError(object sender, Exception e)
         {
             Disconnect();
-            OnUnexpectedError?.Invoke(this, new VoiceClientExceptionEventArgs(this, e));
+            OnFatalError?.Invoke(this, new VoiceClientExceptionEventArgs(this, e));
         }
 
         /// <summary>
@@ -131,15 +137,20 @@ namespace Discore.Audio
         /// <summary>
         /// Disconnects this <see cref="DiscordVoiceClient"/>.
         /// </summary>
-        public void Disconnect()
+        /// <returns>Returns whether the voice client was disconnected. 
+        /// (will return false if already disconnected).</returns>
+        public bool Disconnect()
         {
             if (isConnected)
             {
                 isConnected = false;
                 Client.Gateway.DisconnectFromVoice(Guild);
+                OnDisconnected?.Invoke(this, new VoiceClientEventArgs(this));
+
+                return true;
             }
 
-            Dispose();
+            return false;
         }
 
         /// <summary>
@@ -181,7 +192,7 @@ namespace Discore.Audio
             try
             {
                 byte[] blockBuffer = new byte[PCM_BLOCK_SIZE];
-                while (!disposed)
+                while (!isDisposed)
                 {
                     if (!isConnected)
                     {
@@ -204,6 +215,8 @@ namespace Discore.Audio
                             gotFirstBlock = true;
                         }
                     }
+                    // Causes major audio artifacts in move to .NET Core
+                    // TODO: Figure out why sending opus silence no longer works correctly.
                     //else if (gotFirstBlock && isSpeaking)
                     //{
                     //    if (voiceSocket.CanSendData(3))
@@ -229,13 +242,12 @@ namespace Discore.Audio
                 }
             }
             catch (OperationCanceledException) { }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Client.EnqueueError(e);
-            }
-            finally
-            {
-                Dispose();
+                log.LogError(ex);
+
+                Disconnect();
+                OnFatalError?.Invoke(this, new VoiceClientExceptionEventArgs(this, ex));
             }
         }
 
@@ -244,15 +256,11 @@ namespace Discore.Audio
         /// </summary>
         public void Dispose()
         {
-            if (!disposed)
+            if (!isDisposed)
             {
-                disposed = true;
-                isConnected = false;
-                isSpeaking = false;
+                isDisposed = true;
 
                 voiceSocket?.Dispose();
-
-                OnDisposed?.Invoke(this, new VoiceClientEventArgs(this));
 
                 DiscordVoiceClient temp;
                 Client.VoiceClients.TryRemove(Guild, out temp);

@@ -13,8 +13,11 @@ namespace Discore.Net
         public event UnhandledGatewayEventHandler OnUnhandledEvent;
         public event EventHandler<DiscordApiData> OnReadyEvent;
         public event EventHandler<VoiceClientEventArgs> OnVoiceClientConnected;
+        public event EventHandler OnConnected;
+        public event EventHandler OnDisconnected;
+        public event EventHandler<Exception> OnFatalError;
 
-        public bool IsConnected { get { return socket.State == WebSocketState.Open || socket.State == WebSocketState.Connecting; } }
+        public bool IsConnected { get { return isConnected; } }
 
         DiscordClient client;
         CancellationTokenSource cancelTokenSource;
@@ -31,6 +34,9 @@ namespace Discore.Net
         int connectionTimeOutAfterMs;
         int lastHeartbeatAckMs;
 
+        bool manuallyDisconnected;
+        bool isConnected;
+
         public GatewaySocket(DiscordClient client)
         {
             this.client = client;
@@ -41,30 +47,39 @@ namespace Discore.Net
             heartbeatThread.Name = "GatewaySocket Heartbeat Thread";
             heartbeatThread.IsBackground = true;
             
-            socket = new DiscordClientWebSocket(client);
+            socket = new DiscordClientWebSocket(client, "Gateway");
             cancelTokenSource = new CancellationTokenSource();
 
             socket.OnMessageReceived += Socket_OnMessageReceived;
             socket.OnOpened += Socket_OnOpened;
             socket.OnFatalError += Socket_OnFatalError;
+
+            isConnected = true;
         }
 
-        private void Socket_OnFatalError(object sender, Exception e)
+        private void Socket_OnFatalError(object sender, Exception ex)
         {
-            DiscoreSocketException socketEx = e as DiscoreSocketException;
+            DiscoreSocketException socketEx = ex as DiscoreSocketException;
             if (socketEx != null)
             {
+                // TODO: Is this necessary?
                 DiscordGatewayException gex = new DiscordGatewayException(
-                    (GatewayDisconnectCode)socketEx.ErrorCode, socketEx.Message);
+                    (GatewayDisconnectCode)socketEx.ErrorCode, socketEx.Message, ex);
 
                 log.LogError(gex);
             }
+
+            HandleFatalError(ex);
         }
 
         private void Socket_OnOpened(object sender, EventArgs e)
         {
             SendIdentifyPayload(token);
-            heartbeatThread.Start();
+
+            // The only case where the thread would still be alive is
+            // when the socket is reconnecting from timing out.
+            if (!heartbeatThread.IsAlive)
+                heartbeatThread.Start();
         }
 
         public async Task<bool> Connect(string token)
@@ -72,20 +87,35 @@ namespace Discore.Net
             if (socket.State != WebSocketState.Open)
             {
                 this.token = token;
-                heartbeatInterval = 0;
-                sequenceNumber = 0;
-
-                string gatewayEndpoint = GetGatewayEndpoint();
-                if (await socket.Connect($"{gatewayEndpoint}/?encoding=json&v=5"))
-                    return true;
-                else
+                if (await Connect())
                 {
-                    TryUpdateGatewayEndpoint(gatewayEndpoint);
-                    return false;
+                    OnConnected?.Invoke(this, EventArgs.Empty);
+                    return true;
                 }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Attempts to connect using the stored token.
+        /// </summary>
+        async Task<bool> Connect()
+        {
+            if (token == null)
+                throw new InvalidOperationException("Cannot connect without a token");
+
+            heartbeatInterval = 0;
+            sequenceNumber = 0;
+
+            string gatewayEndpoint = GetGatewayEndpoint();
+            if (await socket.Connect($"{gatewayEndpoint}/?encoding=json&v=5"))
+                return true;
+            else
+            {
+                TryUpdateGatewayEndpoint(gatewayEndpoint);
+                return false;
+            }
         }
 
         void TryUpdateGatewayEndpoint(string currentEndpoint)
@@ -113,8 +143,18 @@ namespace Discore.Net
 
         public async Task Disconnect()
         {
-            await socket.Close(WebSocketCloseStatus.NormalClosure, "Disconnecting...");
-            log.LogVerbose("Disconnecting from gateway socket...");
+            if (isConnected)
+            {
+                log.LogVerbose("Disconnecting from gateway socket...");
+
+                manuallyDisconnected = true;
+                isConnected = false;
+
+                cancelTokenSource.Cancel();
+                await socket.Close(WebSocketCloseStatus.NormalClosure, "Disconnecting...");
+
+                OnDisconnected?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public DiscordVoiceClient ConnectToVoice(DiscordGuildChannel channel)
@@ -355,23 +395,93 @@ namespace Discore.Net
                 while (heartbeatInterval == 0 && socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                     Thread.Sleep(1000);
 
-                while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
+                do
                 {
-                    if (Environment.TickCount >= lastHeartbeatAckMs + connectionTimeOutAfterMs)
+                    while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                     {
-                        log.LogError($"Failed to receive heartbeat acknowledgement after {connectionTimeOutAfterMs}ms, disconnecting...");
-                        Disconnect().Wait();
+                        if (Environment.TickCount >= lastHeartbeatAckMs + connectionTimeOutAfterMs)
+                        {
+                            log.LogError($"Failed to receive heartbeat acknowledgement after {connectionTimeOutAfterMs}ms");
+                            break;
+                        }
+                        else
+                        {
+                            SendHeartbeat();
+                            Thread.Sleep(heartbeatInterval);
+                        }
                     }
-                    else
+
+                    // Attempt to reconnect
+                    if (!cancelTokenSource.IsCancellationRequested)
                     {
-                        SendHeartbeat();
-                        Thread.Sleep(heartbeatInterval);
+                        // Cancel any async operations
+                        cancelTokenSource.Cancel();
+
+                        // Disconnect from the gateway fully
+                        socket.Close(WebSocketCloseStatus.ProtocolError, "Heartbeat timeout").Wait();
+
+                        // Reset the cancellation source
+                        cancelTokenSource = new CancellationTokenSource();
+
+                        // Continuously attempt to reconnect
+                        while (!manuallyDisconnected)
+                        {
+                            if (Connect().Result)
+                            {
+                                log.LogImportant("Successfully reconnected after timeout");
+                                break;
+                            }
+                            else
+                            {
+                                log.LogImportant("Failed to reconnect after timeout, waiting 5 seconds before retrying...");
+                                Thread.Sleep(5000);
+                            }
+                        }
                     }
+
+                } while (!cancelTokenSource.IsCancellationRequested && !manuallyDisconnected);
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex);
+                HandleFatalError(ex);
+            }
+        }
+
+        void HandleFatalError(Exception ex)
+        {
+            // Cancel any async operations
+            cancelTokenSource.Cancel();
+
+            // Disconnect from the gateway fully
+            socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+
+            log.LogError("Gateway encountered a fatal error");
+            log.LogImportant("Waiting for heartbeat loop to end before reconnecting...");
+
+            // Wait for heartbeat thread to stop
+            heartbeatThread.Join();
+
+            try
+            {
+                // Reset the cancellation source
+                cancelTokenSource = new CancellationTokenSource();
+
+                // Attempt to reconnect using existing token
+                if (Connect().Result)
+                    log.LogImportant("Successfully reconnected after fatal error");
+                else
+                {
+                    log.LogError("Failed to reconnect after fatal error");
+                    isConnected = false;
+                    OnFatalError?.Invoke(this, ex);
                 }
             }
-            catch (Exception e)
+            catch (Exception _ex)
             {
-                client.EnqueueError(e);
+                log.LogError($"Failed to reconnect after fatal error: {_ex}");
+                isConnected = false;
+                OnFatalError?.Invoke(this, new AggregateException(_ex, ex));
             }
         }
 

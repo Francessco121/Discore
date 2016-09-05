@@ -127,6 +127,18 @@ namespace Discore
             Exception = exception;
         }
     }
+
+    public class DiscordClientExceptionEventArgs : EventArgs
+    {
+        public DiscordClient Client { get; }
+        public Exception Exception { get; }
+
+        public DiscordClientExceptionEventArgs(DiscordClient client, Exception exception)
+        {
+            Client = client;
+            Exception = exception;
+        }
+    }
 }
 
 #pragma warning restore 1591

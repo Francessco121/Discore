@@ -4,7 +4,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Discore.Audio
 {
@@ -23,48 +22,44 @@ namespace Discore.Audio
     class VoiceUDPSocket : IDisposable
     {
         public event EventHandler<IPDiscoveryEventArgs> OnIPDiscovered;
+        public event EventHandler<Exception> OnFatalError;
+
+        public bool IsConnected { get { return socket.Connected; } }
 
         DiscordClient client;
-        //UdpClient socket;
+        DiscordLogger log;
+
         Socket socket;
-        bool isAwaitingIPDiscovery;
         IPEndPoint endpoint;
-
+        bool isAwaitingIPDiscovery;
+        
         Thread receiveThread;
-        CancellationTokenSource cancelTokenSource;
 
-        public VoiceUDPSocket(DiscordClient client, string hostname, int port)
+        public VoiceUDPSocket(DiscordClient client, DiscordGuild guild, string hostname, int port)
         {
             this.client = client;
 
-            cancelTokenSource = new CancellationTokenSource();
+            log = new DiscordLogger($"VoiceUDPSocket:{guild.Name}");
+
+            IPAddress ip = Dns.GetHostAddressesAsync(hostname).Result.FirstOrDefault();
+            endpoint = new IPEndPoint(ip, port);
 
             receiveThread = new Thread(ReceiveLoop);
             receiveThread.Name = "VoiceUDPSocket Receive Thread";
             receiveThread.IsBackground = true;
 
-            IPAddress ip = Dns.GetHostAddressesAsync(hostname).Result.FirstOrDefault();
-            endpoint = new IPEndPoint(ip, port);
-
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.Connect(endpoint);
-            
-            try
-            {
-                socket.DontFragment = true;
-            }
-            catch (Exception ex)
-            {
-                DiscordLogger.Default.LogError($"[VoiceUDPSocket] Failed to set DontFragment: {ex}");
-            }
-
-            //socket = new UdpClient(new IPEndPoint(IPAddress.Any, 0));
-            //socket.Ttl = 128;
 
             receiveThread.Start();
         }
 
-        public void /*async Task*/ StartIPDiscovery(int ssrc)
+        public void Disconnect()
+        {
+            socket.Shutdown(SocketShutdown.Both);
+        }
+
+        public void StartIPDiscovery(int ssrc)
         {
             byte[] packet = new byte[70];
             packet[0] = (byte)(ssrc >> 24);
@@ -73,19 +68,8 @@ namespace Discore.Audio
             packet[3] = (byte)(ssrc >> 0);
 
             isAwaitingIPDiscovery = true;
-            //await Send(packet);
             Send(packet);
         }
-
-        //public async Task Send(byte[] data)
-        //{
-        //    await socket.SendAsync(data, data.Length, endpoint).ConfigureAwait(false);
-        //}
-
-        //public async Task Send(byte[] data, int bytes)
-        //{
-        //    await socket.SendAsync(data, bytes, endpoint).ConfigureAwait(false);
-        //}
 
         public void Send(byte[] data)
         {
@@ -97,24 +81,19 @@ namespace Discore.Audio
             socket.SendTo(data, bytes, SocketFlags.None, endpoint);
         }
 
-        /*async*/ void ReceiveLoop()
+        void ReceiveLoop()
         {
             try
             {
                 byte[] buffer = new byte[socket.ReceiveBufferSize];
 
-                //while (!cancelTokenSource.IsCancellationRequested && socket.Client != null)
-                while (!cancelTokenSource.IsCancellationRequested && socket != null)
+                while (socket != null)
                 {
                     EndPoint endpoint = this.endpoint;
-                    //socket.Bind(endpoint);
+
                     int read = socket.Receive(buffer);
                     if (read == 70 && isAwaitingIPDiscovery)
                         HandleIPDiscoveryPacket(buffer);
-
-                    //UdpReceiveResult result = await socket.ReceiveAsync().ConfigureAwait(true);
-                    //if (result.Buffer.Length == 70 && isAwaitingIPDiscovery)
-                    //    HandleIPDiscoveryPacket(result.Buffer);
                 }
             }
             catch (ObjectDisposedException) { }
@@ -122,12 +101,16 @@ namespace Discore.Audio
             {
                 // Ignore interrupted errors, it just means the socket was disconnected
                 // while the socket was waiting for data on Socket.Receive().
-                if (ex.SocketErrorCode != SocketError.Interrupted)
-                    DiscordLogger.Default.LogError($"{ex.SocketErrorCode}: {ex}");
+                if (ex.SocketErrorCode != SocketError.Interrupted && ex.SocketErrorCode != SocketError.Success)
+                {
+                    log.LogError($"{ex.SocketErrorCode}: {ex}");
+                    HandleFatalError(ex);
+                }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                client.EnqueueError(e);
+                log.LogError(ex);
+                HandleFatalError(ex);
             }
         }
 
@@ -144,9 +127,16 @@ namespace Discore.Audio
             OnIPDiscovered?.Invoke(this, new IPDiscoveryEventArgs(ip, port));
         }
 
+        void HandleFatalError(Exception ex)
+        {
+            // Shutdown the socket
+            socket.Shutdown(SocketShutdown.Both);
+
+            OnFatalError?.Invoke(this, ex);
+        }
+
         public void Dispose()
         {
-            cancelTokenSource.Cancel();
             socket.Dispose();
         }
     }

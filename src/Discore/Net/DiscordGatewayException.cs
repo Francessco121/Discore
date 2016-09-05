@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System;
+using System.Net.WebSockets;
 
 namespace Discore.Net
 {
@@ -14,6 +15,12 @@ namespace Discore.Net
 
         internal DiscordGatewayException(GatewayDisconnectCode dcCode, string message)
             : base($"[{dcCode}:{(int)dcCode}] {message}", (WebSocketCloseStatus)dcCode)
+        {
+            DisconnectCode = dcCode;
+        }
+
+        internal DiscordGatewayException(GatewayDisconnectCode dcCode, string message, Exception innerException)
+            : base($"[{dcCode}:{(int)dcCode}] {message}", (WebSocketCloseStatus)dcCode, innerException)
         {
             DisconnectCode = dcCode;
         }
