@@ -191,8 +191,8 @@ namespace Discore.Net
                     + "Socket encountered a fatal error, shutting down...");
 
                 socket.Abort();
-                OnFatalError?.Invoke(this, ex);
                 client.EnqueueError(ex);
+                OnFatalError?.Invoke(this, ex);
             }
         }
 

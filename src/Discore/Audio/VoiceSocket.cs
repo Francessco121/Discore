@@ -81,7 +81,7 @@ namespace Discore.Audio
             OnFatalError?.Invoke(this, e);
         }
 
-        private async void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
+        private /*async*/ void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
         {
             VoiceSocketOPCode op = (VoiceSocketOPCode)e.GetInteger("op");
             DiscordApiData d = e.Get("d");
@@ -89,7 +89,8 @@ namespace Discore.Audio
             switch (op)
             {
                 case VoiceSocketOPCode.Ready:
-                    await HandleReadyPayload(d);
+                    //await HandleReadyPayload(d);
+                    HandleReadyPayload(d);
                     break;
                 case VoiceSocketOPCode.SessionDescription:
                     HandleSessionDescriptionPayload(d);
@@ -186,7 +187,7 @@ namespace Discore.Audio
             SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
         }
 
-        async Task HandleReadyPayload(DiscordApiData data)
+        void/*async Task*/ HandleReadyPayload(DiscordApiData data)
         {
             ssrc = data.GetInteger("ssrc") ?? 0;
             int port = data.GetInteger("port") ?? 0;
@@ -196,13 +197,15 @@ namespace Discore.Audio
 
             udpSocket = new VoiceUDPSocket(client, endpoint, port);
             udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
-            await StartIPDiscovery();
+            //await StartIPDiscovery();
+            StartIPDiscovery();
         }
 
-        async Task StartIPDiscovery()
+        void/*async Task*/ StartIPDiscovery()
         {
             log.LogVerbose("[IP_DISCOVERY] Starting ip discovery...");
-            await udpSocket.StartIPDiscovery(ssrc);
+            //await udpSocket.StartIPDiscovery(ssrc);
+            udpSocket.StartIPDiscovery(ssrc);
         }
 
         private void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
@@ -234,7 +237,7 @@ namespace Discore.Audio
 
         void SendLoop()
         {
-            const int TICKS_PER_S = 1000;
+            //const int TICKS_PER_S = 1000;
             const int TICKS_PER_MS = 1;
 
             try
@@ -326,28 +329,29 @@ namespace Discore.Audio
                         {
                             hasFrame = false;
                             // Send the frame across UDP
-                            udpSocket.Send(voicePacket, rtpPacketLength).Wait();
+                            //udpSocket.Send(voicePacket, rtpPacketLength).Wait();
+                            udpSocket.Send(voicePacket, rtpPacketLength);
                         }
 
                         // Calculate the time for next frame
                         nextTicks += ticksPerFrame;
 
                         // Is it time to ping?
-                        if (currentTicks > nextPingTicks)
-                        {
-                            // Increment the ping packet
-                            for (int i = 0; i < 8; i++)
-                            {
-                                unchecked
-                                {
-                                    pingPacket[i] = (byte)(pingPacket[i] + 1);
-                                }
-                            }
+                        //if (currentTicks > nextPingTicks)
+                        //{
+                        //    // Increment the ping packet
+                        //    for (int i = 0; i < 8; i++)
+                        //    {
+                        //        unchecked
+                        //        {
+                        //            pingPacket[i] = (byte)(pingPacket[i] + 1);
+                        //        }
+                        //    }
 
-                            // Send the ping packet across UDP
-                            udpSocket.Send(pingPacket, pingPacket.Length).Wait();
-                            nextPingTicks = currentTicks + 5 * TICKS_PER_S;
-                        }
+                        //    // Send the ping packet across UDP
+                        //    udpSocket.Send(pingPacket, pingPacket.Length).Wait();
+                        //    nextPingTicks = currentTicks + 5 * TICKS_PER_S;
+                        //}
                     }
                     else
                     {

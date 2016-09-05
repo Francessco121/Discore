@@ -25,7 +25,8 @@ namespace Discore.Audio
         public event EventHandler<IPDiscoveryEventArgs> OnIPDiscovered;
 
         DiscordClient client;
-        UdpClient socket;
+        //UdpClient socket;
+        Socket socket;
         bool isAwaitingIPDiscovery;
         IPEndPoint endpoint;
 
@@ -45,13 +46,25 @@ namespace Discore.Audio
             IPAddress ip = Dns.GetHostAddressesAsync(hostname).Result.FirstOrDefault();
             endpoint = new IPEndPoint(ip, port);
 
-            socket = new UdpClient(new IPEndPoint(IPAddress.Any, 0));
-            socket.Ttl = 128;
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.Connect(endpoint);
+            
+            try
+            {
+                socket.DontFragment = true;
+            }
+            catch (Exception ex)
+            {
+                DiscordLogger.Default.LogError($"[VoiceUDPSocket] Failed to set DontFragment: {ex}");
+            }
+
+            //socket = new UdpClient(new IPEndPoint(IPAddress.Any, 0));
+            //socket.Ttl = 128;
 
             receiveThread.Start();
         }
 
-        public async Task StartIPDiscovery(int ssrc)
+        public void /*async Task*/ StartIPDiscovery(int ssrc)
         {
             byte[] packet = new byte[70];
             packet[0] = (byte)(ssrc >> 24);
@@ -60,31 +73,58 @@ namespace Discore.Audio
             packet[3] = (byte)(ssrc >> 0);
 
             isAwaitingIPDiscovery = true;
-            await Send(packet);
+            //await Send(packet);
+            Send(packet);
         }
 
-        public async Task Send(byte[] data)
+        //public async Task Send(byte[] data)
+        //{
+        //    await socket.SendAsync(data, data.Length, endpoint).ConfigureAwait(false);
+        //}
+
+        //public async Task Send(byte[] data, int bytes)
+        //{
+        //    await socket.SendAsync(data, bytes, endpoint).ConfigureAwait(false);
+        //}
+
+        public void Send(byte[] data)
         {
-            await socket.SendAsync(data, data.Length, endpoint).ConfigureAwait(false);
+            socket.SendTo(data, endpoint);
         }
 
-        public async Task Send(byte[] data, int bytes)
+        public void Send(byte[] data, int bytes)
         {
-            await socket.SendAsync(data, bytes, endpoint).ConfigureAwait(false);
+            socket.SendTo(data, bytes, SocketFlags.None, endpoint);
         }
 
-        async void ReceiveLoop()
+        /*async*/ void ReceiveLoop()
         {
             try
             {
-                while (!cancelTokenSource.IsCancellationRequested && socket.Client != null)
+                byte[] buffer = new byte[socket.ReceiveBufferSize];
+
+                //while (!cancelTokenSource.IsCancellationRequested && socket.Client != null)
+                while (!cancelTokenSource.IsCancellationRequested && socket != null)
                 {
-                    UdpReceiveResult result = await socket.ReceiveAsync().ConfigureAwait(true);
-                    if (result.Buffer.Length == 70 && isAwaitingIPDiscovery)
-                        HandleIPDiscoveryPacket(result.Buffer);
+                    EndPoint endpoint = this.endpoint;
+                    //socket.Bind(endpoint);
+                    int read = socket.Receive(buffer);
+                    if (read == 70 && isAwaitingIPDiscovery)
+                        HandleIPDiscoveryPacket(buffer);
+
+                    //UdpReceiveResult result = await socket.ReceiveAsync().ConfigureAwait(true);
+                    //if (result.Buffer.Length == 70 && isAwaitingIPDiscovery)
+                    //    HandleIPDiscoveryPacket(result.Buffer);
                 }
             }
             catch (ObjectDisposedException) { }
+            catch (SocketException ex)
+            {
+                // Ignore interrupted errors, it just means the socket was disconnected
+                // while the socket was waiting for data on Socket.Receive().
+                if (ex.SocketErrorCode != SocketError.Interrupted)
+                    DiscordLogger.Default.LogError($"{ex.SocketErrorCode}: {ex}");
+            }
             catch (Exception e)
             {
                 client.EnqueueError(e);
