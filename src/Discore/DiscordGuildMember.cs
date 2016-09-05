@@ -114,6 +114,13 @@ namespace Discore
                 }
             }
 
+            // Apply channel @everyone overwrites
+            DiscordOverwrite channelEveryoneOverwrite;
+            if (forChannel.RolePermissionOverwrites.TryGetValue(forChannel.Guild.AtEveryoneRole.Id, out channelEveryoneOverwrite))
+            {
+                userPermissions = (userPermissions | channelEveryoneOverwrite.Allow) & (~channelEveryoneOverwrite.Deny);
+            }
+
             // Apply channel-specific member overwrite for this channel
             DiscordOverwrite memberOverwrite;
             if (forChannel.MemberPermissionOverwrites.TryGetValue(User.Id, out memberOverwrite))
