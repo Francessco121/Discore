@@ -3,8 +3,6 @@ using Discore.Net;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -249,13 +247,14 @@ namespace Discore
         private void Gateway_OnReadyEvent(object sender, DiscordApiData data)
         {
             DiscordApiData userData = data.Get("user");
-            User = cache.AddOrUpdate(userData.GetString("id"), userData, () => { return new DiscordUser(); });
+            User = cache.AddOrUpdate(userData.GetString("id"), userData, () => { return new DiscordUser(this); });
 
             foreach (DiscordApiData dmChannelData in data.GetArray("private_channels"))
             {
                 string dmChannelId = dmChannelData.GetString("id");
 
-                DiscordDMChannel dmChannel = cache.AddOrUpdate(dmChannelId, dmChannelData, () => { return new DiscordDMChannel(this); });
+                DiscordDMChannel dmChannel = cache.AddOrUpdate(dmChannelId, dmChannelData, 
+                    () => { return new DiscordDMChannel(this); });
                 cache.SetAlias<DiscordChannel>(dmChannel);
             }
 
@@ -757,7 +756,7 @@ namespace Discore
             try
             {
                 DiscordGuildMember member = CacheHelper.UpdatePresence(data);
-                log.LogVerbose($"[PRESENCE_UPDATE] Updated presence of member '{member.User.Username}' in guild '{member.Guild.Name}'");
+                log.LogUnnecessary($"[PRESENCE_UPDATE] Updated presence of member '{member.User.Username}' in guild '{member.Guild.Name}'");
             }
             catch (DiscordApiCacheHelperException ex)
             {

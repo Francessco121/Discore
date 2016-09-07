@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -39,6 +40,17 @@ namespace Discore
         /// Gets the current status of this user.
         /// </summary>
         public DiscordUserStatus Status { get; private set; }
+
+        IDiscordClient client;
+
+        /// <summary>
+        /// Creates a new <see cref="DiscordUser"/> instance.
+        /// </summary>
+        /// <param name="client">The associated <see cref="IDiscordClient"/>.</param>
+        public DiscordUser(IDiscordClient client)
+        {
+            this.client = client;
+        }
 
         /// <summary>
         /// Gets whether or not this user has the specified permissions.
@@ -106,6 +118,14 @@ namespace Discore
                 member.AssertPermission(permission, channel);
             else
                 throw new ArgumentException("User is not in the specified guild", "channel");
+        }
+
+        /// <summary>
+        /// Opens a DM channel with the specified user.
+        /// </summary>
+        public Task<DiscordDMChannel> OpenDMWith()
+        {
+            return client.Rest.Users.CreateDM(Id);
         }
 
         /// <summary>

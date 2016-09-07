@@ -8,6 +8,7 @@ namespace Discore.Net
 
         public IDiscordRestMessagesService Messages { get; }
         public IDiscordRestChannelsService Channels { get; }
+        public IDiscordRestUsersService Users { get; }
 
         public RestClientRateLimitManager RateLimitManager { get; }
         public HttpClient HttpClient { get; }
@@ -29,6 +30,7 @@ namespace Discore.Net
 
             Messages = new RestClientMessagesService(client, this);
             Channels = new RestClientChannelsService(client, this);
+            Users = new RestClientUsersService(client, this);
         }
 
         public void SetToken(string token)

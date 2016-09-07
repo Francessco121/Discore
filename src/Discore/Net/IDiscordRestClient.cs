@@ -14,5 +14,10 @@
         /// Gets the service used for interacting with <see cref="DiscordChannel"/>s.
         /// </summary>
         IDiscordRestChannelsService Channels { get; }
+
+        /// <summary>
+        /// Gets the service used for interacting with <see cref="DiscordUser"/>s.
+        /// </summary>
+        IDiscordRestUsersService Users { get; }
     }
 }

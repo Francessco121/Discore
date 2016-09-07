@@ -40,7 +40,7 @@
             if (recipientData != null)
             {
                 string userId = recipientData.GetString("id");
-                Cache.AddOrUpdate(userId, recipientData, () => { return new DiscordUser(); });
+                Cache.AddOrUpdate(userId, recipientData, () => { return new DiscordUser(Client); });
             }
         }
 

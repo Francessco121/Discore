@@ -198,7 +198,7 @@ namespace Discore
             if (cache.GetAndTryUpdate(guildId, data, out guild))
             {
                 string userId = data.GetString("id");
-                DiscordUser user = cache.AddOrUpdate(userId, data, () => { return new DiscordUser(); });
+                DiscordUser user = cache.AddOrUpdate(userId, data, () => { return new DiscordUser(client); });
 
                 return new Tuple<DiscordGuild, DiscordUser>(guild, user);
             }
@@ -219,7 +219,7 @@ namespace Discore
             if (cache.GetAndTryUpdate(guildId, data, out guild))
             {
                 string userId = data.GetString("id");
-                DiscordUser user = cache.AddOrUpdate(userId, data, () => { return new DiscordUser(); });
+                DiscordUser user = cache.AddOrUpdate(userId, data, () => { return new DiscordUser(client); });
 
                 return new Tuple<DiscordGuild, DiscordUser>(guild, user);
             }
@@ -543,7 +543,7 @@ namespace Discore
         public DiscordUser UpdateUser(DiscordApiData data)
         {
             string userId = data.GetString("id");
-            DiscordUser user = cache.AddOrUpdate(userId, data, () => { return new DiscordUser(); });
+            DiscordUser user = cache.AddOrUpdate(userId, data, () => { return new DiscordUser(client); });
 
             return user;
         }

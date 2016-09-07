@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Discore
 {
@@ -33,10 +34,9 @@ namespace Discore
         // TODO: Grab actual region
         public string Region { get; private set; }
         /// <summary>
-        /// Gets the id of the afk channel in this guild.
+        /// Gets the afk channel in this guild (if set).
         /// </summary>
-        // TODO: Grab actual channel
-        public string AfkChannelId { get; private set; }
+        public DiscordGuildChannel AfkChannel { get; private set; }
         /// <summary>
         /// Gets the afk timeout in seconds of this guild.
         /// </summary>
@@ -46,9 +46,9 @@ namespace Discore
         /// </summary>
         public bool EmbedEnabled { get; private set; }
         /// <summary>
-        /// Gets the id of the embedded channel.
+        /// Gets the embedded channel.
         /// </summary>
-        public string EmbedChannelId { get; private set; }
+        public DiscordGuildChannel EmbedChannel { get; private set; }
         /// <summary>
         /// Gets the level of verification required by this guild.
         /// </summary>
@@ -103,7 +103,10 @@ namespace Discore
             get { return cache.GetList<DiscordGuildMember, DiscordGuild>(this); }
         }
 
+        string ownerId;
         string atEveryoneRoleId;
+        string afkChannelId;
+        string embedChannelId;
 
         IDiscordClient client;
         DiscordApiCache cache;
@@ -163,6 +166,15 @@ namespace Discore
         }
 
         /// <summary>
+        /// Returns all channels in this guild of the specified type.
+        /// </summary>
+        /// <param name="type">The type of guild channel to return.</param>
+        public IEnumerable<KeyValuePair<string, DiscordGuildChannel>> GetChannelsOfType(DiscordGuildChannelType type)
+        {
+            return Channels.Where(c => c.Value.GuildChannelType == type);
+        }
+
+        /// <summary>
         /// Updates this guild with the specified <see cref="DiscordApiData"/>.
         /// </summary>
         /// <param name="data">The data to update this guild with.</param>
@@ -173,11 +185,12 @@ namespace Discore
             Icon              = data.GetString("icon") ?? Icon;
             Splash            = data.GetString("splash") ?? Splash;
             Region            = data.GetString("region") ?? Region;
-            AfkChannelId      = data.GetString("afk_chanenl_id") ?? AfkChannelId;
+            afkChannelId      = data.GetString("afk_channel_id") ?? afkChannelId;
             AfkTimeout        = data.GetInteger("afk_timeout") ?? AfkTimeout;
             EmbedEnabled      = data.GetBoolean("embed_enabled") ?? EmbedEnabled;
-            EmbedChannelId    = data.GetString("embed_channel_id") ?? EmbedChannelId;
+            embedChannelId    = data.GetString("embed_channel_id") ?? embedChannelId;
             VerificationLevel = data.GetInteger("verification_level") ?? VerificationLevel;
+            ownerId           = data.GetString("owner_id") ?? ownerId;
 
             // Update features
             IList<DiscordApiData> featuresData = data.GetArray("features");
@@ -226,8 +239,6 @@ namespace Discore
                 }
             }
 
-            string ownerId = data.GetString("owner_id");
-
             // Update members
             IList<DiscordApiData> membersData = data.GetArray("members");
             if (membersData != null)
@@ -237,9 +248,6 @@ namespace Discore
                     string memberId = memberData.LocateString("user.id");
                     DiscordGuildMember member = cache.AddOrUpdate(this, memberId, memberData, 
                         () => { return new DiscordGuildMember(client, this); });
-
-                    if (ownerId != null && ownerId == memberId)
-                        Owner = member;
                 }
             }
 
@@ -258,6 +266,7 @@ namespace Discore
                 }
             }
 
+            // Update presences
             IList<DiscordApiData> presences = data.GetArray("presences");
             if (presences != null)
             {
@@ -270,6 +279,37 @@ namespace Discore
                     else
                         DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}:Presences] Failed to locate member with id {memberId}");
                 }
+            }
+
+            // Locate owner
+            DiscordGuildMember owner;
+            if (cache.TryGet(this, ownerId, out owner))
+                Owner = owner;
+            else
+                DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}:Owner] Failed to locate owner with id {ownerId}");
+
+            // Locate afk channel
+            if (afkChannelId == null)
+                AfkChannel = null;
+            else
+            {
+                DiscordGuildChannel channel;
+                if (cache.TryGet(this, afkChannelId, out channel))
+                    AfkChannel = channel;
+                else
+                    DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}:AfkChannel] Failed to locate afk channel with id {afkChannelId}");
+            }
+
+            // Locate embed channel
+            if (embedChannelId == null)
+                EmbedChannel = null;
+            else
+            {
+                DiscordGuildChannel channel;
+                if (cache.TryGet(this, embedChannelId, out channel))
+                    EmbedChannel = channel;
+                else
+                    DiscordLogger.Default.LogWarning($"[GUILD.UPDATE:{Name}:EmbedChannel] Failed to locate embed channel with id {embedChannelId}");
             }
         }
 

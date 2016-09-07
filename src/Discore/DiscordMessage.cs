@@ -127,7 +127,7 @@ namespace Discore
             if (authorData != null)
             {
                 string authorId = authorData.GetString("id");
-                Author = cache.AddOrUpdate(authorId, authorData, () => { return new DiscordUser(); });
+                Author = cache.AddOrUpdate(authorId, authorData, () => { return new DiscordUser(client); });
 
                 DiscordGuildChannel guildChannel = Channel as DiscordGuildChannel;
                 if (guildChannel != null)

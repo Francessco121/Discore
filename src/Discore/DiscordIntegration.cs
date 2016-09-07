@@ -56,6 +56,7 @@ namespace Discore
         /// </summary>
         public DiscordGuild Guild { get; private set; }
 
+        IDiscordClient client;
         DiscordApiCache cache;
 
         /// <summary>
@@ -65,6 +66,7 @@ namespace Discore
         /// <param name="guild">The assocaited <see cref="DiscordGuild"/>.</param>
         public DiscordIntegration(IDiscordClient client, DiscordGuild guild)
         {
+            this.client = client;
             cache = client.Cache;
             Guild = guild;
         }
@@ -96,7 +98,7 @@ namespace Discore
             if (userData != null)
             {
                 string userId = userData.GetString("id");
-                User = cache.AddOrUpdate(userId, userData, () => { return new DiscordUser(); });
+                User = cache.AddOrUpdate(userId, userData, () => { return new DiscordUser(client); });
             }
 
             DiscordApiData accountData = data.Get("account");

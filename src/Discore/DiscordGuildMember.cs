@@ -39,6 +39,7 @@ namespace Discore
         /// </summary>
         public DiscordVoiceState VoiceState { get; private set; }
 
+        IDiscordClient client;
         DiscordApiCache cache;
 
         /// <summary>
@@ -48,6 +49,7 @@ namespace Discore
         /// <param name="guild">The <see cref="DiscordGuild"/> this member belongs to.</param>
         public DiscordGuildMember(IDiscordClient client, DiscordGuild guild)
         {
+            this.client = client;
             cache = client.Cache;
 
             Guild = guild;
@@ -206,7 +208,7 @@ namespace Discore
             if (userData != null)
             {
                 string userId = userData.GetString("id");
-                User = cache.AddOrUpdate(userId, userData, () => { return new DiscordUser(); });
+                User = cache.AddOrUpdate(userId, userData, () => { return new DiscordUser(client); });
             }
 
             User?.Update(data);
