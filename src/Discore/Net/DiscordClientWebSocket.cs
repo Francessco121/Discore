@@ -264,8 +264,14 @@ namespace Discore.Net
 
             // Close the socket if the error wasn't directly from the socket.
             if (socket.State == WebSocketState.Open)
-                socket.CloseAsync(WebSocketCloseStatus.InternalServerError, "An internal error occured",
-                    CancellationToken.None).Wait();
+            {
+                try
+                {
+                    socket.CloseAsync(WebSocketCloseStatus.InternalServerError, "An internal error occured",
+                        CancellationToken.None).Wait();
+                }
+                catch (Exception) { }
+            }
 
             OnFatalError?.Invoke(this, ex);
         }

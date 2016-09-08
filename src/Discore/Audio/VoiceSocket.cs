@@ -402,7 +402,13 @@ namespace Discore.Audio
 
             // Close the socket if the error wasn't directly from the socket.
             if (socket.State == WebSocketState.Open)
-                socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+            {
+                try
+                {
+                    socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+                }
+                catch (Exception) { }
+            }
 
             // Close the UDP socket if still open
             if (udpSocket.IsConnected)
