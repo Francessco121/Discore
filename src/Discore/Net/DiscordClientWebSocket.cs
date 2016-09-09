@@ -177,7 +177,7 @@ namespace Discore.Net
                     if (wse.WebSocketErrorCode != WebSocketError.InvalidState
                         && wse.WebSocketErrorCode != WebSocketError.Success)
                     {
-                        log.LogError(aex);
+                        log.LogError($"[ReceiveLoop] {wse.Message}({(int)wse.WebSocketErrorCode}:{wse.WebSocketErrorCode})");
                         HandleFatalError(aex);
                     }
                 }   
@@ -245,7 +245,7 @@ namespace Discore.Net
                     if (wse.WebSocketErrorCode != WebSocketError.InvalidState 
                         && wse.WebSocketErrorCode != WebSocketError.Success)
                     {
-                        log.LogError(aex);
+                        log.LogError($"[SendLoop] {wse.Message}({(int)wse.WebSocketErrorCode}:{wse.WebSocketErrorCode})");
                         HandleFatalError(aex);
                     }
                 }
