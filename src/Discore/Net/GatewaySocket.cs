@@ -417,8 +417,15 @@ namespace Discore.Net
                         // Cancel any async operations
                         cancelTokenSource.Cancel();
 
-                        // Disconnect from the gateway fully
-                        socket.Close(WebSocketCloseStatus.ProtocolError, "Heartbeat timeout").Wait();
+                        // Try to close the socket if the error wasn't directly from the socket.
+                        if (socket.State == WebSocketState.Open)
+                        {
+                            try
+                            {
+                                socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+                            }
+                            catch (Exception) { }
+                        }
 
                         // Reset the cancellation source
                         cancelTokenSource = new CancellationTokenSource();
@@ -453,8 +460,15 @@ namespace Discore.Net
             // Cancel any async operations
             cancelTokenSource.Cancel();
 
-            // Disconnect from the gateway fully
-            socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+            // Try to close the socket if the error wasn't directly from the socket.
+            if (socket.State == WebSocketState.Open)
+            {
+                try
+                {
+                    socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+                }
+                catch (Exception) { }
+            }
 
             log.LogError("Gateway encountered a fatal error");
             log.LogImportant("Waiting for heartbeat loop to end before reconnecting...");

@@ -262,7 +262,7 @@ namespace Discore.Net
             // Cancel any async operations
             cancelTokenSource.Cancel();
 
-            // Close the socket if the error wasn't directly from the socket.
+            // Try to close the socket if the error wasn't directly from the socket.
             if (socket.State == WebSocketState.Open)
             {
                 try
