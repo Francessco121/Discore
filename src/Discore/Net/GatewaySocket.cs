@@ -43,10 +43,8 @@ namespace Discore.Net
 
             log = new DiscordLogger("Gateway");
 
-            heartbeatThread = new Thread(HeartbeatLoop);
-            heartbeatThread.Name = "GatewaySocket Heartbeat Thread";
-            heartbeatThread.IsBackground = true;
-            
+            CreateHeartbeatThread();
+
             socket = new DiscordClientWebSocket(client, "Gateway");
             cancelTokenSource = new CancellationTokenSource();
 
@@ -55,6 +53,13 @@ namespace Discore.Net
             socket.OnFatalError += Socket_OnFatalError;
 
             isConnected = true;
+        }
+
+        void CreateHeartbeatThread()
+        {
+            heartbeatThread = new Thread(HeartbeatLoop);
+            heartbeatThread.Name = "GatewaySocket Heartbeat Thread";
+            heartbeatThread.IsBackground = true;
         }
 
         private void Socket_OnFatalError(object sender, Exception ex)
@@ -460,24 +465,27 @@ namespace Discore.Net
             // Cancel any async operations
             cancelTokenSource.Cancel();
 
-            // Try to close the socket if the error wasn't directly from the socket.
-            if (socket.State == WebSocketState.Open)
+            // Disconnect from the gateway fully
+            try
             {
-                try
-                {
-                    socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
-                }
-                catch (Exception) { }
+                socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+            }
+            catch (Exception)
+            {
+                // TODO: may need to recreate the socket here?
             }
 
             log.LogError("Gateway encountered a fatal error");
             log.LogImportant("Waiting for heartbeat loop to end before reconnecting...");
 
-            // Wait for heartbeat thread to stop
-            heartbeatThread.Join();
-
             try
             {
+                // Wait for heartbeat thread to stop
+                heartbeatThread.Join();
+
+                // Recreate the heartbeat thread
+                CreateHeartbeatThread();
+
                 // Reset the cancellation source
                 cancelTokenSource = new CancellationTokenSource();
 
