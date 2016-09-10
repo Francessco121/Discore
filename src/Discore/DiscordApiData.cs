@@ -100,7 +100,11 @@ namespace Discore
         object value;
         IList<DiscordApiData> values;
 
-        private DiscordApiData(DiscordApiDataType type)
+        /// <summary>
+        /// Creates a new DiscordApiData object of the specified type.
+        /// </summary>
+        /// <param name="type">The type of api data to store.</param>
+        public DiscordApiData(DiscordApiDataType type)
         {
             Type = type;
 
