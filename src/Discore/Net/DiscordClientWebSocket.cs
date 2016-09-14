@@ -155,6 +155,11 @@ namespace Discore.Net
                     receiveMs.SetLength(0);
                 }
             }
+            catch (DiscoreSocketException dse)
+            {
+                if (dse.ErrorCode != WebSocketCloseStatus.NormalClosure)
+                    throw;
+            }
             catch (WebSocketException wse)
             {
                 if (wse.WebSocketErrorCode != WebSocketError.Success)
@@ -222,6 +227,11 @@ namespace Discore.Net
                     else
                         Thread.Sleep(100);
                 }
+            }
+            catch (DiscoreSocketException dse)
+            {
+                if (dse.ErrorCode != WebSocketCloseStatus.NormalClosure)
+                    throw;
             }
             catch (WebSocketException wse)
             {
