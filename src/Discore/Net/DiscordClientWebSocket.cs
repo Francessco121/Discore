@@ -158,7 +158,10 @@ namespace Discore.Net
             catch (DiscoreSocketException dse)
             {
                 if (dse.ErrorCode != WebSocketCloseStatus.NormalClosure)
-                    throw;
+                {
+                    log.LogError(dse);
+                    HandleFatalError(dse);
+                }
             }
             catch (WebSocketException wse)
             {
@@ -231,7 +234,10 @@ namespace Discore.Net
             catch (DiscoreSocketException dse)
             {
                 if (dse.ErrorCode != WebSocketCloseStatus.NormalClosure)
-                    throw;
+                {
+                    log.LogError(dse);
+                    HandleFatalError(dse);
+                }
             }
             catch (WebSocketException wse)
             {

@@ -411,7 +411,7 @@ namespace Discore.Audio
             }
 
             // Close the UDP socket if still open
-            if (udpSocket.IsConnected)
+            if (udpSocket != null && udpSocket.IsConnected)
                 udpSocket.Disconnect();
 
             OnFatalError?.Invoke(this, ex);
