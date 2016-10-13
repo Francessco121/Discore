@@ -12,7 +12,7 @@ namespace Discore.Net
         {
             DiscordApiData response = await Get($"channels/{channelId}", "GetChannel");
 
-            return client.CacheHelper.UpdateChannel(response);
+            return response.IsNull ? null : client.CacheHelper.UpdateChannel(response);
         }
 
         public async Task<DiscordGuildChannel> Modify(DiscordGuildChannel guildChannel,
@@ -35,9 +35,7 @@ namespace Discore.Net
             }
 
             DiscordApiData responseData = await Put($"channels/{guildChannel.Id}", requestData, "ModifyChannel");
-            DiscordGuildChannel channel = cacheHelper.UpdateChannel(responseData);
-
-            return channel;
+            return responseData.IsNull ? null : cacheHelper.UpdateChannel(responseData);
         }
 
         public async Task<DiscordChannel> Close(DiscordChannel channel)

@@ -67,5 +67,12 @@ namespace Discore.Net
         /// <param name="messageIds">The ids of the <see cref="DiscordMessage"/>s to delete.</param>
         /// <returns>Returns whether or not the deletion was successful.</returns>
         Task<bool> Delete(DiscordChannel channel, string[] messageIds);
+
+        /// <summary>
+        /// Pins a <see cref="DiscordMessage"/>.
+        /// </summary>
+        /// <param name="message">The message to pin.</param>
+        /// <returns>Returns whether the pin was successful.</returns>
+        Task<bool> Pin(DiscordMessage message);
     }
 }

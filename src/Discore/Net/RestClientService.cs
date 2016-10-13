@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,31 +27,39 @@ namespace Discore.Net
 
         DiscordApiData ValidateReturnData(HttpResponseMessage response, DiscordApiData data)
         {
-            if (response.IsSuccessStatusCode)
-                return data;
-            else
+            try
             {
-                IList<DiscordApiData> content = data.GetArray("content");
-                if (content != null)
-                {
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < content.Count; i++)
-                    {
-                        sb.Append(content[i]);
-
-                        if (i < content.Count - 1)
-                            sb.Append(", ");
-                    }
-
-                    throw new DiscordRestClientException(sb.ToString(), RestErrorCode.BadRequest);
-                }
+                if (response.IsSuccessStatusCode)
+                    return data;
                 else
                 {
-                    long code = data.GetInt64("code") ?? 0;
-                    string message = data.GetString("message");
+                    IList<DiscordApiData> content = data.GetArray("content");
+                    if (content != null)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < content.Count; i++)
+                        {
+                            sb.Append(content[i]);
 
-                    throw new DiscordRestClientException(message, (RestErrorCode)code);
+                            if (i < content.Count - 1)
+                                sb.Append(", ");
+                        }
+
+                        throw new DiscordRestClientException(sb.ToString(), RestErrorCode.BadRequest);
+                    }
+                    else
+                    {
+                        long code = data.GetInt64("code") ?? 0;
+                        string message = data.GetString("message");
+
+                        throw new DiscordRestClientException(message, (RestErrorCode)code);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                DiscordLogger.Default.LogError($"[RestClientService] {ex}");
+                return new DiscordApiData(value: null);
             }
         }
 
@@ -99,7 +108,8 @@ namespace Discore.Net
             await rateLimitManager.AwaitRateLimiter(limiterAction);
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/{action}");
-            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+            if (data != null)
+                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
             HttpResponseMessage response = await httpClient.SendAsync(request);
             rateLimitManager.UpdateRateLimiter(limiterAction, response);

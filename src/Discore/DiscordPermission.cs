@@ -10,6 +10,10 @@ namespace Discore
     public enum DiscordPermission : long
     {
         /// <summary>
+        /// No permissions.
+        /// </summary>
+        None = 0,
+        /// <summary>
         /// Allows creation of instant invites.
         /// </summary>
         CreateInstantInvite = 0x00000001,

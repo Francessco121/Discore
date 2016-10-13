@@ -20,7 +20,7 @@ namespace Discore.Net
             data.Set("recipient_id", recipientId);
 
             DiscordApiData response = await Post($"users/{client.User.Id}/channels", data, "CreateDM");
-            return (DiscordDMChannel)cacheHelper.CreateChannel(response);
+            return response.IsNull ? null : (DiscordDMChannel)cacheHelper.CreateChannel(response);
         }
     }
 }

@@ -99,6 +99,14 @@ namespace Discore
         }
 
         /// <summary>
+        /// Pins this message.
+        /// </summary>
+        public async Task<bool> Pin()
+        {
+            return await client.Rest.Messages.Pin(this);
+        }
+
+        /// <summary>
         /// Updates this message with the specified <see cref="DiscordApiData"/>.
         /// </summary>
         /// <param name="data">The data to update this message with.</param>

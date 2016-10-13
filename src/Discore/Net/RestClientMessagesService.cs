@@ -25,7 +25,7 @@ namespace Discore.Net
             data.Set("content", message);
 
             DiscordApiData response = await Post($"channels/{channel.Id}/messages", data, "SendMessage");
-            return cacheHelper.CreateMessage(response);
+            return response.IsNull ? null : cacheHelper.CreateMessage(response);
         }
 
         public async Task<DiscordMessage> Send(DiscordChannel channel, string message, byte[] file)
@@ -47,7 +47,7 @@ namespace Discore.Net
             request.Properties.Add("content", message);
 
             DiscordApiData response = await Post(request, "SendMessageWithAttachment");
-            return cacheHelper.CreateMessage(response);
+            return response.IsNull ? null : cacheHelper.CreateMessage(response);
         }
 
         public async Task<DiscordMessage> Get(DiscordChannel channel, string messageId)
@@ -63,9 +63,7 @@ namespace Discore.Net
 
             DiscordApiData data = await Get($"channels/{channel.Id}/messages/{messageId}", "GetMessage");
 
-            DiscordMessage msg = cacheHelper.CreateMessage(data);
-
-            return msg;
+            return data.IsNull ? null : cacheHelper.CreateMessage(data);
         }
 
         public async Task<DiscordMessage[]> Get(DiscordChannel channel, DiscordMessageGetStrategy strategy,
@@ -88,14 +86,19 @@ namespace Discore.Net
             DiscordApiData data = await Get($"channels/{channel.Id}/messages?limit={limit}&{strategyStr}={baseMessageId}",
                 "GetMessages");
 
-            DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
-            for (int i = 0; i < data.Values.Count; i++)
+            if (!data.IsNull)
             {
-                DiscordMessage msg = cacheHelper.CreateMessage(data.Values[i]);
-                messages[i] = msg;
-            }
+                DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
+                for (int i = 0; i < data.Values.Count; i++)
+                {
+                    DiscordMessage msg = cacheHelper.CreateMessage(data.Values[i]);
+                    messages[i] = msg;
+                }
 
-            return messages;
+                return messages;
+            }
+            else
+                return null;
         }
 
         public async Task<DiscordMessage> Edit(DiscordChannel channel, string messageId, string content)
@@ -113,10 +116,15 @@ namespace Discore.Net
             requestData.Set("content", content);
 
             DiscordApiData responseData = await Patch($"channels/{channel.Id}/messages/{messageId}", requestData, "EditMessage");
-            DiscordMessage msg = new DiscordMessage(client);
-            msg.Update(responseData);
+            if (!responseData.IsNull)
+            {
+                DiscordMessage msg = new DiscordMessage(client);
+                msg.Update(responseData);
 
-            return msg;
+                return msg;
+            }
+            else
+                return null;
         }
 
         public async Task<bool> Delete(DiscordChannel channel, string messageId)
@@ -167,6 +175,12 @@ namespace Discore.Net
                 DiscordApiData data = await Post($"channels/{channel.Id}/messages/bulk_delete", deleteData, "DeleteMessages");
                 return data.Value == null;
             }
+        }
+
+        public async Task<bool> Pin(DiscordMessage message)
+        {
+            DiscordApiData data = await Put($"channels/{message.Channel.Id}/pins/{message.Id}", null, "PinMessage");
+            return data.Value == null;
         }
     }
 }
