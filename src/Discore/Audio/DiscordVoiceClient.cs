@@ -214,6 +214,8 @@ namespace Discore.Audio
                             voiceSocket.SendPCMData(blockBuffer, 0, read);
                             gotFirstBlock = true;
                         }
+                        else
+                            Thread.Sleep(1);
                     }
                     // Causes major audio artifacts in move to .NET Core
                     // TODO: Figure out why sending opus silence no longer works correctly.
