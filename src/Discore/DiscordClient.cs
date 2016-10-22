@@ -110,6 +110,10 @@ namespace Discore
         /// Called when a <see cref="DiscordGuildMember"/> starts typing.
         /// </summary>
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
+        /// <summary>
+        /// Called when the voice state of a <see cref="DiscordGuildMember"/> is updated.
+        /// </summary>
+        public event EventHandler<GuildMemberEventArgs> OnVoiceStateUpdated;
         #endregion
 
         /// <summary>
@@ -787,7 +791,8 @@ namespace Discore
         {
             try
             {
-                CacheHelper.UpdateVoiceState(data);
+                DiscordGuildMember member = CacheHelper.UpdateVoiceState(data);
+                OnVoiceStateUpdated?.Invoke(this, new GuildMemberEventArgs(member.Guild, member));
             }
             catch (DiscordApiCacheHelperException ex)
             {

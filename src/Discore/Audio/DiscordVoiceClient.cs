@@ -47,6 +47,10 @@ namespace Discore.Audio
         /// Gets whether or not this <see cref="DiscordVoiceClient"/> is connected to a <see cref="DiscordGuild"/>.
         /// </summary>
         public bool IsConnected { get { return isConnected && !isDisposed; } }
+        /// <summary>
+        /// Gets whether this voice client is in the process of disconnecting.
+        /// </summary>
+        public bool IsDisconnecting { get; private set; }
 
         // TODO: Make prebuffer configuration available publically
         const int PCM_BLOCK_SIZE = 3840;
@@ -70,6 +74,8 @@ namespace Discore.Audio
             Client = client;
             Guild = guild;
 
+            client.OnVoiceStateUpdated += Client_OnVoiceStateUpdated;
+
             log = new DiscordLogger($"DiscordVoiceClient:{guild.Name}");
 
             audioBuffer = new CircularBuffer(AUDIO_BUFFER_SIZE);
@@ -78,6 +84,21 @@ namespace Discore.Audio
             audioSendThread.Name = $"{log.Prefix} Audio Send Thread";
             audioSendThread.IsBackground = true;
             audioSendThread.Start();
+        }
+
+        private void Client_OnVoiceStateUpdated(object sender, GuildMemberEventArgs e)
+        {
+            DiscordGuildMember member = e.Member;
+            if (member.Id == Client.User.Id && member.Guild.Id == Guild.Id)
+            {
+                if (member.VoiceState.Channel == null)
+                {
+                    isConnected = false;
+                    IsDisconnecting = false;
+
+                    OnDisconnected?.Invoke(this, new VoiceClientEventArgs(this));
+                }
+            }
         }
 
         internal void SetSocket(VoiceSocket socket)
@@ -143,10 +164,8 @@ namespace Discore.Audio
         {
             if (isConnected)
             {
-                isConnected = false;
+                IsDisconnecting = true;
                 Client.Gateway.DisconnectFromVoice(Guild);
-                OnDisconnected?.Invoke(this, new VoiceClientEventArgs(this));
-
                 return true;
             }
 
@@ -261,6 +280,8 @@ namespace Discore.Audio
             if (!isDisposed)
             {
                 isDisposed = true;
+
+                Client.OnVoiceStateUpdated -= Client_OnVoiceStateUpdated;
 
                 voiceSocket?.Dispose();
 
