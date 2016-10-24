@@ -481,6 +481,7 @@ namespace Discore.Net
                 if (Connect().Result)
                 {
                     log.LogImportant("Successfully reconnected after timeout");
+                    lastHeartbeatAckMs = Environment.TickCount;
                     break;
                 }
                 else
