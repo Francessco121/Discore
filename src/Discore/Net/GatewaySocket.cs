@@ -84,7 +84,13 @@ namespace Discore.Net
             // The only case where the thread would still be alive is
             // when the socket is reconnecting from timing out.
             if (!heartbeatThread.IsAlive)
+            {
+                // Give discord 10s to reply to websocket connection
+                connectionTimeOutAfterMs = 10000;
+                lastHeartbeatAckMs = Environment.TickCount;
+
                 heartbeatThread.Start();
+            }
         }
 
         public async Task<bool> Connect(string token)
@@ -397,66 +403,91 @@ namespace Discore.Net
         {
             try
             {
-                while (heartbeatInterval == 0 && socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
-                    Thread.Sleep(1000);
-
-                do
+                // Await hello payload
+                while (!manuallyDisconnected && heartbeatInterval == 0 && socket.State == WebSocketState.Open 
+                    && !cancelTokenSource.IsCancellationRequested)
                 {
-                    while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
+                    if (Environment.TickCount >= lastHeartbeatAckMs + connectionTimeOutAfterMs)
                     {
-                        if (Environment.TickCount >= lastHeartbeatAckMs + connectionTimeOutAfterMs)
+                        log.LogError($"Failed to receive hello after {connectionTimeOutAfterMs}ms");
+
+                        // Attempt to reconnect
+                        if (!cancelTokenSource.IsCancellationRequested)
                         {
-                            log.LogError($"Failed to receive heartbeat acknowledgement after {connectionTimeOutAfterMs}ms");
-                            break;
-                        }
-                        else
-                        {
-                            SendHeartbeat();
-                            Thread.Sleep(heartbeatInterval);
+                            AttemptReconnect();
+
+                            // Reset timeout
+                            lastHeartbeatAckMs = Environment.TickCount;
                         }
                     }
+                    else
+                        Thread.Sleep(100);
+                }
 
-                    // Attempt to reconnect
-                    if (!cancelTokenSource.IsCancellationRequested)
+                // Heartbeat
+                if (!manuallyDisconnected)
+                {
+                    do
                     {
-                        // Cancel any async operations
-                        cancelTokenSource.Cancel();
-
-                        // Try to close the socket if the error wasn't directly from the socket.
-                        if (socket.State == WebSocketState.Open)
+                        while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                         {
-                            try
+                            if (Environment.TickCount >= lastHeartbeatAckMs + connectionTimeOutAfterMs)
                             {
-                                socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
-                            }
-                            catch (Exception) { }
-                        }
-
-                        // Reset the cancellation source
-                        cancelTokenSource = new CancellationTokenSource();
-
-                        // Continuously attempt to reconnect
-                        while (!manuallyDisconnected)
-                        {
-                            if (Connect().Result)
-                            {
-                                log.LogImportant("Successfully reconnected after timeout");
+                                log.LogError($"Failed to receive heartbeat acknowledgement after {connectionTimeOutAfterMs}ms");
                                 break;
                             }
                             else
                             {
-                                log.LogImportant("Failed to reconnect after timeout, waiting 5 seconds before retrying...");
-                                Thread.Sleep(5000);
+                                SendHeartbeat();
+                                Thread.Sleep(heartbeatInterval);
                             }
                         }
-                    }
 
-                } while (!cancelTokenSource.IsCancellationRequested && !manuallyDisconnected);
+                        // Attempt to reconnect
+                        if (!cancelTokenSource.IsCancellationRequested)
+                            AttemptReconnect();
+
+                    } while (!cancelTokenSource.IsCancellationRequested && !manuallyDisconnected);
+                }
             }
             catch (Exception ex)
             {
                 log.LogError(ex);
                 HandleFatalError(ex);
+            }
+        }
+
+        void AttemptReconnect()
+        {
+            // Cancel any async operations
+            cancelTokenSource.Cancel();
+
+            // Try to close the socket if the error wasn't directly from the socket.
+            if (socket.State == WebSocketState.Open)
+            {
+                try
+                {
+                    socket.Close(WebSocketCloseStatus.InternalServerError, "An internal error occured").Wait();
+                }
+                catch (Exception) { }
+            }
+
+            // Reset the cancellation source
+            cancelTokenSource = new CancellationTokenSource();
+
+            // Continuously attempt to reconnect
+            while (!manuallyDisconnected)
+            {
+                if (Connect().Result)
+                {
+                    log.LogImportant("Successfully reconnected after timeout");
+                    break;
+                }
+                else
+                {
+                    log.LogImportant("Failed to reconnect after timeout, waiting 5 seconds before retrying...");
+                    Thread.Sleep(5000);
+                }
             }
         }
 
