@@ -147,8 +147,16 @@ namespace Discore.Net
                     }
 
                     // Invoke event
-                    DiscordApiData data = DiscordApiData.FromJson(json);
-                    InvokeOnMessageReceived(data);
+                    try
+                    {
+                        DiscordApiData data = DiscordApiData.FromJson(json);
+                        InvokeOnMessageReceived(data);
+                    }
+                    catch (Newtonsoft.Json.JsonException jex)
+                    {
+                        log.LogError(jex);
+                        log.LogError($"Failed to parse: {json}");
+                    }
 
                     // Reset memory stream
                     receiveMs.Position = 0;
