@@ -157,10 +157,12 @@ namespace Discore.Net
                         log.LogError(jex);
                         log.LogError($"Failed to parse: {json}");
                     }
-
-                    // Reset memory stream
-                    receiveMs.Position = 0;
-                    receiveMs.SetLength(0);
+                    finally
+                    {
+                        // Reset memory stream
+                        receiveMs.Position = 0;
+                        receiveMs.SetLength(0);
+                    }
                 }
             }
             catch (DiscoreSocketException dse)
