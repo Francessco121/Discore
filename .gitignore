@@ -5,3 +5,4 @@ obj/
 .vs/
 project.lock.json
 .DS_Store
+token.txt

@@ -25,7 +25,7 @@ namespace Discore
             }
 
             DiscordObject obj = typeTable[id] as DiscordObject;
-            DiscordObject orig = obj;
+
             if (obj != null)
                 obj = obj.MemberwiseClone();
             else
