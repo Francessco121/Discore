@@ -7,17 +7,13 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Discore")]
+[assembly: AssemblyProduct("DiscoreTest")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyVersion("2.0.0.*")]
 
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
 
-// Make internals visible for test project
-[assembly: InternalsVisibleTo("DiscoreTest")]
-
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("e7c8beea-c91e-405c-a6eb-ff15a944654f")]
+[assembly: Guid("3c51139a-1997-4eaf-9abb-44dc6e7c6170")]
