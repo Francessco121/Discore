@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace Discore
 {
-    public class DiscordLogEventArgs : EventArgs
+    public class DiscoreLogEventArgs : EventArgs
     {
-        public readonly DiscordLogLine Line;
+        public readonly DiscoreLogLine Line;
 
-        internal DiscordLogEventArgs(DiscordLogLine line)
+        internal DiscoreLogEventArgs(DiscoreLogLine line)
         {
             Line = line;
         }
@@ -16,7 +16,7 @@ namespace Discore
     /// <summary>
     /// Represents a single logged line.
     /// </summary>
-    public class DiscordLogLine
+    public class DiscoreLogLine
     {
         /// <summary>
         /// The contents of this line.
@@ -25,9 +25,9 @@ namespace Discore
         /// <summary>
         /// The type of line.
         /// </summary>
-        public readonly DiscordLogType Type;
+        public readonly DiscoreLogType Type;
 
-        internal DiscordLogLine(string msg, DiscordLogType type)
+        internal DiscoreLogLine(string msg, DiscoreLogType type)
         {
             Message = msg;
             Type = type;
@@ -35,9 +35,9 @@ namespace Discore
     }
 
     /// <summary>
-    /// The type of a <see cref="DiscordLogLine"/>.
+    /// The type of a <see cref="DiscoreLogLine"/>.
     /// </summary>
-    public enum DiscordLogType
+    public enum DiscoreLogType
     {
         Heartbeat,
         Verbose,
@@ -48,97 +48,96 @@ namespace Discore
     }
 
     /// <summary>
-    /// A filter for a <see cref="DiscordLogger"/>.
+    /// A filter for a <see cref="DiscoreLogger"/>.
     /// </summary>
-    public class DiscordLoggerFilter
+    public class DiscoreLoggerFilter
     {
-        Dictionary<DiscordLogType, bool> settings;
+        Dictionary<DiscoreLogType, bool> settings;
 
-        internal DiscordLoggerFilter()
+        internal DiscoreLoggerFilter()
         {
-            settings = new Dictionary<DiscordLogType, bool>();
+            settings = new Dictionary<DiscoreLogType, bool>();
 
-            foreach (object v in Enum.GetValues(typeof(DiscordLogType)))
-                settings[(DiscordLogType)v] = false;
+            foreach (object v in Enum.GetValues(typeof(DiscoreLogType)))
+                settings[(DiscoreLogType)v] = false;
         }
 
         /// <summary>
-        /// Sets the filtered state of a <see cref="DiscordLogType"/>.
+        /// Sets the filtered state of a <see cref="DiscoreLogType"/>.
         /// </summary>
-        /// <param name="type">The type of <see cref="DiscordLogLine"/> to affect.</param>
+        /// <param name="type">The type of <see cref="DiscoreLogLine"/> to affect.</param>
         /// <param name="filter">The new filtered state.</param>
-        public void Set(DiscordLogType type, bool filter)
+        public void Set(DiscoreLogType type, bool filter)
         {
             settings[type] = filter;
         }
 
         /// <summary>
-        /// Gets whether or not a <see cref="DiscordLogType"/> is filtered.
+        /// Gets whether or not a <see cref="DiscoreLogType"/> is filtered.
         /// </summary>
-        /// <param name="type">The type of <see cref="DiscordLogLine"/>.</param>
-        /// <returns>Returns whether or not the <see cref="DiscordLogType"/> is filtered.</returns>
-        public bool IsFiltered(DiscordLogType type)
+        /// <param name="type">The type of <see cref="DiscoreLogLine"/>.</param>
+        /// <returns>Returns whether or not the <see cref="DiscoreLogType"/> is filtered.</returns>
+        public bool IsFiltered(DiscoreLogType type)
         {
             return settings[type];
         }
     }
 
     /// <summary>
-    /// A logger for Discord related systems.
+    /// A logger for Discore related systems.
     /// </summary>
-    public class DiscordLogger
+    public class DiscoreLogger
     {
         /// <summary>
-        /// Called when a line is logged from any <see cref="DiscordLogger"/>.
+        /// Called when a line is logged from any <see cref="DiscoreLogger"/>.
         /// </summary>
-        public static event EventHandler<DiscordLogEventArgs> OnLog;
+        public static event EventHandler<DiscoreLogEventArgs> OnLog;
         /// <summary>
-        /// Called when a filtered line is logged from any <see cref="DiscordLogger"/>.
+        /// Called when a filtered line is logged from any <see cref="DiscoreLogger"/>.
         /// </summary>
-        public static event EventHandler<DiscordLogEventArgs> OnFilteredLog;
+        public static event EventHandler<DiscoreLogEventArgs> OnFilteredLog;
 
         /// <summary>
         /// Gets or sets whether or not timestamps are prepended to every logged line.
         /// </summary>
         public static bool PrependTimestamp { get; set; } = true;
         /// <summary>
-        /// Gets the default <see cref="DiscordLogger"/>.
+        /// Gets the default <see cref="DiscoreLogger"/>.
         /// </summary>
-        public static DiscordLogger Default { get; }
+        public static DiscoreLogger Default { get; }
         /// <summary>
-        /// Gets the global filter for every <see cref="DiscordLogger"/>.
+        /// Gets the global filter for every <see cref="DiscoreLogger"/>.
         /// </summary>
-        public static DiscordLoggerFilter GlobalFilter { get; }
+        public static DiscoreLoggerFilter GlobalFilter { get; }
 
         /// <summary>
-        /// Gets or sets the prefix for this <see cref="DiscordLogger"/>.
+        /// Gets or sets the prefix for this <see cref="DiscoreLogger"/>.
         /// </summary>
         public string Prefix { get; set; }
         /// <summary>
-        /// Gets the filter for this <see cref="DiscordLogger"/>.
+        /// Gets the filter for this <see cref="DiscoreLogger"/>.
         /// </summary>
-        public DiscordLoggerFilter Filter { get; }
+        public DiscoreLoggerFilter Filter { get; }
 
-        static DiscordLogger()
+        static DiscoreLogger()
         {
-            GlobalFilter = new DiscordLoggerFilter();
+            GlobalFilter = new DiscoreLoggerFilter();
 #if !DEBUG
-            GlobalFilter.Set(DiscordLogType.Heartbeat, true);
-            GlobalFilter.Set(DiscordLogType.Unnecessary, true);
-            GlobalFilter.Set(DiscordLogType.Verbose, true);
+            GlobalFilter.Set(DiscoreLogType.Heartbeat, true);
+            GlobalFilter.Set(DiscoreLogType.Verbose, true);
 #endif
 
-            Default = new DiscordLogger("");
+            Default = new DiscoreLogger("");
         }
 
         /// <summary>
-        /// Creates a new <see cref="DiscordLogger"/> instance.
+        /// Creates a new <see cref="DiscoreLogger"/> instance.
         /// </summary>
         /// <param name="prefix">The prefix of this logger.</param>
-        public DiscordLogger(string prefix)
+        public DiscoreLogger(string prefix)
         {
             Prefix = prefix;
-            Filter = new DiscordLoggerFilter();
+            Filter = new DiscoreLoggerFilter();
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace Discore
         /// </summary>
         /// <param name="msg">The contents of this log.</param>
         /// <param name="type">The type of log.</param>
-        public void Log(string msg, DiscordLogType type)
+        public void Log(string msg, DiscoreLogType type)
         {
             if (PrependTimestamp && !string.IsNullOrWhiteSpace(Prefix))
                 // Timestamp and prefix
@@ -159,9 +158,9 @@ namespace Discore
                 msg = $"[{Prefix}] {msg}";
 
             if (GlobalFilter.IsFiltered(type) || Filter.IsFiltered(type))
-                OnFilteredLog?.Invoke(null, new DiscordLogEventArgs(new DiscordLogLine(msg, type)));
+                OnFilteredLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type)));
             else
-                OnLog?.Invoke(null, new DiscordLogEventArgs(new DiscordLogLine(msg, type)));
+                OnLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type)));
         }
 
         /// <summary>
@@ -170,7 +169,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogHeartbeat(string msg)
         {
-            Log(msg, DiscordLogType.Heartbeat);
+            Log(msg, DiscoreLogType.Heartbeat);
         }
 
         /// <summary>
@@ -179,7 +178,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogVerbose(string msg)
         {
-            Log(msg, DiscordLogType.Verbose);
+            Log(msg, DiscoreLogType.Verbose);
         }
 
         /// <summary>
@@ -188,7 +187,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogInfo(string msg)
         {
-            Log(msg, DiscordLogType.Info);
+            Log(msg, DiscoreLogType.Info);
         }
 
         /// <summary>
@@ -197,7 +196,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogImportant(string msg)
         {
-            Log(msg, DiscordLogType.Important);
+            Log(msg, DiscoreLogType.Important);
         }
 
         /// <summary>
@@ -206,7 +205,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogWarning(string msg)
         {
-            Log(msg, DiscordLogType.Warning);
+            Log(msg, DiscoreLogType.Warning);
         }
 
         /// <summary>
@@ -215,7 +214,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogError(string msg)
         {
-            Log(msg, DiscordLogType.Error);
+            Log(msg, DiscoreLogType.Error);
         }
 
         /// <summary>
@@ -224,7 +223,7 @@ namespace Discore
         /// <param name="ex">The exception to log.</param>
         public void LogError(Exception ex)
         {
-            Log(ex.ToString(), DiscordLogType.Error);
+            Log(ex.ToString(), DiscoreLogType.Error);
         }
     }
 }
