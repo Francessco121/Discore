@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -39,6 +36,24 @@ namespace Discore
         /// </summary>
         public string Email { get; private set; }
 
+        /// <summary>
+        /// Gets the game this user is currently playing.
+        /// </summary>
+        public DiscordGame Game { get; private set; }
+
+        /// <summary>
+        /// Gets the current status of this user.
+        /// </summary>
+        public DiscordUserStatus Status { get; private set; }
+
+        internal override DiscordObject MemberwiseClone()
+        {
+            DiscordUser user = (DiscordUser)base.MemberwiseClone();
+            user.Game = (DiscordGame)Game.MemberwiseClone();
+
+            return user;
+        }
+
         internal override void Update(DiscordApiData data)
         {
             Id = data.GetString("id") ?? Id;
@@ -48,36 +63,32 @@ namespace Discore
             IsVerified = data.GetBoolean("verified") ?? IsVerified;
             Email = data.GetString("email") ?? Email;
 
-            //DiscordApiData gameData = data.Get("game");
-            //if (gameData != null)
-            //{
-            //    if (gameData.IsNull)
-            //        Game = null;
-            //    else
-            //    {
-            //        if (Game == null)
-            //            Game = new DiscordGame();
+            DiscordApiData gameData = data.Get("game");
+            if (gameData != null)
+            {
+                if (gameData.IsNull)
+                    Game = null;
+                else
+                {
+                    if (Game == null)
+                        Game = new DiscordGame();
 
-            //        Game.Update(gameData);
-            //    }
-            //}
+                    Game.Update(gameData);
+                }
+            }
 
-            //string status = data.GetString("status");
-            //if (status != null)
-            //{
-            //    switch (status)
-            //    {
-            //        case "online":
-            //            Status = DiscordUserStatus.Online;
-            //            break;
-            //        case "offline":
-            //            Status = DiscordUserStatus.Offline;
-            //            break;
-            //        case "idle":
-            //            Status = DiscordUserStatus.Idle;
-            //            break;
-            //    }
-            //}
+            string statusStr = data.GetString("status");
+            if (statusStr != null)
+            {
+                DiscordUserStatus status;
+                if (Enum.TryParse(statusStr, true, out status))
+                    Status = status;
+            }
+        }
+
+        public override string ToString()
+        {
+            return Username;
         }
     }
 }
