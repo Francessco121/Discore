@@ -39,6 +39,8 @@ namespace DiscoreTest
                 }
             }
 
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("\nDone.");
             Console.ReadKey();
         }
     }

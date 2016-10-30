@@ -651,6 +651,24 @@ namespace Discore
 
         #region Conversions
         /// <summary>
+        /// Attempts to create a DiscordApiData object from a JSON string.
+        /// </summary>
+        /// <returns>Returns whether the conversion was successful.</returns>
+        public static bool TryCreateFromJson(string json, out DiscordApiData data)
+        {
+            try
+            {
+                data = FromJson(json);
+                return true;
+            }
+            catch (Exception)
+            {
+                data = null;
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Creates a DiscordApiData object from a JSON string.
         /// </summary>
         public static DiscordApiData FromJson(string json)

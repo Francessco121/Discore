@@ -1,4 +1,4 @@
-﻿namespace Discore.Net
+﻿namespace Discore.Net.Rest
 {
     /// <summary>
     /// Error codes returned by the discord HTTP API.
@@ -6,6 +6,8 @@
     /// </summary>
     public enum DiscordRestErrorCode
     {
+        None = 0,
+
         UnknownAccount = 10001,
         UnknownApplication,
         UnknownChannel,
