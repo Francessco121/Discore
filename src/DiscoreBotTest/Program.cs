@@ -16,12 +16,19 @@ namespace DiscoreBotTest
             if (string.IsNullOrWhiteSpace(token))
                 throw new Exception("Token from token.txt is invalid!");
 
+            DiscoreLogger.OnLog += DiscoreLogger_OnLog;
+
             DiscordApplication app = new DiscordApplication(token);
 
             app.Shards.CreateShards(1);
 
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
+        }
+
+        private static void DiscoreLogger_OnLog(object sender, DiscoreLogEventArgs e)
+        {
+            Console.WriteLine($"[{e.Line.Type}] {e.Line.Message}");
         }
     }
 }

@@ -47,7 +47,7 @@ namespace Discore.Net.Rest
 
             // Attempt to parse the payload as JSON.
             DiscordApiData data;
-            if (DiscordApiData.TryCreateFromJson(json, out data))
+            if (DiscordApiData.TryParseJson(json, out data))
             {
                 if (response.IsSuccessStatusCode)
                     // If successful, no more action is required.

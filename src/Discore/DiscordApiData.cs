@@ -654,11 +654,11 @@ namespace Discore
         /// Attempts to create a DiscordApiData object from a JSON string.
         /// </summary>
         /// <returns>Returns whether the conversion was successful.</returns>
-        public static bool TryCreateFromJson(string json, out DiscordApiData data)
+        public static bool TryParseJson(string json, out DiscordApiData data)
         {
             try
             {
-                data = FromJson(json);
+                data = ParseJson(json);
                 return true;
             }
             catch (Exception)
@@ -671,7 +671,7 @@ namespace Discore
         /// <summary>
         /// Creates a DiscordApiData object from a JSON string.
         /// </summary>
-        public static DiscordApiData FromJson(string json)
+        public static DiscordApiData ParseJson(string json)
         {
             if (string.IsNullOrWhiteSpace(json))
                 return new DiscordApiData(value: null);

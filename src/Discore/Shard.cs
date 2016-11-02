@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Net.Sockets;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,16 +10,18 @@ namespace Discore
     {
         public int ShardId { get; }
         public DiscordApiCache Cache { get; }
+        public DiscordApplication Application { get; }
 
-        DiscordApplication app;
         bool isRunning;
+        Gateway gateway;
 
         internal Shard(DiscordApplication app, int shardId)
         {
-            this.app = app;
+            Application = app;
             ShardId = shardId;
 
             Cache = new DiscordApiCache();
+            gateway = new Gateway();
         }
 
         internal void Start()
@@ -27,7 +30,7 @@ namespace Discore
             {
                 isRunning = true;
 
-                // TODO: start
+                gateway.Connect();
             }
             else
                 throw new InvalidOperationException($"Shard {ShardId} has already been started!");
