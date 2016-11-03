@@ -14,14 +14,17 @@ namespace Discore
 
         bool isRunning;
         Gateway gateway;
+        DiscoreLogger log;
 
         internal Shard(DiscordApplication app, int shardId)
         {
             Application = app;
             ShardId = shardId;
 
+            log = new DiscoreLogger($"Shard {shardId}");
+
             Cache = new DiscordApiCache();
-            gateway = new Gateway();
+            gateway = new Gateway(app, this);
         }
 
         internal void Start()
@@ -30,7 +33,10 @@ namespace Discore
             {
                 isRunning = true;
 
-                gateway.Connect();
+                if (gateway.Connect())
+                {
+                    log.LogInfo("Successfully connected to gateway");
+                }
             }
             else
                 throw new InvalidOperationException($"Shard {ShardId} has already been started!");
