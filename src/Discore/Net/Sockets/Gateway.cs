@@ -51,7 +51,14 @@ namespace Discore.Net.Sockets
                 Reset();
 
                 // Attempt to connect socket
-                if (socket.Connect($"{"wss://gateway.discord.gg/"}/encoding=json&v=5"))
+                // TODO: gateway endpoint should be retrieved from a cache,
+                // and GET /gateway should be called when this connect fails
+                // to ensure we have the correct endpoint.
+                // OR
+                // the endpoint can be passed from higher up,
+                // since GET /gateway/bot is now a thing and needs to be managed
+                // from a higher point.
+                if (socket.Connect($"{"wss://gateway.discord.gg/"}/?encoding=json&v=5"))
                 {
                     SendIdentifyPayload();
 
@@ -102,6 +109,7 @@ namespace Discore.Net.Sockets
                 }
 
                 SendHeartbeatPayload();
+                Thread.Sleep(heartbeatInterval);
             }
 
             if (timedOut)
