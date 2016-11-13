@@ -5,11 +5,8 @@
     /// </summary>
     public abstract class DiscordObject
     {
-        internal abstract void Update(DiscordApiData data);
+        internal DiscordObject() { }
 
-        internal virtual new DiscordObject MemberwiseClone()
-        {
-            return (DiscordObject)base.MemberwiseClone();
-        }
+        internal abstract void Update(DiscordApiData data);
     }
 }

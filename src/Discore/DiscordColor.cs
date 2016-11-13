@@ -55,5 +55,10 @@
 
             return new DiscordColor(r, g, b);
         }
+
+        public override string ToString()
+        {
+            return $"{R}, {G}, {B}";
+        }
     }
 }

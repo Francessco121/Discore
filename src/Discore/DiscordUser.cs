@@ -2,7 +2,7 @@
 
 namespace Discore
 {
-    public class DiscordUser : DiscordIdObject
+    public sealed class DiscordUser : DiscordIdObject
     {
         public string Username { get; private set; }
 
@@ -46,17 +46,12 @@ namespace Discore
         /// </summary>
         public DiscordUserStatus Status { get; private set; }
 
-        internal override DiscordObject MemberwiseClone()
-        {
-            DiscordUser user = (DiscordUser)base.MemberwiseClone();
-            user.Game = (DiscordGame)Game.MemberwiseClone();
-
-            return user;
-        }
+        internal DiscordUser() { }
 
         internal override void Update(DiscordApiData data)
         {
-            Id = data.GetString("id") ?? Id;
+            base.Update(data);
+
             Username = data.GetString("username") ?? Username;
             Discriminator = data.GetString("discriminator") ?? Discriminator;
             Avatar = data.GetString("avatar") ?? Avatar;

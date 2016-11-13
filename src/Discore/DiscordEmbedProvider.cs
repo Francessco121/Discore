@@ -3,7 +3,7 @@
     /// <summary>
     /// The web provider of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public class DiscordEmbedProvider : DiscordObject
+    public sealed class DiscordEmbedProvider : DiscordObject
     {
         /// <summary>
         /// Gets the name of this provider.
@@ -13,6 +13,8 @@
         /// Gets the url of this provider.
         /// </summary>
         public string Url { get; private set; }
+
+        internal DiscordEmbedProvider() { }
 
         internal override void Update(DiscordApiData data)
         {

@@ -1,4 +1,6 @@
-﻿namespace Discore
+﻿using System;
+
+namespace Discore
 {
     /// <summary>
     /// The base class for all Discord API objects that contain an id.
@@ -9,6 +11,13 @@
         /// Gets the id of this Discord API object.
         /// </summary>
         public string Id { get; protected set; }
+
+        internal DiscordIdObject() { }
+
+        internal override void Update(DiscordApiData data)
+        {
+            Id = data.GetString("id") ?? Id;
+        }
 
         public override string ToString()
         {

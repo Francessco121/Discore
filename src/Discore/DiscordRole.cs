@@ -6,7 +6,7 @@
     /// Roles are unique per guild, and can have separate permission profiles for the global 
     /// context (guild) and channel context.
     /// </summary>
-    public class DiscordRole : DiscordIdObject
+    public sealed class DiscordRole : DiscordIdObject
     {
         /// <summary>
         /// Gets the name of this role.
@@ -37,9 +37,12 @@
         /// </summary>
         public bool IsMentionable { get; private set; }
 
+        internal DiscordRole() { }
+
         internal override void Update(DiscordApiData data)
         {
-            Id = data.GetString("id") ?? Id;
+            base.Update(data);
+
             Name = data.GetString("name") ?? Name;
             IsHoisted = data.GetBoolean("hoist") ?? IsHoisted;
             Position = data.GetInteger("position") ?? Position;

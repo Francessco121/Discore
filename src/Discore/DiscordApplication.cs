@@ -9,14 +9,14 @@ namespace Discore
     public class DiscordApplication
     {
         public string Token { get; }
-        public ShardManager Shards { get; }
+        public ShardManager ShardManager { get; }
         public DiscordRestApi Rest { get; }
 
         public DiscordApplication(string token)
         {
             Token = token;
 
-            Shards = new ShardManager(this);
+            ShardManager = new ShardManager(this);
             Rest = new DiscordRestApi(this);
         }
     }

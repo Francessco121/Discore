@@ -3,7 +3,7 @@
     /// <summary>
     /// Embedded content in a message.
     /// </summary>
-    public class DiscordEmbed : DiscordObject
+    public sealed class DiscordEmbed : DiscordObject
     {
         /// <summary>
         /// Gets the title of this embed.
@@ -30,13 +30,7 @@
         /// </summary>
         public DiscordEmbedProvider Provider { get; private set; }
 
-        internal override DiscordObject MemberwiseClone()
-        {
-            DiscordEmbed embed = (DiscordEmbed)base.MemberwiseClone();
-            embed.Thumbnail = (DiscordEmbedThumbnail)Thumbnail.MemberwiseClone();
-            embed.Provider = (DiscordEmbedProvider)Provider.MemberwiseClone();
-            return embed;
-        }
+        internal DiscordEmbed() { }
 
         internal override void Update(DiscordApiData data)
         {

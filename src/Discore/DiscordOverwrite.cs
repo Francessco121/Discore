@@ -3,7 +3,7 @@
     /// <summary>
     /// A permission overwrite for a <see cref="DiscordRole"/> or <see cref="DiscordGuildMember"/>.
     /// </summary>
-    public class DiscordOverwrite : DiscordIdObject
+    public sealed class DiscordOverwrite : DiscordIdObject
     {
         /// <summary>
         /// The type of this overwrite.
@@ -18,9 +18,11 @@
         /// </summary>
         public DiscordPermission Deny { get; private set; }
 
+        internal DiscordOverwrite() { }
+
         internal override void Update(DiscordApiData data)
         {
-            Id = data.GetString("id") ?? Id;
+            base.Update(data);
 
             string type = data.GetString("type");
             if (type != null)
@@ -43,6 +45,11 @@
             long? deny = data.GetInt64("deny");
             if (deny.HasValue)
                 Deny = (DiscordPermission)deny.Value;
+        }
+
+        public override string ToString()
+        {
+            return $"{Type} Overwrite: {Id}";
         }
     }
 }

@@ -3,7 +3,7 @@
     /// <summary>
     /// A brief version of a guild object.
     /// </summary>
-    public class DiscordUserGuild : DiscordIdObject
+    public sealed class DiscordUserGuild : DiscordIdObject
     {
         /// <summary>
         /// Gets the name of this user guild.
@@ -22,9 +22,12 @@
         /// </summary>
         public DiscordPermission Permissions { get; private set; }
 
+        internal DiscordUserGuild() { }
+
         internal override void Update(DiscordApiData data)
         {
-            Id = data.GetString("id") ?? Id;
+            base.Update(data);
+
             Name = data.GetString("name") ?? Name;
             Icon = data.GetString("icon") ?? Icon;
             IsOwner = data.GetBoolean("owner") ?? IsOwner;

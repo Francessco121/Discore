@@ -1,6 +1,7 @@
 ﻿using Discore;
 using System;
 using System.IO;
+using System.Threading;
 
 namespace DiscoreBotTest
 {
@@ -20,7 +21,10 @@ namespace DiscoreBotTest
 
             DiscordApplication app = new DiscordApplication(token);
 
-            app.Shards.CreateShards(1);
+            app.ShardManager.CreateShards(1);
+
+            while (app.ShardManager.Shards[0].IsActive)
+                Thread.Sleep(1000);
 
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
@@ -28,7 +32,27 @@ namespace DiscoreBotTest
 
         private static void DiscoreLogger_OnLog(object sender, DiscoreLogEventArgs e)
         {
-            Console.WriteLine($"[{e.Line.Type}] {e.Line.Message}");
+            switch (e.Line.Type)
+            {
+                case DiscoreLogType.Error:
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    break;
+                case DiscoreLogType.Warning:
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    break;
+                case DiscoreLogType.Important:
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    break;
+                case DiscoreLogType.Verbose:
+                case DiscoreLogType.Heartbeat:
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    break;
+                default:
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+            }
+
+            Console.WriteLine(e.Line.Message);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public class DiscordAttachment : DiscordIdObject
+    public sealed class DiscordAttachment : DiscordIdObject
     {
         /// <summary>
         /// Gets the file name of the attachment.
@@ -27,9 +27,12 @@
         /// </summary>
         public int? Height { get; private set; }
 
+        internal DiscordAttachment() { }
+
         internal override void Update(DiscordApiData data)
         {
-            Id = data.GetString("id") ?? Id;
+            base.Update(data);
+
             FileName = data.GetString("filename") ?? FileName;
             Size = data.GetInteger("size") ?? Size;
             Url = data.GetString("url") ?? Url;

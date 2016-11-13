@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace Discore.Net.Sockets
 {
@@ -17,7 +15,8 @@ namespace Discore.Net.Sockets
             payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
             payloadHandlers[GatewayOPCode.Dispath] = HandleDispatchPayload;
             payloadHandlers[GatewayOPCode.Hello] = HandleHelloPayload;
-            payloadHandlers[GatewayOPCode.HeartbeatAck] = HandleHeartbeatAck;
+            payloadHandlers[GatewayOPCode.HeartbeatAck] = HandleHeartbeatAckPayload;
+            payloadHandlers[GatewayOPCode.InvalidSession] = HandleInvalidSessionPayload;
         }
 
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
@@ -35,13 +34,30 @@ namespace Discore.Net.Sockets
         void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
         {
             heartbeatInterval = data.GetInteger("heartbeat_interval") ?? heartbeatInterval;
-            log.LogVerbose($"[HELLO] heartbeat_interval: {heartbeatInterval}ms");
+            log.LogVerbose($"[Hello] heartbeat_interval: {heartbeatInterval}ms");
         }
 
-        void HandleHeartbeatAck(DiscordApiData payload, DiscordApiData data)
+        void HandleHeartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
         {
             // Reset heartbeat timeout
             heartbeatTimeoutAt = Environment.TickCount + (heartbeatInterval * HEARTBEAT_TIMEOUT_MISSED_PACKETS);
+        }
+
+        void HandleReconnectPayload(DiscordApiData payload, DiscordApiData data)
+        {
+            log.LogInfo("[Reconnect] Performing resume...");
+
+            // We won't worry about sending the resume payload here,
+            // as that will be handled by the reconnect procedure,
+            // when we pass true.
+            Reconnect(true);
+        }
+
+        void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
+        {
+            log.LogInfo("[InvalidSession] Reconnecting...");
+
+            Reconnect();
         }
 
         void SendPayload(GatewayOPCode op, DiscordApiData data)
@@ -60,11 +76,11 @@ namespace Discore.Net.Sockets
             data.Set("compress", true);
             data.Set("large_threshold", 250);
 
-            if (app.Shards.ShardCount > 1)
+            if (app.ShardManager.ShardCount > 1)
             {
                 DiscordApiData shardData = new DiscordApiData(DiscordApiDataType.Array);
                 shardData.Values.Add(new DiscordApiData(shard.ShardId));
-                shardData.Values.Add(new DiscordApiData(app.Shards.ShardCount));
+                shardData.Values.Add(new DiscordApiData(app.ShardManager.ShardCount));
                 data.Set("shard", shardData);
             }
 
@@ -81,6 +97,16 @@ namespace Discore.Net.Sockets
         void SendHeartbeatPayload()
         {
             SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
+        }
+
+        void SendResumePayload()
+        {
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("token", app.Token);
+            data.Set("session_id", sessionId);
+            data.Set("seq", sequence);
+
+            SendPayload(GatewayOPCode.Resume, data);
         }
     }
 }

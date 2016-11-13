@@ -7,27 +7,20 @@ namespace Discore
     /// <summary>
     /// Represents a message sent in a channel within Discord.
     /// </summary>
-    public class DiscordMessage : DiscordIdObject
+    public sealed class DiscordMessage : DiscordIdObject
     {
         /// <summary>
         /// Gets the channel this message is in.
         /// </summary>
-        public DiscordChannel Channel { get { return cache.Get<DiscordChannel>(channelId); } }
+        public DiscordChannel Channel { get; private set; }
         /// <summary>
         /// Gets the author of this message.
         /// </summary>
-        public DiscordUser Author { get { return cache.Get<DiscordUser>(authorId); } }
-        ///// <summary>
-        ///// Gets the guild member instance of the author of this message
-        ///// if it was sent in a <see cref="DiscordGuildChannel"/>.
-        ///// </summary>
-        //public DiscordGuildMember AuthorMember
-        //{
-        //    get
-        //    {
-        //        // todo
-        //    }
-        //}
+        public DiscordUser Author { get; private set; }
+        /// <summary>
+        /// Gets the guild this message was sent in (or null if a DM message).
+        /// </summary>
+        public DiscordGuild Guild { get; private set; }
         /// <summary>
         /// Gets the contents of this message.
         /// </summary>
@@ -51,11 +44,11 @@ namespace Discore
         /// <summary>
         /// Gets a list of all user-specific mentions in this message.
         /// </summary>
-        public DiscordUser[] Mentions { get { return cache.Get<DiscordUser>(mentionIds); } }
+        public DiscordApiCacheIdSet<DiscordUser> Mentions { get; }
         /// <summary>
-        /// Gets a list of all attachments in this message.
+        /// Gets a table of all attachments in this message.
         /// </summary>
-        public DiscordAttachment[] Attachments { get { return cache.Get<DiscordAttachment>(attachmentIds); } }
+        public DiscordApiCacheTable<DiscordAttachment> Attachments { get; }
         /// <summary>
         /// Gets a list of all embedded attachments in this message.
         /// </summary>
@@ -69,18 +62,16 @@ namespace Discore
         /// </summary>
         public bool IsPinned { get; private set; }
 
-        string channelId;
-        string authorId;
-        string[] mentionIds;
-        string[] attachmentIds;
-
-        DiscordApiCache cache;
+        Shard shard;
         DiscordRestApi rest;
 
         internal DiscordMessage(Shard shard)
         {
-            cache = shard.Cache;
+            this.shard = shard;
             rest = shard.Application.Rest;
+
+            Mentions = new DiscordApiCacheIdSet<DiscordUser>(shard.Users);
+            Attachments = new DiscordApiCacheTable<DiscordAttachment>();
         }
 
         ///// <summary>
@@ -111,7 +102,8 @@ namespace Discore
 
         internal override void Update(DiscordApiData data)
         {
-            Id              = data.GetString("id") ?? Id;
+            base.Update(data);
+
             Content         = data.GetString("content") ?? Content;
             Timestamp       = data.GetDateTime("timestamp") ?? Timestamp;
             EditedTimestamp = data.GetDateTime("edited_timestamp") ?? EditedTimestamp;
@@ -119,40 +111,51 @@ namespace Discore
             MentionEveryone = data.GetBoolean("mention_everyone") ?? MentionEveryone;
             Nonce           = data.GetString("nonce") ?? Nonce;
             IsPinned        = data.GetBoolean("pinned") ?? IsPinned;
-            channelId       = data.GetString("channel_id") ?? channelId;
+
+            string channelId = data.GetString("channel_id");
+            Channel = shard.Channels.Get(channelId);
+
+            DiscordGuildChannel guildChannel = Channel as DiscordGuildChannel;
+            if (guildChannel != null)
+                // Message was sent in a guild
+                Guild = guildChannel.Guild;
+            else
+                Guild = null;
 
             DiscordApiData authorData = data.Get("author");
             if (authorData != null)
             {
-                authorId = authorData.GetString("id");
-                cache.Set(authorData, authorId, () => new DiscordUser());
+                string authorId = authorData.GetString("id");
+                Author = shard.Users.Edit(authorId, () => new DiscordUser(), user => user.Update(authorData));
             }
 
             IList<DiscordApiData> mentionsData = data.GetArray("mentions");
             if (mentionsData != null)
             {
-                mentionIds = new string[mentionsData.Count];
-                for (int i = 0; i < mentionIds.Length; i++)
+                Mentions.Clear();
+                for (int i = 0; i < mentionsData.Count; i++)
                 {
                     DiscordApiData mentionData = mentionsData[i];
                     string mentionedUserId = mentionData.GetString("id");
 
-                    mentionIds[i] = mentionedUserId;
-                    cache.Set(mentionData, mentionedUserId, () => new DiscordUser());
+                    // Follow through with the "eventual consistency" and update the user,
+                    // but only save the id on our end.
+                    shard.Users.Edit(mentionedUserId, () => new DiscordUser(), user => user.Update(mentionData));
+
+                    Mentions.Add(mentionedUserId);
                 }
             }
 
             IList<DiscordApiData> attachmentsData = data.GetArray("attachments");
             if (attachmentsData != null)
             {
-                attachmentIds = new string[attachmentsData.Count];
-                for (int i = 0; i < attachmentIds.Length; i++)
+                Attachments.Clear();
+                for (int i = 0; i < attachmentsData.Count; i++)
                 {
                     DiscordApiData attachmentData = attachmentsData[i];
                     string attachmentId = attachmentData.GetString("id");
 
-                    attachmentIds[i] = attachmentId;
-                    cache.Set(attachmentData, attachmentId, () => new DiscordAttachment());
+                    Attachments.Edit(attachmentId, () => new DiscordAttachment(), at => at.Update(attachmentData));
                 }
             }
 

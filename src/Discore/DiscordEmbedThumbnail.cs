@@ -3,7 +3,7 @@
     /// <summary>
     /// A thumbnail of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public class DiscordEmbedThumbnail : DiscordObject
+    public sealed class DiscordEmbedThumbnail : DiscordObject
     {
         /// <summary>
         /// Gets the url of the thumbnail.
@@ -21,6 +21,8 @@
         /// Gets the pixel-height of the thumbnail.
         /// </summary>
         public int Height { get; private set; }
+
+        internal DiscordEmbedThumbnail() { }
 
         internal override void Update(DiscordApiData data)
         {
