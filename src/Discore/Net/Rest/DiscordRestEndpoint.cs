@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Net.Rest
 {
-    public class DiscordRestEndpoint
+    class DiscordRestEndpoint
     {
         internal RestClient Rest { get; }
 

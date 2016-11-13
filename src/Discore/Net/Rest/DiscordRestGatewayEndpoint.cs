@@ -1,6 +1,6 @@
 ﻿namespace Discore.Net.Rest
 {
-    public class DiscordRestGatewayEndpoint : DiscordRestEndpoint
+    class DiscordRestGatewayEndpoint : DiscordRestEndpoint
     {
         internal DiscordRestGatewayEndpoint(RestClient restClient) 
             : base(restClient)

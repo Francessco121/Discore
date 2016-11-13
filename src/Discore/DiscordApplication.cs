@@ -10,7 +10,8 @@ namespace Discore
     {
         public string Token { get; }
         public ShardManager ShardManager { get; }
-        public DiscordRestApi Rest { get; }
+
+        internal DiscordRestApi Rest { get; }
 
         public DiscordApplication(string token)
         {

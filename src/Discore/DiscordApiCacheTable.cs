@@ -20,7 +20,7 @@ namespace Discore
          * 1) ConcurrentDictionary has undefined behaviour for key and value enumeration,
          *    which is very often used.
          * 2) ConcurrentDictionary allows for multiple writers HOWEVER, we are guaranteed
-         *    too only have one writer at a time, so the overhead is not worth it.
+         *    to only have one writer at a time, so the overhead is not worth it.
         */
 
         public ICollection<string> Keys

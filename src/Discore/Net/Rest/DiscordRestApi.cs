@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Net.Rest
 {
-    public class DiscordRestApi
+    class DiscordRestApi
     {
         public DiscordRestGatewayEndpoint Gateway { get; }
 

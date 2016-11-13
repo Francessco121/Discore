@@ -14,13 +14,15 @@ namespace Discore
         public DiscordChannelType ChannelType { get; }
 
         protected Shard Shard { get; }
-        protected DiscordRestApi Rest { get; }
+
+        DiscordRestApi rest;
 
         internal DiscordChannel(Shard shard, DiscordChannelType type)
         {
             Shard = shard;
-            Rest = shard.Application.Rest;
             ChannelType = type;
+
+            rest = shard.Application.Rest;
         }
 
         ///// <summary>
