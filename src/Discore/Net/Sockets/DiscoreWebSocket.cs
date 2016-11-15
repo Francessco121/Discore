@@ -8,9 +8,9 @@ using System.Threading;
 
 namespace Discore.Net.Sockets
 {
-    public class DiscoreWebSocket : IDisposable
+    class DiscoreWebSocket : IDisposable
     {
-        public WebSocketState State { get { return socket.State; } }
+        public WebSocketState State { get { return socket != null ? socket.State : WebSocketState.None; } }
 
         public event EventHandler<Uri> OnConnected;
         public event EventHandler<WebSocketCloseStatus> OnDisconnected;
@@ -26,29 +26,36 @@ namespace Discore.Net.Sockets
         Thread sendThread;
         Thread receiveThread;
 
-        ConcurrentQueue<string> sendQueue;
+        ConcurrentQueue<DiscordApiData> sendQueue;
 
         DiscoreLogger log;
+        WebSocketDataType dataType;
 
         bool isDisposed;
 
-        internal DiscoreWebSocket(string loggingName)
+        internal DiscoreWebSocket(WebSocketDataType dataType, string loggingName)
         {
+            if (dataType != WebSocketDataType.Json)
+                throw new NotImplementedException("Only json packets are supported so far.");
+
+            this.dataType = dataType;
+
             log = new DiscoreLogger($"WebSocket:{loggingName}");
 
-            sendQueue = new ConcurrentQueue<string>();
-
-            socket = new ClientWebSocket();
-            socket.Options.Proxy = null;
-            socket.Options.KeepAliveInterval = TimeSpan.Zero;
+            sendQueue = new ConcurrentQueue<DiscordApiData>();
         }
 
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="UriFormatException"></exception>
         public bool Connect(string url)
         {
-            if (socket.State == WebSocketState.None || socket.State > WebSocketState.Open)
+            if (State == WebSocketState.None || State > WebSocketState.Open)
             {
+                // Create new socket (old socket's can't be reset)
+                socket = new ClientWebSocket();
+                socket.Options.Proxy = null;
+                socket.Options.KeepAliveInterval = TimeSpan.Zero;
+
                 log.LogInfo($"Connecting to {url}...");
                 Uri uri = new Uri(url);
 
@@ -103,7 +110,7 @@ namespace Discore.Net.Sockets
             if (State == WebSocketState.Open)
             {
                 cancelTokenSource.Cancel();
-
+                
                 try
                 {
                     socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None).Wait();
@@ -117,23 +124,23 @@ namespace Discore.Net.Sockets
             }
             else
             {
-                log.LogWarning($"Attempted to disconnect during invalid socket state: {socket.State}");
+                log.LogWarning($"Attempted to disconnect during invalid socket state: {State}");
                 return false;
             }
         }
 
         /// <exception cref="ArgumentNullException"></exception>
-        public void Send(string json)
+        public void Send(DiscordApiData data)
         {
-            if (json == null)
-                throw new ArgumentNullException(nameof(json));
+            if (data == null)
+                throw new ArgumentNullException(nameof(data));
 
-            sendQueue.Enqueue(json);
+            sendQueue.Enqueue(data);
         }
 
         void ClearQueue()
         {
-            string temp;
+            DiscordApiData temp;
             while (sendQueue.TryDequeue(out temp)) ;
         }
 
@@ -141,17 +148,21 @@ namespace Discore.Net.Sockets
         {
             try
             {
-                byte[] sendBuffer = new byte[SEND_BUFFER_SIZE];
-
                 while (State == WebSocketState.Open)
                 {
                     if (sendQueue.Count > 0)
                     {
-                        string json;
-                        if (sendQueue.TryDequeue(out json))
+                        DiscordApiData data;
+                        if (sendQueue.TryDequeue(out data))
                         {
-                            // Send the json payload
-                            int byteCount = Encoding.UTF8.GetBytes(json, 0, json.Length, sendBuffer, 0);
+                            byte[] bytes = null;
+                            if (dataType == WebSocketDataType.Json)
+                                bytes = Encoding.UTF8.GetBytes(data.SerializeToJson());
+
+                            // TODO: ETF serialization
+
+                            // Send the payload
+                            int byteCount = bytes.Length;
                             int frameCount = (int)Math.Ceiling((double)byteCount / SEND_BUFFER_SIZE);
 
                             int offset = 0;
@@ -167,8 +178,11 @@ namespace Discore.Net.Sockets
 
                                 try
                                 {
-                                    socket.SendAsync(new ArraySegment<byte>(sendBuffer, offset, count),
-                                        WebSocketMessageType.Text, isLast, cancelTokenSource.Token).Wait();
+                                    socket.SendAsync(new ArraySegment<byte>(bytes, offset, count),
+                                        (dataType == WebSocketDataType.Json 
+                                            ? WebSocketMessageType.Text 
+                                            : WebSocketMessageType.Binary), 
+                                        isLast, cancelTokenSource.Token).Wait();
                                 }
                                 catch (AggregateException aex)
                                 {
@@ -270,8 +284,8 @@ namespace Discore.Net.Sockets
                                 receiveMs.Seek(2, SeekOrigin.Begin);
 
                                 // Decompress packet
-                                using (DeflateStream zlib = new DeflateStream(receiveMs, CompressionMode.Decompress, true))
-                                    zlib.CopyTo(decompressed);
+                                using (DeflateStream deflateStream = new DeflateStream(receiveMs, CompressionMode.Decompress, true))
+                                    deflateStream.CopyTo(decompressed);
 
                                 decompressed.Position = 0;
 
@@ -281,9 +295,17 @@ namespace Discore.Net.Sockets
                             }
                         }
 
-                        // Parse string as JSON and invoke OnMessageReceived
-                        DiscordApiData data;
-                        if (DiscordApiData.TryParseJson(str, out data))
+                        // Parse string and invoke OnMessageReceived
+                        DiscordApiData data = null;
+                        if (dataType == WebSocketDataType.Json)
+                        {
+                            if (!DiscordApiData.TryParseJson(str, out data))
+                                log.LogError($"Failed to parse json: {str}");
+                        }
+
+                        // TODO: ETF deserialization
+
+                        if (data != null)
                         {
                             try
                             {
@@ -294,8 +316,6 @@ namespace Discore.Net.Sockets
                                 log.LogError($"[OnMessageReceived] Uncaught exception: {ex}");
                             }
                         }
-                        else
-                            log.LogError($"Failed to parse json: {str}");
                     }
                 }
             }
@@ -323,7 +343,7 @@ namespace Discore.Net.Sockets
             cancelTokenSource.Cancel();
 
             // Try to close the socket if still open.
-            if (socket.State == WebSocketState.Open)
+            if (State == WebSocketState.Open)
             {
                 try
                 {
@@ -344,7 +364,7 @@ namespace Discore.Net.Sockets
             {
                 isDisposed = true;
 
-                socket.Dispose();
+                socket?.Dispose();
 
                 cancelTokenSource.Cancel();
             }

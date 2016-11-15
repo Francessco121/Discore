@@ -66,7 +66,7 @@ namespace Discore.Net.Sockets
             payload.Set("op", (int)op);
             payload.Set("d", data);
 
-            socket.Send(payload.SerializeToJson());
+            socket.Send(payload);
         }
 
         void SendIdentifyPayload()

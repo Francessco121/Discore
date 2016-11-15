@@ -26,11 +26,16 @@ namespace Discore
         /// The type of line.
         /// </summary>
         public readonly DiscoreLogType Type;
+        /// <summary>
+        /// The date/time the line was logged.
+        /// </summary>
+        public readonly DateTime Timestamp;
 
-        internal DiscoreLogLine(string msg, DiscoreLogType type)
+        internal DiscoreLogLine(string msg, DiscoreLogType type, DateTime timestamp)
         {
             Message = msg;
             Type = type;
+            Timestamp = timestamp;
         }
     }
 
@@ -98,10 +103,6 @@ namespace Discore
         public static event EventHandler<DiscoreLogEventArgs> OnFilteredLog;
 
         /// <summary>
-        /// Gets or sets whether or not timestamps are prepended to every logged line.
-        /// </summary>
-        public static bool PrependTimestamp { get; set; } = true;
-        /// <summary>
         /// Gets the default <see cref="DiscoreLogger"/>.
         /// </summary>
         public static DiscoreLogger Default { get; }
@@ -147,20 +148,14 @@ namespace Discore
         /// <param name="type">The type of log.</param>
         public void Log(string msg, DiscoreLogType type)
         {
-            if (PrependTimestamp && !string.IsNullOrWhiteSpace(Prefix))
-                // Timestamp and prefix
-                msg = $"[{DateTime.Now.ToString()}] [{Prefix}] {msg}";
-            else if (PrependTimestamp)
-                // Timestamp
-                msg = $"[{DateTime.Now.ToString()}] {msg}";
-            else if (!string.IsNullOrWhiteSpace(Prefix))
+            if (!string.IsNullOrWhiteSpace(Prefix))
                 // Prefix
                 msg = $"[{Prefix}] {msg}";
 
             if (GlobalFilter.IsFiltered(type) || Filter.IsFiltered(type))
-                OnFilteredLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type)));
+                OnFilteredLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now)));
             else
-                OnLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type)));
+                OnLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now)));
         }
 
         /// <summary>

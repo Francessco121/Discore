@@ -12,7 +12,8 @@ namespace Discore
          * 1) Consistency.
          * 2) We can't use a concurrent dictionary (see below), 
          *    but generic support is nice.
-         * 3) Making it read-only to the public (could just use a ReadOnlyDictionary however).
+         * 3) Making it read-only to the public (could just use a ReadOnlyDictionary however,
+         *    but we still need thread-saftey).
         */
 
         /* Reasoning for using a hashtable instead of a concurrent dictionary:

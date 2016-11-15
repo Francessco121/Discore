@@ -33,13 +33,15 @@ namespace Discore.Net.Sockets
         {
             this.app = app;
             this.shard = shard;
+
+            string logName = $"Gateway#{shard.ShardId}";
                
-            log = new DiscoreLogger("Gateway");
+            log = new DiscoreLogger(logName);
 
             InitializePayloadHandlers();
             InitializeDispatchHandlers();
             
-            socket = new DiscoreWebSocket("Gateway");
+            socket = new DiscoreWebSocket(WebSocketDataType.Json, logName);
             socket.OnError += Socket_OnError;
             socket.OnMessageReceived += Socket_OnMessageReceived;
         }
@@ -145,9 +147,21 @@ namespace Discore.Net.Sockets
             {
                 isReconnecting = true;
 
-                while (!isDisposed && !Connect(gatewayResume))
+                while (!isDisposed)
+                {
                     // Give 5s in between failed connections
                     Thread.Sleep(5000);
+
+                    try
+                    {
+                        if (Connect(gatewayResume))
+                            break;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError($"[Reconnect] {ex}");
+                    }
+                }
 
                 isReconnecting = false;
             }
@@ -155,8 +169,27 @@ namespace Discore.Net.Sockets
 
         private void Socket_OnError(object sender, Exception e)
         {
-            // Socket errors are fatal, so attempt to reconnect.
-            Reconnect();
+            DiscoreWebSocketException dex = e as DiscoreWebSocketException;
+            if (dex != null)
+            {
+                GatewayDisconnectCode code = (GatewayDisconnectCode)dex.ErrorCode;
+                switch (code)
+                {
+                    case GatewayDisconnectCode.InvalidShard:
+                    case GatewayDisconnectCode.AuthenticationFailed:
+                        // Not safe to reconnect
+                        log.LogError($"[{code} ({(int)code})] Unsafe to continue, NOT reconnecting gateway.");
+                        // TODO: Application should be able to handle this externally
+                        break;
+                    default:
+                        // Safe to reconnect
+                        Reconnect();
+                        break;
+                }
+            }
+            else
+                // Socket errors are fatal, so attempt to reconnect.
+                Reconnect();
         }
 
         private void Socket_OnMessageReceived(object sender, DiscordApiData e)

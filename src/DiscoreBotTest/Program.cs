@@ -52,7 +52,7 @@ namespace DiscoreBotTest
                     break;
             }
 
-            Console.WriteLine(e.Line.Message);
+            Console.WriteLine($"[{e.Line.Timestamp}] {e.Line.Message}");
         }
     }
 }
