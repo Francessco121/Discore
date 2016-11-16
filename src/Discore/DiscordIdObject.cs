@@ -10,18 +10,18 @@ namespace Discore
         /// <summary>
         /// Gets the id of this Discord API object.
         /// </summary>
-        public string Id { get; protected set; }
+        public Snowflake Id { get; protected set; }
 
         internal DiscordIdObject() { }
 
         internal override void Update(DiscordApiData data)
         {
-            Id = data.GetString("id") ?? Id;
+            Id = data.GetSnowflake("id") ?? Id;
         }
 
         public override string ToString()
         {
-            return Id;
+            return Id.ToString();
         }
 
         /// <summary>

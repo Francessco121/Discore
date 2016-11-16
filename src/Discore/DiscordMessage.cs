@@ -112,7 +112,7 @@ namespace Discore
             Nonce           = data.GetString("nonce") ?? Nonce;
             IsPinned        = data.GetBoolean("pinned") ?? IsPinned;
 
-            string channelId = data.GetString("channel_id");
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
             Channel = shard.Channels.Get(channelId);
 
             DiscordGuildChannel guildChannel = Channel as DiscordGuildChannel;
@@ -125,7 +125,7 @@ namespace Discore
             DiscordApiData authorData = data.Get("author");
             if (authorData != null)
             {
-                string authorId = authorData.GetString("id");
+                Snowflake authorId = authorData.GetSnowflake("id").Value;
                 Author = shard.Users.Edit(authorId, () => new DiscordUser(), user => user.Update(authorData));
             }
 
@@ -136,7 +136,7 @@ namespace Discore
                 for (int i = 0; i < mentionsData.Count; i++)
                 {
                     DiscordApiData mentionData = mentionsData[i];
-                    string mentionedUserId = mentionData.GetString("id");
+                    Snowflake mentionedUserId = mentionData.GetSnowflake("id").Value;
 
                     // Follow through with the "eventual consistency" and update the user,
                     // but only save the id on our end.
@@ -153,7 +153,7 @@ namespace Discore
                 for (int i = 0; i < attachmentsData.Count; i++)
                 {
                     DiscordApiData attachmentData = attachmentsData[i];
-                    string attachmentId = attachmentData.GetString("id");
+                    Snowflake attachmentId = attachmentData.GetSnowflake("id").Value;
 
                     Attachments.Edit(attachmentId, () => new DiscordAttachment(), at => at.Update(attachmentData));
                 }

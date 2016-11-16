@@ -64,32 +64,32 @@
             IsSuppressed = data.GetBoolean("suppress") ?? IsSuppressed;
 
             // Get user
-            string userId = data.GetString("user_id");
+            Snowflake? userId = data.GetSnowflake("user_id");
 
             if (userId != null)
-                User = shard.Users.Get(userId);
+                User = shard.Users.Get(userId.Value);
             else
             {
                 DiscordApiData userData = data.Get("user");
                 if (userData != null)
                 {
-                    userId = userData.GetString("id");
-                    User = shard.Users.Edit(userId, () => new DiscordUser(), user => user.Update(userData));
+                    userId = userData.GetSnowflake("id");
+                    User = shard.Users.Edit(userId.Value, () => new DiscordUser(), user => user.Update(userData));
                 }
             }
 
             // Get guild (if in voice channel)
-            string guildId = data.GetString("guild_id");
+            Snowflake? guildId = data.GetSnowflake("guild_id");
 
             if (guildId != null)
-                Guild = shard.Guilds.Get(guildId);
+                Guild = shard.Guilds.Get(guildId.Value);
 
             // Get channel (if in voice channel)
-            string channelId = data.GetString("channel_id");
+            Snowflake? channelId = data.GetSnowflake("channel_id");
 
             if (channelId != null && Guild != null)
             {
-                Channel = Guild.VoiceChannels.Get(channelId);
+                Channel = Guild.VoiceChannels.Get(channelId.Value);
                 Channel.Members.Add(User.Id);
             }
             else
@@ -109,8 +109,8 @@
         public DiscordApiData Serialize()
         {
             DiscordApiData data = new DiscordApiData();
-            data.Set("guild_id", Guild != null ? Guild.Id : null);
-            data.Set("channel_id", Channel != null ? Channel.Id : null);
+            data.Set("guild_id", Guild != null ? new Snowflake?(Guild.Id) : null);
+            data.Set("channel_id", Channel != null ? new Snowflake?(Channel.Id) : null);
             data.Set("user_id", User.Id);
             data.Set("session_id", SessionId);
             data.Set("deaf", IsServerDeaf);

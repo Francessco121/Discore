@@ -49,7 +49,7 @@ namespace Discore
                 Roles.Clear();
                 foreach (DiscordApiData roleData in roles)
                 {
-                    string roleId = roleData.GetString("id");
+                    Snowflake roleId = roleData.GetSnowflake("id").Value;
 
                     // TODO: Figure out if these roles are seperate, or are actually just guild roles.
 

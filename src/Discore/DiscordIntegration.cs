@@ -72,14 +72,14 @@ namespace Discore
             ExpireGracePeriod = data.GetInteger("expire_grace_period") ?? ExpireGracePeriod;
             SyncedAt = data.GetDateTime("synced_at") ?? SyncedAt;
 
-            string roleId = data.GetString("role_id");
+            Snowflake? roleId = data.GetSnowflake("role_id");
             if (roleId != null)
-                Role = Guild.Roles.Get(roleId);
+                Role = Guild.Roles.Get(roleId.Value);
 
             DiscordApiData userData = data.Get("user");
             if (userData != null)
             {
-                string userId = userData.GetString("id");
+                Snowflake userId = userData.GetSnowflake("id").Value;
                 User = shard.Users.Edit(userId, () => new DiscordUser(), user => user.Update(userData));
             }
 

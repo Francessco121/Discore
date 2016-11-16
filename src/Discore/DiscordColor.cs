@@ -49,11 +49,14 @@
         /// <returns>Returns the converted color.</returns>
         public static DiscordColor FromHexadecimal(int hex)
         {
-            byte r = (byte)(hex >> 16);
-            byte g = (byte)(hex >> 8);
-            byte b = (byte)(hex >> 0);
+            unchecked
+            {
+                byte r = (byte)(hex >> 16);
+                byte g = (byte)(hex >> 8);
+                byte b = (byte)(hex >> 0);
 
-            return new DiscordColor(r, g, b);
+                return new DiscordColor(r, g, b);
+            }
         }
 
         public override string ToString()

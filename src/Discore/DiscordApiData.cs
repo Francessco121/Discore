@@ -133,6 +133,15 @@ namespace Discore
         }
 
         /// <summary>
+        /// Creates a new value type DiscordApiData object.
+        /// </summary>
+        public DiscordApiData(Snowflake value)
+        {
+            this.value = value.ToString(); // Snowflakes are stored as strings in transit.
+            Type = DiscordApiDataType.Value;
+        }
+
+        /// <summary>
         /// Creates a new array type DiscordApiData object.
         /// </summary>
         public DiscordApiData(IList<DiscordApiData> values)
@@ -189,6 +198,14 @@ namespace Discore
         }
 
         /// <summary>
+        /// If a value type, returns this data as an uint64.
+        /// </summary>
+        public ulong? ToUInt64()
+        {
+            return value as ulong?;
+        }
+
+        /// <summary>
         /// If a value type, returns this data as a double floating-point number.
         /// </summary>
         public double? ToDouble()
@@ -202,6 +219,24 @@ namespace Discore
         public DateTime? ToDateTime()
         {
             return value as DateTime?;
+        }
+
+        /// <summary>
+        /// If a value type, returns this data as a unsigned 64-bit snowflake.
+        /// </summary>
+        /// <remarks>
+        /// This is not the same as .ToUInt64 as the snowflake is originally
+        /// stored as a string by the Discord Api.
+        /// </remarks>
+        public Snowflake? ToSnowflake()
+        {
+            string str = value as string;
+
+            ulong snowflake;
+            if (str != null && ulong.TryParse(str, out snowflake))
+                return new Snowflake(snowflake);
+
+            return null;
         }
 
         /// <summary>
@@ -319,6 +354,21 @@ namespace Discore
         }
 
         /// <summary>
+        /// If a container type, gets the uint64 at the given key.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public ulong? GetUInt64(string key)
+        {
+            AssertContainer();
+
+            DiscordApiData nestedData;
+            if (data.TryGetValue(key, out nestedData))
+                return nestedData.ToUInt64();
+
+            return null;
+        }
+
+        /// <summary>
         /// If a container type, gets the double floating-point number at the given key.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
@@ -344,6 +394,21 @@ namespace Discore
             DiscordApiData nestedData;
             if (data.TryGetValue(key, out nestedData))
                 return nestedData.ToDateTime();
+
+            return null;
+        }
+
+        /// <summary>
+        /// If a container type, gets the snowflake at the given key.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public Snowflake? GetSnowflake(string key)
+        {
+            AssertContainer();
+
+            DiscordApiData nestedData;
+            if (data.TryGetValue(key, out nestedData))
+                return nestedData.ToSnowflake();
 
             return null;
         }
@@ -531,6 +596,18 @@ namespace Discore
 
         /// <summary>
         /// If a container type,
+        /// attempts to locate the uint64 at the end of the given path.
+        /// </summary>
+        /// <see cref="Locate(string)"/>
+        /// <param name="path">A dot seperated path to the uint64.</param>
+        public ulong? LocateUInt64(string path)
+        {
+            DiscordApiData data = Locate(path);
+            return data?.ToUInt64();
+        }
+
+        /// <summary>
+        /// If a container type,
         /// attempts to locate the double floating-point number at the end of the given path.
         /// </summary>
         /// <see cref="Locate(string)"/>
@@ -551,6 +628,18 @@ namespace Discore
         {
             DiscordApiData data = Locate(path);
             return data?.ToDateTime();
+        }
+
+        /// <summary>
+        /// If a container type,
+        /// attempts to locate the snowflake at the end of the given path.
+        /// </summary>
+        /// <see cref="Locate(string)"/>
+        /// <param name="path">A dot seperated path to the snowflake.</param>
+        public Snowflake? LocateSnowflake(string path)
+        {
+            DiscordApiData data = Locate(path);
+            return data?.ToSnowflake();
         }
 
         /// <summary>

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Discore
 {
-    public class DiscordApiCacheTable<T> : IDictionary<string, T>, ICollection<T>, IEnumerable<KeyValuePair<string, T>>, IEnumerable
+    public class DiscordApiCacheTable<T> : IDictionary<Snowflake, T>, ICollection<T>, IEnumerable<KeyValuePair<Snowflake, T>>, IEnumerable
         where T : DiscordIdObject
     {
         /* Reasoning for essentially encapsulating a hashtable:
@@ -24,17 +24,17 @@ namespace Discore
          *    to only have one writer at a time, so the overhead is not worth it.
         */
 
-        public ICollection<string> Keys
+        public ICollection<Snowflake> Keys
         {
             get
             {
-                string[] keys;
+                Snowflake[] keys;
 
                 // Lock to ensure table count won't change
                 // during the copy.
                 lock (table.SyncRoot)
                 {
-                    keys = new string[table.Count];
+                    keys = new Snowflake[table.Count];
                     table.Keys.CopyTo(keys, 0);
                 }
 
@@ -66,7 +66,7 @@ namespace Discore
         }
 
         bool ICollection<T>.IsReadOnly { get { throw new NotSupportedException(); } }
-        bool ICollection<KeyValuePair<string, T>>.IsReadOnly { get { throw new NotSupportedException(); } }
+        bool ICollection<KeyValuePair<Snowflake, T>>.IsReadOnly { get { throw new NotSupportedException(); } }
 
         Hashtable table;
 
@@ -78,12 +78,12 @@ namespace Discore
         /// <summary>
         /// Gets an item by its id, or null if the entry is not found.
         /// </summary>
-        public T Get(string id)
+        public T Get(Snowflake id)
         {
             return table[id] as T;
         }
 
-        public T this[string id]
+        public T this[Snowflake id]
         {
             get { return Get(id); }
         }
@@ -91,27 +91,27 @@ namespace Discore
         /// <summary>
         /// Attempts to get an item by its id.
         /// </summary>
-        public bool TryGetValue(string id, out T item)
+        public bool TryGetValue(Snowflake id, out T item)
         {
             item = table[id] as T;
             return item != null;
         }
 
-        public IEnumerator<KeyValuePair<string, T>> GetEnumerator()
+        public IEnumerator<KeyValuePair<Snowflake, T>> GetEnumerator()
         {
             // Make a copy of all entries for thread-saftey reasons.
-            KeyValuePair<string, T>[] entries;
+            KeyValuePair<Snowflake, T>[] entries;
 
             lock (table.SyncRoot)
             {
-                entries = new KeyValuePair<string, T>[table.Count];
+                entries = new KeyValuePair<Snowflake, T>[table.Count];
 
                 int i = 0;
                 foreach (DictionaryEntry entry in table)
-                    entries[i++] = new KeyValuePair<string, T>((string)entry.Key, (T)entry.Value);
+                    entries[i++] = new KeyValuePair<Snowflake, T>((Snowflake)entry.Key, (T)entry.Value);
             }
 
-            return (IEnumerator<KeyValuePair<string, T>>)entries.GetEnumerator();
+            return (IEnumerator<KeyValuePair<Snowflake, T>>)entries.GetEnumerator();
         }
 
         public bool Contains(T item)
@@ -119,7 +119,7 @@ namespace Discore
             return table.ContainsValue(item);
         }
 
-        public bool ContainsKey(string key)
+        public bool ContainsKey(Snowflake key)
         {
             return table.ContainsKey(key);
         }
@@ -129,12 +129,12 @@ namespace Discore
             return table.ContainsValue(value);
         }
 
-        public void CopyTo(string[] array, int arrayIndex)
+        public void CopyTo(Snowflake[] array, int arrayIndex)
         {
             int i = arrayIndex;
             lock (table.SyncRoot)
             {
-                foreach (string key in table.Keys)
+                foreach (Snowflake key in table.Keys)
                     array[i++] = key;
             }
         }
@@ -149,17 +149,17 @@ namespace Discore
             }
         }
 
-        public void CopyTo(KeyValuePair<string, T>[] array, int arrayIndex)
+        public void CopyTo(KeyValuePair<Snowflake, T>[] array, int arrayIndex)
         {
             int i = arrayIndex;
             lock (table.SyncRoot)
             {
                 foreach (DictionaryEntry entry in table)
-                    array[i++] = new KeyValuePair<string, T>((string)entry.Key, (T)entry.Value);
+                    array[i++] = new KeyValuePair<Snowflake, T>((Snowflake)entry.Key, (T)entry.Value);
             }
         }
 
-        internal void Set(string id, T value)
+        internal void Set(Snowflake id, T value)
         {
             // Lock for thread-sensitive calls such as enumeration.
             lock (table.SyncRoot)
@@ -171,7 +171,7 @@ namespace Discore
         /// <summary>
         /// Provides a thread-safe way to update/add an item in the table.
         /// </summary>
-        internal T Edit(string id, Func<T> createCallback, Action<T> editCallback)
+        internal T Edit(Snowflake id, Func<T> createCallback, Action<T> editCallback)
         {
             T item = table[id] as T;
             if (item == null)
@@ -199,7 +199,7 @@ namespace Discore
             }
         }
 
-        T IDictionary<string, T>.this[string key]
+        T IDictionary<Snowflake, T>.this[Snowflake key]
         {
             get { return this[key]; }
             set { throw new NotSupportedException(); }
@@ -231,32 +231,32 @@ namespace Discore
             throw new NotSupportedException();
         }
 
-        void IDictionary<string, T>.Add(string key, T value)
+        void IDictionary<Snowflake, T>.Add(Snowflake key, T value)
         {
             throw new NotSupportedException();
         }
 
-        bool IDictionary<string, T>.Remove(string key)
+        bool IDictionary<Snowflake, T>.Remove(Snowflake key)
         {
             throw new NotSupportedException();
         }
 
-        void ICollection<KeyValuePair<string, T>>.Add(KeyValuePair<string, T> item)
+        void ICollection<KeyValuePair<Snowflake, T>>.Add(KeyValuePair<Snowflake, T> item)
         {
             throw new NotSupportedException();
         }
 
-        void ICollection<KeyValuePair<string, T>>.Clear()
+        void ICollection<KeyValuePair<Snowflake, T>>.Clear()
         {
             throw new NotImplementedException();
         }
 
-        bool ICollection<KeyValuePair<string, T>>.Contains(KeyValuePair<string, T> item)
+        bool ICollection<KeyValuePair<Snowflake, T>>.Contains(KeyValuePair<Snowflake, T> item)
         {
             throw new NotSupportedException();
         }
 
-        bool ICollection<KeyValuePair<string, T>>.Remove(KeyValuePair<string, T> item)
+        bool ICollection<KeyValuePair<Snowflake, T>>.Remove(KeyValuePair<Snowflake, T> item)
         {
             throw new NotSupportedException();
         }

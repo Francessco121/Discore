@@ -27,7 +27,7 @@ namespace Discore.Net.Sockets
 
             // Get the authenticated user
             DiscordApiData userData = data.Get("user");
-            string id = userData.GetString("id");
+            Snowflake id = userData.GetSnowflake("id").Value;
             // Store authenticated user in cache for immediate use
             shard.User = shard.Users.Edit(id, () => new DiscordUser(), user => user.Update(userData));
 
@@ -39,7 +39,7 @@ namespace Discore.Net.Sockets
             // Get private channels
             foreach (DiscordApiData privateChannelData in data.GetArray("private_channels"))
             {
-                string channelId = privateChannelData.GetString("id");
+                Snowflake channelId = privateChannelData.GetSnowflake("id").Value;
 
                 DiscordDMChannel channel = shard.DirectMessageChannels.Edit(channelId, 
                     () => new DiscordDMChannel(shard), 
@@ -51,7 +51,7 @@ namespace Discore.Net.Sockets
             // Get unavailable guilds
             foreach (DiscordApiData unavailableGuildData in data.GetArray("guilds"))
             {
-                string guildId = unavailableGuildData.GetString("id");
+                Snowflake guildId = unavailableGuildData.GetSnowflake("id").Value;
 
                 DiscordGuild guild = shard.Guilds.Edit(guildId,
                     () => new DiscordGuild(shard), g => g.Update(unavailableGuildData));
@@ -60,7 +60,7 @@ namespace Discore.Net.Sockets
 
         void HandleGuildCreate(DiscordApiData data)
         {
-            string guildId = data.GetString("id");
+            Snowflake guildId = data.GetSnowflake("id").Value;
             DiscordGuild guild = shard.Guilds.Edit(guildId, () => new DiscordGuild(shard), g => g.Update(data));
 
             // todo: call event

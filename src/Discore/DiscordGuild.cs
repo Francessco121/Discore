@@ -158,7 +158,7 @@ namespace Discore
                 Roles.Clear();
                 foreach (DiscordApiData roleData in rolesData)
                 {
-                    string roleId = roleData.GetString("id");
+                    Snowflake roleId = roleData.GetSnowflake("id").Value;
                     Roles.Edit(roleId, () => new DiscordRole(),
                         role =>
                         {
@@ -178,7 +178,7 @@ namespace Discore
                 Emojis.Clear();
                 foreach (DiscordApiData emojiData in emojisData)
                 {
-                    string emojiId = emojiData.GetString("id");
+                    Snowflake emojiId = emojiData.GetSnowflake("id").Value;
 
                     Emojis.Edit(emojiId, () => new DiscordEmoji(shard, this),
                         emoji => emoji.Update(emojiData));
@@ -195,7 +195,7 @@ namespace Discore
 
                 foreach (DiscordApiData channelData in channelsData)
                 {
-                    string channelId = channelData.GetString("id");
+                    Snowflake channelId = channelData.GetSnowflake("id").Value;
                     DiscordGuildChannel channel;
 
                     string type = channelData.GetString("type");
@@ -222,8 +222,8 @@ namespace Discore
             IList<DiscordApiData> membersData = data.GetArray("members");
             if (membersData != null)
             {
-                Dictionary<string, DiscordApiData> presences = new Dictionary<string, DiscordApiData>();
-                Dictionary<string, DiscordApiData> voiceStates = new Dictionary<string, DiscordApiData>();
+                Dictionary<Snowflake, DiscordApiData> presences = new Dictionary<Snowflake, DiscordApiData>();
+                Dictionary<Snowflake, DiscordApiData> voiceStates = new Dictionary<Snowflake, DiscordApiData>();
 
                 // Get presences
                 IList<DiscordApiData> presencesData = data.GetArray("presences");
@@ -231,7 +231,7 @@ namespace Discore
                 {
                     foreach (DiscordApiData presence in presencesData)
                     {
-                        string memberId = presence.LocateString("user.id");
+                        Snowflake memberId = presence.LocateSnowflake("user.id").Value;
                         presences.Add(memberId, presence);
                     }
                 }
@@ -242,7 +242,7 @@ namespace Discore
                 {
                     foreach (DiscordApiData voiceStateData in voiceStatesData)
                     {
-                        string memberId = voiceStateData.GetString("user_id");
+                        Snowflake memberId = voiceStateData.GetSnowflake("user_id").Value;
                         voiceStates.Add(memberId, voiceStateData);
                     }
                 }
@@ -250,7 +250,7 @@ namespace Discore
                 // Update each member with their presence and voice state
                 foreach (DiscordApiData memberData in membersData)
                 {
-                    string memberId = memberData.LocateString("user.id");
+                    Snowflake memberId = memberData.LocateSnowflake("user.id").Value;
 
                     Members.Edit(memberId, () => new DiscordGuildMember(shard, this),
                         member =>
@@ -271,19 +271,19 @@ namespace Discore
             }
 
             // Get afk channel
-            string afkChannelId = data.GetString("afk_channel_id");
+            Snowflake? afkChannelId = data.GetSnowflake("afk_channel_id");
             if (afkChannelId != null)
-                AfkChannel = VoiceChannels.Get(afkChannelId);
+                AfkChannel = VoiceChannels.Get(afkChannelId.Value);
 
             // Get owner
-            string ownerId = data.GetString("owner_id");
+            Snowflake? ownerId = data.GetSnowflake("owner_id");
             if (ownerId != null)
-                Owner = Members.Get(ownerId);
+                Owner = Members.Get(ownerId.Value);
 
             // Get embed channel
-            string embedChannelId = data.GetString("embed_channel_id");
+            Snowflake? embedChannelId = data.GetSnowflake("embed_channel_id");
             if (embedChannelId != null)
-                EmbedChannel = Channels.Get(embedChannelId);
+                EmbedChannel = Channels.Get(embedChannelId.Value);
         }
 
         public override string ToString()

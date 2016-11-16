@@ -13,7 +13,7 @@ namespace Discore
             {
                 get
                 {
-                    string id = enumerator.Current;
+                    Snowflake id = enumerator.Current;
                     return table.Get(id);
                 }
             }
@@ -24,9 +24,9 @@ namespace Discore
             }
 
             DiscordApiCacheTable<T> table;
-            IEnumerator<string> enumerator;
+            IEnumerator<Snowflake> enumerator;
 
-            public Enumerator(DiscordApiCacheTable<T> table, IEnumerable<string> keys)
+            public Enumerator(DiscordApiCacheTable<T> table, IEnumerable<Snowflake> keys)
             {
                 this.table = table;
                 enumerator = keys.GetEnumerator();
@@ -53,7 +53,7 @@ namespace Discore
         bool ICollection<T>.IsReadOnly { get { throw new NotSupportedException(); } }
 
         DiscordApiCacheTable<T> table;
-        HashSet<string> set;
+        HashSet<Snowflake> set;
 
         internal DiscordApiCacheIdSet(DiscordApiCacheTable<T> table)
         {
@@ -61,15 +61,15 @@ namespace Discore
                 throw new ArgumentNullException(nameof(table));
 
             this.table = table;
-            set = new HashSet<string>();
+            set = new HashSet<Snowflake>();
         }
 
-        public T this[string id]
+        public T this[Snowflake id]
         {
             get { return Get(id); }
         }
 
-        public T Get(string id)
+        public T Get(Snowflake id)
         {
             if (set.Contains(id))
                 return table.Get(id);
@@ -77,7 +77,7 @@ namespace Discore
                 return null;
         }
 
-        public bool TryGetValue(string id, out T item)
+        public bool TryGetValue(Snowflake id, out T item)
         {
             if (set.Contains(id))
             {
@@ -91,7 +91,7 @@ namespace Discore
             }
         }
 
-        public bool Contains(string id)
+        public bool Contains(Snowflake id)
         {
             lock (set)
             {
@@ -110,12 +110,12 @@ namespace Discore
         /// <summary>
         /// Copies all id's in this set to the specified array.
         /// </summary>
-        public void CopyTo(string[] array, int arrayIndex)
+        public void CopyTo(Snowflake[] array, int arrayIndex)
         {
             int i = arrayIndex;
             lock (set)
             {
-                foreach (string id in set)
+                foreach (Snowflake id in set)
                     array[i++] = id;
             }
         }
@@ -128,27 +128,27 @@ namespace Discore
             int i = arrayIndex;
             lock (set)
             {
-                foreach (string id in set)
+                foreach (Snowflake id in set)
                     array[i++] = table.Get(id);
             }
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            string[] keys;
+            Snowflake[] keys;
 
             lock (set)
             {
-                keys = new string[set.Count];
+                keys = new Snowflake[set.Count];
                 int i = 0;
-                foreach (string key in set)
+                foreach (Snowflake key in set)
                     keys[i++] = key;
             }
 
             return new Enumerator(table, keys);
         }
 
-        internal void Add(string id)
+        internal void Add(Snowflake id)
         {
             lock (set)
             {
@@ -156,7 +156,7 @@ namespace Discore
             }
         }
 
-        internal void Remove(string id)
+        internal void Remove(Snowflake id)
         {
             lock (set)
             {

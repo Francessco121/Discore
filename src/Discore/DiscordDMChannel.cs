@@ -30,7 +30,7 @@
             DiscordApiData recipientData = data.Get("recipient");
             if (recipientData != null)
             {
-                string recipientId = recipientData.GetString("id");
+                Snowflake recipientId = recipientData.GetSnowflake("id").Value;
                 Recipient = shard.Users.Edit(recipientId, () => new DiscordUser(), user => user.Update(recipientData));
             }
 

@@ -172,7 +172,7 @@ namespace Discore
             DiscordApiData userData = data.Get("user");
             if (userData != null)
             {
-                Id = userData.GetString("id");
+                Id = userData.GetSnowflake("id").Value;
 
                 User = shard.Users.Edit(Id, 
                     () => new DiscordUser(),
@@ -186,7 +186,7 @@ namespace Discore
                 Roles.Clear();
                 for (int i = 0; i < rolesData.Count; i++)
                 {
-                    string roleId = rolesData[i].ToString();
+                    Snowflake roleId = rolesData[i].ToSnowflake().Value;
                     Roles.Add(roleId);
                 }
             }

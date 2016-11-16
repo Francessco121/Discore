@@ -63,7 +63,7 @@ namespace Discore
                 PermissionOverwrites.Clear();
                 foreach (DiscordApiData overwriteData in overwrites)
                 {
-                    string id = overwriteData.GetString("id");
+                    Snowflake id = overwriteData.GetSnowflake("id").Value;
                     DiscordOverwrite overwrite = PermissionOverwrites.Edit(id, 
                         () => new DiscordOverwrite(), o => o.Update(overwriteData));
 
