@@ -9,6 +9,34 @@ namespace Discore.Net.Sockets
     {
         delegate void DispatchCallback(DiscordApiData data);
 
+        #region Events
+        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;
+        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelRemoved;
+        public event EventHandler<GuildEventArgs> OnGuildCreated;
+        public event EventHandler<GuildEventArgs> OnGuildUpdated;
+        public event EventHandler<GuildEventArgs> OnGuildRemoved;
+        public event EventHandler<GuildEventArgs> OnGuildUnavailable;
+        public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
+        public event EventHandler<GuildUserEventArgs> OnGuildBanRemoved;
+        public event EventHandler<GuildEventArgs> OnEmojisUpdated;
+        public event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
+        public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
+        public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
+        public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
+        public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
+        public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
+        public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
+        public event EventHandler<MessageEventArgs> OnMessageCreated;
+        public event EventHandler<MessageEventArgs> OnMessageUpdated;
+        public event EventHandler<MessageEventArgs> OnMessageDeleted;
+        public event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
+        public event EventHandler<TypingStartEventArgs> OnTypingStarted;
+        public event EventHandler<UserEventArgs> OnUserUpdated;
+        #endregion
+
         Dictionary<string, DispatchCallback> dispatchHandlers;
 
         void InitializeDispatchHandlers()
@@ -16,6 +44,8 @@ namespace Discore.Net.Sockets
             dispatchHandlers = new Dictionary<string, DispatchCallback>();
             dispatchHandlers["READY"] = HandleReadyEvent;
             dispatchHandlers["GUILD_CREATE"] = HandleGuildCreate;
+            dispatchHandlers["GUILD_UPDATE"] = HandleGuildUpdate;
+            dispatchHandlers["GUILD_DELETE"] = HandleGuildDelete;
         }
 
         void HandleReadyEvent(DiscordApiData data)
@@ -63,7 +93,39 @@ namespace Discore.Net.Sockets
             Snowflake guildId = data.GetSnowflake("id").Value;
             DiscordGuild guild = shard.Guilds.Edit(guildId, () => new DiscordGuild(shard), g => g.Update(data));
 
-            // todo: call event
+            OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, guild));
+        }
+
+        void HandleGuildUpdate(DiscordApiData data)
+        {
+            Snowflake guildId = data.GetSnowflake("id").Value;
+            DiscordGuild guild = shard.Guilds.Edit(guildId, () => new DiscordGuild(shard), g => g.Update(data));
+
+            OnGuildUpdated?.Invoke(this, new GuildEventArgs(shard, guild));
+        }
+
+        void HandleGuildDelete(DiscordApiData data)
+        {
+            Snowflake guildId = data.GetSnowflake("id").Value;
+
+            bool unavailable = data.GetBoolean("unavailable") ?? false;
+
+            if (unavailable)
+            {
+                DiscordGuild guild = shard.Guilds.Get(guildId);
+                if (guild != null)
+                {
+                    guild.Update(data);
+                    OnGuildUnavailable?.Invoke(this, new GuildEventArgs(shard, guild));
+                }
+            }
+            else
+            {
+                DiscordGuild guild = shard.Guilds.Remove(guildId);
+
+                if (guild != null)
+                    OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, guild));
+            }
         }
     }
 }

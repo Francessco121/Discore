@@ -23,11 +23,23 @@ namespace DiscoreBotTest
 
             app.ShardManager.CreateShards(1);
 
+            TestShard(app.ShardManager.Shards[0]);
+
             while (app.ShardManager.Shards[0].IsActive)
                 Thread.Sleep(1000);
 
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
+        }
+
+        static void TestShard(Shard shard)
+        {
+            shard.OnGuildCreated += Shard_OnGuildCreated;
+        }
+
+        private static void Shard_OnGuildCreated(Shard shard, DiscordGuild guild)
+        {
+
         }
 
         private static void DiscoreLogger_OnLog(object sender, DiscoreLogEventArgs e)

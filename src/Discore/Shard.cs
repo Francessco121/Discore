@@ -32,6 +32,11 @@ namespace Discore
         /// </summary>
         public DiscordUser User { get; internal set; }
 
+        /// <summary>
+        /// Gets the gateway manager for this shard.
+        /// </summary>
+        public IDiscordGateway Gateway { get { return gateway; } }
+
         bool isRunning;
         Gateway gateway;
         DiscoreLogger log;

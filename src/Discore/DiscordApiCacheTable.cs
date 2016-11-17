@@ -191,6 +191,19 @@ namespace Discore
             return item;
         }
 
+        internal T Remove(Snowflake id)
+        {
+            T obj;
+
+            lock (table.SyncRoot)
+            {
+                obj = table[id] as T;
+                table.Remove(id);
+            }
+
+            return obj;
+        }
+
         internal void Clear()
         {
             lock (table.SyncRoot)

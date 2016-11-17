@@ -4,8 +4,10 @@ using System.Threading;
 
 namespace Discore.Net.Sockets
 {
-    partial class Gateway : IDisposable
+    partial class Gateway : IDiscordGateway, IDisposable
     {
+        public Shard Shard { get { return shard; } }
+
         DiscordApplication app;
         Shard shard;
 
