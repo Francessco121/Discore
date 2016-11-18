@@ -6,7 +6,7 @@ namespace Discore.WebSocket
     public class Shard : IDisposable
     {
         public int ShardId { get; }
-        public DiscordApplication Application { get; }
+        public DiscordWebSocketApplication Application { get; }
         public bool IsActive { get { return isRunning; } }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Discore.WebSocket
         Gateway gateway;
         DiscoreLogger log;
 
-        internal Shard(DiscordApplication app, int shardId)
+        internal Shard(DiscordWebSocketApplication app, int shardId)
         {
             Application = app;
             ShardId = shardId;

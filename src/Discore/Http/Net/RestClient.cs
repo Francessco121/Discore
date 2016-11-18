@@ -12,17 +12,14 @@ namespace Discore.Http.Net
 
         HttpClient http;
         RestClientRateLimitManager rateLimitManager;
-        DiscordApplication app;
 
-        public RestClient(DiscordApplication app)
+        public RestClient(IDiscordAuthenticator authenticator)
         {
-            this.app = app;
-
             rateLimitManager = new RestClientRateLimitManager();
 
             http = new HttpClient();
             http.DefaultRequestHeaders.Add("User-Agent", "DiscordBot (discore, 2.0)");
-            http.DefaultRequestHeaders.Add("Authorization", $"Bot {app.Token}");
+            http.DefaultRequestHeaders.Add("Authorization", $"{authenticator.GetTokenHttpType()} {authenticator.GetToken()}");
         }
 
         DiscordApiData ParseResponse(HttpResponseMessage response)
@@ -67,20 +64,20 @@ namespace Discore.Http.Net
                                 sb.Append(", ");
                         }
 
-                        throw new DiscordRestClientException(sb.ToString(), DiscordRestErrorCode.None, response.StatusCode);
+                        throw new DiscordHttpClientException(sb.ToString(), DiscordHttpErrorCode.None, response.StatusCode);
                     }
                     else
                     {
                         long code = data.GetInt64("code") ?? 0;
                         string message = data.GetString("message");
 
-                        throw new DiscordRestClientException(message, (DiscordRestErrorCode)code, response.StatusCode);
+                        throw new DiscordHttpClientException(message, (DiscordHttpErrorCode)code, response.StatusCode);
                     }
                 }
             }
             else
-                throw new DiscordRestClientException($"Unknown error. Payload: {json}",
-                    DiscordRestErrorCode.None, response.StatusCode);
+                throw new DiscordHttpClientException($"Unknown error. Payload: {json}",
+                    DiscordHttpErrorCode.None, response.StatusCode);
         }
 
         public DiscordApiData Send(HttpRequestMessage request, string limiterAction)

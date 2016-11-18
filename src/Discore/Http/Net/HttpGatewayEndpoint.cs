@@ -1,8 +1,8 @@
 ﻿namespace Discore.Http.Net
 {
-    class DiscordRestGatewayEndpoint : DiscordRestEndpoint
+    class HttpGatewayEndpoint : HttpApiEndpoint
     {
-        internal DiscordRestGatewayEndpoint(RestClient restClient) 
+        public HttpGatewayEndpoint(RestClient restClient) 
             : base(restClient)
         { }
 

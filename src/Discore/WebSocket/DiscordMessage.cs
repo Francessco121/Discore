@@ -66,12 +66,12 @@ namespace Discore.WebSocket
         // TODO: add reactions
 
         Shard shard;
-        DiscordRestApi rest;
+        HttpApi rest;
 
         internal DiscordMessage(Shard shard)
         {
             this.shard = shard;
-            rest = shard.Application.Rest;
+            rest = shard.Application.InternalHttpApi;
 
             Mentions = new DiscordApiCacheIdSet<DiscordUser>(shard.Users);
             Attachments = new DiscordApiCacheTable<DiscordAttachment>();

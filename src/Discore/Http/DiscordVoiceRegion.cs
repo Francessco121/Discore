@@ -18,11 +18,11 @@
         /// </summary>
         public int SamplePort { get; }
         /// <summary>
-        /// Gets whether or not this is a vip-only server.
+        /// Gets whether this is a vip-only server.
         /// </summary>
         public bool IsVIPOnly { get; }
         /// <summary>
-        /// Gets whether or not this server is the closest to the user's client.
+        /// Gets whether this server is the closest to the user's client.
         /// </summary>
         public bool IsOptimal { get; }
         /// <summary>

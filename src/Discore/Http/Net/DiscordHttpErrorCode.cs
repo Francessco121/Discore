@@ -4,7 +4,7 @@
     /// Error codes returned by the discord HTTP API.
     /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/RESPONSE_CODES.md#json-error-response
     /// </summary>
-    public enum DiscordRestErrorCode
+    public enum DiscordHttpErrorCode
     {
         None = 0,
 

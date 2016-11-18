@@ -8,7 +8,7 @@ namespace Discore.WebSocket.Net
     {
         public Shard Shard { get { return shard; } }
 
-        DiscordApplication app;
+        DiscordWebSocketApplication app;
         Shard shard;
 
         DiscoreWebSocket socket;
@@ -31,7 +31,7 @@ namespace Discore.WebSocket.Net
 
         const int GATEWAY_VERSION = 5;
 
-        internal Gateway(DiscordApplication app, Shard shard)
+        internal Gateway(DiscordWebSocketApplication app, Shard shard)
         {
             this.app = app;
             this.shard = shard;

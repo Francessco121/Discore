@@ -72,7 +72,7 @@ namespace Discore.WebSocket.Net
         void SendIdentifyPayload()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("token", app.Token);
+            data.Set("token", app.Authenticator.GetToken());
             data.Set("compress", true);
             data.Set("large_threshold", 250);
 
@@ -102,7 +102,7 @@ namespace Discore.WebSocket.Net
         void SendResumePayload()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("token", app.Token);
+            data.Set("token", app.Authenticator.GetToken());
             data.Set("session_id", sessionId);
             data.Set("seq", sequence);
 

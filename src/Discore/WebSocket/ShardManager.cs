@@ -11,10 +11,10 @@ namespace Discore.WebSocket
         public int ShardCount { get { return shards?.Length ?? 0; } }
         public IReadOnlyList<Shard> Shards { get { return new ReadOnlyCollection<Shard>(shards); } }
 
-        DiscordApplication app;
+        DiscordWebSocketApplication app;
         Shard[] shards;
 
-        internal ShardManager(DiscordApplication app)
+        internal ShardManager(DiscordWebSocketApplication app)
         {
             this.app = app;
         }

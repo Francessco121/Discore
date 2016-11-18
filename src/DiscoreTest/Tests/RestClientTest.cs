@@ -12,8 +12,9 @@ namespace DiscoreTest.Tests
         [TestMethod]
         public static void GetGatewayTest()
         {
-            DiscordApplication app = new DiscordApplication("");
-            DiscordApiData data = app.Rest.Gateway.Get();
+            DiscordBotUserAuthenticator auth = new DiscordBotUserAuthenticator("");
+            DiscordWebSocketApplication app = new DiscordWebSocketApplication(auth);
+            DiscordApiData data = app.InternalHttpApi.Gateway.Get();
 
             TestHelper.Assert(data != null, "Response should not return null");
             TestHelper.Assert(data.ContainsKey("url"), "Response did not contain expected contents.");

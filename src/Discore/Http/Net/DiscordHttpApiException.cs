@@ -2,12 +2,12 @@
 
 namespace Discore.Http.Net
 {
-    public class DiscordRestClientException : DiscoreException
+    public class DiscordHttpClientException : DiscoreException
     {
-        public DiscordRestErrorCode ErrorCode { get; }
+        public DiscordHttpErrorCode ErrorCode { get; }
         public HttpStatusCode HttpStatusCode { get; }
 
-        internal DiscordRestClientException(string message, DiscordRestErrorCode errorCode, HttpStatusCode httpCode)
+        internal DiscordHttpClientException(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
             : base($"{message} ({errorCode})")
         {
             ErrorCode = errorCode;

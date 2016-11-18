@@ -15,14 +15,14 @@ namespace Discore.WebSocket
 
         protected Shard Shard { get; }
 
-        DiscordRestApi rest;
+        HttpApi rest;
 
         internal DiscordChannel(Shard shard, DiscordChannelType type)
         {
             Shard = shard;
             ChannelType = type;
 
-            rest = shard.Application.Rest;
+            rest = shard.Application.InternalHttpApi;
         }
 
         ///// <summary>
