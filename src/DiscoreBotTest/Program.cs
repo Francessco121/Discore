@@ -21,7 +21,7 @@ namespace DiscoreBotTest
 
             DiscoreLogger.OnLog += DiscoreLogger_OnLog;
 
-            DiscordBotUserAuthenticator auth = new DiscordBotUserAuthenticator(token);
+            DiscordBotUserToken auth = new DiscordBotUserToken(token);
             DiscordWebSocketApplication app = new DiscordWebSocketApplication(auth);
 
             app.ShardManager.CreateShards(1);

@@ -3,14 +3,14 @@ using System.Net.Http;
 
 namespace Discore
 {
-    public class DiscordClientCredentialsAuthenticator : IDiscordAuthenticator
+    public class DiscordClientCredentials : IDiscordAuthenticator
     {
         public bool CanAuthenticateWebSocket { get { return false; } }
 
         string token;
         string tokenType;
 
-        public DiscordClientCredentialsAuthenticator(string clientId, string clientSecret)
+        public DiscordClientCredentials(string clientId, string clientSecret)
         {
             throw new NotImplementedException("This authenticator is just a stub for now."); // This is not useable yet!
 

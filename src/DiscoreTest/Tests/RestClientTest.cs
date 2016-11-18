@@ -12,7 +12,7 @@ namespace DiscoreTest.Tests
         [TestMethod]
         public static void GetGatewayTest()
         {
-            DiscordBotUserAuthenticator auth = new DiscordBotUserAuthenticator("");
+            DiscordBotUserToken auth = new DiscordBotUserToken("");
             DiscordWebSocketApplication app = new DiscordWebSocketApplication(auth);
             DiscordApiData data = app.InternalHttpApi.Gateway.Get();
 

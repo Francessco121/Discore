@@ -1,12 +1,12 @@
 ﻿namespace Discore
 {
-    public class DiscordBotUserAuthenticator : IDiscordAuthenticator
+    public class DiscordBotUserToken : IDiscordAuthenticator
     {
         public bool CanAuthenticateWebSocket { get { return true; } }
 
         string token;
 
-        public DiscordBotUserAuthenticator(string token)
+        public DiscordBotUserToken(string token)
         {
             this.token = token;
         }

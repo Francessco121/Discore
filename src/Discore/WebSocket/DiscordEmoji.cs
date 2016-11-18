@@ -47,18 +47,8 @@ namespace Discore.WebSocket
             if (roles != null)
             {
                 Roles.Clear();
-                foreach (DiscordApiData roleData in roles)
-                {
-                    Snowflake roleId = roleData.GetSnowflake("id").Value;
-
-                    // TODO: Figure out if these roles are seperate, or are actually just guild roles.
-
-                    // Follow through with the "eventual consistency" and update the role,
-                    // but only save the id on our end.
-                    Guild.Roles.Edit(roleId, () => new DiscordRole(), role => role.Update(roleData));
-
-                    Roles.Add(roleId);
-                }
+                for (int i = 0; i < roles.Count; i++)
+                    Roles.Add(roles[i].ToSnowflake().Value);
             }
         }
 
