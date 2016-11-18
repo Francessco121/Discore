@@ -1,4 +1,6 @@
 ﻿using Discore;
+using Discore.WebSocket;
+using Discore.WebSocket.Net;
 using System;
 using System.IO;
 using System.Threading;
@@ -34,10 +36,10 @@ namespace DiscoreBotTest
 
         static void TestShard(Shard shard)
         {
-            shard.OnGuildCreated += Shard_OnGuildCreated;
+            shard.Gateway.OnGuildCreated += Shard_OnGuildCreated;
         }
 
-        private static void Shard_OnGuildCreated(Shard shard, DiscordGuild guild)
+        private static void Shard_OnGuildCreated(object sender, GuildEventArgs e)
         {
 
         }

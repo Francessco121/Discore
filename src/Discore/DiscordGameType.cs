@@ -1,8 +1,5 @@
 ﻿namespace Discore
 {
-    /// <summary>
-    /// The type of a <see cref="DiscordGame"/>.
-    /// </summary>
     public enum DiscordGameType
     {
         /// <summary>
