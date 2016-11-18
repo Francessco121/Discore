@@ -122,6 +122,9 @@ namespace Discore.WebSocket.Net
             dispatchHandlers["GUILD_CREATE"] = HandleGuildCreate;
             dispatchHandlers["GUILD_UPDATE"] = HandleGuildUpdate;
             dispatchHandlers["GUILD_DELETE"] = HandleGuildDelete;
+            dispatchHandlers["CHANNEL_CREATE"] = HandleChannelCreate;
+            dispatchHandlers["CHANNEL_UPDATE"] = HandleChannelUpdate;
+            dispatchHandlers["CHANNEL_DELETE"] = HandleChannelDelete;
         }
 
         void HandleReadyEvent(DiscordApiData data)
@@ -201,6 +204,108 @@ namespace Discore.WebSocket.Net
 
                 if (guild != null)
                     OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, guild));
+            }
+        }
+
+        void HandleChannelCreate(DiscordApiData data)
+        {
+            Snowflake id = data.GetSnowflake("id").Value;
+            bool isPrivate = data.GetBoolean("is_private") ?? false;
+
+            if (isPrivate)
+            {
+                // DM channel
+                DiscordDMChannel dm = shard.DirectMessageChannels.Edit(id, () => new DiscordDMChannel(shard), c => c.Update(data));
+                shard.Channels.Set(id, dm);
+
+                OnDMChannelCreated?.Invoke(this, new DMChannelEventArgs(shard, dm));
+            }
+            else
+            {
+                // Guild channel
+                string type = data.GetString("type");
+                Snowflake guildId = data.GetSnowflake("guild_id").Value;
+
+                DiscordGuild guild = shard.Guilds.Get(guildId);
+                if (guild != null)
+                {
+                    DiscordGuildChannel channel = null;
+
+                    if (type == "text")
+                        channel = guild.TextChannels.Edit(id, () => new DiscordGuildTextChannel(shard, guild), c => c.Update(data));
+                    else if (type == "voice")
+                        channel = guild.VoiceChannels.Edit(id, () => new DiscordGuildVoiceChannel(shard, guild), c => c.Update(data));
+
+                    if (channel != null)
+                    {
+                        guild.Channels.Set(id, channel);
+                        shard.Channels.Set(id, channel);
+
+                        OnGuildChannelCreated?.Invoke(this, new GuildChannelEventArgs(shard, channel));
+                    }
+                }
+            }
+        }
+
+        void HandleChannelUpdate(DiscordApiData data)
+        {
+            Snowflake id = data.GetSnowflake("id").Value;
+            string type = data.GetString("type");
+            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+
+            DiscordGuild guild = shard.Guilds.Get(guildId);
+            if (guild != null)
+            {
+                DiscordGuildChannel channel = null;
+
+                if (type == "text")
+                    channel = guild.TextChannels.Edit(id, () => new DiscordGuildTextChannel(shard, guild), c => c.Update(data));
+                else if (type == "voice")
+                    channel = guild.VoiceChannels.Edit(id, () => new DiscordGuildVoiceChannel(shard, guild), c => c.Update(data));
+
+                if (channel != null)
+                {
+                    guild.Channels.Set(id, channel);
+                    shard.Channels.Set(id, channel);
+
+                    OnGuildChannelUpdated?.Invoke(this, new GuildChannelEventArgs(shard, channel));
+                }
+            }
+        }
+
+        void HandleChannelDelete(DiscordApiData data)
+        {
+            Snowflake id = data.GetSnowflake("id").Value;
+            bool isPrivate = data.GetBoolean("is_private") ?? false;
+
+            if (isPrivate)
+            {
+                // DM channel
+                shard.DirectMessageChannels.Remove(id);
+                shard.Channels.Remove(id);
+
+                DiscordDMChannel dm = new DiscordDMChannel(shard);
+                dm.Update(data);
+
+                OnDMChannelRemoved?.Invoke(this, new DMChannelEventArgs(shard, dm));
+            }
+            else
+            {
+                // Guild channel
+                string type = data.GetString("type");
+                Snowflake guildId = data.GetSnowflake("guild_id").Value;
+
+                DiscordGuild guild = shard.Guilds.Get(guildId);
+                if (guild != null)
+                {
+                    if (type == "text")
+                        guild.TextChannels.Remove(id);
+                    else if (type == "voice")
+                        guild.VoiceChannels.Remove(id);
+
+                    guild.Channels.Remove(id);
+                    shard.Channels.Remove(id);
+                }
             }
         }
     }
