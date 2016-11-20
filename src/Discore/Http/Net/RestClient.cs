@@ -76,7 +76,7 @@ namespace Discore.Http.Net
                 }
             }
             else
-                throw new DiscordHttpClientException($"Unknown error. Payload: {json}",
+                throw new DiscordHttpClientException($"Unknown error. Response: {json}",
                     DiscordHttpErrorCode.None, response.StatusCode);
         }
 
@@ -103,6 +103,14 @@ namespace Discore.Http.Net
             return Send(request, limiterAction);
         }
 
+        public DiscordApiData Get(string action, DiscordApiData data, string limiterAction)
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
+            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+
+            return Send(request, limiterAction);
+        }
+
         public DiscordApiData Post(string action, DiscordApiData data, string limiterAction)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
@@ -111,12 +119,16 @@ namespace Discore.Http.Net
             return Send(request, limiterAction);
         }
 
+        public DiscordApiData Put(string action, string limiterAction)
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
+            return Send(request, limiterAction);
+        }
+
         public DiscordApiData Put(string action, DiscordApiData data, string limiterAction)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-
-            if (data != null)
-                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
             return Send(request, limiterAction);
         }

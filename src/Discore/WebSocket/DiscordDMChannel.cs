@@ -5,7 +5,7 @@ namespace Discore.WebSocket
     /// <summary>
     /// Direct message channels represent a one-to-one conversation between two users, outside of the scope of guilds.
     /// </summary>
-    public sealed class DiscordDMChannel : DiscordChannel
+    public sealed class DiscordDMChannel : DiscordChannel, ITextChannel
     {
         /// <summary>
         /// The id of the last message sent in this DM.
@@ -30,21 +30,16 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Sends a message to this direct message channel.
-        /// Returns the message sent, or null if the send failed.
+        /// Returns the message sent.
         /// </summary>
         public DiscordMessage SendMessage(string content)
         {
-            DiscordApiData data = channelsHttp.Create(Id, content);
+            DiscordApiData data = channelsHttp.CreateMessage(Id, content);
 
-            if (data != null && !data.IsNull)
-            {
-                DiscordMessage msg = new DiscordMessage(shard);
-                msg.Update(data);
+            DiscordMessage msg = new DiscordMessage(shard);
+            msg.Update(data);
 
-                return msg;
-            }
-            else
-                return null;
+            return msg;
         }
 
         internal override void Update(DiscordApiData data)

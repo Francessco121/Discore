@@ -46,16 +46,22 @@ namespace DiscoreBotTest
 
             if (message.Author != e.Shard.User)
             {
-                if (message.Channel.ChannelType == DiscordChannelType.DirectMessage)
-                {
-                    DiscordDMChannel dm = (DiscordDMChannel)message.Channel;
-                    dm.SendMessage("heck you");
-                }
-                else if (message.Channel.ChannelType == DiscordChannelType.Guild && message.Mentions.Contains(e.Shard.User))
-                {
-                    DiscordGuildTextChannel channel = (DiscordGuildTextChannel)message.Channel;
-                    channel.SendMessage($"<@!{message.Author.Id}> heck off");
-                }
+                //message.AddReaction("wutface", new Snowflake(245312095791480834));
+
+                //ITextChannel channel = (ITextChannel)message.Channel;
+
+                //channel.SendMessage("heck off");
+
+                //if (message.Channel.ChannelType == DiscordChannelType.DirectMessage)
+                //{
+                //    DiscordDMChannel dm = (DiscordDMChannel)message.Channel;
+                //    dm.SendMessage("heck you");
+                //}
+                //else if (message.Channel.ChannelType == DiscordChannelType.Guild && message.Mentions.Contains(e.Shard.User))
+                //{
+                //    DiscordGuildTextChannel channel = (DiscordGuildTextChannel)message.Channel;
+                //    channel.SendMessage($"<@!{message.Author.Id}> heck off");
+                //}
             }
         }
 

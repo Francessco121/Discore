@@ -34,8 +34,10 @@ namespace Discore.WebSocket.Net
         event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
 
         event EventHandler<MessageEventArgs> OnMessageCreated;
-        event EventHandler<MessageEventArgs> OnMessageUpdated;
-        event EventHandler<MessageEventArgs> OnMessageDeleted;
+        event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
+        event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
+        event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
+        event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
 
         event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
 

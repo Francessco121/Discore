@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 
 namespace Discore
@@ -20,7 +21,14 @@ namespace Discore
 
                 try
                 {
-                    result = http.GetStringAsync("https://discordapp.com/api/oauth2/token").Result;
+                    Dictionary<string, string> props = new Dictionary<string, string>();
+                    FormUrlEncodedContent content = new FormUrlEncodedContent(props);
+                    props["client_id"] = clientId;
+                    props["client_secret"] = clientSecret;
+                    props["grant_type"] = "client_credentials";
+
+                    HttpResponseMessage response = http.PostAsync("https://discordapp.com/api/oauth2/token", content).Result;
+                    result = response.Content.ReadAsStringAsync().Result;
                 }
                 catch (AggregateException aex)
                 {

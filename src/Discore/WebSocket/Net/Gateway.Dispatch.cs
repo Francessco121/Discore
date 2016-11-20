@@ -93,12 +93,24 @@ namespace Discore.WebSocket.Net
         public event EventHandler<MessageEventArgs> OnMessageCreated;
         /// <summary>
         /// Called when a message is updated.
+        /// <para>
+        /// Message contained in this event is only partially filled out!
+        /// The only guaranteed field is the channel the message was sent in.
+        /// </para>
         /// </summary>
-        public event EventHandler<MessageEventArgs> OnMessageUpdated;
+        public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
         /// <summary>
         /// Called when a message is deleted.
         /// </summary>
-        public event EventHandler<MessageEventArgs> OnMessageDeleted;
+        public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
+        /// <summary>
+        /// Called when someone reacts to a message.
+        /// </summary>
+        public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
+        /// <summary>
+        /// Called when a reaction is removed from a message.
+        /// </summary>
+        public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
         /// <summary>
         /// Called when the presence of a member in a guild is updated.
         /// </summary>
@@ -138,7 +150,13 @@ namespace Discore.WebSocket.Net
             dispatchHandlers["GUILD_ROLE_DELETE"] = HandleGuildRoleDeleteEvent;
             dispatchHandlers["PRESENCE_UPDATE"] = HandlePresenceUpdateEvent;
             dispatchHandlers["TYPING_START"] = HandleTypingStartEvent;
+            dispatchHandlers["USER_UPDATE"] = HandleUserUpdateEvent;
             dispatchHandlers["MESSAGE_CREATE"] = HandleMessageCreateEvent;
+            dispatchHandlers["MESSAGE_UPDATE"] = HandleMessageUpdateEvent;
+            dispatchHandlers["MESSAGE_DELETE"] = HandleMessageDeleteEvent;
+            dispatchHandlers["MESSAGE_DELETE_BULK"] = HandleMessageDeleteBulkEvent;
+            dispatchHandlers["MESSAGE_REACTION_ADD"] = HandleMessageReactionAddEvent;
+            dispatchHandlers["MESSAGE_REACTION_REMOVE"] = HandleMessageReactionRemoveEvent;
         }
 
         void HandleReadyEvent(DiscordApiData data)
@@ -364,6 +382,7 @@ namespace Discore.WebSocket.Net
                 Snowflake roleId = roleData.GetSnowflake("id").Value;
 
                 DiscordRole role = guild.Roles.Edit(roleId, () => new DiscordRole(), r => r.Update(roleData));
+                shard.Roles.Set(roleId, role);
 
                 OnGuildRoleCreated?.Invoke(this, new GuildRoleEventArgs(shard, guild, role));
             }
@@ -380,6 +399,7 @@ namespace Discore.WebSocket.Net
                 Snowflake roleId = roleData.GetSnowflake("id").Value;
 
                 DiscordRole role = guild.Roles.Edit(roleId, () => new DiscordRole(), r => r.Update(roleData));
+                shard.Roles.Set(roleId, role);
 
                 OnGuildRoleUpdated?.Invoke(this, new GuildRoleEventArgs(shard, guild, role));
             }
@@ -395,6 +415,7 @@ namespace Discore.WebSocket.Net
                 Snowflake roleId = data.GetSnowflake("role_id").Value;
 
                 DiscordRole role = guild.Roles.Remove(roleId);
+                shard.Roles.Remove(roleId);
 
                 if (role != null)
                     OnGuildRoleDeleted?.Invoke(this, new GuildRoleEventArgs(shard, guild, role));
@@ -539,12 +560,79 @@ namespace Discore.WebSocket.Net
 
         void HandleMessageUpdateEvent(DiscordApiData data)
         {
+            DiscordMessage message = new DiscordMessage(shard);
+            message.Update(data);
 
+            OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message, data));
         }
 
         void HandleMessageDeleteEvent(DiscordApiData data)
         {
-            
+            Snowflake messageId = data.GetSnowflake("id").Value;
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+
+            DiscordChannel channel = shard.Channels.Get(channelId);
+            if (channel != null)
+                OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channel));
+        }
+
+        void HandleMessageDeleteBulkEvent(DiscordApiData data)
+        {
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+
+            DiscordChannel channel = shard.Channels.Get(channelId);
+            if (channel != null)
+            {
+                IList<DiscordApiData> idArray = data.GetArray("ids");
+                for (int i = 0; i < idArray.Count; i++)
+                {
+                    Snowflake messageId = idArray[i].ToSnowflake().Value;
+                    OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channel));
+                }
+            }
+        }
+
+        void HandleMessageReactionAddEvent(DiscordApiData data)
+        {
+            Snowflake userId = data.GetSnowflake("user_id").Value;
+            DiscordUser user;
+            if (shard.Users.TryGetValue(userId, out user))
+            {
+                Snowflake channelId = data.GetSnowflake("channel_id").Value;
+                DiscordChannel channel;
+                if (shard.Channels.TryGetValue(channelId, out channel))
+                {
+                    DiscordApiData emojiData = data.Get("emoji");
+                    DiscordReactionEmoji emoji = new DiscordReactionEmoji();
+                    emoji.Update(emojiData);
+
+                    Snowflake messageId = data.GetSnowflake("message_id").Value;
+
+                    OnMessageReactionAdded?.Invoke(this, new MessageReactionEventArgs(shard, messageId, channel, user, emoji));
+                }
+            }
+        }
+
+        void HandleMessageReactionRemoveEvent(DiscordApiData data)
+        {
+            Snowflake userId = data.GetSnowflake("user_id").Value;
+            DiscordUser user;
+            if (shard.Users.TryGetValue(userId, out user))
+            {
+                Snowflake channelId = data.GetSnowflake("channel_id").Value;
+                DiscordChannel channel;
+                if (shard.Channels.TryGetValue(channelId, out channel))
+                {
+                    DiscordApiData emojiData = data.Get("emoji");
+                    DiscordReactionEmoji emoji = new DiscordReactionEmoji();
+                    emoji.Update(emojiData);
+
+                    Snowflake messageId = data.GetSnowflake("message_id").Value;
+
+                    OnMessageReactionRemoved?.Invoke(this, 
+                        new MessageReactionEventArgs(shard, messageId, channel, user, emoji));
+                }
+            }
         }
         #endregion
 
@@ -562,6 +650,8 @@ namespace Discore.WebSocket.Net
                 {
                     member.Update(data);
                     member.User.PresenceUpdate(data);
+
+                    OnPresenceUpdated?.Invoke(this, new GuildMemberEventArgs(shard, guild, member));
                 }
             }
         }
@@ -582,6 +672,14 @@ namespace Discore.WebSocket.Net
                     OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, user, channel, timestamp));
                 }
             }
+        }
+
+        void HandleUserUpdateEvent(DiscordApiData data)
+        {
+            Snowflake userId = data.GetSnowflake("id").Value;
+            DiscordUser user = shard.Users.Edit(userId, () => new DiscordUser(), u => u.Update(data));
+
+            OnUserUpdated?.Invoke(this, new UserEventArgs(shard, user));
         }
     }
 }

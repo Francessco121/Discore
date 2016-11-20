@@ -159,15 +159,17 @@ namespace Discore.WebSocket
                 foreach (DiscordApiData roleData in rolesData)
                 {
                     Snowflake roleId = roleData.GetSnowflake("id").Value;
-                    Roles.Edit(roleId, () => new DiscordRole(),
-                        role =>
+                    DiscordRole role = Roles.Edit(roleId, () => new DiscordRole(),
+                        r =>
                         {
-                            role.Update(roleData);
+                            r.Update(roleData);
 
-                            if (role.Name.ToLower() == "@everyone")
-                                AtEveryoneRole = role;
+                            if (r.Name.ToLower() == "@everyone")
+                                AtEveryoneRole = r;
 
                         });
+
+                    shard.Roles.Set(roleId, role);
                 }
             }
 

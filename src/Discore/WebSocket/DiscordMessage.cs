@@ -1,6 +1,7 @@
 ﻿using Discore.Http.Net;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.WebSocket
 {
@@ -9,6 +10,8 @@ namespace Discore.WebSocket
     /// </summary>
     public sealed class DiscordMessage : DiscordIdObject
     {
+        public const int MAX_CHARACTERS = 2000;
+
         /// <summary>
         /// Gets the channel this message is in.
         /// </summary>
@@ -46,13 +49,21 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordApiCacheIdSet<DiscordUser> Mentions { get; }
         /// <summary>
+        /// Gets a list of all mentioned roles in this message.
+        /// </summary>
+        public DiscordApiCacheIdSet<DiscordRole> MentionedRoles { get; }
+        /// <summary>
         /// Gets a table of all attachments in this message.
         /// </summary>
         public DiscordApiCacheTable<DiscordAttachment> Attachments { get; }
         /// <summary>
         /// Gets a list of all embedded attachments in this message.
         /// </summary>
-        public DiscordEmbed[] Embeds { get; private set; }
+        public IReadOnlyList<DiscordEmbed> Embeds { get; private set; }
+        /// <summary>
+        /// Gets a list of all reactions to this message.
+        /// </summary>
+        public IReadOnlyList<DiscordReaction> Reactions { get; private set; }
         /// <summary>
         /// Used for validating if a message was sent.
         /// </summary>
@@ -62,19 +73,37 @@ namespace Discore.WebSocket
         /// </summary>
         public bool IsPinned { get; private set; }
 
-        // TODO: add mentioned roles
-        // TODO: add reactions
-
         Shard shard;
-        HttpApi rest;
+        HttpChannelsEndpoint channelsHttp;
 
         internal DiscordMessage(Shard shard)
         {
             this.shard = shard;
-            rest = shard.Application.InternalHttpApi;
+            channelsHttp = shard.Application.InternalHttpApi.Channels;
 
             Mentions = new DiscordApiCacheIdSet<DiscordUser>(shard.Users);
+            MentionedRoles = new DiscordApiCacheIdSet<DiscordRole>(shard.Roles);
             Attachments = new DiscordApiCacheTable<DiscordAttachment>();
+        }
+
+        public bool AddReaction(string emojiName)
+        {
+            DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, emojiName);
+            return data.IsNull;
+        }
+
+        public bool AddReaction(DiscordReactionEmoji emoji)
+        {
+            if (emoji.Id.HasValue)
+                return AddReaction(emoji.Name, emoji.Id.Value);
+            else
+                return AddReaction(emoji.Name);
+        }
+
+        public bool AddReaction(string customEmojiName, Snowflake customEmojiId)
+        {
+            DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, customEmojiName, customEmojiId);
+            return data.IsNull;
         }
 
         ///// <summary>
@@ -102,6 +131,15 @@ namespace Discore.WebSocket
         //{
         //    return rest.Messages.Pin(this);
         //}
+
+        /// <summary>
+        /// Updates an existing <see cref="DiscordMessage"/> object with data
+        /// received from a MessageUpdated event.
+        /// </summary>
+        public static void UpdateMessage(DiscordMessage existingMessage, DiscordApiData updates)
+        {
+            existingMessage.Update(updates);
+        }
 
         internal override void Update(DiscordApiData data)
         {
@@ -149,6 +187,17 @@ namespace Discore.WebSocket
                 }
             }
 
+            IList<DiscordApiData> mentionedRolesArray = data.GetArray("mention_roles");
+            if (mentionedRolesArray != null)
+            {
+                MentionedRoles.Clear();
+                for (int i = 0; i < mentionedRolesArray.Count; i++)
+                {
+                    Snowflake roleId = mentionedRolesArray[i].ToSnowflake().Value;
+                    MentionedRoles.Add(roleId);
+                }
+            }
+
             IList<DiscordApiData> attachmentsData = data.GetArray("attachments");
             if (attachmentsData != null)
             {
@@ -162,16 +211,32 @@ namespace Discore.WebSocket
                 }
             }
 
-            IList<DiscordApiData> embedsData = data.GetArray("embeds");
-            if (embedsData != null)
+            IList<DiscordApiData> embedsArray = data.GetArray("embeds");
+            if (embedsArray != null)
             {
-                Embeds = new DiscordEmbed[embedsData.Count];
-                for (int i = 0; i < Embeds.Length; i++)
+                DiscordEmbed[] embeds = new DiscordEmbed[embedsArray.Count];
+                for (int i = 0; i < embeds.Length; i++)
                 {
                     DiscordEmbed embed = new DiscordEmbed();
-                    embed.Update(embedsData[i]);
-                    Embeds[i] = embed;
+                    embed.Update(embedsArray[i]);
+                    embeds[i] = embed;
                 }
+
+                Embeds = new ReadOnlyCollection<DiscordEmbed>(embeds);
+            }
+
+            IList<DiscordApiData> reactionsArray = data.GetArray("reactions");
+            if (reactionsArray != null)
+            {
+                DiscordReaction[] reactions = new DiscordReaction[reactionsArray.Count];
+                for (int i = 0; i < reactions.Length; i++)
+                {
+                    DiscordReaction reaction = new DiscordReaction();
+                    reaction.Update(reactionsArray[i]);
+                    reactions[i] = reaction;
+                }
+
+                Reactions = new ReadOnlyCollection<DiscordReaction>(reactions);
             }
         }
     }

@@ -2,7 +2,7 @@
 
 namespace Discore.WebSocket
 {
-    public sealed class DiscordGuildTextChannel : DiscordGuildChannel
+    public sealed class DiscordGuildTextChannel : DiscordGuildChannel, ITextChannel
     {
         /// <summary>
         /// Gets the topic of this channel.
@@ -24,21 +24,16 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Sends a message to this guild message channel.
-        /// Returns the message sent, or null if the send failed.
+        /// Returns the message sent.
         /// </summary>
         public DiscordMessage SendMessage(string content)
         {
-            DiscordApiData data = channelsHttp.Create(Id, content);
+            DiscordApiData data = channelsHttp.CreateMessage(Id, content);
 
-            if (data != null && !data.IsNull)
-            {
-                DiscordMessage msg = new DiscordMessage(Shard);
-                msg.Update(data);
+            DiscordMessage msg = new DiscordMessage(Shard);
+            msg.Update(data);
 
-                return msg;
-            }
-            else
-                return null;
+            return msg;
         }
 
         internal override void Update(DiscordApiData data)

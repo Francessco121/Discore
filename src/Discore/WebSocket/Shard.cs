@@ -18,6 +18,10 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordApiCacheTable<DiscordChannel> Channels { get; }
         /// <summary>
+        /// Gets a table of all roles managed by this shard.
+        /// </summary>
+        public DiscordApiCacheTable<DiscordRole> Roles { get; }
+        /// <summary>
         /// Gets a table of all DM channels managed by this shard.
         /// </summary>
         public DiscordApiCacheTable<DiscordDMChannel> DirectMessageChannels { get; }
@@ -50,6 +54,7 @@ namespace Discore.WebSocket
 
             Guilds = new DiscordApiCacheTable<DiscordGuild>();
             Channels = new DiscordApiCacheTable<DiscordChannel>();
+            Roles = new DiscordApiCacheTable<DiscordRole>();
             DirectMessageChannels = new DiscordApiCacheTable<DiscordDMChannel>();
             Users = new DiscordApiCacheTable<DiscordUser>();
 
@@ -82,6 +87,7 @@ namespace Discore.WebSocket
 
                 Guilds.Clear();
                 Channels.Clear();
+                Roles.Clear();
                 DirectMessageChannels.Clear();
                 Users.Clear();
 

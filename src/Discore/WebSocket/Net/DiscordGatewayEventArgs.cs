@@ -132,6 +132,50 @@ namespace Discore.WebSocket.Net
         }
     }
 
+    public class MessageUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        public DiscordMessage PartialMessage { get; }
+        public DiscordApiData UpdateData { get; }
+
+        public MessageUpdateEventArgs(Shard shard, DiscordMessage message, DiscordApiData updateData)
+            : base(shard)
+        {
+            PartialMessage = message;
+            UpdateData = updateData;
+        }
+    }
+
+    public class MessageDeleteEventArgs : DiscordGatewayEventArgs
+    {
+        public Snowflake MessageId { get; }
+        public DiscordChannel Channel { get; }
+
+        public MessageDeleteEventArgs(Shard shard, Snowflake messageId, DiscordChannel channel)
+            : base(shard)
+        {
+            MessageId = messageId;
+            Channel = channel;
+        }
+    }
+
+    public class MessageReactionEventArgs : DiscordGatewayEventArgs
+    {
+        public Snowflake MessageId { get; }
+        public DiscordUser User { get; }
+        public DiscordChannel Channel { get; }
+        public DiscordReactionEmoji Emoji { get; }
+
+        public MessageReactionEventArgs(Shard shard, Snowflake messageId, DiscordChannel channel, 
+            DiscordUser user, DiscordReactionEmoji emoji)
+            : base(shard)
+        {
+            MessageId = messageId;
+            Channel = channel;
+            User = user;
+            Emoji = emoji;
+        }
+    }
+
     public class ShardExceptionEventArgs : DiscordGatewayEventArgs
     {
         public Exception Exception { get; }
