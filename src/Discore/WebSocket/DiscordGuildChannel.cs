@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Discore.Http.Net;
+using System.Collections.Generic;
 
 namespace Discore.WebSocket
 {
@@ -37,6 +38,7 @@ namespace Discore.WebSocket
         public DiscordGuild Guild { get; }
 
         Shard shard;
+        HttpChannelsEndpoint channelsHttp;
 
         internal DiscordGuildChannel(Shard shard, DiscordGuild guild, DiscordGuildChannelType type) 
             : base(shard, DiscordChannelType.Guild)
@@ -45,9 +47,49 @@ namespace Discore.WebSocket
             Guild = guild;
             GuildChannelType = type;
 
+            channelsHttp = shard.Application.InternalHttpApi.Channels;
+
             PermissionOverwrites = new DiscordApiCacheTable<DiscordOverwrite>();
             RolePermissionOverwrites = new DiscordApiCacheIdSet<DiscordOverwrite>(PermissionOverwrites);
             MemberPermissionOverwrites = new DiscordApiCacheIdSet<DiscordOverwrite>(PermissionOverwrites);
+        }
+
+        public bool EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
+        {
+            return EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
+        }
+
+        public bool EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
+        {
+            return EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
+        }
+
+        bool EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
+            DiscordOverwriteType type)
+        {
+            DiscordApiData data = channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
+            return data.IsNull;
+        }
+
+        public bool DeletePermission(DiscordGuildMember member)
+        {
+            return DeletePermission(member.Id);
+        }
+
+        public bool DeletePermission(DiscordRole role)
+        {
+            return DeletePermission(role.Id);
+        }
+
+        public bool DeletePermission(DiscordOverwrite overwrite)
+        {
+            return DeletePermission(overwrite.Id);
+        }
+
+        bool DeletePermission(Snowflake overwriteId)
+        {
+            DiscordApiData data = channelsHttp.DeletePermission(Id, overwriteId);
+            return data.IsNull;
         }
 
         internal override void Update(DiscordApiData data)

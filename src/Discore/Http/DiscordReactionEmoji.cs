@@ -12,6 +12,17 @@
         /// </summary>
         public string Name { get; }
 
+        public DiscordReactionEmoji(string name)
+        {
+            Name = name;
+        }
+
+        public DiscordReactionEmoji(string name, Snowflake? id)
+        {
+            Name = name;
+            Id = id;
+        }
+
         public DiscordReactionEmoji(DiscordApiData data)
         {
             Id = data.GetSnowflake("id");
@@ -20,7 +31,7 @@
 
         public override string ToString()
         {
-            return Name;
+            return Id.HasValue ? $"{Name}:{Id.Value}" : Name;
         }
     }
 }

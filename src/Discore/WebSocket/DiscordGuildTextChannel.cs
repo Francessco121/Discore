@@ -1,4 +1,5 @@
 ﻿using Discore.Http.Net;
+using System.Collections.Generic;
 
 namespace Discore.WebSocket
 {
@@ -23,17 +24,91 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
-        /// Sends a message to this guild message channel.
+        /// Sends a message to this guild channel.
         /// Returns the message sent.
         /// </summary>
-        public DiscordMessage SendMessage(string content)
+        public DiscordMessage SendMessage(string content, bool tts = false)
         {
-            DiscordApiData data = channelsHttp.CreateMessage(Id, content);
+            DiscordApiData data = channelsHttp.CreateMessage(Id, content, tts);
 
             DiscordMessage msg = new DiscordMessage(Shard);
             msg.Update(data);
 
             return msg;
+        }
+
+        /// <summary>
+        /// Sends a message with a file attachment to this guild channel.
+        /// Returns the message sent.
+        /// </summary>
+        public DiscordMessage SendMessage(string content, byte[] fileAttachment, bool tts = false)
+        {
+            DiscordApiData data = channelsHttp.UploadFile(Id, fileAttachment, content, tts);
+
+            DiscordMessage msg = new DiscordMessage(Shard);
+            msg.Update(data);
+
+            return msg;
+        }
+
+        public bool BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
+        {
+            DiscordApiData data = channelsHttp.BulkDeleteMessages(Id, messageIds);
+            return data.IsNull;
+        }
+
+        public bool TriggerTypingIndicator()
+        {
+            DiscordApiData data = channelsHttp.TriggerTypingIndicator(Id);
+            return data.IsNull;
+        }
+
+        public IList<DiscordMessage> GetPinnedMessages()
+        {
+            DiscordApiData messagesArray = channelsHttp.GetPinnedMessages(Id);
+            DiscordMessage[] messages = new DiscordMessage[messagesArray.Values.Count];
+
+            for (int i = 0; i < messages.Length; i++)
+            {
+                DiscordMessage message = new DiscordMessage(Shard);
+                message.Update(messagesArray.Values[i]);
+
+                messages[i] = message;
+            }
+
+            return messages;
+        }
+
+        public DiscordMessage GetMessage(Snowflake messageId)
+        {
+            DiscordApiData data = channelsHttp.GetMessage(Id, messageId);
+            DiscordMessage message = new DiscordMessage(Shard);
+            message.Update(data);
+
+            return message;
+        }
+
+        public IList<DiscordMessage> GetMessages(Snowflake? baseMessageId = null, int? limit = null,
+            DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
+        {
+            DiscordApiData messagesArray = channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
+            DiscordMessage[] messages = new DiscordMessage[messagesArray.Values.Count];
+
+            for (int i = 0; i < messages.Length; i++)
+            {
+                DiscordMessage message = new DiscordMessage(Shard);
+                message.Update(messagesArray.Values[i]);
+
+                messages[i] = message;
+            }
+
+            return messages;
+        }
+
+        public bool Delete()
+        {
+            DiscordApiData data = channelsHttp.Delete(Id);
+            return data.IsNull;
         }
 
         internal override void Update(DiscordApiData data)

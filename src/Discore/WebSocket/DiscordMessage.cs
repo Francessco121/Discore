@@ -86,51 +86,118 @@ namespace Discore.WebSocket
             Attachments = new DiscordApiCacheTable<DiscordAttachment>();
         }
 
-        public bool AddReaction(string emojiName)
-        {
-            DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, emojiName);
-            return data.IsNull;
-        }
-
         public bool AddReaction(DiscordReactionEmoji emoji)
         {
-            if (emoji.Id.HasValue)
-                return AddReaction(emoji.Name, emoji.Id.Value);
-            else
-                return AddReaction(emoji.Name);
+            return AddReaction(emoji.Name, emoji.Id.Value);
         }
 
-        public bool AddReaction(string customEmojiName, Snowflake customEmojiId)
+        public bool AddReaction(string emojiName, Snowflake? customEmojiId = null)
         {
-            DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, customEmojiName, customEmojiId);
+            DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, 
+                new Http.DiscordReactionEmoji(emojiName, customEmojiId));
             return data.IsNull;
         }
 
-        ///// <summary>
-        ///// Changes the contents of this message.
-        ///// </summary>
-        ///// <param name="newContent">The new contents.</param>
-        //public DiscordMessage Edit(string newContent)
-        //{
-        //    Content = newContent;
-        //    return rest.Messages.Edit(Channel, Id, newContent);
-        //}
+        public bool RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
 
-        ///// <summary>
-        ///// Deletes this message.
-        ///// </summary>
-        //public bool Delete()
-        //{
-        //    return rest.Messages.Delete(Channel, Id);
-        //}
+            DiscordApiData data = channelsHttp.DeleteOwnReaction(Channel.Id, Id, emoji);
+            return data.IsNull;
+        }
 
-        ///// <summary>
-        ///// Pins this message.
-        ///// </summary>
-        //public bool Pin()
-        //{
-        //    return rest.Messages.Pin(this);
-        //}
+        public bool RemoveMyReaction(string emojiName, Snowflake? customEmojiId = null)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
+
+            DiscordApiData data = channelsHttp.DeleteOwnReaction(Channel.Id, Id, emoji);
+            return data.IsNull;
+        }
+
+        public bool RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
+
+            DiscordApiData data = channelsHttp.DeleteUserReaction(Channel.Id, Id, user.Id, emoji);
+            return data.IsNull;
+        }
+
+        public bool RemoveReaction(DiscordUser user, string emojiName, Snowflake? customEmojiId = null)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
+            
+            DiscordApiData data = channelsHttp.DeleteUserReaction(Channel.Id, Id, user.Id, emoji);
+            return data.IsNull;
+        }
+
+        public DiscordApiCacheIdSet<DiscordUser> GetReactions(DiscordReactionEmoji reactionEmoji)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
+            return GetReactions(emoji);
+        }
+
+        public DiscordApiCacheIdSet<DiscordUser> GetReactions(string emojiName, Snowflake? customEmojiId = null)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
+            return GetReactions(emoji);
+        }
+
+        DiscordApiCacheIdSet<DiscordUser> GetReactions(Http.DiscordReactionEmoji reactionEmoji)
+        {
+            DiscordApiCacheIdSet<DiscordUser> reactions = new DiscordApiCacheIdSet<DiscordUser>(shard.Users);
+
+            DiscordApiData data = channelsHttp.GetReactions(Channel.Id, Id, reactionEmoji);
+            for (int i = 0; i < data.Values.Count; i++)
+            {
+                DiscordApiData userdata = data.Values[i];
+                Snowflake userId = userdata.GetSnowflake("id").Value;
+
+                shard.Users.Edit(userId, () => new DiscordUser(), u => u.Update(userdata));
+
+                reactions.Add(userId);
+            }
+
+            return reactions;
+        }
+
+        public void DeleteAllReactions()
+        {
+            channelsHttp.DeleteAllReactions(Channel.Id, Id);
+        }
+
+        public bool Pin()
+        {
+            DiscordApiData data = channelsHttp.AddPinnedChannelMessage(Channel.Id, Id);
+            return data.IsNull;
+        }
+
+        public bool Unpin()
+        {
+            DiscordApiData data = channelsHttp.DeletePinnedChannelMessage(Channel.Id, Id);
+            return data.IsNull;
+        }
+
+        /// <summary>
+        /// Changes the contents of this message.
+        /// </summary>
+        /// <param name="newContent">The new contents.</param>
+        public DiscordMessage Edit(string newContent)
+        {
+            DiscordApiData data = channelsHttp.EditMessage(Channel.Id, Id, newContent);
+            DiscordMessage newMsg = new DiscordMessage(shard);
+            newMsg.Update(data);
+
+            return newMsg;
+        }
+
+        /// <summary>
+        /// Deletes this message.
+        /// </summary>
+        public bool Delete()
+        {
+            DiscordApiData data = channelsHttp.DeleteMessage(Channel.Id, Id);
+            return data.IsNull;
+        }
 
         /// <summary>
         /// Updates an existing <see cref="DiscordMessage"/> object with data

@@ -111,6 +111,12 @@ namespace Discore.Http.Net
             return Send(request, limiterAction);
         }
 
+        public DiscordApiData Post(string action, string limiterAction)
+        {
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
+            return Send(request, limiterAction);
+        }
+
         public DiscordApiData Post(string action, DiscordApiData data, string limiterAction)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");

@@ -44,8 +44,17 @@ namespace DiscoreBotTest
         {
             DiscordMessage message = e.Message;
 
-            if (message.Author != e.Shard.User)
+            if (message.Author != e.Shard.User && message.Mentions.Contains(e.Shard.User))
             {
+                message.AddReaction("ancap", new Snowflake(250034455006281728));
+
+                //ITextChannel channel = (ITextChannel)message.Channel;
+                //DiscordMessage heckoff = channel.SendMessage($"<@!{message.Author.Id}> kys");
+                //heckoff.AddReaction("👌");
+                //heckoff.AddReaction("🇩");
+                //heckoff.AddReaction("🇮");
+                //heckoff.AddReaction("🇪");
+
                 //message.AddReaction("wutface", new Snowflake(245312095791480834));
 
                 //ITextChannel channel = (ITextChannel)message.Channel;
