@@ -21,7 +21,7 @@ namespace Discore.WebSocket.Net
         event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
         event EventHandler<GuildUserEventArgs> OnGuildBanRemoved;
 
-        event EventHandler<GuildEventArgs> OnEmojisUpdated;
+        event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
 
         event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
 

@@ -37,12 +37,26 @@ namespace DiscoreBotTest
 
         static void TestShard(Shard shard)
         {
-            shard.Gateway.OnGuildCreated += Shard_OnGuildCreated;
+            shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
         }
 
-        private static void Shard_OnGuildCreated(object sender, GuildEventArgs e)
+        private static void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
         {
+            DiscordMessage message = e.Message;
 
+            if (message.Author != e.Shard.User)
+            {
+                if (message.Channel.ChannelType == DiscordChannelType.DirectMessage)
+                {
+                    DiscordDMChannel dm = (DiscordDMChannel)message.Channel;
+                    dm.SendMessage("heck you");
+                }
+                else if (message.Channel.ChannelType == DiscordChannelType.Guild && message.Mentions.Contains(e.Shard.User))
+                {
+                    DiscordGuildTextChannel channel = (DiscordGuildTextChannel)message.Channel;
+                    channel.SendMessage($"<@!{message.Author.Id}> heck off");
+                }
+            }
         }
 
         private static void DiscoreLogger_OnLog(object sender, DiscoreLogEventArgs e)

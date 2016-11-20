@@ -52,7 +52,15 @@ namespace Discore
 
         public override bool Equals(object obj)
         {
-            return Id.Equals(obj);
+            if (obj == null)
+                return false;
+            else if (typeof(Snowflake) == obj.GetType())
+            {
+                Snowflake other = (Snowflake)obj;
+                return Id == other.Id;
+            }
+            else
+                return base.Equals(obj);
         }
 
         public override int GetHashCode()

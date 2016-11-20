@@ -57,6 +57,7 @@ namespace Discore.WebSocket.Net
         {
             log.LogInfo("[InvalidSession] Reconnecting...");
 
+            Disconnect();
             Reconnect();
         }
 

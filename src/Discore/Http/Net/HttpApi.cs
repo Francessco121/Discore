@@ -7,6 +7,7 @@
     {
         public HttpGatewayEndpoint Gateway { get; }
         public HttpUsersEndpoint Users { get; }
+        public HttpChannelsEndpoint Channels { get; }
 
         public HttpApi(IDiscordAuthenticator authenticator)
         {
@@ -14,6 +15,7 @@
 
             Gateway = new HttpGatewayEndpoint(client);
             Users = new HttpUsersEndpoint(client);
+            Channels = new HttpChannelsEndpoint(client);
         }
     }
 }

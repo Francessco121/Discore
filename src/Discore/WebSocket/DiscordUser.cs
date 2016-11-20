@@ -59,7 +59,10 @@ namespace Discore.WebSocket
             Email            = data.GetString("email") ?? Email;
             IsBot            = data.GetBoolean("bot") ?? IsBot;
             HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? HasTwoFactorAuth;
+        }
 
+        internal void PresenceUpdate(DiscordApiData data)
+        {
             DiscordApiData gameData = data.Get("game");
             if (gameData != null)
             {
