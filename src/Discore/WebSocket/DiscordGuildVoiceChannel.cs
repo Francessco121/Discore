@@ -1,4 +1,6 @@
-﻿namespace Discore.WebSocket
+﻿using Discore.Http.Net;
+
+namespace Discore.WebSocket
 {
     public sealed class DiscordGuildVoiceChannel : DiscordGuildChannel
     {
@@ -17,10 +19,23 @@
         /// </summary>
         public DiscordApiCacheIdSet<DiscordGuildMember> Members { get; }
 
+        HttpChannelsEndpoint channelsHttp;
+
         internal DiscordGuildVoiceChannel(Shard shard, DiscordGuild guild)
             : base(shard, guild, DiscordGuildChannelType.Voice)
         {
             Members = new DiscordApiCacheIdSet<DiscordGuildMember>(guild.Members);
+
+            channelsHttp = shard.Application.InternalHttpApi.Channels;
+        }
+
+        /// <summary>
+        /// Modifies this voice channel.
+        /// Any parameters not specified will be unchanged.
+        /// </summary>
+        public void Modify(string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
+        {
+            channelsHttp.Modify(Id, name, position, null, bitrate, userLimit);
         }
 
         internal override void Update(DiscordApiData data)

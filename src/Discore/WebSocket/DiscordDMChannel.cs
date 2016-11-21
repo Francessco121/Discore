@@ -31,45 +31,116 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
-        /// Sends a message to this direct message channel.
-        /// Returns the message sent.
+        /// Sends a message to this channel.
         /// </summary>
-        public DiscordMessage SendMessage(string content, bool tts = false)
+        /// <param name="content">The message text content.</param>
+        /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
+        /// <param name="tts">Whether this should be played over text-to-speech.</param>
+        /// <returns>Returns the created message (or first if split into multiple).</returns>
+        public DiscordMessage SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
         {
-            DiscordApiData data = channelsHttp.CreateMessage(Id, content, tts);
+            DiscordApiData firstOrOnlyMessageData = null;
+
+            if (splitIfTooLong && content.Length > DiscordMessage.MAX_CHARACTERS)
+            {
+                SplitSendMessage(content,
+                    message =>
+                    {
+                        DiscordApiData msgData = channelsHttp.CreateMessage(Id, content, tts);
+
+                        if (firstOrOnlyMessageData == null)
+                            firstOrOnlyMessageData = msgData;
+                    });
+            }
+            else
+                firstOrOnlyMessageData = channelsHttp.CreateMessage(Id, content, tts);
 
             DiscordMessage msg = new DiscordMessage(shard);
-            msg.Update(data);
+            msg.Update(firstOrOnlyMessageData);
 
             return msg;
         }
 
         /// <summary>
-        /// Sends a message with a file attachment to this direct message channel.
-        /// Returns the message sent.
+        /// Sends a message with a file attachment to this channel.
         /// </summary>
-        public DiscordMessage SendMessage(string content, byte[] fileAttachment, bool tts = false)
+        /// <param name="fileAttachment">The file data to attach.</param>
+        /// <param name="content">The message text content.</param>
+        /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
+        /// <param name="tts">Whether this should be played over text-to-speech.</param>
+        /// <returns>Returns the created message (or first if split into multiple).</returns>
+        public DiscordMessage SendMessage(byte[] fileAttachment, string content = null, bool splitIfTooLong = false, bool tts = false)
         {
-            DiscordApiData data = channelsHttp.UploadFile(Id, fileAttachment, content, tts);
+            DiscordApiData firstOrOnlyMessageData = null;
+
+            if (splitIfTooLong && content.Length > DiscordMessage.MAX_CHARACTERS)
+            {
+                SplitSendMessage(content,
+                    message =>
+                    {
+                        if (firstOrOnlyMessageData == null)
+                        {
+                            DiscordApiData msgData = channelsHttp.UploadFile(Id, fileAttachment, message, tts);
+                            firstOrOnlyMessageData = msgData;
+                        }
+                        else
+                            channelsHttp.CreateMessage(Id, message, tts);
+                    });
+            }
+            else
+                firstOrOnlyMessageData = channelsHttp.UploadFile(Id, fileAttachment, content, tts);
 
             DiscordMessage msg = new DiscordMessage(shard);
-            msg.Update(data);
+            msg.Update(firstOrOnlyMessageData);
 
             return msg;
         }
 
+        void SplitSendMessage(string content, Action<string> createMessageCallback)
+        {
+            int i = 0;
+            while (i < content.Length)
+            {
+                int maxChars = Math.Min(DiscordMessage.MAX_CHARACTERS, content.Length - i);
+                int lastNewLine = content.LastIndexOf('\n', i + maxChars - 1, maxChars - 1);
+
+                string subMessage;
+                if (lastNewLine > -1)
+                    subMessage = content.Substring(i, lastNewLine - i);
+                else
+                    subMessage = content.Substring(i, maxChars);
+
+                if (!string.IsNullOrWhiteSpace(subMessage))
+                    createMessageCallback(subMessage);
+
+                i += subMessage.Length;
+            }
+        }
+
+        /// <summary>
+        /// Deletes a list of messages in one API call.
+        /// Much quicker than calling Delete() on each message instance.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
         {
             DiscordApiData data = channelsHttp.BulkDeleteMessages(Id, messageIds);
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Causes the current authenticated user to appear as typing in this channel.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool TriggerTypingIndicator()
         {
             DiscordApiData data = channelsHttp.TriggerTypingIndicator(Id);
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Gets a list of all pinned messages in this channel.
+        /// </summary>
         public IList<DiscordMessage> GetPinnedMessages()
         {
             DiscordApiData messagesArray = channelsHttp.GetPinnedMessages(Id);
@@ -86,6 +157,9 @@ namespace Discore.WebSocket
             return messages;
         }
 
+        /// <summary>
+        /// Gets a message in this channel.
+        /// </summary>
         public DiscordMessage GetMessage(Snowflake messageId)
         {
             DiscordApiData data = channelsHttp.GetMessage(Id, messageId);
@@ -95,6 +169,12 @@ namespace Discore.WebSocket
             return message;
         }
 
+        /// <summary>
+        /// Gets a list of messages in this channel.
+        /// </summary>
+        /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
+        /// <param name="limit">Maximum number of messages to be returned.</param>
+        /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
         public IList<DiscordMessage> GetMessages(Snowflake? baseMessageId = null, int? limit = null, 
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
@@ -111,13 +191,7 @@ namespace Discore.WebSocket
 
             return messages;
         }
-
-        public bool Delete()
-        {
-            DiscordApiData data = channelsHttp.Delete(Id);
-            return data.IsNull;
-        }
-
+        
         internal override void Update(DiscordApiData data)
         {
             base.Update(data);

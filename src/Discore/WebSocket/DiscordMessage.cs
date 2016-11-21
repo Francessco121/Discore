@@ -86,11 +86,19 @@ namespace Discore.WebSocket
             Attachments = new DiscordApiCacheTable<DiscordAttachment>();
         }
 
+        /// <summary>
+        /// Adds a reaction to this message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool AddReaction(DiscordReactionEmoji emoji)
         {
             return AddReaction(emoji.Name, emoji.Id.Value);
         }
 
+        /// <summary>
+        /// Adds a reaction to this message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool AddReaction(string emojiName, Snowflake? customEmojiId = null)
         {
             DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, 
@@ -98,6 +106,10 @@ namespace Discore.WebSocket
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Removes a reaction from this message added from the current authenticated user.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
@@ -106,6 +118,10 @@ namespace Discore.WebSocket
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Removes a reaction from this message added from the current authenticated user.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveMyReaction(string emojiName, Snowflake? customEmojiId = null)
         {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
@@ -114,6 +130,12 @@ namespace Discore.WebSocket
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Removes a reaction from this message.
+        /// </summary>
+        /// <param name="user">The user who added the reacted.</param>
+        /// <param name="reactionEmoji"></param>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
@@ -122,6 +144,13 @@ namespace Discore.WebSocket
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Removes a reaction from this message.
+        /// </summary>
+        /// <param name="user">The user who added the reacted.</param>
+        /// <param name="emojiName"></param>
+        /// <param name="customEmojiId"></param>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveReaction(DiscordUser user, string emojiName, Snowflake? customEmojiId = null)
         {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
@@ -130,12 +159,18 @@ namespace Discore.WebSocket
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Gets all users who reacted with the specified emoji to this message.
+        /// </summary>
         public DiscordApiCacheIdSet<DiscordUser> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
             return GetReactions(emoji);
         }
 
+        /// <summary>
+        /// Gets all users who reacted with the specified emoji to this message.
+        /// </summary>
         public DiscordApiCacheIdSet<DiscordUser> GetReactions(string emojiName, Snowflake? customEmojiId = null)
         {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
@@ -160,17 +195,28 @@ namespace Discore.WebSocket
             return reactions;
         }
 
+        /// <summary>
+        /// Deletes all reactions to this message.
+        /// </summary>
         public void DeleteAllReactions()
         {
             channelsHttp.DeleteAllReactions(Channel.Id, Id);
         }
 
+        /// <summary>
+        /// Pins this message to the channel it was sent in.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool Pin()
         {
             DiscordApiData data = channelsHttp.AddPinnedChannelMessage(Channel.Id, Id);
             return data.IsNull;
         }
 
+        /// <summary>
+        /// Unpins this message from the channel it was sent in.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool Unpin()
         {
             DiscordApiData data = channelsHttp.DeletePinnedChannelMessage(Channel.Id, Id);
@@ -179,8 +225,10 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Changes the contents of this message.
+        /// Note: changes will not be reflected in this message instance.
         /// </summary>
         /// <param name="newContent">The new contents.</param>
+        /// <returns>Returns the editted message.</returns>
         public DiscordMessage Edit(string newContent)
         {
             DiscordApiData data = channelsHttp.EditMessage(Channel.Id, Id, newContent);
