@@ -2,7 +2,7 @@
   "title": "Discore",
   "copyright": "Bundled Sticks Inkorporated 2016",
   "description": ".NET Core Library for Discord",
-  "version": "1.0.0-1",
+  "version": "1.0.0.1",
   "dependencies": {
     "Microsoft.CSharp": "4.0.1",
     "NETStandard.Library": "1.6.0",
