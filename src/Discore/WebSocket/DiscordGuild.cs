@@ -23,6 +23,11 @@ namespace Discore.WebSocket
         public DiscordGuildMember Owner { get; private set; }
 
         /// <summary>
+        /// Gets the first undeletable text channel of this guild.
+        /// </summary>
+        public DiscordGuildTextChannel InitialTextChannel { get; private set; }
+
+        /// <summary>
         /// Gets the afk channel in this guild (if set).
         /// </summary>
         public DiscordGuildVoiceChannel AfkChannel { get; private set; }
@@ -212,6 +217,10 @@ namespace Discore.WebSocket
                         channel = TextChannels.Edit(channelId,
                             () => new DiscordGuildTextChannel(shard, this),
                             c => c.Update(channelData));
+
+                        // Check if it is the initial channel
+                        if (channelId == Id)
+                            InitialTextChannel = (DiscordGuildTextChannel)channel;
                     }
 
                     // Set aliases
@@ -267,7 +276,7 @@ namespace Discore.WebSocket
                             // Include the voice state in the update, if it exists
                             DiscordApiData voiceState;
                             if (voiceStates.TryGetValue(memberId, out voiceState))
-                                member.VoiceState.Update(presence);
+                                member.VoiceState.Update(voiceState);
                         });
                 }
             }

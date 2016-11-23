@@ -17,9 +17,17 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordChannel Channel { get; private set; }
         /// <summary>
+        /// Gets the channel this message is in, as a text channel interface.
+        /// </summary>
+        public ITextChannel TextChannel { get; private set; }
+        /// <summary>
         /// Gets the author of this message.
         /// </summary>
         public DiscordUser Author { get; private set; }
+        /// <summary>
+        /// Gets the guild member of the author of this message (or null if a DM message).
+        /// </summary>
+        public DiscordGuildMember AuthorMember { get; private set; }
         /// <summary>
         /// Gets the guild this message was sent in (or null if a DM message).
         /// </summary>
@@ -270,19 +278,28 @@ namespace Discore.WebSocket
 
             Snowflake channelId = data.GetSnowflake("channel_id").Value;
             Channel = shard.Channels.Get(channelId);
-
-            DiscordGuildChannel guildChannel = Channel as DiscordGuildChannel;
-            if (guildChannel != null)
-                // Message was sent in a guild
-                Guild = guildChannel.Guild;
-            else
-                Guild = null;
+            TextChannel = (ITextChannel)Channel;
 
             DiscordApiData authorData = data.Get("author");
             if (authorData != null)
             {
                 Snowflake authorId = authorData.GetSnowflake("id").Value;
                 Author = shard.Users.Edit(authorId, () => new DiscordUser(), user => user.Update(authorData));
+            }
+
+            DiscordGuildChannel guildChannel = Channel as DiscordGuildChannel;
+            if (guildChannel != null)
+            {
+                // Message was sent in a guild
+                Guild = guildChannel.Guild;
+
+                if (Author != null)
+                    AuthorMember = Guild.Members.Get(Author.Id);
+            }
+            else
+            {
+                Guild = null;
+                AuthorMember = null;
             }
 
             IList<DiscordApiData> mentionsData = data.GetArray("mentions");

@@ -19,7 +19,7 @@ namespace Discore.WebSocket
             this.app = app;
         }
 
-        public void CreateShards(int numberOfShards = 1)
+        public bool StartShards(int numberOfShards = 1)
         {
             if (numberOfShards < 1)
                 throw new ArgumentOutOfRangeException("numberOfShards", "numberOfShards must be above or equal to 1");
@@ -34,8 +34,11 @@ namespace Discore.WebSocket
                 Shard shard = new Shard(app, i);
                 shards[i] = shard;
 
-                shard.Start();
+                if (!shard.Start())
+                    return false;
             }
+
+            return true;
         }
 
         public void ShutdownShards()

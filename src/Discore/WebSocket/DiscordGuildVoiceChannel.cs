@@ -1,4 +1,5 @@
 ﻿using Discore.Http.Net;
+using Discore.WebSocket.Audio;
 
 namespace Discore.WebSocket
 {
@@ -36,6 +37,15 @@ namespace Discore.WebSocket
         public void Modify(string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
         {
             channelsHttp.Modify(Id, name, position, null, bitrate, userLimit);
+        }
+
+        /// <summary>
+        /// Creates a voice connection to this voice channel.
+        /// </summary>
+        /// <returns>Returns the voice connection.</returns>
+        public DiscordVoiceConnection ConnectToVoice()
+        {
+            return Shard.ConnectToVoice(this);
         }
 
         internal override void Update(DiscordApiData data)

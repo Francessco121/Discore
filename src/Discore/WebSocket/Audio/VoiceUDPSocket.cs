@@ -1,0 +1,155 @@
+﻿using System;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+
+namespace Discore.WebSocket.Audio
+{
+    class IPDiscoveryEventArgs : EventArgs
+    {
+        public string Ip;
+        public int Port;
+
+        public IPDiscoveryEventArgs(string ip, int port)
+        {
+            Ip = ip;
+            Port = port;
+        }
+    }
+
+    class VoiceUDPSocket : IDisposable
+    {
+        public event EventHandler<IPDiscoveryEventArgs> OnIPDiscovered;
+        public event EventHandler<Exception> OnError;
+
+        public bool IsConnected { get { return socket.Connected; } }
+
+        DiscoreLogger log;
+
+        Socket socket;
+        IPEndPoint endpoint;
+        bool isAwaitingIPDiscovery;
+
+        Thread receiveThread;
+
+        public VoiceUDPSocket(DiscordGuild guild, string hostname, int port)
+        {
+            log = new DiscoreLogger($"VoiceUDPSocket:{guild.Name}");
+
+            IPAddress ip = Dns.GetHostAddressesAsync(hostname).Result.FirstOrDefault();
+            endpoint = new IPEndPoint(ip, port);
+
+            receiveThread = new Thread(ReceiveLoop);
+            receiveThread.Name = "VoiceUDPSocket Receive Thread";
+            receiveThread.IsBackground = true;
+
+            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.Connect(endpoint);
+
+            receiveThread.Start();
+        }
+
+        public void Disconnect()
+        {
+            socket.Shutdown(SocketShutdown.Both);
+        }
+
+        public void StartIPDiscovery(int ssrc)
+        {
+            byte[] packet = new byte[70];
+            packet[0] = (byte)(ssrc >> 24);
+            packet[1] = (byte)(ssrc >> 16);
+            packet[2] = (byte)(ssrc >> 8);
+            packet[3] = (byte)(ssrc >> 0);
+
+            isAwaitingIPDiscovery = true;
+            Send(packet);
+        }
+
+        public void Send(byte[] data)
+        {
+            Send(data, data.Length);
+        }
+
+        public void Send(byte[] data, int bytes)
+        {
+            try
+            {
+                socket.SendTo(data, bytes, SocketFlags.None, endpoint);
+            }
+            catch (SocketException ex)
+            {
+                // Ignore interrupted/shutdown errors, it just means the socket was disconnected
+                // while the socket was waiting for data on Socket.Receive().
+                if (ex.SocketErrorCode != SocketError.Interrupted && ex.SocketErrorCode != SocketError.Success
+                    && ex.SocketErrorCode != SocketError.Shutdown)
+                {
+                    throw;
+                }
+            }
+        }
+
+        void ReceiveLoop()
+        {
+            try
+            {
+                byte[] buffer = new byte[socket.ReceiveBufferSize];
+
+                while (socket != null)
+                {
+                    EndPoint endpoint = this.endpoint;
+
+                    int read = socket.Receive(buffer);
+                    if (read == 70 && isAwaitingIPDiscovery)
+                        HandleIPDiscoveryPacket(buffer);
+                }
+            }
+            catch (ObjectDisposedException) { }
+            catch (SocketException ex)
+            {
+                // Ignore interrupted/shutdown errors, it just means the socket was disconnected
+                // while the socket was waiting for data on Socket.Receive().
+                if (ex.SocketErrorCode != SocketError.Interrupted && ex.SocketErrorCode != SocketError.Success
+                    && ex.SocketErrorCode != SocketError.Shutdown)
+                {
+                    log.LogError($"{ex.SocketErrorCode}: {ex}");
+                    HandleFatalError(ex);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex);
+                HandleFatalError(ex);
+            }
+        }
+
+        void HandleIPDiscoveryPacket(byte[] data)
+        {
+            isAwaitingIPDiscovery = false;
+
+            // Read null-terminated string
+            string ip = Encoding.UTF8.GetString(data, 4, 70 - 6).TrimEnd('\0');
+
+            // Read port
+            int port = (ushort)(data[68] | data[69] << 8);
+
+            OnIPDiscovered?.Invoke(this, new IPDiscoveryEventArgs(ip, port));
+        }
+
+        void HandleFatalError(Exception ex)
+        {
+            // Shutdown the socket
+            try { socket.Shutdown(SocketShutdown.Both); }
+            catch { }
+
+            OnError?.Invoke(this, ex);
+        }
+
+        public void Dispose()
+        {
+            socket.Dispose();
+        }
+    }
+}

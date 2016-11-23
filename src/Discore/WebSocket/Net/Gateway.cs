@@ -8,6 +8,8 @@ namespace Discore.WebSocket.Net
     {
         public Shard Shard { get { return shard; } }
 
+        public event EventHandler<GatewayDisconnectCode> OnFatalDisconnection;
+
         DiscordWebSocketApplication app;
         Shard shard;
 
@@ -181,7 +183,7 @@ namespace Discore.WebSocket.Net
                     case GatewayDisconnectCode.AuthenticationFailed:
                         // Not safe to reconnect
                         log.LogError($"[{code} ({(int)code})] Unsafe to continue, NOT reconnecting gateway.");
-                        // TODO: Application should be able to handle this externally
+                        OnFatalDisconnection?.Invoke(this, code);
                         break;
                     default:
                         // Safe to reconnect

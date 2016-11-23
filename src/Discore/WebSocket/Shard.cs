@@ -1,5 +1,9 @@
-﻿using Discore.WebSocket.Net;
+﻿using Discore.WebSocket.Audio;
+using Discore.WebSocket.Net;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.WebSocket
 {
@@ -8,6 +12,15 @@ namespace Discore.WebSocket
         public int ShardId { get; }
         public DiscordWebSocketApplication Application { get; }
         public bool IsActive { get { return isRunning; } }
+
+        /// <summary>
+        /// Called when this shard first connects to the Discord gateway.
+        /// </summary>
+        public event EventHandler<ShardEventArgs> OnConnected;
+        /// <summary>
+        /// Called when this shard fails and cannot reconnect due to the error.
+        /// </summary>
+        public event EventHandler<ShardFailureEventArgs> OnFailure;
 
         /// <summary>
         /// Gets a table of all guilds managed by this shard.
@@ -39,10 +52,27 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the gateway manager for this shard.
         /// </summary>
-        public IDiscordGateway Gateway { get { return gateway; } }
+        public IDiscordGateway Gateway { get { return InternalGateway; } }
+
+        /// <summary>
+        /// Gets a list of all voice connections for the current authenticated user.
+        /// </summary>
+        public IReadOnlyCollection<DiscordVoiceConnection> VoiceConnections
+        {
+            get
+            {
+                // Now if only a ReadOnlyCollection could take an ICollection...
+                DiscordVoiceConnection[] connections = new DiscordVoiceConnection[VoiceConnections.Count];
+                VoiceConnectionsTable.Values.CopyTo(connections, 0);
+
+                return connections;
+            }
+        }
+
+        internal ConcurrentDictionary<Snowflake, DiscordVoiceConnection> VoiceConnectionsTable;
+        internal Gateway InternalGateway;
 
         bool isRunning;
-        Gateway gateway;
         DiscoreLogger log;
 
         internal Shard(DiscordWebSocketApplication app, int shardId)
@@ -57,8 +87,57 @@ namespace Discore.WebSocket
             Roles = new DiscordApiCacheTable<DiscordRole>();
             DirectMessageChannels = new DiscordApiCacheTable<DiscordDMChannel>();
             Users = new DiscordApiCacheTable<DiscordUser>();
+            VoiceConnectionsTable = new ConcurrentDictionary<Snowflake, DiscordVoiceConnection>();
 
-            gateway = new Gateway(app, this);
+            InternalGateway = new Gateway(app, this);
+            InternalGateway.OnFatalDisconnection += Gateway_OnFatalDisconnection;
+        }
+
+        /// <summary>
+        /// Attempts to retrieve a voice connection for the current user,
+        /// by the guild the connection is in.
+        /// </summary>
+        public bool TryGetVoiceConnection(DiscordGuild guild, out DiscordVoiceConnection connection)
+        {
+            return VoiceConnectionsTable.TryGetValue(guild.Id, out connection);
+        }
+
+        internal DiscordVoiceConnection ConnectToVoice(DiscordGuildVoiceChannel voiceChannel)
+        {
+            DiscordVoiceConnection connection;
+            if (VoiceConnectionsTable.TryRemove(voiceChannel.Guild.Id, out connection))
+                // Close any existing connection.
+                connection.Disconnect();
+
+            DiscordGuildMember member;
+            if (voiceChannel.Guild.Members.TryGetValue(User.Id, out member))
+            {
+                connection = new DiscordVoiceConnection(this, voiceChannel.Guild, member, voiceChannel);
+                if (VoiceConnectionsTable.TryAdd(voiceChannel.Guild.Id, connection))
+                {
+                    // Initiate connection
+                    InternalGateway.SendVoiceStateUpdatePayload(voiceChannel.Guild.Id, voiceChannel.Id, false, false);
+                    return connection;
+                }
+                else
+                    // Connection already exists, just return the existing one.
+                    return VoiceConnectionsTable[voiceChannel.Guild.Id];
+            }
+            else
+                // This really should never ever ever happen.
+                throw new ArgumentException("The current authenticated user is not a member of the specified guild.", 
+                    nameof(voiceChannel));
+        }
+
+        private void Gateway_OnFatalDisconnection(object sender, GatewayDisconnectCode e)
+        {
+            ShardFailureReason reason = ShardFailureReason.Unknown;
+            if (e == GatewayDisconnectCode.InvalidShard)
+                reason = ShardFailureReason.ShardInvalid;
+            else if (e == GatewayDisconnectCode.AuthenticationFailed)
+                reason = ShardFailureReason.AuthenticationFailed;
+
+            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, reason));
         }
 
         internal bool Start()
@@ -67,9 +146,10 @@ namespace Discore.WebSocket
             {
                 isRunning = true;
 
-                if (gateway.Connect())
+                if (InternalGateway.Connect())
                 {
                     log.LogInfo("Successfully connected to gateway");
+                    OnConnected?.Invoke(this, new ShardEventArgs(this));
                     return true;
                 }
                 else
@@ -90,8 +170,9 @@ namespace Discore.WebSocket
                 Roles.Clear();
                 DirectMessageChannels.Clear();
                 Users.Clear();
+                VoiceConnectionsTable.Clear();
 
-                return gateway.Disconnect();
+                return InternalGateway.Disconnect();
             }
             else
                 throw new InvalidOperationException($"Shard {ShardId} has already been stopped!");
@@ -99,7 +180,7 @@ namespace Discore.WebSocket
 
         public void Dispose()
         {
-            gateway.Dispose();
+            InternalGateway.Dispose();
         }
     }
 }

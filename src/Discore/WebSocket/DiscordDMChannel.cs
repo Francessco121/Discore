@@ -12,7 +12,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// The id of the last message sent in this DM.
         /// </summary>
-        public string LastMessageId { get; private set; }
+        public Snowflake LastMessageId { get; private set; }
 
         /// <summary>
         /// Gets the user on the other end of this channel.
@@ -46,7 +46,7 @@ namespace Discore.WebSocket
                 SplitSendMessage(content,
                     message =>
                     {
-                        DiscordApiData msgData = channelsHttp.CreateMessage(Id, content, tts);
+                        DiscordApiData msgData = channelsHttp.CreateMessage(Id, message, tts);
 
                         if (firstOrOnlyMessageData == null)
                             firstOrOnlyMessageData = msgData;
@@ -203,7 +203,7 @@ namespace Discore.WebSocket
                 Recipient = shard.Users.Edit(recipientId, () => new DiscordUser(), user => user.Update(recipientData));
             }
 
-            LastMessageId = data.GetString("last_message_id") ?? LastMessageId;
+            LastMessageId = data.GetSnowflake("last_message_id") ?? LastMessageId;
         }
 
         public override string ToString()

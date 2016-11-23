@@ -17,7 +17,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<DiscordApiData> OnMessageReceived;
         public event EventHandler<Exception> OnError;
 
-        const int SEND_BUFFER_SIZE      = 4 * 1024;  // 4kb
+        const int SEND_BUFFER_SIZE      = 4 * 1024;  // 4kb (max gateway payload size)
         const int RECEIVE_BUFFER_SIZE   = 12 * 1024; // 12kb
 
         ClientWebSocket socket;
@@ -127,6 +127,12 @@ namespace Discore.WebSocket.Net
                 log.LogWarning($"Attempted to disconnect during invalid socket state: {State}");
                 return false;
             }
+        }
+
+        public void JoinThreads()
+        {
+            sendThread?.Join();
+            receiveThread?.Join();
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -366,7 +372,7 @@ namespace Discore.WebSocket.Net
 
                 socket?.Dispose();
 
-                cancelTokenSource.Cancel();
+                cancelTokenSource?.Cancel();
             }
         }
     }

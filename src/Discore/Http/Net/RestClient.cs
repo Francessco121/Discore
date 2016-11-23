@@ -103,14 +103,6 @@ namespace Discore.Http.Net
             return Send(request, limiterAction);
         }
 
-        public DiscordApiData Get(string action, DiscordApiData data, string limiterAction)
-        {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
-            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
-
-            return Send(request, limiterAction);
-        }
-
         public DiscordApiData Post(string action, string limiterAction)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");

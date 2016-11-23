@@ -5,7 +5,7 @@
   },
 
   "dependencies": {
-    "Discore": "1.0.0-*",
+    "Discore": "*",
     "Microsoft.NETCore.App": {
       "type": "platform",
       "version": "1.0.1"

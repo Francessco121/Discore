@@ -97,21 +97,9 @@ namespace Discore.WebSocket
             return item != null;
         }
 
-        public IEnumerator<KeyValuePair<Snowflake, T>> GetEnumerator()
+        IEnumerator<KeyValuePair<Snowflake, T>> IEnumerable<KeyValuePair<Snowflake, T>>.GetEnumerator()
         {
-            // Make a copy of all entries for thread-saftey reasons.
-            KeyValuePair<Snowflake, T>[] entries;
-
-            lock (table.SyncRoot)
-            {
-                entries = new KeyValuePair<Snowflake, T>[table.Count];
-
-                int i = 0;
-                foreach (DictionaryEntry entry in table)
-                    entries[i++] = new KeyValuePair<Snowflake, T>((Snowflake)entry.Key, (T)entry.Value);
-            }
-
-            return (IEnumerator<KeyValuePair<Snowflake, T>>)entries.GetEnumerator();
+            throw new NotSupportedException();
         }
 
         public bool Contains(T item)
@@ -218,9 +206,21 @@ namespace Discore.WebSocket
             set { throw new NotSupportedException(); }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public IEnumerator GetEnumerator()
         {
-            return GetEnumerator();
+            // Make a copy of all entries for thread-saftey reasons.
+            KeyValuePair<Snowflake, T>[] entries;
+
+            lock (table.SyncRoot)
+            {
+                entries = new KeyValuePair<Snowflake, T>[table.Count];
+
+                int i = 0;
+                foreach (DictionaryEntry entry in table)
+                    entries[i++] = new KeyValuePair<Snowflake, T>((Snowflake)entry.Key, (T)entry.Value);
+            }
+
+            return entries.GetEnumerator();
         }
 
         #region Unsupported Methods

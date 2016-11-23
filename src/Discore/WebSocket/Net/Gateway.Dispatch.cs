@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.WebSocket.Audio;
+using System;
 using System.Collections.Generic;
 
 namespace Discore.WebSocket.Net
@@ -55,6 +56,7 @@ namespace Discore.WebSocket.Net
         {
             dispatchHandlers = new Dictionary<string, DispatchCallback>();
             dispatchHandlers["READY"] = HandleReadyEvent;
+            dispatchHandlers["RESUMED"] = HandleResumedEvent;
             dispatchHandlers["GUILD_CREATE"] = HandleGuildCreateEvent;
             dispatchHandlers["GUILD_UPDATE"] = HandleGuildUpdateEvent;
             dispatchHandlers["GUILD_DELETE"] = HandleGuildDeleteEvent;
@@ -81,6 +83,8 @@ namespace Discore.WebSocket.Net
             dispatchHandlers["MESSAGE_DELETE_BULK"] = HandleMessageDeleteBulkEvent;
             dispatchHandlers["MESSAGE_REACTION_ADD"] = HandleMessageReactionAddEvent;
             dispatchHandlers["MESSAGE_REACTION_REMOVE"] = HandleMessageReactionRemoveEvent;
+            dispatchHandlers["VOICE_STATE_UPDATE"] = HandleVoiceStateUpdateEvent;
+            dispatchHandlers["VOICE_SERVER_UPDATE"] = HandleVoiceServerUpdateEvent;
         }
 
         void HandleReadyEvent(DiscordApiData data)
@@ -121,6 +125,11 @@ namespace Discore.WebSocket.Net
                 DiscordGuild guild = shard.Guilds.Edit(guildId,
                     () => new DiscordGuild(shard), g => g.Update(unavailableGuildData));
             }
+        }
+
+        void HandleResumedEvent(DiscordApiData data)
+        {
+            log.LogInfo("[Resumed] Successfully resumed.");
         }
 
         #region Guild
@@ -605,5 +614,63 @@ namespace Discore.WebSocket.Net
 
             OnUserUpdated?.Invoke(this, new UserEventArgs(shard, user));
         }
+
+        #region Voice
+        void HandleVoiceStateUpdateEvent(DiscordApiData data)
+        {
+            Snowflake? guildId = data.GetSnowflake("guild_id");
+            if (guildId.HasValue) // Only guild voice channels are supported so far.
+            {
+                Snowflake userId = data.GetSnowflake("user_id").Value;
+
+                DiscordGuild guild;
+                if (shard.Guilds.TryGetValue(guildId.Value, out guild))
+                {
+                    DiscordGuildMember member;
+                    if (guild.Members.TryGetValue(userId, out member))
+                    {
+                        member.VoiceState.Update(data);
+
+                        if (member.User == shard.User)
+                        {
+                            // If this voice state belongs to the current authenticated user,
+                            // then we need to notify the connection of the session id.
+                            DiscordVoiceConnection connection;
+                            if (shard.VoiceConnectionsTable.TryGetValue(guildId.Value, out connection))
+                            {
+                                if (member.VoiceState.Channel != null)
+                                {
+                                    // Notify the connection of the new state
+                                    connection.OnVoiceStateUpdated(member.VoiceState);
+                                }
+                                else
+                                {
+                                    // The user has left the channel, so disconnect.
+                                    connection.Disconnect();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        void HandleVoiceServerUpdateEvent(DiscordApiData data)
+        {
+            Snowflake? guildId = data.GetSnowflake("guild_id");
+            if (guildId.HasValue) // Only guild voice channels are supported so far.
+            {
+                string token = data.GetString("token");
+                string endpoint = data.GetString("endpoint");
+
+                DiscordVoiceConnection connection;
+                if (shard.VoiceConnectionsTable.TryGetValue(guildId.Value, out connection))
+                {
+                    // Notify the connection of the server update
+                    connection.OnVoiceServerUpdated(token, endpoint);
+                }
+            }
+        }
+        #endregion
     }
 }

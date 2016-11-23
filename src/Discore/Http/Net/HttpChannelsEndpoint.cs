@@ -35,11 +35,10 @@ namespace Discore.Http.Net
         public DiscordApiData GetMessages(Snowflake channelId,
             Snowflake? baseMessageId = null, int? limit = null, DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("limit", limit);
-            data.Set(getStrategy.ToString().ToLower(), baseMessageId);
+            string strat = getStrategy.ToString().ToLower();
+            string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
 
-            return Rest.Get($"channels/{channelId}/messages", data, "GetChannelMessages");
+            return Rest.Get($"channels/{channelId}/messages?{strat}={baseMessageId}{limitStr}", "GetChannelMessages");
         }
 
         public DiscordApiData GetMessage(Snowflake channelId, Snowflake messageId)

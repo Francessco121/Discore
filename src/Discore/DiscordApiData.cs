@@ -247,6 +247,8 @@ namespace Discore
         {
             if (Type == DiscordApiDataType.Array)
                 return $"DiscordApiData[{values.Count}]";
+            else if (Type == DiscordApiDataType.Value && value == null)
+                return "null";
             else
                 return value?.ToString() ?? base.ToString();
         }
@@ -439,6 +441,32 @@ namespace Discore
             AssertContainer();
 
             DiscordApiData apiValue = new DiscordApiData(value);
+            data[key] = apiValue;
+            return apiValue;
+        }
+
+        /// <summary>
+        /// Sets a snowflake value in this api data container.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public DiscordApiData Set(string key, Snowflake snowflake)
+        {
+            AssertContainer();
+
+            DiscordApiData apiValue = new DiscordApiData(snowflake);
+            data[key] = apiValue;
+            return apiValue;
+        }
+
+        /// <summary>
+        /// Sets a snowflake value in this api data container.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public DiscordApiData Set(string key, Snowflake? snowflake)
+        {
+            AssertContainer();
+
+            DiscordApiData apiValue = snowflake.HasValue ? new DiscordApiData(snowflake.Value) : new DiscordApiData(value: null);
             data[key] = apiValue;
             return apiValue;
         }

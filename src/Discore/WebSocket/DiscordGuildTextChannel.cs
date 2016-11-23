@@ -14,7 +14,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the id of the last message sent in this channel.
         /// </summary>
-        public string LastMessageId { get; private set; }
+        public Snowflake LastMessageId { get; private set; }
 
         HttpChannelsEndpoint channelsHttp;
 
@@ -49,7 +49,7 @@ namespace Discore.WebSocket
                 SplitSendMessage(content,
                     message =>
                     {
-                        DiscordApiData msgData = channelsHttp.CreateMessage(Id, content, tts);
+                        DiscordApiData msgData = channelsHttp.CreateMessage(Id, message, tts);
 
                         if (firstOrOnlyMessageData == null)
                             firstOrOnlyMessageData = msgData;
@@ -200,7 +200,7 @@ namespace Discore.WebSocket
             base.Update(data);
 
             Topic = data.GetString("topic") ?? Topic;
-            LastMessageId = data.GetString("last_message_id") ?? LastMessageId;
+            LastMessageId = data.GetSnowflake("last_message_id") ?? LastMessageId;
         }
     }
 }

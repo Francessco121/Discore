@@ -109,5 +109,16 @@ namespace Discore.WebSocket.Net
 
             SendPayload(GatewayOPCode.Resume, data);
         }
+
+        internal void SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
+        {
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("guild_id", guildId);
+            data.Set("channel_id", channelId);
+            data.Set("self_mute", isMute);
+            data.Set("self_deaf", isDeaf);
+
+            SendPayload(GatewayOPCode.VoiceStateUpdate, data);
+        }
     }
 }

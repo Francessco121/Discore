@@ -6,10 +6,6 @@
     public class DiscordVoiceState : DiscordObject
     {
         /// <summary>
-        /// Gets the guild the user of this voice state is in.
-        /// </summary>
-        public DiscordGuild Guild { get; private set; }
-        /// <summary>
         /// Gets the voice channel this user is in.
         /// </summary>
         public DiscordGuildVoiceChannel Channel { get; private set; }
@@ -78,22 +74,24 @@
                 }
             }
 
-            // Get guild (if in voice channel)
-            Snowflake? guildId = data.GetSnowflake("guild_id");
-
-            if (guildId != null)
-                Guild = shard.Guilds.Get(guildId.Value);
-
             // Get channel (if in voice channel)
             Snowflake? channelId = data.GetSnowflake("channel_id");
 
-            if (channelId != null && Guild != null)
+            if (channelId.HasValue)
             {
-                Channel = Guild.VoiceChannels.Get(channelId.Value);
-                Channel.Members.Add(User.Id);
+                DiscordChannel channel = shard.Channels.Get(channelId.Value);
+                Channel = channel as DiscordGuildVoiceChannel;
+
+                if (Channel != null)
+                    Channel.Members.Add(User.Id);
             }
             else
+            {
+                if (Channel != null)
+                    Channel.Members.Remove(User.Id);
+
                 Channel = null;
+            }
         }
 
         internal void UpdateFromGuildMemberUpdate(DiscordApiData data)
@@ -109,7 +107,7 @@
         public DiscordApiData Serialize()
         {
             DiscordApiData data = new DiscordApiData();
-            data.Set("guild_id", Guild != null ? new Snowflake?(Guild.Id) : null);
+            //data.Set("guild_id", Guild != null ? new Snowflake?(Guild.Id) : null);
             data.Set("channel_id", Channel != null ? new Snowflake?(Channel.Id) : null);
             data.Set("user_id", User.Id);
             data.Set("session_id", SessionId);

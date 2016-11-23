@@ -68,6 +68,45 @@ namespace Discore
             return Id.GetHashCode();
         }
 
+        /// <summary>
+        /// Parses a snowflake from a string.
+        /// </summary>
+        public static Snowflake Parse(string snowflakeString)
+        {
+            return new Snowflake(ulong.Parse(snowflakeString));
+        }
+
+        /// <summary>
+        /// Attempts to parses a snowflake from a string,
+        /// returns null if the parse failed.
+        /// </summary>
+        public static Snowflake? ParseOrNull(string snowflakeString)
+        {
+            ulong snowflakeId;
+            if (ulong.TryParse(snowflakeString, out snowflakeId))
+                return new Snowflake(snowflakeId);
+            else
+                return null;
+        }
+
+        /// <summary>
+        /// Attempts to parse a snowflake from a string.
+        /// </summary>
+        public static bool TryParse(string snowflakeString, out Snowflake snowflake)
+        {
+            ulong snowflakeId;
+            if (ulong.TryParse(snowflakeString, out snowflakeId))
+            {
+                snowflake = new Snowflake(snowflakeId);
+                return true;
+            }
+            else
+            {
+                snowflake = default(Snowflake);
+                return false;
+            }
+        }
+
         public static bool operator ==(Snowflake a, Snowflake b)
         {
             return a.Id == b.Id;
