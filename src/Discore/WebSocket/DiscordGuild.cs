@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.WebSocket
 {
@@ -58,7 +59,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets a list of guild features.
         /// </summary>
-        public string[] Features { get; private set; }
+        public IReadOnlyCollection<string> Features { get; private set; }
 
         /// <summary>
         /// Gets the level of multi-factor authentication for this guild.
@@ -151,9 +152,11 @@ namespace Discore.WebSocket
             IList<DiscordApiData> featuresData = data.GetArray("features");
             if (featuresData != null)
             {
-                Features = new string[featuresData.Count];
-                for (int i = 0; i < Features.Length; i++)
-                    Features[i] = featuresData[i].ToString();
+                string[] features = new string[featuresData.Count];
+                for (int i = 0; i < features.Length; i++)
+                    features[i] = featuresData[i].ToString();
+
+                Features = new ReadOnlyCollection<string>(features);
             }
 
             // Update roles

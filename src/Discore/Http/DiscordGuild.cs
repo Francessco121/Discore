@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.Http
 {
@@ -51,17 +52,17 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all roles in this guild.
         /// </summary>
-        public DiscordRole[] Roles { get; }
+        public IReadOnlyCollection<DiscordRole> Roles { get; }
 
         /// <summary>
         /// Gets a list of all emojis in this guild.
         /// </summary>
-        public DiscordEmoji[] Emojis { get; }
+        public IReadOnlyCollection<DiscordEmoji> Emojis { get; }
 
         /// <summary>
         /// Gets a list of guild features.
         /// </summary>
-        public string[] Features { get; }
+        public IReadOnlyCollection<string> Features { get; }
 
         /// <summary>
         /// Gets the level of multi-factor authentication for this guild.
@@ -91,24 +92,30 @@ namespace Discore.Http
 
             // Update features
             IList<DiscordApiData> featuresData = data.GetArray("features");
-            Features = new string[featuresData.Count];
+            string[] features = new string[featuresData.Count];
 
-            for (int i = 0; i < Features.Length; i++)
-                Features[i] = featuresData[i].ToString();
+            for (int i = 0; i < features.Length; i++)
+                features[i] = featuresData[i].ToString();
+
+            Features = new ReadOnlyCollection<string>(features);
 
             // Update roles
             IList<DiscordApiData> rolesData = data.GetArray("roles");
-            Roles = new DiscordRole[rolesData.Count];
+            DiscordRole[] roles = new DiscordRole[rolesData.Count];
 
             for (int i = 0; i < rolesData.Count; i++)
-                Roles[i] = new DiscordRole(rolesData[i]);
+                roles[i] = new DiscordRole(rolesData[i]);
+
+            Roles = new ReadOnlyCollection<DiscordRole>(roles);
 
             // Update emojis
             IList<DiscordApiData> emojisData = data.GetArray("emojis");
-            Emojis = new DiscordEmoji[emojisData.Count];
+            DiscordEmoji[] emojis = new DiscordEmoji[emojisData.Count];
 
             for (int i = 0; i < emojisData.Count; i++)
-                Emojis[i] = new DiscordEmoji(emojisData[i]);
+                emojis[i] = new DiscordEmoji(emojisData[i]);
+
+            Emojis = new ReadOnlyCollection<DiscordEmoji>(emojis);
         }
 
         public override string ToString()

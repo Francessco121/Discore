@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.Http
 {
@@ -23,7 +24,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets the ids of all of the roles this member has.
         /// </summary>
-        public Snowflake[] RoleIds { get; }
+        public IReadOnlyCollection<Snowflake> RoleIds { get; }
 
         /// <summary>
         /// Gets the time this member joined the guild.
@@ -55,10 +56,12 @@ namespace Discore.Http
 
             // Get roles
             IList<DiscordApiData> rolesData = data.GetArray("roles");
-            RoleIds = new Snowflake[rolesData.Count];
+            Snowflake[] roleIds = new Snowflake[rolesData.Count];
 
             for (int i = 0; i < rolesData.Count; i++)
-                RoleIds[i] = rolesData[i].ToSnowflake().Value;
+                roleIds[i] = rolesData[i].ToSnowflake().Value;
+
+            RoleIds = new ReadOnlyCollection<Snowflake>(roleIds);
         }
 
         public override string ToString()

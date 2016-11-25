@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.Http
 {
@@ -41,23 +42,23 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all user-specific mentions in this message.
         /// </summary>
-        public DiscordUser[] Mentions { get; }
+        public IReadOnlyCollection<DiscordUser> Mentions { get; }
         /// <summary>
         /// Gets a list of all roles mentioned in this message.
         /// </summary>
-        public Snowflake[] MentionedRoles { get; }
+        public IReadOnlyCollection<Snowflake> MentionedRoles { get; }
         /// <summary>
         /// Gets a table of all attachments in this message.
         /// </summary>
-        public DiscordAttachment[] Attachments { get; }
+        public IReadOnlyCollection<DiscordAttachment> Attachments { get; }
         /// <summary>
         /// Gets a list of all embedded attachments in this message.
         /// </summary>
-        public DiscordEmbed[] Embeds { get; }
+        public IReadOnlyCollection<DiscordEmbed> Embeds { get; }
         /// <summary>
         /// Gets a list of all reactions to this message.
         /// </summary>
-        public DiscordReaction[] Reactions { get; }
+        public IReadOnlyCollection<DiscordReaction> Reactions { get; }
         /// <summary>
         /// Used for validating if a message was sent.
         /// </summary>
@@ -90,38 +91,48 @@ namespace Discore.Http
 
             // Get mentions
             IList<DiscordApiData> mentionsData = data.GetArray("mentions");
-            Mentions = new DiscordUser[mentionsData.Count];
+            DiscordUser[] mentions = new DiscordUser[mentionsData.Count];
 
             for (int i = 0; i < mentionsData.Count; i++)
-                Mentions[i] = new DiscordUser(mentionsData[i]);
+                mentions[i] = new DiscordUser(mentionsData[i]);
+
+            Mentions = new ReadOnlyCollection<DiscordUser>(mentions);
 
             // Get mentioned roles
             IList<DiscordApiData> mentionRolesData = data.GetArray("mention_roles");
-            MentionedRoles = new Snowflake[mentionRolesData.Count];
+            Snowflake[] mentionedRoles = new Snowflake[mentionRolesData.Count];
 
             for (int i = 0; i < mentionRolesData.Count; i++)
-                MentionedRoles[i] = mentionRolesData[i].ToSnowflake().Value;
+                mentionedRoles[i] = mentionRolesData[i].ToSnowflake().Value;
+
+            MentionedRoles = new ReadOnlyCollection<Snowflake>(mentionedRoles);
 
             // Get attachments
             IList<DiscordApiData> attachmentsData = data.GetArray("attachments");
-            Attachments = new DiscordAttachment[attachmentsData.Count];
+            DiscordAttachment[] attachments = new DiscordAttachment[attachmentsData.Count];
 
             for (int i = 0; i < attachmentsData.Count; i++)
-                Attachments[i] = new DiscordAttachment(attachmentsData[i]);
+                attachments[i] = new DiscordAttachment(attachmentsData[i]);
+
+            Attachments = new ReadOnlyCollection<DiscordAttachment>(attachments);
 
             // Get embeds
             IList<DiscordApiData> embedsData = data.GetArray("embeds");
-            Embeds = new DiscordEmbed[embedsData.Count];
+            DiscordEmbed[] embeds = new DiscordEmbed[embedsData.Count];
 
             for (int i = 0; i < embedsData.Count; i++)
-                Embeds[i] = new DiscordEmbed(embedsData[i]);
+                embeds[i] = new DiscordEmbed(embedsData[i]);
+
+            Embeds = new ReadOnlyCollection<DiscordEmbed>(embeds);
 
             // Get reactions
             IList<DiscordApiData> reactionsArray = data.GetArray("reactions");
-            Reactions = new DiscordReaction[reactionsArray.Count];
+            DiscordReaction[] reactions = new DiscordReaction[reactionsArray.Count];
 
             for (int i = 0; i < reactionsArray.Count; i++)
-                Reactions[i] = new DiscordReaction(reactionsArray[i]);
+                reactions[i] = new DiscordReaction(reactionsArray[i]);
+
+            Reactions = new ReadOnlyCollection<DiscordReaction>(reactions);
         }
     }
 }

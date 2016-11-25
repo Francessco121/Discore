@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.Http
 {
@@ -22,7 +23,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of partial integrations associated with this connection.
         /// </summary>
-        public DiscordIntegration[] Integrations { get; }
+        public IReadOnlyCollection<DiscordIntegration> Integrations { get; }
 
         public DiscordConnection(DiscordApiData data)
             : base(data)
@@ -32,10 +33,12 @@ namespace Discore.Http
             IsRevoked = data.GetBoolean("revoked").Value;
 
             IList<DiscordApiData> integrationsData = data.GetArray("integrations");
-            Integrations = new DiscordIntegration[integrationsData.Count];
+            DiscordIntegration[] integrations = new DiscordIntegration[integrationsData.Count];
 
             for (int i = 0; i < integrationsData.Count; i++)
-                Integrations[i] = new DiscordIntegration(integrationsData[i]);
+                integrations[i] = new DiscordIntegration(integrationsData[i]);
+
+            Integrations = new ReadOnlyCollection<DiscordIntegration>(integrations);
         }
     }
 }

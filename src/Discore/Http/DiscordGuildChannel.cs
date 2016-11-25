@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.Http
 {
@@ -19,7 +20,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all permission overwrites associated with this channel.
         /// </summary>
-        public DiscordOverwrite[] PermissionOverwrites { get; }
+        public IReadOnlyCollection<DiscordOverwrite> PermissionOverwrites { get; }
 
         /// <summary>
         /// Gets the id of the guild this channel is in.
@@ -36,10 +37,12 @@ namespace Discore.Http
             Position = data.GetInteger("position").Value;
 
             IList<DiscordApiData> overwrites = data.GetArray("permission_overwrites");
-            PermissionOverwrites = new DiscordOverwrite[overwrites.Count];
+            DiscordOverwrite[] permissionOverwrites = new DiscordOverwrite[overwrites.Count];
 
             for (int i = 0; i < overwrites.Count; i++)
-                PermissionOverwrites[i] = new DiscordOverwrite(overwrites[i]);
+                permissionOverwrites[i] = new DiscordOverwrite(overwrites[i]);
+
+            PermissionOverwrites = new ReadOnlyCollection<DiscordOverwrite>(permissionOverwrites);
         }
 
         public override string ToString()

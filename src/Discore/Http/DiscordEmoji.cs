@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace Discore.Http
 {
@@ -11,7 +12,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets the ids of associated roles with this emoji.
         /// </summary>
-        public Snowflake[] RoleIds { get; }
+        public IReadOnlyCollection<Snowflake> RoleIds { get; }
         /// <summary>
         /// Gets whether or not colons are required around the emoji name to use it.
         /// </summary>
@@ -29,10 +30,12 @@ namespace Discore.Http
             IsManaged     = data.GetBoolean("managed").Value;
 
             IList<DiscordApiData> roles = data.GetArray("roles");
-            RoleIds = new Snowflake[roles.Count];
+            Snowflake[] roleIds = new Snowflake[roles.Count];
 
             for (int i = 0; i < roles.Count; i++)
-                RoleIds[i] = roles[i].ToSnowflake().Value;
+                roleIds[i] = roles[i].ToSnowflake().Value;
+
+            RoleIds = new ReadOnlyCollection<Snowflake>(roleIds);
         }
 
         public override string ToString()
