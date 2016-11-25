@@ -38,7 +38,7 @@ namespace Discore.WebSocket.Net
             this.app = app;
             this.shard = shard;
 
-            string logName = $"Gateway#{shard.ShardId}";
+            string logName = $"Gateway#{shard.Id}";
                
             log = new DiscoreLogger(logName);
 

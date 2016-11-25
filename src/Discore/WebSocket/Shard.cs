@@ -3,16 +3,23 @@ using Discore.WebSocket.Net;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading;
 
 namespace Discore.WebSocket
 {
     public class Shard : IDisposable
     {
-        public int ShardId { get; }
+        /// <summary>
+        /// Gets the id of this shard.
+        /// </summary>
+        public int Id { get; }
+        /// <summary>
+        /// Gets the websocket application this shard was created from.
+        /// </summary>
         public DiscordWebSocketApplication Application { get; }
-        public bool IsActive { get { return isRunning; } }
+        /// <summary>
+        /// Gets whether this shard is currently running.
+        /// </summary>
+        public bool IsRunning { get { return isRunning; } }
 
         /// <summary>
         /// Called when this shard first connects to the Discord gateway.
@@ -79,7 +86,7 @@ namespace Discore.WebSocket
         internal Shard(DiscordWebSocketApplication app, int shardId)
         {
             Application = app;
-            ShardId = shardId;
+            Id = shardId;
 
             log = new DiscoreLogger($"Shard#{shardId}");
 
@@ -186,10 +193,17 @@ namespace Discore.WebSocket
             else if (e == GatewayDisconnectCode.AuthenticationFailed)
                 reason = ShardFailureReason.AuthenticationFailed;
 
+            isRunning = false;
+            CleanUp();
             OnFailure?.Invoke(this, new ShardFailureEventArgs(this, reason));
         }
 
-        internal bool Start()
+        /// <summary>
+        /// Attempts to start this shard.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
+        /// <returns>Returns whether this shard connected successfully.</returns>
+        public bool Start()
         {
             if (!isRunning)
             {
@@ -205,26 +219,36 @@ namespace Discore.WebSocket
                     return false;
             }
             else
-                throw new InvalidOperationException($"Shard {ShardId} has already been started!");
+                throw new InvalidOperationException($"Shard {Id} has already been started!");
         }
 
-        internal bool Stop()
+        /// <summary>
+        /// Attempts to stop this shard.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this shard is not running.</exception>
+        /// <returns>Returns whether this shard disconnected successfully.</returns>
+        public bool Stop()
         {
             if (isRunning)
             {
                 isRunning = false;
 
-                Guilds.Clear();
-                Channels.Clear();
-                Roles.Clear();
-                DirectMessageChannels.Clear();
-                Users.Clear();
-                VoiceConnectionsTable.Clear();
+                CleanUp();
 
                 return InternalGateway.Disconnect();
             }
             else
-                throw new InvalidOperationException($"Shard {ShardId} has already been stopped!");
+                throw new InvalidOperationException($"Shard {Id} has already been stopped!");
+        }
+
+        void CleanUp()
+        {
+            Guilds.Clear();
+            Channels.Clear();
+            Roles.Clear();
+            DirectMessageChannels.Clear();
+            Users.Clear();
+            VoiceConnectionsTable.Clear();
         }
 
         public void Dispose()

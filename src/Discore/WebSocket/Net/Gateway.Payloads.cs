@@ -80,7 +80,7 @@ namespace Discore.WebSocket.Net
             if (app.ShardManager.ShardCount > 1)
             {
                 DiscordApiData shardData = new DiscordApiData(DiscordApiDataType.Array);
-                shardData.Values.Add(new DiscordApiData(shard.ShardId));
+                shardData.Values.Add(new DiscordApiData(shard.Id));
                 shardData.Values.Add(new DiscordApiData(app.ShardManager.ShardCount));
                 data.Set("shard", shardData);
             }

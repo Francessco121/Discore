@@ -8,7 +8,7 @@ namespace Discore
     /// <summary>
     /// A Discord bot application.
     /// </summary>
-    public class DiscordWebSocketApplication
+    public class DiscordWebSocketApplication : IDisposable
     {
         /// <summary>
         /// Gets the authenticator used for this application.
@@ -35,6 +35,11 @@ namespace Discore
             ShardManager = new ShardManager(this);
             InternalHttpApi = new HttpApi(authenticator);
             HttpApi = new DiscordHttpApi(InternalHttpApi);
+        }
+
+        public void Dispose()
+        {
+            ShardManager.Dispose();
         }
     }
 }
