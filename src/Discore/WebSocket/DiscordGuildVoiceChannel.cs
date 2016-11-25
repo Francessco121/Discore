@@ -1,5 +1,7 @@
 ﻿using Discore.Http.Net;
 using Discore.WebSocket.Audio;
+using System;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -36,7 +38,17 @@ namespace Discore.WebSocket
         /// </summary>
         public void Modify(string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
         {
-            channelsHttp.Modify(Id, name, position, null, bitrate, userLimit);
+            try { ModifyAsync(name, position, bitrate, userLimit).Wait(); }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Modifies this voice channel.
+        /// Any parameters not specified will be unchanged.
+        /// </summary>
+        public async Task ModifyAsync(string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
+        {
+            await channelsHttp.Modify(Id, name, position, null, bitrate, userLimit);
         }
 
         /// <summary>

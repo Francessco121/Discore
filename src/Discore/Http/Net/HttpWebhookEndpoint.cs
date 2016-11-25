@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Discore.Http.Net
 {
@@ -19,7 +20,7 @@ namespace Discore.Http.Net
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="DiscoreException"/>
         /// <exception cref="InvalidOperationException"/>
-        public DiscordApiData CreateWebhook(string name, DiscordAvatarData avatar, WebSocket.DiscordChannel channel)
+        public async Task<DiscordApiData> CreateWebhook(string name, DiscordAvatarData avatar, WebSocket.DiscordChannel channel)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(avatar));
             if (avatar == null) throw new ArgumentNullException(nameof(avatar));
@@ -36,7 +37,7 @@ namespace Discore.Http.Net
             container.Set("name", name);
             container.Set("avatar", avatar.ToFormattedString());
 
-            return Rest.Post($"channels/{channel.Id}/webhooks", container, "CreateWebhook");
+            return await Rest.Post($"channels/{channel.Id}/webhooks", container, "CreateWebhook");
         }
 
         /// <summary>
@@ -44,11 +45,11 @@ namespace Discore.Http.Net
         /// </summary>
         /// <param name="channel"><see cref="WebSocket.DiscordChannel"/> to poll</param>
         /// <exception cref="ArgumentException"/>
-        public DiscordApiData GetWebhooks(WebSocket.DiscordChannel channel)
+        public async Task<DiscordApiData> GetWebhooks(WebSocket.DiscordChannel channel)
         {
             if (channel == null) throw new ArgumentException(nameof(channel));
 
-            return Rest.Get($"channels/{channel.Id}/webhooks", "GetChannelWebhooks");
+            return await Rest.Get($"channels/{channel.Id}/webhooks", "GetChannelWebhooks");
         }
 
         /// <summary>
@@ -56,11 +57,11 @@ namespace Discore.Http.Net
         /// </summary>
         /// <param name="guild"><see cref="WebSocket.DiscordGuild"/> to poll</param>
         /// <exception cref="ArgumentNullException"/>
-        public DiscordApiData GetWebhooks(WebSocket.DiscordGuild guild)
+        public async Task<DiscordApiData> GetWebhooks(WebSocket.DiscordGuild guild)
         {
             if (guild == null) throw new ArgumentNullException(nameof(guild));
 
-            return Rest.Get($"guilds/{guild.Id}/webhooks", "GetGuildWebhooks");
+            return await Rest.Get($"guilds/{guild.Id}/webhooks", "GetGuildWebhooks");
         }
 
         //https://discordapp.com/developers/docs/resources/webhook#get-webhook
@@ -68,10 +69,10 @@ namespace Discore.Http.Net
         /// Get a existing <see cref="DiscordWebhook"/>
         /// </summary>
         /// <param name="webhook"/>
-        public DiscordApiData GetWebhook(DiscordWebhook webhook) {
-            return Rest.Get($"webhooks/{webhook.Id}", "GetWebhook");
+        public async Task<DiscordApiData> GetWebhook(DiscordWebhook webhook) {
+            return await Rest.Get($"webhooks/{webhook.Id}", "GetWebhook");
         }
-        //public DiscordApiData GetWebhook(DiscordWebhook, bool usingToken) //TODO: is this call needed?
+        //public async Task<DiscordApiData> GetWebhook(DiscordWebhook, bool usingToken) //TODO: is this call needed?
 
         /// <summary>
         /// Modify a existing <see cref="DiscordWebhook"/>
@@ -81,7 +82,7 @@ namespace Discore.Http.Net
         /// <param name="avatar">new <see cref="DiscordAvatarData"/>, optional</param>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="InvalidOperationException"/>
-        public DiscordApiData ModifyWebhook(DiscordWebhook webhook, string name = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordApiData> ModifyWebhook(DiscordWebhook webhook, string name = null, DiscordAvatarData avatar = null)
         {
             if (webhook == null) throw new ArgumentNullException(nameof(webhook));
 
@@ -89,22 +90,22 @@ namespace Discore.Http.Net
             if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
             if (avatar != null) postData.Set("avatar", avatar.ToFormattedString());
 
-            return Rest.Patch($"webhooks/{webhook.Id}", postData, "ModifyWebhook");
+            return await Rest.Patch($"webhooks/{webhook.Id}", postData, "ModifyWebhook");
         }
-        //public DiscordApiData ModifyWebhook(DiscordWebhook, bool usingToken)
+        //public async Task<DiscordApiData> ModifyWebhook(DiscordWebhook, bool usingToken)
 
         /// <summary>
         /// Delete a existing <see cref="DiscordWebhook"/> 
         /// </summary>
         /// <param name="webhook"><see cref="DiscordWebhook"/> to delete</param>
-        public DiscordApiData DeleteWebhook(DiscordWebhook webhook)
+        public async Task<DiscordApiData> DeleteWebhook(DiscordWebhook webhook)
         {
-            return Rest.Delete($"webhooks/{webhook.Id}", "DeleteWebhook");
+            return await Rest.Delete($"webhooks/{webhook.Id}", "DeleteWebhook");
         }
-        //public DiscordApiData DeleteWebhook(DiscordWebhook, bool usingToken)
+        //public async Task<DiscordApiData> DeleteWebhook(DiscordWebhook, bool usingToken)
 
 
-        public DiscordApiData ExecuteWebhook(DiscordWebhook webhook,
+        public async Task<DiscordApiData> ExecuteWebhook(DiscordWebhook webhook,
             string content,
             string username = null, 
             Uri avatar = null,
@@ -120,10 +121,10 @@ namespace Discore.Http.Net
             postData.Set("tts", tts);
             postData.Set("content", content);
 
-            return Rest.Post($"webhooks/{webhook.Id}/{webhook.Token}", postData, "ExecuteWebhook");
+            return await Rest.Post($"webhooks/{webhook.Id}/{webhook.Token}", postData, "ExecuteWebhook");
         }
 
-        public DiscordApiData ExecuteWebhook(DiscordWebhook webhook,
+        public async Task<DiscordApiData> ExecuteWebhook(DiscordWebhook webhook,
             byte[] file,
             string filename = null,
             string username = null,
@@ -150,10 +151,10 @@ namespace Discore.Http.Net
 
             request.Content = form;
 
-            return Rest.Send(request, "ExecuteWebhook");
+            return await Rest.Send(request, "ExecuteWebhook");
         }
 
-        public DiscordApiData ExecuteWebhook(DiscordWebhook webhook,
+        public async Task<DiscordApiData> ExecuteWebhook(DiscordWebhook webhook,
             DiscordEmbed[] embeds,
             string username = null,
             Uri avatar = null,
@@ -169,7 +170,7 @@ namespace Discore.Http.Net
             postData.Set("tts", tts);
             postData.Set("embeds", embeds);
 
-            return Rest.Post($"webhooks/{webhook.Id}/{webhook.Token}", postData, "ExecuteWebhook");
+            return await Rest.Post($"webhooks/{webhook.Id}/{webhook.Token}", postData, "ExecuteWebhook");
         }
     }
 }

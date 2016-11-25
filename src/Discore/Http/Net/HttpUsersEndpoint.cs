@@ -1,4 +1,6 @@
-﻿namespace Discore.Http.Net
+﻿using System.Threading.Tasks;
+
+namespace Discore.Http.Net
 {
     class HttpUsersEndpoint : HttpApiEndpoint
     {
@@ -6,51 +8,51 @@
             : base(restClient)
         { }
 
-        public DiscordApiData GetCurrentUser()
+        public async Task<DiscordApiData> GetCurrentUser()
         {
-            return Rest.Get("users/@me", "GetCurrentUser");
+            return await Rest.Get("users/@me", "GetCurrentUser");
         }
 
-        public DiscordApiData Get(Snowflake id)
+        public async Task<DiscordApiData> Get(Snowflake id)
         {
-            return Rest.Get($"users/{id}", "GetUser");
+            return await Rest.Get($"users/{id}", "GetUser");
         }
 
-        public DiscordApiData ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordApiData> ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("username", username);
             data.Set("avatar", avatar.ToFormattedString());
 
-            return Rest.Patch("users/@me", data, "ModifyCurrentUser");
+            return await Rest.Patch("users/@me", data, "ModifyCurrentUser");
         }
 
-        public DiscordApiData GetCurrentUserGuilds()
+        public async Task<DiscordApiData> GetCurrentUserGuilds()
         {
-            return Rest.Get($"users/@me/guilds", "GetCurrentUserGuilds");
+            return await Rest.Get($"users/@me/guilds", "GetCurrentUserGuilds");
         }
 
-        public bool LeaveGuild(Snowflake guildId)
+        public async Task<bool> LeaveGuild(Snowflake guildId)
         {
-            return Rest.Delete($"users/@me/guilds/{guildId}", "LeaveGuild").IsNull;
+            return (await Rest.Delete($"users/@me/guilds/{guildId}", "LeaveGuild")).IsNull;
         }
 
-        public DiscordApiData GetCurrentUserDMs()
+        public async Task<DiscordApiData> GetCurrentUserDMs()
         {
-            return Rest.Get("users/@me/channels", "GetCurrentUserDMs");
+            return await Rest.Get("users/@me/channels", "GetCurrentUserDMs");
         }
 
-        public DiscordApiData CreateDM(Snowflake recipientId)
+        public async Task<DiscordApiData> CreateDM(Snowflake recipientId)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("recipient_id", recipientId);
 
-            return Rest.Post("users/@me/channels", data, "CreateDM");
+            return await Rest.Post("users/@me/channels", data, "CreateDM");
         }
 
-        public DiscordApiData GetCurrentUserConnections()
+        public async Task<DiscordApiData> GetCurrentUserConnections()
         {
-            return Rest.Get("users/@me/connections", "GetCurrentUserConnections");
+            return await Rest.Get("users/@me/connections", "GetCurrentUserConnections");
         }
     }
 }

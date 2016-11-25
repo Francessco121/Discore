@@ -1,6 +1,7 @@
 ﻿using System;
 using Discore.Http.Net;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Discore.Http
 {
@@ -13,16 +14,16 @@ namespace Discore.Http
             this.endpoint = endpoint;
         }
 
-        public DiscordWebhook CreateWebhook(string name, DiscordAvatarData avatar, WebSocket.DiscordChannel channel) 
-            => new DiscordWebhook(endpoint.CreateWebhook(name, avatar, channel));
+        public async Task<DiscordWebhook> CreateWebhook(string name, DiscordAvatarData avatar, WebSocket.DiscordChannel channel) 
+            => new DiscordWebhook(await endpoint.CreateWebhook(name, avatar, channel));
 
-        public DiscordWebhook GetWebhook(DiscordWebhook webhook)
-            => new DiscordWebhook(endpoint.GetWebhook(webhook));
+        public async Task<DiscordWebhook> GetWebhook(DiscordWebhook webhook)
+            => new DiscordWebhook(await endpoint.GetWebhook(webhook));
 
-        public IReadOnlyList<DiscordWebhook> GetWebhooks(WebSocket.DiscordChannel channel)
+        public async Task<IReadOnlyList<DiscordWebhook>> GetWebhooks(WebSocket.DiscordChannel channel)
         {
             List<DiscordWebhook> toReturn = new List<DiscordWebhook>();
-            DiscordApiData json = endpoint.GetWebhooks(channel);
+            DiscordApiData json = await endpoint.GetWebhooks(channel);
             if (json.Type != DiscordApiDataType.Array)
                 throw new DiscoreException("Malformed json response");
 
@@ -32,32 +33,32 @@ namespace Discore.Http
             return toReturn;
         }
 
-        public DiscordWebhook ModifyWebhook(DiscordWebhook webhook, string name = null, DiscordAvatarData avatar = null)
-            => new DiscordWebhook(endpoint.ModifyWebhook(webhook, name, avatar));
+        public async Task<DiscordWebhook> ModifyWebhook(DiscordWebhook webhook, string name = null, DiscordAvatarData avatar = null)
+            => new DiscordWebhook(await endpoint.ModifyWebhook(webhook, name, avatar));
 
-        public void DeleteWebhook(DiscordWebhook webhook)
-            => endpoint.DeleteWebhook(webhook);
+        public async Task DeleteWebhook(DiscordWebhook webhook)
+            => await endpoint.DeleteWebhook(webhook);
 
-        public void ExecuteWebhook(DiscordWebhook webhook,
+        public async Task ExecuteWebhook(DiscordWebhook webhook,
             string content,
             string username = null,
             Uri avatar = null,
             bool tts = false)
-            => endpoint.ExecuteWebhook(webhook, content, username, avatar, tts);
+            => await endpoint.ExecuteWebhook(webhook, content, username, avatar, tts);
 
-        public void ExecuteWebhook(DiscordWebhook webhook,
+        public async Task ExecuteWebhook(DiscordWebhook webhook,
             byte[] file,
             string filename = "unknown.jpg",
             string username = null,
             Uri avatar = null,
             bool tts = false)
-            => endpoint.ExecuteWebhook(webhook, file, filename, username, avatar, tts);
+            => await endpoint.ExecuteWebhook(webhook, file, filename, username, avatar, tts);
 
-        public void ExecuteWebhook(DiscordWebhook webhook,
+        public async Task ExecuteWebhook(DiscordWebhook webhook,
             DiscordEmbed[] embeds,
             string username = null,
             Uri avatar = null,
             bool tts = false)
-            => endpoint.ExecuteWebhook(webhook, embeds, username, avatar, tts);
+            => await endpoint.ExecuteWebhook(webhook, embeds, username, avatar, tts);
         }
 }

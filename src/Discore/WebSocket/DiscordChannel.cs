@@ -1,5 +1,6 @@
 ﻿using Discore.Http.Net;
 using System;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -28,10 +29,19 @@ namespace Discore.WebSocket
         /// <summary>
         /// Deletes/closes this channel.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public bool Delete()
+        public void Delete()
         {
-            DiscordApiData data = channelsHttp.Delete(Id);
+            try { DeleteAsync().Wait(); }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Deletes/closes this channel.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeleteAsync()
+        {
+            DiscordApiData data = await channelsHttp.Delete(Id);
             return data.IsNull;
         }
     }

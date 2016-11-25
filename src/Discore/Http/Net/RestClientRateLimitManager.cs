@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.Http.Net
 {
@@ -93,7 +94,7 @@ namespace Discore.Http.Net
                     blocker.Continue();
             }
 
-            public void Wait()
+            public async Task Wait()
             {
                 if (remaining == 0)
                 {
@@ -112,7 +113,7 @@ namespace Discore.Http.Net
                     {
                         waiting = true;
                         int waitTime = (resetTime - epochSeconds) * 1000;
-                        Thread.Sleep(waitTime);
+                        await Task.Delay(waitTime);
                         waiting = false;
                     }
                 }
@@ -126,11 +127,11 @@ namespace Discore.Http.Net
             rateLimiters = new ConcurrentDictionary<string, RateLimiter>();
         }
 
-        public void AwaitRateLimiter(string action)
+        public async Task AwaitRateLimiter(string action)
         {
             RateLimiter limiter;
             if (rateLimiters.TryGetValue(action, out limiter))
-                limiter.Wait();
+                await limiter.Wait();
         }
 
         public void UpdateRateLimiter(string action, HttpResponseMessage response)

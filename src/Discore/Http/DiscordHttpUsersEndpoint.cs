@@ -1,4 +1,5 @@
 ﻿using Discore.Http.Net;
+using System.Threading.Tasks;
 
 namespace Discore.Http
 {
@@ -11,27 +12,27 @@ namespace Discore.Http
             this.endpoint = endpoint;
         }
 
-        public DiscordUser GetCurrentUser()
+        public async Task<DiscordUser> GetCurrentUser()
         {
-            DiscordApiData data = endpoint.GetCurrentUser();
+            DiscordApiData data = await endpoint.GetCurrentUser();
             return new DiscordUser(data);
         }
 
-        public DiscordUser Get(Snowflake id)
+        public async Task<DiscordUser> Get(Snowflake id)
         {
-            DiscordApiData data = endpoint.Get(id);
+            DiscordApiData data = await endpoint.Get(id);
             return new DiscordUser(data);
         }
 
-        public DiscordUser ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordUser> ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
         {
-            DiscordApiData data = endpoint.ModifyCurrentUser(username, avatar);
+            DiscordApiData data = await endpoint.ModifyCurrentUser(username, avatar);
             return data.IsNull ? null : new DiscordUser(data);
         }
 
-        public DiscordUserGuild[] GetCurrentUserGuilds()
+        public async Task<DiscordUserGuild[]> GetCurrentUserGuilds()
         {
-            DiscordApiData data = endpoint.GetCurrentUserGuilds();
+            DiscordApiData data = await endpoint.GetCurrentUserGuilds();
             DiscordUserGuild[] guilds = new DiscordUserGuild[data.Values.Count];
 
             for (int i = 0; i < guilds.Length; i++)
@@ -40,14 +41,14 @@ namespace Discore.Http
             return guilds;
         }
 
-        public bool LeaveGuild(Snowflake guildId)
+        public async Task<bool> LeaveGuild(Snowflake guildId)
         {
-            return endpoint.LeaveGuild(guildId);
+            return await endpoint.LeaveGuild(guildId);
         }
 
-        public DiscordDMChannel[] GetCurrentUserDMs()
+        public async Task<DiscordDMChannel[]> GetCurrentUserDMs()
         {
-            DiscordApiData data = endpoint.GetCurrentUserDMs();
+            DiscordApiData data = await endpoint.GetCurrentUserDMs();
             DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
 
             for (int i = 0; i < dms.Length; i++)
@@ -56,9 +57,9 @@ namespace Discore.Http
             return dms;
         }
 
-        public DiscordConnection[] GetCurrentUserConnections()
+        public async Task<DiscordConnection[]> GetCurrentUserConnections()
         {
-            DiscordApiData data = endpoint.GetCurrentUserConnections();
+            DiscordApiData data = await endpoint.GetCurrentUserConnections();
             DiscordConnection[] connections = new DiscordConnection[data.Values.Count];
 
             for (int i = 0; i < connections.Length; i++)

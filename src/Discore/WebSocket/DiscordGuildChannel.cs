@@ -1,5 +1,7 @@
 ﻿using Discore.Http.Net;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -63,7 +65,20 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
-            return EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
+            try { return EditPermissionsAsync(member, allow, deny).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Adds/edits a guild member permission overwrite for this channel.
+        /// </summary>
+        /// <param name="member">The member this overwrite will change permissions for.</param>
+        /// <param name="allow">Specifically allowed permissions.</param>
+        /// <param name="deny">Specifically denied permissions.</param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> EditPermissionsAsync(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
+        {
+            return await EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
         }
 
         /// <summary>
@@ -75,10 +90,23 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
-            return EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
+            try { return EditPermissionsAsync(role, allow, deny).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
         }
 
-        bool EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
+        /// <summary>
+        /// Adds/edits a role permission overwrite for this channel.
+        /// </summary>
+        /// <param name="role">The role this overwrite will change permissions for.</param>
+        /// <param name="allow">Specifically allowed permissions.</param>
+        /// <param name="deny">Specifically denied permissions.</param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> EditPermissionsAsync(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
+        {
+            return await EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
+        }
+
+        async Task<bool> EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
             DiscordOverwriteType type)
         {
             DiscordOverwrite ov;
@@ -89,7 +117,7 @@ namespace Discore.WebSocket
             {
                 // This permission most likely does not exist yet, so we have no changes to
                 // instantly reflect so perform a normal http call.
-                DiscordApiData data = channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
+                DiscordApiData data = await channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
                 return data.IsNull;
             }
         }
@@ -99,7 +127,16 @@ namespace Discore.WebSocket
         /// </summary>
         public bool DeletePermission(DiscordGuildMember member)
         {
-            return DeletePermission(member.Id);
+            try { return DeletePermissionAsync(member).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Deletes a permission overwrite for a guild member.
+        /// </summary>
+        public async Task<bool> DeletePermissionAsync(DiscordGuildMember member)
+        {
+            return await DeletePermission(member.Id);
         }
 
         /// <summary>
@@ -107,7 +144,16 @@ namespace Discore.WebSocket
         /// </summary>
         public bool DeletePermission(DiscordRole role)
         {
-            return DeletePermission(role.Id);
+            try { return DeletePermissionAsync(role).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Deletes a permission overwrite for a role.
+        /// </summary>
+        public async Task<bool> DeletePermissionAsync(DiscordRole role)
+        {
+            return await DeletePermission(role.Id);
         }
 
         /// <summary>
@@ -115,12 +161,21 @@ namespace Discore.WebSocket
         /// </summary>
         public bool DeletePermission(DiscordOverwrite overwrite)
         {
-            return DeletePermission(overwrite.Id);
+            try { return DeletePermissionAsync(overwrite).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
         }
 
-        bool DeletePermission(Snowflake overwriteId)
+        /// <summary>
+        /// Deletes a permission overwrite.
+        /// </summary>
+        public async Task<bool> DeletePermissionAsync(DiscordOverwrite overwrite)
         {
-            DiscordApiData data = channelsHttp.DeletePermission(Id, overwriteId);
+            return await DeletePermission(overwrite.Id);
+        }
+
+        async Task<bool> DeletePermission(Snowflake overwriteId)
+        {
+            DiscordApiData data = await channelsHttp.DeletePermission(Id, overwriteId);
             if (data.IsNull)
             {
                 // If successful, reflect changes immediately.

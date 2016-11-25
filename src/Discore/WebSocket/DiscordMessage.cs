@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -107,9 +108,28 @@ namespace Discore.WebSocket
         /// Adds a reaction to this message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> AddReactionAsync(DiscordReactionEmoji emoji)
+        {
+            return await AddReactionAsync(emoji.Name, emoji.Id.Value);
+        }
+
+        /// <summary>
+        /// Adds a reaction to this message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool AddReaction(string emojiName, Snowflake? customEmojiId = null)
         {
-            DiscordApiData data = channelsHttp.CreateReaction(Channel.Id, Id, 
+            try { return AddReactionAsync(emojiName, customEmojiId).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Adds a reaction to this message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> AddReactionAsync(string emojiName, Snowflake? customEmojiId = null)
+        {
+            DiscordApiData data = await channelsHttp.CreateReaction(Channel.Id, Id, 
                 new Http.DiscordReactionEmoji(emojiName, customEmojiId));
             return data.IsNull;
         }
@@ -120,9 +140,19 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
+            try { return RemoveMyReactionAsync(reactionEmoji).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Removes a reaction from this message added from the current authenticated user.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> RemoveMyReactionAsync(DiscordReactionEmoji reactionEmoji)
+        {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
 
-            DiscordApiData data = channelsHttp.DeleteOwnReaction(Channel.Id, Id, emoji);
+            DiscordApiData data = await channelsHttp.DeleteOwnReaction(Channel.Id, Id, emoji);
             return data.IsNull;
         }
 
@@ -132,9 +162,19 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveMyReaction(string emojiName, Snowflake? customEmojiId = null)
         {
+            try { return RemoveMyReactionAsync(emojiName, customEmojiId).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Removes a reaction from this message added from the current authenticated user.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> RemoveMyReactionAsync(string emojiName, Snowflake? customEmojiId = null)
+        {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
 
-            DiscordApiData data = channelsHttp.DeleteOwnReaction(Channel.Id, Id, emoji);
+            DiscordApiData data = await channelsHttp.DeleteOwnReaction(Channel.Id, Id, emoji);
             return data.IsNull;
         }
 
@@ -146,9 +186,21 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
+            try { return RemoveReactionAsync(user, reactionEmoji).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Removes a reaction from this message.
+        /// </summary>
+        /// <param name="user">The user who added the reacted.</param>
+        /// <param name="reactionEmoji"></param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> RemoveReactionAsync(DiscordUser user, DiscordReactionEmoji reactionEmoji)
+        {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
 
-            DiscordApiData data = channelsHttp.DeleteUserReaction(Channel.Id, Id, user.Id, emoji);
+            DiscordApiData data = await channelsHttp.DeleteUserReaction(Channel.Id, Id, user.Id, emoji);
             return data.IsNull;
         }
 
@@ -161,9 +213,22 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool RemoveReaction(DiscordUser user, string emojiName, Snowflake? customEmojiId = null)
         {
+            try { return RemoveReactionAsync(user, emojiName, customEmojiId).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Removes a reaction from this message.
+        /// </summary>
+        /// <param name="user">The user who added the reacted.</param>
+        /// <param name="emojiName"></param>
+        /// <param name="customEmojiId"></param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> RemoveReactionAsync(DiscordUser user, string emojiName, Snowflake? customEmojiId = null)
+        {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
-            
-            DiscordApiData data = channelsHttp.DeleteUserReaction(Channel.Id, Id, user.Id, emoji);
+
+            DiscordApiData data = await channelsHttp.DeleteUserReaction(Channel.Id, Id, user.Id, emoji);
             return data.IsNull;
         }
 
@@ -172,8 +237,17 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordApiCacheIdSet<DiscordUser> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
+            try { return GetReactionsAsync(reactionEmoji).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Gets all users who reacted with the specified emoji to this message.
+        /// </summary>
+        public async Task<DiscordApiCacheIdSet<DiscordUser>> GetReactionsAsync(DiscordReactionEmoji reactionEmoji)
+        {
             Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(reactionEmoji.Name, reactionEmoji.Id);
-            return GetReactions(emoji);
+            return await GetReactions(emoji);
         }
 
         /// <summary>
@@ -181,15 +255,24 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordApiCacheIdSet<DiscordUser> GetReactions(string emojiName, Snowflake? customEmojiId = null)
         {
-            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
-            return GetReactions(emoji);
+            try { return GetReactionsAsync(emojiName, customEmojiId).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
         }
 
-        DiscordApiCacheIdSet<DiscordUser> GetReactions(Http.DiscordReactionEmoji reactionEmoji)
+        /// <summary>
+        /// Gets all users who reacted with the specified emoji to this message.
+        /// </summary>
+        public async Task<DiscordApiCacheIdSet<DiscordUser>> GetReactionsAsync(string emojiName, Snowflake? customEmojiId = null)
+        {
+            Http.DiscordReactionEmoji emoji = new Http.DiscordReactionEmoji(emojiName, customEmojiId);
+            return await GetReactions(emoji);
+        }
+
+        async Task<DiscordApiCacheIdSet<DiscordUser>> GetReactions(Http.DiscordReactionEmoji reactionEmoji)
         {
             DiscordApiCacheIdSet<DiscordUser> reactions = new DiscordApiCacheIdSet<DiscordUser>(shard.Users);
 
-            DiscordApiData data = channelsHttp.GetReactions(Channel.Id, Id, reactionEmoji);
+            DiscordApiData data = await channelsHttp.GetReactions(Channel.Id, Id, reactionEmoji);
             for (int i = 0; i < data.Values.Count; i++)
             {
                 DiscordApiData userdata = data.Values[i];
@@ -208,7 +291,16 @@ namespace Discore.WebSocket
         /// </summary>
         public void DeleteAllReactions()
         {
-            channelsHttp.DeleteAllReactions(Channel.Id, Id);
+            try { DeleteAllReactionsAsync().Wait(); }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Deletes all reactions to this message.
+        /// </summary>
+        public async Task DeleteAllReactionsAsync()
+        {
+            await channelsHttp.DeleteAllReactions(Channel.Id, Id);
         }
 
         /// <summary>
@@ -217,7 +309,17 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool Pin()
         {
-            DiscordApiData data = channelsHttp.AddPinnedChannelMessage(Channel.Id, Id);
+            try { return PinAsync().Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Pins this message to the channel it was sent in.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> PinAsync()
+        {
+            DiscordApiData data = await channelsHttp.AddPinnedChannelMessage(Channel.Id, Id);
             return data.IsNull;
         }
 
@@ -227,7 +329,17 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful.</returns>
         public bool Unpin()
         {
-            DiscordApiData data = channelsHttp.DeletePinnedChannelMessage(Channel.Id, Id);
+            try { return UnpinAsync().Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Unpins this message from the channel it was sent in.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> UnpinAsync()
+        {
+            DiscordApiData data = await channelsHttp.DeletePinnedChannelMessage(Channel.Id, Id);
             return data.IsNull;
         }
 
@@ -239,7 +351,19 @@ namespace Discore.WebSocket
         /// <returns>Returns the editted message.</returns>
         public DiscordMessage Edit(string newContent)
         {
-            DiscordApiData data = channelsHttp.EditMessage(Channel.Id, Id, newContent);
+            try { return EditAsync(newContent).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Changes the contents of this message.
+        /// Note: changes will not be reflected in this message instance.
+        /// </summary>
+        /// <param name="newContent">The new contents.</param>
+        /// <returns>Returns the editted message.</returns>
+        public async Task<DiscordMessage> EditAsync(string newContent)
+        {
+            DiscordApiData data = await channelsHttp.EditMessage(Channel.Id, Id, newContent);
             DiscordMessage newMsg = new DiscordMessage(shard);
             newMsg.Update(data);
 
@@ -251,7 +375,16 @@ namespace Discore.WebSocket
         /// </summary>
         public bool Delete()
         {
-            DiscordApiData data = channelsHttp.DeleteMessage(Channel.Id, Id);
+            try { return DeleteAsync().Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Deletes this message.
+        /// </summary>
+        public async Task<bool> DeleteAsync()
+        {
+            DiscordApiData data = await channelsHttp.DeleteMessage(Channel.Id, Id);
             return data.IsNull;
         }
 

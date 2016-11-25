@@ -1,4 +1,6 @@
 ﻿using Discore.Http.Net;
+using System;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -37,7 +39,18 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful</returns>
         public bool Edit(DiscordPermission allow, DiscordPermission deny)
         {
-            DiscordApiData data = channelsHttp.EditPermissions(Channel.Id, Id, allow, deny, Type);
+            try { return EditAsync(allow, deny).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Edits the permissions of this overwrite.
+        /// If successful, changes will be immediately reflected for this instance.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful</returns>
+        public async Task<bool> EditAsync(DiscordPermission allow, DiscordPermission deny)
+        {
+            DiscordApiData data = await channelsHttp.EditPermissions(Channel.Id, Id, allow, deny, Type);
 
             if (data.IsNull)
             {
@@ -60,7 +73,18 @@ namespace Discore.WebSocket
         /// <returns>Returns whether the operation was successful</returns>
         public bool Delete()
         {
-            DiscordApiData data = channelsHttp.DeletePermission(Channel.Id, Id);
+            try { return DeleteAsync().Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Deletes this overwrite.
+        /// If successful, changes will be immediately reflected for the channel this overwrite was in.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful</returns>
+        public async Task<bool> DeleteAsync()
+        {
+            DiscordApiData data = await channelsHttp.DeletePermission(Channel.Id, Id);
             if (data.IsNull)
             {
                 // If successful, reflect changes immediately.

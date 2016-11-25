@@ -1,4 +1,6 @@
-﻿namespace Discore.Http.Net
+﻿using System.Threading.Tasks;
+
+namespace Discore.Http.Net
 {
     class HttpGatewayEndpoint : HttpApiEndpoint
     {
@@ -6,14 +8,14 @@
             : base(restClient)
         { }
 
-        public DiscordApiData Get()
+        public async Task<DiscordApiData> Get()
         {
-            return Rest.Get("gateway", "GetGateway");
+            return await Rest.Get("gateway", "GetGateway");
         }
 
-        public DiscordApiData GetBot()
+        public async Task<DiscordApiData> GetBot()
         {
-            return Rest.Get("gateway/bot", "GetGatewayBot");
+            return await Rest.Get("gateway/bot", "GetGatewayBot");
         }
     }
 }
