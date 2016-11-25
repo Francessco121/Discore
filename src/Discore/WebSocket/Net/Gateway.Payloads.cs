@@ -110,6 +110,32 @@ namespace Discore.WebSocket.Net
             SendPayload(GatewayOPCode.Resume, data);
         }
 
+        internal void SendStatusUpdate(string game = null, int ? idleSince = null)
+        {
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("idle_since", idleSince);
+
+            if (game != null)
+            {
+                DiscordApiData gameData = new DiscordApiData(DiscordApiDataType.Container);
+                data.Set("game", gameData);
+
+                gameData.Set("name", game);
+            }
+
+            SendPayload(GatewayOPCode.StatusUpdate, data);
+        }
+
+        internal void SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
+        {
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("guild_id", guildId);
+            data.Set("query", query);
+            data.Set("limit", limit);
+
+            SendPayload(GatewayOPCode.RequestGuildMembers, data);
+        }
+
         internal void SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);

@@ -32,6 +32,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
+        internal event EventHandler<Snowflake[]> OnGuildMembersChunk;
 
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
@@ -286,10 +287,12 @@ namespace Discore.WebSocket.Net
             if (shard.Guilds.TryGetValue(guildId, out guild))
             {
                 IList<DiscordApiData> membersData = data.GetArray("members");
+                Snowflake[] ids = new Snowflake[membersData.Count];
                 for (int i = 0; i < membersData.Count; i++)
                 {
                     DiscordApiData memberData = membersData[i];
                     Snowflake memberId = memberData.LocateSnowflake("user.id").Value;
+                    ids[i] = memberId;
 
                     bool memberExistedPreviously = guild.Members.ContainsKey(memberId);
 
@@ -301,6 +304,8 @@ namespace Discore.WebSocket.Net
                     else
                         OnGuildMemberAdded?.Invoke(this, new GuildMemberEventArgs(shard, guild, member));
                 }
+
+                OnGuildMembersChunk?.Invoke(this, ids);
             }
         }
 
