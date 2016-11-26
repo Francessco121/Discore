@@ -6,6 +6,11 @@ namespace Discore.WebSocket
     public interface ITextChannel
     {
         /// <summary>
+        /// Gets the last known message id sent in this channel.
+        /// </summary>
+        Snowflake LastMessageId { get; }
+
+        /// <summary>
         /// Sends a message to this channel.
         /// </summary>
         /// <param name="content">The message text content.</param>
@@ -77,7 +82,7 @@ namespace Discore.WebSocket
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        IList<DiscordMessage> GetMessages(Snowflake? baseMessageId = null, int? limit = null,
+        IList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before);
         /// <summary>
         /// Gets a list of messages in this channel.
@@ -85,7 +90,7 @@ namespace Discore.WebSocket
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        Task<IList<DiscordMessage>> GetMessagesAsync(Snowflake? baseMessageId = null, int? limit = null,
+        Task<IList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before);
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
@@ -95,5 +100,14 @@ namespace Discore.WebSocket
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
         Task<IList<DiscordMessage>> GetPinnedMessagesAsync();
+
+        /// <summary>
+        /// Updates the last message id sent in this channel.
+        /// </summary>
+        void UpdateLastMessageId();
+        /// <summary>
+        /// Updates the last message id sent in this channel.
+        /// </summary>
+        Task UpdateLastMessageIdAsync();
     }
 }

@@ -26,6 +26,34 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
+        /// Updates the last message id sent in this channel.
+        /// </summary>
+        public void UpdateLastMessageId()
+        {
+            try { UpdateLastMessageIdAsync().Wait(); }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Updates the last message id sent in this channel.
+        /// </summary>
+        public async Task UpdateLastMessageIdAsync()
+        {
+            Snowflake lastId = LastMessageId;
+            while (true)
+            {
+                IList<DiscordMessage> messages = await GetMessagesAsync(lastId, 100, DiscordMessageGetStrategy.After);
+
+                lastId = messages[0].Id;
+
+                if (messages.Count < 100)
+                    break;
+            }
+
+            LastMessageId = lastId;
+        }
+
+        /// <summary>
         /// Modifies this text channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
@@ -257,7 +285,7 @@ namespace Discore.WebSocket
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public IList<DiscordMessage> GetMessages(Snowflake? baseMessageId = null, int? limit = null,
+        public IList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
             try { return GetMessagesAsync(baseMessageId, limit, getStrategy).Result; }
@@ -270,7 +298,7 @@ namespace Discore.WebSocket
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public async Task<IList<DiscordMessage>> GetMessagesAsync(Snowflake? baseMessageId = null, int? limit = null,
+        public async Task<IList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
             DiscordApiData messagesArray = await channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
