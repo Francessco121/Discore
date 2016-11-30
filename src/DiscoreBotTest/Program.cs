@@ -27,12 +27,16 @@ namespace DiscoreBotTest
             DiscordBotUserToken auth = new DiscordBotUserToken(token);
             app = new DiscordWebSocketApplication(auth);
 
-            app.ShardManager.StartShards(1);
+            Shard shard = app.ShardManager.CreateSingleShard();
+            if (shard.Start())
+            {
+                TestShard(shard);
 
-            TestShard(app.ShardManager.Shards[0]);
-
-            while (app.ShardManager.Shards[0].IsActive)
-                Thread.Sleep(1000);
+                while (shard.IsRunning)
+                    Thread.Sleep(1000);
+            }
+            else
+                Console.WriteLine("Failed to start shard!");
 
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
@@ -116,7 +120,6 @@ namespace DiscoreBotTest
                     Console.ForegroundColor = ConsoleColor.Green;
                     break;
                 case DiscoreLogType.Verbose:
-                case DiscoreLogType.Heartbeat:
                     Console.ForegroundColor = ConsoleColor.DarkGray;
                     break;
                 default:
