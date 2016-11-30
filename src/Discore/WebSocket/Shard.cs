@@ -211,7 +211,7 @@ namespace Discore.WebSocket
 
                 if (InternalGateway.Connect())
                 {
-                    log.LogInfo("Successfully connected to gateway");
+                    log.LogVerbose("Successfully connected to gateway.");
                     OnConnected?.Invoke(this, new ShardEventArgs(this));
                     return true;
                 }

@@ -56,7 +56,7 @@ namespace Discore.WebSocket.Net
                 socket.Options.Proxy = null;
                 socket.Options.KeepAliveInterval = TimeSpan.Zero;
 
-                log.LogInfo($"Connecting to {url}...");
+                log.LogVerbose($"Connecting to {url}...");
                 Uri uri = new Uri(url);
 
                 // Reset fields
@@ -87,14 +87,14 @@ namespace Discore.WebSocket.Net
                     sendThread.Start();
                     receiveThread.Start();
 
-                    log.LogInfo($"Connected to {url}.");
+                    log.LogVerbose($"Connected to {url}.");
 
                     OnConnected?.Invoke(this, uri);
                     return true;
                 }
                 else
                 {
-                    log.LogInfo($"Failed to connect to {url}.");
+                    log.LogError($"Failed to connect to {url}.");
                     return false;
                 }
             }

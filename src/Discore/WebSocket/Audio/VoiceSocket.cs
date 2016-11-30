@@ -142,7 +142,7 @@ namespace Discore.WebSocket.Audio
                 log.LogVerbose($"Connecting to voice websocket {uri}...");
                 if (socket.Connect(uri))
                 {
-                    log.LogInfo($"Connected to voice websocket {uri}.");
+                    log.LogVerbose($"Connected to voice websocket {uri}.");
 
                     // Create new threads
                     CreateThreads();

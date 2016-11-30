@@ -104,7 +104,7 @@ namespace Discore.WebSocket.Net
             // Get session id
             sessionId = data.GetString("session_id");
 
-            log.LogInfo($"[Ready] session_id = {sessionId}, user = {shard.User}");
+            log.LogVerbose($"[Ready] session_id = {sessionId}, user = {shard.User}");
 
             // Get private channels
             foreach (DiscordApiData privateChannelData in data.GetArray("private_channels"))
