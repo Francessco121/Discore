@@ -1,7 +1,12 @@
 ﻿namespace Discore.Http
 {
-    public class DiscordInviteChannel : DiscordIdObject
+    public class DiscordInviteChannel
     {
+        /// <summary>
+        /// Gets the id of the channel this invite is for.
+        /// </summary>
+        public Snowflake ChannelId { get; }
+
         /// <summary>
         /// Gets the name of the channel.
         /// </summary>
@@ -13,8 +18,9 @@
         public DiscordGuildChannelType Type { get; }
 
         public DiscordInviteChannel(DiscordApiData data)
-            : base(data)
         {
+            ChannelId = data.GetSnowflake("id").Value;
+
             Name = data.GetString("name");
 
             string type = data.GetString("type");

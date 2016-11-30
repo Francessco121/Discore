@@ -1,6 +1,7 @@
 ﻿using Discore.Http.Net;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket
@@ -54,6 +55,64 @@ namespace Discore.WebSocket
             PermissionOverwrites = new DiscordApiCacheTable<DiscordOverwrite>();
             RolePermissionOverwrites = new DiscordApiCacheIdSet<DiscordOverwrite>(PermissionOverwrites);
             MemberPermissionOverwrites = new DiscordApiCacheIdSet<DiscordOverwrite>(PermissionOverwrites);
+        }
+
+        /// <summary>
+        /// Gets a list of all invites for this channel.
+        /// </summary>
+        public IReadOnlyList<DiscordInviteMetadata> GetInvites()
+        {
+            try { return GetInvitesAsync().Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Gets a list of all invites for this channel.
+        /// </summary>
+        public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvitesAsync()
+        {
+            DiscordApiData data = await channelsHttp.GetInvites(Id);
+            DiscordInviteMetadata[] list = new DiscordInviteMetadata[data.Values.Count];
+            for (int i = 0; i < list.Length; i++)
+            {
+                DiscordInviteMetadata metadata = new DiscordInviteMetadata(shard);
+                metadata.Update(data.Values[i]);
+                list[i] = metadata;
+            }
+
+            return new ReadOnlyCollection<DiscordInviteMetadata>(list);
+        }
+
+        /// <summary>
+        /// Creates an invite to this guild, through this channel.
+        /// </summary>
+        /// <param name="maxAge">Duration of invite in seconds before expiry, or 0 or null for never.</param>
+        /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
+        /// <param name="temporary">Whether this invite only grants temporary membership.</param>
+        /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
+        public DiscordInvite CreateInvite(int? maxAge = null, int? maxUses = null,
+            bool? temporary = null, bool? unique = null)
+        {
+            try { return CreateInviteAsync(maxAge, maxUses, temporary, unique).Result; }
+            catch (AggregateException aex) { throw aex.InnerException; }
+        }
+
+        /// <summary>
+        /// Creates an invite to this guild, through this channel.
+        /// </summary>
+        /// <param name="maxAge">Duration of invite in seconds before expiry, or 0 or null for never.</param>
+        /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
+        /// <param name="temporary">Whether this invite only grants temporary membership.</param>
+        /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
+        public async Task<DiscordInvite> CreateInviteAsync(int? maxAge = null, int? maxUses = null, 
+            bool? temporary = null, bool? unique = null)
+        {
+            DiscordApiData data = await channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
+
+            DiscordInvite invite = new DiscordInvite(shard);
+            invite.Update(data);
+
+            return invite;
         }
 
         /// <summary>
