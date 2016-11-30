@@ -21,6 +21,7 @@
         UnknownRole,
         UnknownToken,
         UnknownUser,
+        UnknownEmoji,
         BotsCannotUseThisEndpoint = 20001,
         OnlyBotsCanUseThisEndpoint,
         /// <summary>
@@ -39,6 +40,7 @@
         /// Maximum Guild Roles: 250
         /// </summary>
         MaximumGuildRolesReached = 30005,
+        TooManyReactions = 30010,
         Unauthorized = 40001,
         MissingAccess = 50001,
         InvalidAccountType,
@@ -59,6 +61,7 @@
         /// Must provide at least 2 and fewer than 100 messages to delete.
         /// </summary>
         ProvidedTooFewOrTooManyMessagesToDelete,
-        MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019
+        MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019,
+        ReactionBlocked = 90001
     }
 }
