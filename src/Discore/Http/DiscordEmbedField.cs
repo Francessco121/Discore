@@ -1,6 +1,8 @@
-﻿namespace Discore.Http
+﻿using System;
+
+namespace Discore.Http
 {
-    public class DiscordEmbedField
+    public class DiscordEmbedField : IDiscordSerializable
     {
         /// <summary>
         /// Gets the name of the field.
@@ -27,6 +29,15 @@
         public override string ToString()
         {
             return Name;
+        }
+
+        public DiscordApiData Serialize()
+        {
+            DiscordApiData data = DiscordApiData.CreateContainer();
+            data.Set("name", Name);
+            data.Set("value", Value);
+            data.Set("inline", IsInline);
+            return data;
         }
     }
 }

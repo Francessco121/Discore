@@ -7,28 +7,18 @@ namespace Discore.Http.Net
 {
     class HttpWebhookEndpoint : HttpApiEndpoint
     {
-        public HttpWebhookEndpoint(RestClient restClient) 
+        public HttpWebhookEndpoint(RestClient restClient)
             : base(restClient)
-        {}
+        { }
 
-        /// <summary>
-        /// Create a webhook on a <see cref="DiscordChannel"/>, only supports <see cref="DiscordChannelType.Guild"/> channels
-        /// </summary>
-        /// <param name="name">Name of the webhook, 2-200 characters</param>
-        /// <param name="avatar"><see cref="DiscordAvatarData"/> of the webhook user</param>
-        /// <param name="channel"><see cref="WebSocket.DiscordChannel"/> to create the webhook on</param>
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="DiscoreException"/>
         /// <exception cref="InvalidOperationException"/>
-        public async Task<DiscordApiData> CreateWebhook(string name, DiscordAvatarData avatar, WebSocket.DiscordChannel channel)
+        public async Task<DiscordApiData> CreateWebhook(string name, DiscordAvatarData avatar, Snowflake id)
         {
-            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(avatar));
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentNullException(nameof(name));
             if (avatar == null) throw new ArgumentNullException(nameof(avatar));
-            if (channel == null) throw new ArgumentNullException(nameof(avatar));
-
-            //webhooks only support guild channels
-            if (channel.ChannelType != DiscordChannelType.Guild)
-                throw new DiscoreException($"{nameof(channel)} must be a type of {DiscordChannelType.Guild}");
+            if (id == null) throw new ArgumentNullException(nameof(id));
 
             if (name.Length < 2 || name.Length > 200)
                 throw new DiscoreException($"{nameof(name)} must be atleast 2 characters and no more than 200 characters");
@@ -37,82 +27,78 @@ namespace Discore.Http.Net
             container.Set("name", name);
             container.Set("avatar", avatar.ToFormattedString());
 
-            return await Rest.Post($"channels/{channel.Id}/webhooks", container, "CreateWebhook");
+            return await Rest.Post($"channels/{id}/webhooks", container, "CreateWebhook");
         }
 
-        /// <summary>
-        /// Get all webhooks on a <see cref="DiscordChannel"/>  
-        /// </summary>
-        /// <param name="channel"><see cref="WebSocket.DiscordChannel"/> to poll</param>
         /// <exception cref="ArgumentException"/>
-        public async Task<DiscordApiData> GetWebhooks(WebSocket.DiscordChannel channel)
+        public async Task<DiscordApiData> GetChannelWebhooks(Snowflake id)
         {
-            if (channel == null) throw new ArgumentException(nameof(channel));
+            if (id == null) throw new ArgumentException(nameof(id));
 
-            return await Rest.Get($"channels/{channel.Id}/webhooks", "GetChannelWebhooks");
+            return await Rest.Get($"channels/{id}/webhooks", "GetChannelWebhooks");
         }
 
-        /// <summary>
-        /// Get all webhooks on a <see cref="WebSocket.DiscordGuild"/>
-        /// </summary>
-        /// <param name="guild"><see cref="WebSocket.DiscordGuild"/> to poll</param>
         /// <exception cref="ArgumentNullException"/>
-        public async Task<DiscordApiData> GetWebhooks(WebSocket.DiscordGuild guild)
+        public async Task<DiscordApiData> GetGuildWebhooks(Snowflake id)
         {
-            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (id == null) throw new ArgumentNullException(nameof(id));
 
-            return await Rest.Get($"guilds/{guild.Id}/webhooks", "GetGuildWebhooks");
+            return await Rest.Get($"guilds/{id}/webhooks", "GetGuildWebhooks");
         }
 
-        //https://discordapp.com/developers/docs/resources/webhook#get-webhook
-        /// <summary>
-        /// Get a existing <see cref="DiscordWebhook"/>
-        /// </summary>
-        /// <param name="webhook"/>
-        public async Task<DiscordApiData> GetWebhook(DiscordWebhook webhook) {
-            return await Rest.Get($"webhooks/{webhook.Id}", "GetWebhook");
+        public async Task<DiscordApiData> GetWebhook(Snowflake id)
+        {
+            return await Rest.Get($"webhooks/{id}", "GetWebhook");
         }
-        //public async Task<DiscordApiData> GetWebhook(DiscordWebhook, bool usingToken) //TODO: is this call needed?
 
-        /// <summary>
-        /// Modify a existing <see cref="DiscordWebhook"/>
-        /// </summary>
-        /// <param name="webhook"><see cref="DiscordWebhook"/> to modfiy</param>
-        /// <param name="name">New <see cref="DiscordWebhook.Name"/>, optional</param>
-        /// <param name="avatar">new <see cref="DiscordAvatarData"/>, optional</param>
+        public async Task<DiscordApiData> GetWebhook(Snowflake id, string token)
+        {
+            return await Rest.Get($"webhooks/{id}/{token}", "GetWebhookToken");
+        }
+
         /// <exception cref="ArgumentNullException"/>
         /// <exception cref="InvalidOperationException"/>
-        public async Task<DiscordApiData> ModifyWebhook(DiscordWebhook webhook, string name = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordApiData> ModifyWebhook(Snowflake id, string name = null, DiscordAvatarData avatar = null)
         {
-            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+            if (id == null) throw new ArgumentNullException(nameof(id));
 
             DiscordApiData postData = DiscordApiData.CreateContainer();
             if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
             if (avatar != null) postData.Set("avatar", avatar.ToFormattedString());
 
-            return await Rest.Patch($"webhooks/{webhook.Id}", postData, "ModifyWebhook");
+            return await Rest.Patch($"webhooks/{id}", postData, "ModifyWebhook");
         }
-        //public async Task<DiscordApiData> ModifyWebhook(DiscordWebhook, bool usingToken)
 
-        /// <summary>
-        /// Delete a existing <see cref="DiscordWebhook"/> 
-        /// </summary>
-        /// <param name="webhook"><see cref="DiscordWebhook"/> to delete</param>
-        public async Task<DiscordApiData> DeleteWebhook(DiscordWebhook webhook)
+        public async Task<DiscordApiData> ModifyWebhook(Snowflake id, string token, string name = null, DiscordAvatarData avatar = null)
         {
-            return await Rest.Delete($"webhooks/{webhook.Id}", "DeleteWebhook");
+            if (id == null) throw new ArgumentNullException(nameof(id));
+            if (string.IsNullOrWhiteSpace(token)) throw new ArgumentNullException(nameof(token));
+
+            DiscordApiData postData = DiscordApiData.CreateContainer();
+            if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
+            if (avatar != null) postData.Set("avatar", avatar.ToFormattedString());
+
+            return await Rest.Patch($"webhooks/{id}/{token}", postData, "ModifyWebhookToken");
         }
-        //public async Task<DiscordApiData> DeleteWebhook(DiscordWebhook, bool usingToken)
 
+        public async Task<DiscordApiData> DeleteWebhook(Snowflake id)
+        {
+            return await Rest.Delete($"webhooks/{id}", "DeleteWebhook");
+        }
 
-        public async Task<DiscordApiData> ExecuteWebhook(DiscordWebhook webhook,
+        public async Task<DiscordApiData> DeleteWebhook(Snowflake id, string token)
+        {
+            return await Rest.Delete($"webhooks/{id}/{token}", "DeleteWebhookToken");
+        }
+
+        public async Task<DiscordApiData> ExecuteWebhook(Snowflake id,
+            string token,
             string content,
-            string username = null, 
+            string username = null,
             Uri avatar = null,
             bool tts = false)
         {
-            if (string.IsNullOrWhiteSpace(content) || content.Length < 1 || content.Length > 2000)
-                throw new DiscoreException($"{nameof(content)} must be atleast 1 character and no more than 2000 characters");
+            if (string.IsNullOrWhiteSpace(content)) throw new ArgumentNullException(nameof(content));
 
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
@@ -121,10 +107,11 @@ namespace Discore.Http.Net
             postData.Set("tts", tts);
             postData.Set("content", content);
 
-            return await Rest.Post($"webhooks/{webhook.Id}/{webhook.Token}", postData, "ExecuteWebhook");
+            return await Rest.Post($"webhooks/{id.Id}/{token}", postData, "ExecuteWebhook");
         }
 
-        public async Task<DiscordApiData> ExecuteWebhook(DiscordWebhook webhook,
+        public async Task<DiscordApiData> ExecuteWebhook(Snowflake id,
+            string token,
             byte[] file,
             string filename = null,
             string username = null,
@@ -133,29 +120,30 @@ namespace Discore.Http.Net
         {
             if (file == null || file.Length == 0)
                 throw new ArgumentNullException($"{nameof(file)} can't be null or empty");
-            
+
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
             if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
             if (avatar != null) postData.Set("avatar", avatar.ToString());
             postData.Set("tts", tts);
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/webhooks/{webhook.Id}/{webhook.Token}");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/webhooks/{id.Id}/{token}");
 
             MultipartFormDataContent form = new MultipartFormDataContent();
 
             ByteArrayContent content = new ByteArrayContent(file);
 
             form.Add(content, "file", filename);
-            form.Add(new StringContent(postData.SerializeToJson(), Encoding.UTF8, "application/json")); //no fucking idea if this works
+            form.Add(new StringContent(postData.SerializeToJson(), Encoding.UTF8, "application/json"));
 
             request.Content = form;
 
             return await Rest.Send(request, "ExecuteWebhook");
         }
 
-        public async Task<DiscordApiData> ExecuteWebhook(DiscordWebhook webhook,
-            DiscordEmbed[] embeds,
+        public async Task<DiscordApiData> ExecuteWebhook(Snowflake id,
+            string token,
+            DiscordApiData[] embeds,
             string username = null,
             Uri avatar = null,
             bool tts = false)
@@ -170,7 +158,7 @@ namespace Discore.Http.Net
             postData.Set("tts", tts);
             postData.Set("embeds", embeds);
 
-            return await Rest.Post($"webhooks/{webhook.Id}/{webhook.Token}", postData, "ExecuteWebhook");
+            return await Rest.Post($"webhooks/{id.Id}/{token}", postData, "ExecuteWebhook");
         }
     }
 }

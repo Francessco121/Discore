@@ -1,6 +1,8 @@
-﻿namespace Discore.Http
+﻿using System;
+
+namespace Discore.Http
 {
-    public class DiscordEmbedFooter
+    public class DiscordEmbedFooter: IDiscordSerializable
     {
         /// <summary>
         /// Gets the footer text.
@@ -22,6 +24,15 @@
             Text = data.GetString("text");
             IconUrl = data.GetString("icon_url");
             ProxyIconUrl = data.GetString("proxy_icon_url");
+        }
+
+        public DiscordApiData Serialize()
+        {
+            DiscordApiData data = DiscordApiData.CreateContainer();
+            data.Set("text", Text);
+            data.Set("icon_url", IconUrl);
+            data.Set("proxy_icon_url", ProxyIconUrl);
+            return data;
         }
     }
 }

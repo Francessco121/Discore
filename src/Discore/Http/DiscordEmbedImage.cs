@@ -1,6 +1,8 @@
-﻿namespace Discore.Http
+﻿using System;
+
+namespace Discore.Http
 {
-    public class DiscordEmbedImage
+    public class DiscordEmbedImage : IDiscordSerializable
     {
         /// <summary>
         /// Gets the source url of the image (only http(s)).
@@ -33,6 +35,16 @@
         public override string ToString()
         {
             return Url;
+        }
+
+        public DiscordApiData Serialize()
+        {
+            DiscordApiData data = DiscordApiData.CreateContainer();
+            data.Set("url", Url);
+            data.Set("proxy_url", ProxyUrl);
+            data.Set("width", Width);
+            data.Set("height", Height);
+            return data;
         }
     }
 }

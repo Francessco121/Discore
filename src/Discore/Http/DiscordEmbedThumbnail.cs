@@ -1,9 +1,11 @@
-﻿namespace Discore.Http
+﻿using System;
+
+namespace Discore.Http
 {
     /// <summary>
     /// A thumbnail of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public class DiscordEmbedThumbnail
+    public class DiscordEmbedThumbnail : IDiscordSerializable
     {
         /// <summary>
         /// Gets the url of the thumbnail.
@@ -33,6 +35,16 @@
         public override string ToString()
         {
             return Url;
+        }
+
+        public DiscordApiData Serialize()
+        {
+            DiscordApiData data = DiscordApiData.CreateContainer();
+            data.Set("url", Url);
+            data.Set("proxy_url", ProxyUrl);
+            data.Set("width", Width);
+            data.Set("height", Height);
+            return data;
         }
     }
 }

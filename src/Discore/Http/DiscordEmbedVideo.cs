@@ -1,6 +1,8 @@
-﻿namespace Discore.Http
+﻿using System;
+
+namespace Discore.Http
 {
-    public class DiscordEmbedVideo
+    public class DiscordEmbedVideo : IDiscordSerializable
     {
         /// <summary>
         /// Gets the source url of the video.
@@ -27,6 +29,15 @@
         public override string ToString()
         {
             return Url;
+        }
+
+        public DiscordApiData Serialize()
+        {
+            DiscordApiData data = DiscordApiData.CreateContainer();
+            data.Set("url", Url);
+            data.Set("width", Width);
+            data.Set("height", Height);
+            return data;
         }
     }
 }
