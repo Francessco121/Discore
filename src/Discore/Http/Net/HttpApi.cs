@@ -9,6 +9,7 @@
         public HttpUsersEndpoint Users { get; }
         public HttpChannelsEndpoint Channels { get; }
         public HttpWebhookEndpoint Webhooks { get; }
+        public HttpVoiceEndpoint Voice { get; }
 
         public HttpApi(IDiscordAuthenticator authenticator)
         {
@@ -18,6 +19,7 @@
             Users = new HttpUsersEndpoint(client);
             Channels = new HttpChannelsEndpoint(client);
             Webhooks = new HttpWebhookEndpoint(client);
+            Voice = new HttpVoiceEndpoint(client);
         }
     }
 }
