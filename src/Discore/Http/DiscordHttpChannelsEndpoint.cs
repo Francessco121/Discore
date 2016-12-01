@@ -18,8 +18,8 @@ namespace Discore.Http
 
         #region Channel Management
 
-        public async Task<DiscordApiData> GetChannel(DiscordChannel channel)
-            => new DiscordApiData(await endpoint.Get(channel.Id));
+        public async Task<T> GetChannel<T>(Snowflake Id) where T : DiscordChannel
+         => Activator.CreateInstance(typeof(T), await endpoint.Get(Id)) as T;
 
         /// <summary>
         /// Modify a Discord Channel
@@ -30,102 +30,134 @@ namespace Discore.Http
         /// <param name="topic"/>
         /// <param name="bitrate">Voice bitrate limit; if its a <see cref="DiscordGuildChannelType.Voice"/></param>
         /// <param name="userLimit"/>
-        public async Task<DiscordApiData> ModifyChannel(DiscordChannel channel, string name = null, int? position = null,
-            string topic = null, int? bitrate = null, int? userLimit = null)
-            => new DiscordApiData(await endpoint.Modify(channel.Id, name, position, topic, bitrate, userLimit));
+        public async Task<T> ModifyChannel<T>(T channel, string name = null, int? position = null,
+            string topic = null, int? bitrate = null, int? userLimit = null) where T : DiscordChannel
+             => Activator.CreateInstance(typeof(T), await endpoint.Modify(channel.Id, name, position, topic, bitrate, userLimit)) as T;
+            //=> new T(await endpoint.Modify(channel.Id, name, position, topic, bitrate, userLimit));
 
-        public async Task<DiscordApiData> DeleteChannel(DiscordChannel channel)
-            => new DiscordApiData(await endpoint.Delete(channel.Id));
+        public async Task DeleteChannel(DiscordChannel channel)
+            => await endpoint.Delete(channel.Id);
         #endregion
 
         #region Message Management
 
-        public async Task<DiscordApiData> GetMessage(DiscordChannel channel, DiscordMessage message)
-            => new DiscordApiData(await endpoint.GetMessage(channel.Id, message.Id));
+        public async Task<DiscordMessage> GetMessage(DiscordChannel channel, DiscordMessage message)
+            => await GetMessage(channel, message.Id);
 
-        public async Task<DiscordApiData> GetMessages(DiscordChannel channel, DiscordMessage baseMessage = null, int? limit = null,
+        public async Task<DiscordMessage> GetMessage(DiscordChannel channel, Snowflake messageId)
+            => new DiscordMessage(await endpoint.GetMessage(channel.Id, messageId));
+
+        public async Task<IEnumerable<DiscordMessage>> GetMessages(DiscordChannel channel, DiscordMessage baseMessage = null, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
-            => new DiscordApiData(await endpoint.GetMessages(channel.Id, baseMessage.Id, limit, getStrategy));
+        {
+            List<DiscordMessage> toReturn = new List<DiscordMessage>();
+            DiscordApiData data = await endpoint.GetMessages(channel.Id, baseMessage.Id, limit, getStrategy);
+            foreach (DiscordApiData item in data.Values)
+                toReturn.Add(new DiscordMessage(item));
 
-        public async Task<DiscordApiData> CreateMessage(DiscordChannel channel, string content, bool tts = false, DiscordIdObject nonce = null)
-            => new DiscordApiData(await endpoint.CreateMessage(channel.Id, content, tts, nonce?.Id));
+            return toReturn;
+        }
 
-        public async Task<DiscordApiData> CreateMessage(DiscordChannel channel, string content, byte[] file, string filename = null, bool tts = false,
+        public async Task<DiscordMessage> CreateMessage(DiscordChannel channel, string content, bool tts = false, DiscordIdObject nonce = null)
+            => new DiscordMessage(await endpoint.CreateMessage(channel.Id, content, tts, nonce?.Id));
+
+        public async Task<DiscordMessage> CreateMessage(DiscordChannel channel, string content, byte[] file, string filename = null, bool tts = false,
             DiscordIdObject nonce = null)
-            => new DiscordApiData(await endpoint.CreateMessage(channel.Id, content, file, filename, tts, nonce?.Id));
+            => new DiscordMessage(await endpoint.CreateMessage(channel.Id, content, file, filename, tts, nonce?.Id));
 
-        public async Task<DiscordApiData> CreateMessage(DiscordChannel channel, string content, FileInfo file, bool tts = false, DiscordIdObject nonce = null)
+        public async Task<DiscordMessage> CreateMessage(DiscordChannel channel, string content, FileInfo file, bool tts = false, DiscordIdObject nonce = null)
         {
             using (FileStream fs = file.OpenRead())
             using (MemoryStream ms = new MemoryStream())
             {
                 await ms.CopyToAsync(ms);
-                return new DiscordApiData(await endpoint.CreateMessage(channel.Id, content, ms.ToArray(), file.Name, tts, nonce?.Id));
+                return new DiscordMessage(await endpoint.CreateMessage(channel.Id, content, ms.ToArray(), file.Name, tts, nonce?.Id));
             }
         }
 
-        public async Task<DiscordApiData> EditMessage(DiscordMessage message, string content)
-            => new DiscordApiData(await endpoint.EditMessage(message.ChannelId, message.Id, content));
+        public async Task<DiscordMessage> EditMessage(DiscordMessage message, string content)
+            => new DiscordMessage(await endpoint.EditMessage(message.ChannelId, message.Id, content));
 
-        public async Task<DiscordApiData> DeleteMessage(DiscordMessage message)
-            => new DiscordApiData(await endpoint.DeleteMessage(message.ChannelId, message.Id));
+        public async Task DeleteMessage(DiscordMessage message)
+            => await endpoint.DeleteMessage(message.ChannelId, message.Id);
 
-        public async Task<DiscordApiData> DeleteMessages(DiscordChannel channel, IEnumerable<DiscordMessage> messages)
+        public async Task DeleteMessages(DiscordChannel channel, IEnumerable<DiscordMessage> messages)
         {
             List<Snowflake> msgIds = new List<Snowflake>(messages.Count());
             foreach (DiscordMessage msg in messages)
                 msgIds.Add(msg.Id);
 
-            return new DiscordApiData(await endpoint.BulkDeleteMessages(channel.Id, msgIds));
+            await endpoint.BulkDeleteMessages(channel.Id, msgIds);
         }
 
         #endregion
 
         #region Reaction Management
 
-        public async Task<DiscordApiData> GetUsersThatReacted(DiscordMessage message, DiscordReactionEmoji emoji)
-            => new DiscordApiData(await endpoint.GetReactions(message.ChannelId, message.Id, emoji));
-
-        public async Task<DiscordApiData> AddReaction(DiscordMessage message, DiscordReactionEmoji emoji)
-            => new DiscordApiData(await endpoint.CreateReaction(message.ChannelId, message.Id, emoji));
-
-        public async Task<DiscordApiData> RemoveReaction(DiscordMessage message, DiscordReactionEmoji emoji, DiscordUser owner = null)
+        public async Task<IEnumerable<DiscordUser>> GetUsersThatReacted(DiscordMessage message, DiscordReactionEmoji emoji)
         {
-            if (owner != null) //we are deleting someone else's (or our own) reaction
-                return new DiscordApiData(await endpoint.DeleteUserReaction(message.ChannelId, message.Id, owner.Id, emoji));
-            else //we are deff deleting our own
-                return new DiscordApiData(await endpoint.DeleteOwnReaction(message.ChannelId, message.Id, emoji));
+            List<DiscordUser> toReturn = new List<DiscordUser>();
+            DiscordApiData data = await endpoint.GetReactions(message.ChannelId, message.Id, emoji);
+            foreach (DiscordApiData item in data.Values)
+                toReturn.Add(new DiscordUser(item));
+
+            return toReturn;
         }
 
-        public async Task<DiscordApiData> ClearAllReactions(DiscordMessage message)
-            => new DiscordApiData(await endpoint.DeleteAllReactions(message.ChannelId, message.Id));
+        public async Task AddReaction(DiscordMessage message, DiscordReactionEmoji emoji)
+            => await endpoint.CreateReaction(message.ChannelId, message.Id, emoji);
+
+        public async Task RemoveReaction(DiscordMessage message, DiscordReactionEmoji emoji, DiscordUser owner = null)
+        {
+            if (owner != null) //we are deleting someone else's (or our own) reaction
+                await endpoint.DeleteUserReaction(message.ChannelId, message.Id, owner.Id, emoji);
+            else //we are deff deleting our own
+                await endpoint.DeleteOwnReaction(message.ChannelId, message.Id, emoji);
+        }
+
+        public async Task ClearAllReactions(DiscordMessage message)
+            => await endpoint.DeleteAllReactions(message.ChannelId, message.Id);
 
         #endregion
 
         #region Invite Management
 
-        public async Task<DiscordApiData> GetInvites(DiscordChannel channel)
-            => new DiscordApiData(await endpoint.GetInvites(channel.Id));
+        public async Task<IEnumerable<DiscordInvite>> GetInvites(DiscordChannel channel)
+        {
+            List<DiscordInvite> toReturn = new List<DiscordInvite>();
+            DiscordApiData data = await endpoint.GetInvites(channel.Id);
+            foreach (DiscordApiData item in data.Values)
+                toReturn.Add(new DiscordInvite(item));
 
-        public async Task<DiscordApiData> CreateInvite(DiscordChannel channel,
+            return toReturn;
+        }
+
+        public async Task<DiscordInvite> CreateInvite(DiscordChannel channel,
             TimeSpan? maxAge = null, int maxUses = 0, bool temporary = false, bool unique = false)
         {
             if (!maxAge.HasValue) maxAge = TimeSpan.FromHours(24); //we default to 24 hours, just like Discord's api
-            return new DiscordApiData(await endpoint.CreateInvite(channel.Id, maxAge.Value.Seconds, maxUses, temporary, unique));
+            return new DiscordInvite(await endpoint.CreateInvite(channel.Id, maxAge.Value.Seconds, maxUses, temporary, unique));
         }
 
         #endregion
 
         #region Pinned Messages Management
 
-        public async Task<DiscordApiData> GetPinnedMessages(DiscordChannel channel)
-            => new DiscordApiData(await endpoint.GetPinnedMessages(channel.Id));
+        public async Task<IEnumerable<DiscordMessage>> GetPinnedMessages(DiscordChannel channel)
+        {
+            List<DiscordMessage> toReturn = new List<DiscordMessage>();
+            DiscordApiData data = await endpoint.GetPinnedMessages(channel.Id);
+            foreach (DiscordApiData item in data.Values)
+                toReturn.Add(new DiscordMessage(item));
 
-        public async Task<DiscordApiData> PinMessage(DiscordMessage message)
-            => new DiscordApiData(await endpoint.AddPinnedChannelMessage(message.ChannelId, message.Id));
+            return toReturn;
+        }
 
-        public async Task<DiscordApiData> UnpinMessage(DiscordMessage message)
-            => new DiscordApiData(await endpoint.DeletePinnedChannelMessage(message.ChannelId, message.Id));
+        public async Task PinMessage(DiscordMessage message)
+            => await endpoint.AddPinnedChannelMessage(message.ChannelId, message.Id);
+
+        public async Task UnpinMessage(DiscordMessage message)
+            => await endpoint.DeletePinnedChannelMessage(message.ChannelId, message.Id);
 
         #endregion
 
