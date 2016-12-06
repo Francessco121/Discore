@@ -735,11 +735,9 @@ namespace Discore
             {
                 string key = pair.Key;
                 DiscordApiData data = pair.Value;
-                if (!data.IsNull)
-                {
-                    writer.WritePropertyName(key);
-                    ApiDataToJson(data, writer);
-                }
+
+                writer.WritePropertyName(key);
+                ApiDataToJson(data, writer);
             }
 
             writer.WriteEndObject();
@@ -752,8 +750,8 @@ namespace Discore
             for (int i = 0; i < apiDataArray.Count; i++)
             {
                 DiscordApiData apiData = apiDataArray[i];
-                if (!apiData.IsNull)
-                    ApiDataToJson(apiData, writer);
+
+                ApiDataToJson(apiData, writer);
             }
 
             writer.WriteEndArray();
