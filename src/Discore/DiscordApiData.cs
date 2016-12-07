@@ -429,6 +429,21 @@ namespace Discore
 
             return null;
         }
+
+        /// <summary>
+        /// If a container type, gets the DiscordColor at the given key.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public DiscordColor? GetColor(string key)
+        {
+            AssertContainer();
+
+            int? nestedData = GetInteger(key);
+            if (nestedData.HasValue)
+                return DiscordColor.FromHexadecimal(nestedData.Value);
+
+            return null;
+        }
         #endregion
 
         #region Set*
@@ -481,6 +496,41 @@ namespace Discore
 
             data[key] = value ?? new DiscordApiData(value);
             return value;
+        }
+
+        /// <summary>
+        /// Sets a DiscordColor value in this api data container.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public DiscordApiData Set(string key, DiscordColor value)
+        {
+            AssertContainer();
+
+            DiscordApiData apiData = new DiscordApiData(value.ToHexadecimal());
+            data[key] = apiData;
+            return apiData;
+        }
+
+        /// <summary>
+        /// Sets a DiscordColor value in this api data container.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
+        public DiscordApiData Set(string key, DiscordColor? value)
+        {
+            AssertContainer();
+
+            DiscordApiData apiData = value.HasValue ? new DiscordApiData(value.Value) : new DiscordApiData(value: null);
+            data[key] = apiData;
+            return apiData;
+        }
+
+        public DiscordApiData Set(string key, DateTime value)
+        {
+            AssertContainer();
+
+            DiscordApiData apiData = new DiscordApiData(value.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+            data[key] = apiData;
+            return apiData;
         }
 
         /// <summary>

@@ -5,6 +5,10 @@
     /// </summary>
     public struct DiscordColor
     {
+        static readonly DiscordColor _DefaultEmbed = FromHexadecimal(0x4f545c);
+
+        public static DiscordColor DefaultEmbed => _DefaultEmbed;
+
         /// <summary>
         /// The red component of the color.
         /// </summary>

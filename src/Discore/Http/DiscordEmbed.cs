@@ -32,7 +32,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets the color code of this embed.
         /// </summary>
-        public int Color { get; private set; }
+        public DiscordColor Color { get; private set; }
         /// <summary>
         /// Gets the footer information.
         /// </summary>
@@ -68,8 +68,8 @@ namespace Discore.Http
             Type = data.GetString("type");
             Description = data.GetString("description");
             Url = data.GetString("url");
-            Timestamp = data.GetDateTime("timestamp").Value;
-            Color = data.GetInteger("color").Value;
+            Timestamp = data.GetDateTime("timestamp") ?? DateTime.UtcNow;
+            Color = data.GetColor("color") ?? DiscordColor.DefaultEmbed;
 
             DiscordApiData footerData = data.Get("footer");
             if (footerData != null)
