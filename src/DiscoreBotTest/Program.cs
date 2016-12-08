@@ -3,6 +3,7 @@ using Discore.Http.Net;
 using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 
@@ -55,7 +56,17 @@ namespace DiscoreBotTest
             {
                 //if (message.Content.Contains("give me some porn"))
                 //{
-                    //var webHooks = app.HttpApi.Webhooks.GetWebhooks(message.Channel);
+                var webHooks = app.HttpApi.Webhooks.GetWebhooks(new Snowflake(192362318053507072)).Result;
+
+                var data = DiscordApiData.CreateContainer();
+                data.Set("title", "test");
+                data.Set("description", "Hello World");
+                var embed = new Discore.Http.DiscordEmbed(data);
+
+                List<Discore.Http.DiscordEmbed> embeds = new List<Discore.Http.DiscordEmbed>();
+                embeds.Add(embed);
+
+                app.HttpApi.Webhooks.ExecuteWebhook(webHooks[0], embeds).Wait();
 
                     //string[] porn = new string[] {
                     //    "69jym8z.jpg",
@@ -115,9 +126,6 @@ namespace DiscoreBotTest
                     break;
                 case DiscoreLogType.Warning:
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    break;
-                case DiscoreLogType.Important:
-                    Console.ForegroundColor = ConsoleColor.Green;
                     break;
                 case DiscoreLogType.Verbose:
                     Console.ForegroundColor = ConsoleColor.DarkGray;

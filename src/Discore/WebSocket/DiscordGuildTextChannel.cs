@@ -151,7 +151,7 @@ namespace Discore.WebSocket
                     {
                         if (firstOrOnlyMessageData == null)
                         {
-                            DiscordApiData msgData = await channelsHttp.CreateMessage(Id, message, fileAttachment, null, tts);
+                            DiscordApiData msgData = await channelsHttp.UploadFile(Id, fileAttachment, null, message, tts);
                             firstOrOnlyMessageData = msgData;
                         }
                         else
@@ -159,7 +159,7 @@ namespace Discore.WebSocket
                     });
             }
             else
-                firstOrOnlyMessageData = await channelsHttp.CreateMessage(Id, content, fileAttachment, null, tts);
+                firstOrOnlyMessageData = await channelsHttp.UploadFile(Id, fileAttachment, null, content, tts);
 
             DiscordMessage msg = new DiscordMessage(Shard);
             msg.Update(firstOrOnlyMessageData);

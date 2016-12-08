@@ -58,31 +58,6 @@ namespace Discore.Http.Net
             return await Rest.Post($"channels/{channelId}/messages", data, "CreateMessage");
         }
 
-        public async Task<DiscordApiData> CreateMessage(Snowflake channelId, 
-            string content, 
-            byte[] file, 
-            string filename = null, 
-            bool? tts = null, 
-            Snowflake? nonce = null)
-        {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
-                $"{RestClient.BASE_URL}/channels/{channelId}/messages");
-
-            DiscordApiData stringContent = DiscordApiData.CreateContainer();
-
-            if (content != null) stringContent.Set("content", content);
-            if (tts.HasValue) stringContent.Set("tts", tts.Value);
-            if (nonce.HasValue) stringContent.Set("nonce", nonce.Value);
-
-            MultipartFormDataContent data = new MultipartFormDataContent();
-
-            data.Add(new ByteArrayContent(file), "file", filename ?? "unknown.jpg");
-            data.Add(new StringContent(null, Encoding.UTF8, "application/json"));
-            request.Content = data;
-
-            return await Rest.Send(request, "UploadFile");
-        }
-
         public async Task<DiscordApiData> CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
             return await Rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "CreateReaction");
@@ -108,15 +83,14 @@ namespace Discore.Http.Net
             return await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions", "DeleteAllReactions");
         }
         
-        [System.Obsolete("Use CreateMessage Overload instead", true)] //ethan pls
-        public async Task<DiscordApiData> UploadFile(Snowflake channelId, byte[] file, 
+        public async Task<DiscordApiData> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
             string message = null, bool? tts = null, Snowflake? nonce = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
                 $"{RestClient.BASE_URL}/channels/{channelId}/messages");
 
             MultipartFormDataContent data = new MultipartFormDataContent();
-            data.Add(new ByteArrayContent(file), "file", "file.jpeg");
+            data.Add(new ByteArrayContent(file), "file", filename);
             request.Content = data;
 
             if (message != null) request.Properties.Add("content", message);
