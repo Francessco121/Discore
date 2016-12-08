@@ -1,7 +1,8 @@
 # [Discore](https://bundledsticksinkorperated.github.io/Discore/) v2
 ### _Discord + .NET Core = Discore_
 
-~~There is a [NuGet](https://www.nuget.org/packages/Discore) package, install with `Install-Package Discore` from the Package Manager Console~~ NuGet isn't updated for this branch as of yet
+There is a [NuGet](https://www.nuget.org/packages/Discore) package, install with `Install-Package Discore -Pre` from the Package Manager Console. 
+The NuGet package is updated after each commit (suffixed with the SHA1 commit hash) so some things will change/break/explode without warning.
 
 Discore is library written in pure [.NET Core](https://dotnet.github.io/) for creating various kinds of bots for the popular communications client [Discord](https://discordapp.com/)
 
