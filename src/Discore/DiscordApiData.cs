@@ -753,24 +753,29 @@ namespace Discore
         }
         #endregion
 
-        static readonly DiscordApiData _valueType = new DiscordApiData(DiscordApiDataType.Value);
-        static readonly DiscordApiData _containerType = new DiscordApiData(DiscordApiDataType.Container);
-        static readonly DiscordApiData _arrayType = new DiscordApiData(DiscordApiDataType.Array);
-
         /// <summary>
         /// Creates a new value-type <see cref="DiscordApiData"/>.
         /// </summary>
-        public static DiscordApiData ValueType => _valueType;
+        public static DiscordApiData CreateValue()
+        {
+            return new DiscordApiData(DiscordApiDataType.Value);
+        }
 
         /// <summary>
         /// Creates a new container-type <see cref="DiscordApiData"/>.
         /// </summary>
-        public static DiscordApiData ContainerType => _containerType;
+        public static DiscordApiData CreateContainer()
+        {
+            return new DiscordApiData(DiscordApiDataType.Container);
+        }
 
         /// <summary>
         /// Creates a new array-type <see cref="DiscordApiData"/>.
         /// </summary>
-        public static DiscordApiData ArrayType => _arrayType;
+        public static DiscordApiData CreateArray()
+        {
+            return new DiscordApiData(DiscordApiDataType.Array);
+        }
 
         /// <summary>
         /// Serializes this api data object to a JSON string.
