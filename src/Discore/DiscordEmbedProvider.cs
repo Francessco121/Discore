@@ -14,7 +14,7 @@
         /// </summary>
         public string Url { get; }
 
-        public DiscordEmbedProvider(DiscordApiData data)
+        internal DiscordEmbedProvider(DiscordApiData data)
         {
             Name = data.GetString("name");
             Url = data.GetString("url");

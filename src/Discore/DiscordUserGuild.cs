@@ -22,7 +22,7 @@
         /// </summary>
         public DiscordPermission Permissions { get; }
 
-        public DiscordUserGuild(DiscordApiData data)
+        internal DiscordUserGuild(DiscordApiData data)
             : base(data)
         {
             Name = data.GetString("name");

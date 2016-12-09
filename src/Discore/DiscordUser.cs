@@ -38,6 +38,7 @@
         public string Email { get; }
 
         internal DiscordUser(DiscordApiData data)
+            : base(data)
         {
             Username         = data.GetString("username");
             Discriminator    = data.GetString("discriminator");

@@ -54,6 +54,8 @@ namespace Discore
         { }
 
         private DiscordGuildMember(DiscordApiData data, Snowflake guildId, bool isWebSocket)
+            // We do not specify the base constructor here because the member ID must be
+            // manually retrieved, as it is actually the user id rather than a unique one.
         {
             GuildId = guildId;
 

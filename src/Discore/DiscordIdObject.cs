@@ -1,4 +1,6 @@
-﻿namespace Discore
+﻿using System;
+
+namespace Discore
 {
     /// <summary>
     /// The base class for all Discord API objects that contain an id.
@@ -10,7 +12,7 @@
         /// </summary>
         public Snowflake Id { get; protected set; }
 
-        override internal Snowflake DictionaryId { get { return Id; } }
+        internal override Snowflake DictionaryId { get { return Id; } }
 
         internal DiscordIdObject() { }
 

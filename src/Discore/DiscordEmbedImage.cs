@@ -22,7 +22,7 @@
         /// </summary>
         public int Height { get; }
 
-        public DiscordEmbedImage(DiscordApiData data)
+        internal DiscordEmbedImage(DiscordApiData data)
         {
             Url = data.GetString("url");
             ProxyUrl = data.GetString("proxy_url");

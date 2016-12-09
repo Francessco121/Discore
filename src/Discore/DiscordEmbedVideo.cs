@@ -17,7 +17,7 @@
         /// </summary>
         public int Height { get; }
 
-        public DiscordEmbedVideo(DiscordApiData data)
+        internal DiscordEmbedVideo(DiscordApiData data)
         {
             Url = data.GetString("url");
             Width = data.GetInteger("width").Value;

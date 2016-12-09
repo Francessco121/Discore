@@ -109,6 +109,7 @@ namespace Discore
         { }
 
         private DiscordMessage(IDiscordApplication app, DiscordApiData data, bool isWebSocket)
+            : base(data)
         {
             this.app = app;
             channelsHttp = app.HttpApi.InternalApi.Channels;

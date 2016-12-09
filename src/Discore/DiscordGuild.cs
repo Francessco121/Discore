@@ -126,6 +126,7 @@ namespace Discore
         { }
 
         private DiscordGuild(DiscordApiData data, bool isWebSocket)
+            : base(data)
         {
             IsUnavailable = data.GetBoolean("unavailable") ?? false;
             if (IsUnavailable)

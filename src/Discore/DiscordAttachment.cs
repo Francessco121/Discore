@@ -28,6 +28,7 @@
         public int? Height { get; }
 
         internal DiscordAttachment(DiscordApiData data)
+            : base(data)
         {
             FileName = data.GetString("filename");
             Size     = data.GetInteger("size").Value;

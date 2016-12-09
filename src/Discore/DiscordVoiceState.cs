@@ -3,10 +3,8 @@
     /// <summary>
     /// Used to represent a user's voice connection status.
     /// </summary>
-    public class DiscordVoiceState : DiscordHashableObject
+    public sealed class DiscordVoiceState
     {
-        internal override Snowflake DictionaryId { get { return UserId; } }
-
         /// <summary>
         /// Gets the id of the guild this voice state is for.
         /// </summary>

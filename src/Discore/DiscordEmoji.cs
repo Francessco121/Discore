@@ -22,6 +22,7 @@ namespace Discore
         public bool IsManaged { get; }
 
         internal DiscordEmoji(DiscordApiData data)
+            : base(data)
         {
             Name = data.GetString("name");
             RequireColons = data.GetBoolean("require_colons").Value;
