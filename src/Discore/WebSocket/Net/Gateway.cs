@@ -54,6 +54,28 @@ namespace Discore.WebSocket.Net
             socket.OnMessageReceived += Socket_OnMessageReceived;
         }
 
+        /// <param name="forceFindNew">Whether to call the HTTP forcefully, or use the local cached value.</param>
+        string GetGatewayUrl(bool forceFindNew = false)
+        {
+            DiscoreLocalStorage localStorage = DiscoreLocalStorage.Instance;
+
+            string gatewayUrl = localStorage.GatewayUrl;
+            if (forceFindNew || string.IsNullOrWhiteSpace(gatewayUrl))
+            {
+                try
+                {
+                    DiscordApiData getData = app.HttpApi.InternalApi.Gateway.Get().Result;
+                    gatewayUrl = getData.GetString("url");
+                }
+                catch (AggregateException aex) { throw aex.InnerException; }
+
+                localStorage.GatewayUrl = gatewayUrl;
+                localStorage.Save();
+            }
+
+            return gatewayUrl;
+        }
+
         /// <param name="gatewayResume">Will send a resume payload instead of an identify upon reconnecting when true.</param>
         public bool Connect(bool gatewayResume = false)
         {
@@ -63,15 +85,8 @@ namespace Discore.WebSocket.Net
                 if (!gatewayResume)
                     Reset();
 
-                // Attempt to connect socket
-                // TODO: gateway endpoint should be retrieved from a cache,
-                // and GET /gateway should be called when this connect fails
-                // to ensure we have the correct endpoint.
-                // OR
-                // the endpoint can be passed from higher up,
-                // since GET /gateway/bot is now a thing and needs to be managed
-                // from a higher point.
-                if (socket.Connect($"{"wss://gateway.discord.gg/"}/?encoding=json&v={GATEWAY_VERSION}"))
+                string gatewayUrl = GetGatewayUrl();
+                if (socket.Connect($"{gatewayUrl}/?encoding=json&v={GATEWAY_VERSION}"))
                 {
                     if (gatewayResume)
                         SendResumePayload();
@@ -97,6 +112,19 @@ namespace Discore.WebSocket.Net
                     else
                         // We timed out, but the socket is still connected.
                         socket.Disconnect();
+                }
+                else
+                {
+                    // Since we failed to connect, try and find the new gateway url.
+                    string newGatewayUrl = GetGatewayUrl(true);
+                    if (gatewayUrl != newGatewayUrl)
+                    {
+                        // If the endpoint did change, overwrite it in storage.
+                        DiscoreLocalStorage localStorage = DiscoreLocalStorage.Instance;
+                        localStorage.GatewayUrl = newGatewayUrl;
+
+                        localStorage.Save();
+                    }
                 }
             }
             
