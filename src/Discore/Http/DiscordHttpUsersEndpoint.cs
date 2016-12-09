@@ -5,10 +5,12 @@ namespace Discore.Http
 {
     public sealed class DiscordHttpUsersEndpoint
     {
+        IDiscordApplication app;
         HttpUsersEndpoint endpoint;
 
-        internal DiscordHttpUsersEndpoint(HttpUsersEndpoint endpoint)
+        internal DiscordHttpUsersEndpoint(IDiscordApplication app, HttpUsersEndpoint endpoint)
         {
+            this.app = app;
             this.endpoint = endpoint;
         }
 
@@ -52,7 +54,7 @@ namespace Discore.Http
             DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
 
             for (int i = 0; i < dms.Length; i++)
-                dms[i] = new DiscordDMChannel(data.Values[i]);
+                dms[i] = new DiscordDMChannel(app, data.Values[i]);
 
             return dms;
         }

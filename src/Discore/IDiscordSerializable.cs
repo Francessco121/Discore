@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    internal interface IDiscordSerializable
+    interface IDiscordSerializable
     {
         DiscordApiData Serialize();
     }

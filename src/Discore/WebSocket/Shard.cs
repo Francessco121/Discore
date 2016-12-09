@@ -31,25 +31,9 @@ namespace Discore.WebSocket
         public event EventHandler<ShardFailureEventArgs> OnFailure;
 
         /// <summary>
-        /// Gets a table of all guilds managed by this shard.
+        /// Gets the local memory cache of data from the Discord API.
         /// </summary>
-        public DiscordApiCacheTable<DiscordGuild> Guilds { get; }
-        /// <summary>
-        /// Gets a table of all channels managed by this shard.
-        /// </summary>
-        public DiscordApiCacheTable<DiscordChannel> Channels { get; }
-        /// <summary>
-        /// Gets a table of all roles managed by this shard.
-        /// </summary>
-        public DiscordApiCacheTable<DiscordRole> Roles { get; }
-        /// <summary>
-        /// Gets a table of all DM channels managed by this shard.
-        /// </summary>
-        public DiscordApiCacheTable<DiscordDMChannel> DirectMessageChannels { get; }
-        /// <summary>
-        /// Gets a table of all users managed by this shard.
-        /// </summary>
-        public DiscordApiCacheTable<DiscordUser> Users { get; }
+        public DiscoreCache Cache { get; }
 
         /// <summary>
         /// Gets the user used to authenticate this shard connection.
@@ -90,11 +74,8 @@ namespace Discore.WebSocket
 
             log = new DiscoreLogger($"Shard#{shardId}");
 
-            Guilds = new DiscordApiCacheTable<DiscordGuild>();
-            Channels = new DiscordApiCacheTable<DiscordChannel>();
-            Roles = new DiscordApiCacheTable<DiscordRole>();
-            DirectMessageChannels = new DiscordApiCacheTable<DiscordDMChannel>();
-            Users = new DiscordApiCacheTable<DiscordUser>();
+            Cache = new DiscoreCache();
+
             VoiceConnectionsTable = new ConcurrentDictionary<Snowflake, DiscordVoiceConnection>();
 
             InternalGateway = new Gateway(app, this);
@@ -115,37 +96,32 @@ namespace Discore.WebSocket
         /// offline members in a guild that is considered "large". "Large" guilds
         /// will not automatically have the offline members available.
         /// <para>
-        /// Members requested here will be returned via the callback and available
-        /// in <see cref="DiscordGuild.Members"/>.
+        /// Members requested here will be returned via the callback and available in the cache.
         /// </para>
         /// </summary>
         /// <param name="callback">Action to be invoked if the members are successfully retrieved.</param>
-        /// <param name="guild">The guild to retrieve members from.</param>
+        /// <param name="guildId">The if of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
-        public void RequestGuildMembers(Action<DiscordApiCacheIdSet<DiscordGuildMember>> callback, DiscordGuild guild, 
+        public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId, 
             string query = "", int limit = 0)
         {
             // Create GUILD_MEMBERS_CHUNK event handler
-            EventHandler<Snowflake[]> eventHandler = null;
-            eventHandler = (sender, ids) => 
+            EventHandler<DiscordGuildMember[]> eventHandler = null;
+            eventHandler = (sender, members) => 
             {
                 // Unhook event handler
                 InternalGateway.OnGuildMembersChunk -= eventHandler;
 
-                // Return ids
-                DiscordApiCacheIdSet<DiscordGuildMember> set = new DiscordApiCacheIdSet<DiscordGuildMember>(guild.Members);
-                for (int i = 0; i < ids.Length; i++)
-                    set.Add(ids[i]);
-
-                callback(set);
+                // Return members
+                callback(members);
             };
 
             // Hook in event handler
             InternalGateway.OnGuildMembersChunk += eventHandler;
 
             // Send gateway request
-            InternalGateway.SendRequestGuildMembersPayload(guild.Id, query, limit);
+            InternalGateway.SendRequestGuildMembersPayload(guildId, query, limit);
         }
 
         /// <summary>
@@ -161,28 +137,37 @@ namespace Discore.WebSocket
         internal DiscordVoiceConnection ConnectToVoice(DiscordGuildVoiceChannel voiceChannel)
         {
             DiscordVoiceConnection connection;
-            if (VoiceConnectionsTable.TryRemove(voiceChannel.Guild.Id, out connection))
+            if (VoiceConnectionsTable.TryRemove(voiceChannel.GuildId, out connection))
                 // Close any existing connection.
                 connection.Disconnect();
 
-            DiscordGuildMember member;
-            if (voiceChannel.Guild.Members.TryGetValue(User.Id, out member))
+            // Get the guild cache
+            DiscoreGuildCache guildCache;
+            if (Cache.Guilds.TryGetValue(voiceChannel.GuildId, out guildCache))
             {
-                connection = new DiscordVoiceConnection(this, voiceChannel.Guild, member, voiceChannel);
-                if (VoiceConnectionsTable.TryAdd(voiceChannel.Guild.Id, connection))
+                // Get the authenticated user's guild member from cache
+                DiscoreMemberCache memberCache;
+                if (guildCache.Members.TryGetValue(User.Id, out memberCache))
                 {
-                    // Initiate connection
-                    InternalGateway.SendVoiceStateUpdatePayload(voiceChannel.Guild.Id, voiceChannel.Id, false, false);
-                    return connection;
+                    // Create the new connection
+                    connection = new DiscordVoiceConnection(this, guildCache, memberCache, voiceChannel);
+                    if (VoiceConnectionsTable.TryAdd(voiceChannel.GuildId, connection))
+                    {
+                        // Initiate connection
+                        InternalGateway.SendVoiceStateUpdatePayload(voiceChannel.GuildId, voiceChannel.Id, false, false);
+                        return connection;
+                    }
+                    else
+                        // Connection already exists, just return the existing one.
+                        return VoiceConnectionsTable[voiceChannel.GuildId];
                 }
                 else
-                    // Connection already exists, just return the existing one.
-                    return VoiceConnectionsTable[voiceChannel.Guild.Id];
+                    // This really should never ever ever happen.
+                    throw new ArgumentException("The current authenticated user is not a member of the specified guild.",
+                        nameof(voiceChannel));
             }
             else
-                // This really should never ever ever happen.
-                throw new ArgumentException("The current authenticated user is not a member of the specified guild.", 
-                    nameof(voiceChannel));
+                throw new DiscoreCacheException("The specified guild does not exist in the local cache.");
         }
 
         private void Gateway_OnFatalDisconnection(object sender, GatewayDisconnectCode e)
@@ -243,11 +228,7 @@ namespace Discore.WebSocket
 
         void CleanUp()
         {
-            Guilds.Clear();
-            Channels.Clear();
-            Roles.Clear();
-            DirectMessageChannels.Clear();
-            Users.Clear();
+            Cache.Clear();
             VoiceConnectionsTable.Clear();
         }
 

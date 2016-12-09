@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// A Discord application which only works with the Discord http/restful api.
     /// </summary>
-    public class DiscordHttpApplication
+    public class DiscordHttpApplication : IDiscordApplication
     {
         /// <summary>
         /// Gets the authenticator used for this application.
@@ -22,7 +22,7 @@ namespace Discore
             Authenticator = authenticator;
 
             HttpApi api = new HttpApi(authenticator);
-            HttpApi = new DiscordHttpApi(api);
+            HttpApi = new DiscordHttpApi(this, api);
         }
     }
 }

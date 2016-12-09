@@ -34,9 +34,9 @@ namespace Discore.WebSocket.Audio
 
         Thread receiveThread;
 
-        public VoiceUDPSocket(DiscordGuild guild, string hostname, int port)
+        public VoiceUDPSocket(DiscoreGuildCache guildCache, string hostname, int port)
         {
-            log = new DiscoreLogger($"VoiceUDPSocket:{guild.Name}");
+            log = new DiscoreLogger($"VoiceUDPSocket:{guildCache.Value.Name}");
 
             IPAddress ip = Dns.GetHostAddressesAsync(hostname).Result.FirstOrDefault();
             endpoint = new IPEndPoint(ip, port);

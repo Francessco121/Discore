@@ -9,7 +9,7 @@ namespace Discore.WebSocket.Audio
 {
     class VoiceSocket : IDisposable
     {
-        public DiscordGuildMember Member { get { return member; } }
+        public DiscordGuildMember Member { get { return memberCache.Value; } }
         public bool IsConnected { get { return socket.State == WebSocketState.Open; } }
 
         public int BytesToSend { get { return sendBuffer.Count; } }
@@ -17,7 +17,8 @@ namespace Discore.WebSocket.Audio
         public event EventHandler<Exception> OnError;
 
         DiscoreWebSocket socket;
-        DiscordGuildMember member;
+        DiscoreGuildCache guildCache;
+        DiscoreMemberCache memberCache;
         string endpoint;
         string token;
         int heartbeatInterval;
@@ -52,11 +53,12 @@ namespace Discore.WebSocket.Audio
                 return SecretBoxEasy(outPtr + outputOffset, input, inputLength, nonce, secret);
         }
 
-        public VoiceSocket(DiscordGuildMember member)
+        public VoiceSocket(DiscoreGuildCache guildCache, DiscoreMemberCache memberCache)
         {
-            this.member = member;
+            this.guildCache = guildCache;
+            this.memberCache = memberCache;
 
-            log = new DiscoreLogger($"VoiceSocket:{member.Guild.Name}");
+            log = new DiscoreLogger($"VoiceSocket:{guildCache.Value.Name}");
 
             socket = new DiscoreWebSocket(WebSocketDataType.Json, log.Prefix);
 
@@ -84,11 +86,11 @@ namespace Discore.WebSocket.Audio
         void CreateThreads()
         {
             sendThread = new Thread(SendLoop);
-            sendThread.Name = $"VoiceSocket:{member.Guild.Name} Send Thread";
+            sendThread.Name = $"VoiceSocket:{guildCache.Value.Name} Send Thread";
             sendThread.IsBackground = true;
 
             heartbeatThread = new Thread(HeartbeatLoop);
-            heartbeatThread.Name = $"VoiceSocket:{member.Guild.Name} Heartbeat Thread";
+            heartbeatThread.Name = $"VoiceSocket:{guildCache.Value.Name} Heartbeat Thread";
             heartbeatThread.IsBackground = true;
         }
 
@@ -225,12 +227,12 @@ namespace Discore.WebSocket.Audio
         void SendIdentifyPayload()
         {
             DiscordApiData data = new DiscordApiData();
-            data.Set("server_id", member.Guild.Id);
-            data.Set("user_id", member.User.Id);
-            data.Set("session_id", member.VoiceState.SessionId);
+            data.Set("server_id", guildCache.Value.Id);
+            data.Set("user_id", memberCache.Value.User.Id);
+            data.Set("session_id", memberCache.VoiceState.SessionId);
             data.Set("token", token);
 
-            log.LogVerbose($"[Identify] Sending identify with server_id: {member.Guild.Id}");
+            log.LogVerbose($"[Identify] Sending identify with server_id: {guildCache.Value.Id}");
             SendPayload(VoiceSocketOPCode.Identify, data);
         }
 
@@ -260,7 +262,7 @@ namespace Discore.WebSocket.Audio
 
             log.LogVerbose($"[Ready] ssrc: {ssrc}, port: {port}");
 
-            udpSocket = new VoiceUDPSocket(member.Guild, endpoint, port);
+            udpSocket = new VoiceUDPSocket(guildCache, endpoint, port);
             udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
             udpSocket.OnError += UdpSocket_OnError;
 

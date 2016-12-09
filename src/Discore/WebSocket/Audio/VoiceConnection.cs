@@ -58,11 +58,11 @@ namespace Discore.WebSocket.Audio
         /// <summary>
         /// Gets the guild this voice connection is in.
         /// </summary>
-        public DiscordGuild Guild { get; }
+        public DiscordGuild Guild { get { return guildCache.Value; } }
         /// <summary>
         /// Gets the member this connection is communicating through.
         /// </summary>
-        public DiscordGuildMember Member { get; }
+        public DiscordGuildMember Member { get { return memberCache.Value; } }
 
         /// <summary>
         /// Gets the current voice channel this connection is in.
@@ -71,7 +71,12 @@ namespace Discore.WebSocket.Audio
         {
             // Voice state will not be immediately available,
             // so return the initial voice channel while we are still connecting.
-            get { return voiceState != null ? voiceState.Channel : intialVoiceChannel; }
+            get
+            {
+                return voiceState != null && voiceState.ChannelId.HasValue 
+                    ? guildCache.VoiceChannels.Get(voiceState.ChannelId.Value) 
+                    : intialVoiceChannel;
+            }
         }
         /// <summary>
         /// Gets whether this connection is connected.
@@ -90,6 +95,9 @@ namespace Discore.WebSocket.Audio
         /// </summary>
         public int BytesToSend { get { return socket.BytesToSend; } }
 
+        DiscoreGuildCache guildCache;
+        DiscoreMemberCache memberCache;
+
         VoiceSocket socket;
         DiscordVoiceState voiceState;
         DiscoreLogger log;
@@ -102,21 +110,22 @@ namespace Discore.WebSocket.Audio
 
         bool isSpeaking;
 
-        internal DiscordVoiceConnection(Shard shard, DiscordGuild guild, DiscordGuildMember member,
+        internal DiscordVoiceConnection(Shard shard, DiscoreGuildCache guildCache, DiscoreMemberCache memberCache,
             DiscordGuildVoiceChannel intialVoiceChannel)
         {
             Shard = shard;
-            Guild = guild;
-            Member = member;
+
+            this.guildCache = guildCache;
+            this.memberCache = memberCache;
 
             this.intialVoiceChannel = intialVoiceChannel;
 
-            log = new DiscoreLogger($"VoiceConnection:{guild.Name}");
+            log = new DiscoreLogger($"VoiceConnection:{guildCache.Value.Name}");
 
             isValid = true;
             isSpeaking = true;
 
-            socket = new VoiceSocket(member);
+            socket = new VoiceSocket(guildCache, memberCache);
             socket.OnError += Socket_OnError;
         }
 

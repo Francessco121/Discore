@@ -31,12 +31,16 @@ namespace Discore.WebSocket.Net
         bool isDisposed;
         bool isReconnecting;
 
+        DiscoreCache cache;
+
         const int GATEWAY_VERSION = 5;
 
         internal Gateway(DiscordWebSocketApplication app, Shard shard)
         {
             this.app = app;
             this.shard = shard;
+
+            cache = shard.Cache;
 
             string logName = $"Gateway#{shard.Id}";
                

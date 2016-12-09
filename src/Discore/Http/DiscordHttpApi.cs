@@ -7,9 +7,13 @@ namespace Discore.Http
         public DiscordHttpUsersEndpoint Users { get; }
         public DiscordHttpWebhookEndpoint Webhooks { get; }
 
-        internal DiscordHttpApi(HttpApi api)
+        internal HttpApi InternalApi { get; }
+
+        internal DiscordHttpApi(IDiscordApplication app, HttpApi api)
         {
-            Users = new DiscordHttpUsersEndpoint(api.Users);
+            InternalApi = api;
+
+            Users = new DiscordHttpUsersEndpoint(app, api.Users);
             Webhooks = new DiscordHttpWebhookEndpoint(api.Webhooks);
         }
     }
