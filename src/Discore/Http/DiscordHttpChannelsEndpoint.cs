@@ -9,10 +9,12 @@ namespace Discore.Http
 {
     public sealed class DiscordHttpChannelsEndpoint
     {
+        IDiscordApplication app;
         HttpChannelsEndpoint endpoint;
 
-        internal DiscordHttpChannelsEndpoint(HttpChannelsEndpoint endpoint)
+        internal DiscordHttpChannelsEndpoint(IDiscordApplication app, HttpChannelsEndpoint endpoint)
         {
+            this.app = app;
             this.endpoint = endpoint;
         }
 
@@ -30,13 +32,13 @@ namespace Discore.Http
                 if (!isPrivate.Value && !string.IsNullOrWhiteSpace(channelType))
                 {
                     if (channelType == "voice") // if voice channel
-                        toReturn = new DiscordGuildVoiceChannel(data);
+                        toReturn = new DiscordGuildVoiceChannel(app, data);
 
                     // else we assume text channel
-                    toReturn = new DiscordGuildTextChannel(data);
+                    toReturn = new DiscordGuildTextChannel(app, data);
                 }
                 else if (isPrivate.Value)
-                    toReturn = new DiscordDMChannel(data);
+                    toReturn = new DiscordDMChannel(app, data);
             }
 
             throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)} or something messed up bigtime.");
@@ -87,7 +89,7 @@ namespace Discore.Http
             => await GetMessage(channel.Id, message.Id);
 
         public async Task<DiscordMessage> GetMessage(Snowflake channelId, Snowflake messageId)
-            => new DiscordMessage(await endpoint.GetMessage(channelId, messageId));
+            => new DiscordMessage(app, await endpoint.GetMessage(channelId, messageId));
 
         public async Task<IEnumerable<DiscordMessage>> GetMessages(DiscordChannel channel,
             DiscordMessage baseMessage = null,
@@ -103,7 +105,7 @@ namespace Discore.Http
             List<DiscordMessage> toReturn = new List<DiscordMessage>();
             DiscordApiData data = await endpoint.GetMessages(channelId, baseMessageId, limit, getStrategy);
             foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordMessage(item));
+                toReturn.Add(new DiscordMessage(app, item));
 
             return toReturn;
         }
@@ -112,7 +114,7 @@ namespace Discore.Http
             => await CreateMessage(channel.Id, content, tts, nonce);
 
         public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, DiscordIdObject nonce = null)
-            => new DiscordMessage(await endpoint.CreateMessage(channelId, content, tts, nonce?.Id));
+            => new DiscordMessage(app, await endpoint.CreateMessage(channelId, content, tts, nonce?.Id));
 
         public async Task<DiscordMessage> UploadFile(DiscordChannel channel, string content, byte[] file, string filename = "unknown.jpg", bool tts = false,
            DiscordIdObject nonce = null)
@@ -120,7 +122,7 @@ namespace Discore.Http
 
         public async Task<DiscordMessage> UploadFile(Snowflake channelId, string content, byte[] file, string filename = "unknown.jpg", bool tts = false,
             DiscordIdObject nonce = null)
-            => new DiscordMessage(await endpoint.UploadFile(channelId, file, filename, content, tts, nonce?.Id));
+            => new DiscordMessage(app, await endpoint.UploadFile(channelId, file, filename, content, tts, nonce?.Id));
 
         public async Task<DiscordMessage> UploadFile(DiscordChannel channel, string content, FileInfo file, bool tts = false, DiscordIdObject nonce = null)
             => await UploadFile(channel.Id, content, file, tts, nonce);
@@ -131,7 +133,7 @@ namespace Discore.Http
             using (MemoryStream ms = new MemoryStream())
             {
                 await ms.CopyToAsync(ms);
-                return new DiscordMessage(await endpoint.UploadFile(channelId, ms.ToArray(), file.Name, content, tts, nonce?.Id));
+                return new DiscordMessage(app, await endpoint.UploadFile(channelId, ms.ToArray(), file.Name, content, tts, nonce?.Id));
             }
         }
 
@@ -139,7 +141,7 @@ namespace Discore.Http
             => await EditMessage(message.ChannelId, message.Id, content);
 
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
-            => new DiscordMessage(await endpoint.EditMessage(channelId, messageId, content));
+            => new DiscordMessage(app, await endpoint.EditMessage(channelId, messageId, content));
 
         public async Task DeleteMessage(DiscordMessage message)
             => await DeleteMessage(message.ChannelId, message.Id);
@@ -233,7 +235,7 @@ namespace Discore.Http
             List<DiscordMessage> toReturn = new List<DiscordMessage>();
             DiscordApiData data = await endpoint.GetPinnedMessages(Id);
             foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordMessage(item));
+                toReturn.Add(new DiscordMessage(app, item));
 
             return toReturn;
         }

@@ -25,20 +25,22 @@ namespace Discore
         /// Sends a message with a file attachment to this channel.
         /// </summary>
         /// <param name="fileAttachment">The file data to attach.</param>
+        /// <param name="fileName">The name of the file.</param>
         /// <param name="content">The message text content.</param>
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
-        DiscordMessage SendMessage(byte[] fileAttachment, string content = null, bool splitIfTooLong = false, bool tts = false);
+        DiscordMessage SendMessage(byte[] fileAttachment, string fileName = null, string content = null, bool splitIfTooLong = false, bool tts = false);
         /// <summary>
         /// Sends a message with a file attachment to this channel.
         /// </summary>
         /// <param name="fileAttachment">The file data to attach.</param>
+        /// <param name="fileName">The name of the file.</param>
         /// <param name="content">The message text content.</param>
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
-        Task<DiscordMessage> SendMessageAsync(byte[] fileAttachment, string content = null, bool splitIfTooLong = false, bool tts = false);
+        Task<DiscordMessage> SendMessageAsync(byte[] fileAttachment, string fileName = null, string content = null, bool splitIfTooLong = false, bool tts = false);
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.

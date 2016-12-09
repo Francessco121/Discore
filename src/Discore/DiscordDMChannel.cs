@@ -124,14 +124,15 @@ namespace Discore
         /// Sends a message with a file attachment to this channel.
         /// </summary>
         /// <param name="fileAttachment">The file data to attach.</param>
+        /// <param name="fileName">The name of the file.</param>
         /// <param name="content">The message text content.</param>
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
-        public DiscordMessage SendMessage(byte[] fileAttachment, string content = null,
+        public DiscordMessage SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
-            try { return SendMessageAsync(fileAttachment, content, splitIfTooLong, tts).Result; }
+            try { return SendMessageAsync(fileAttachment, fileName, content, splitIfTooLong, tts).Result; }
             catch (AggregateException aex) { throw aex.InnerException; }
         }
 
@@ -139,11 +140,12 @@ namespace Discore
         /// Sends a message with a file attachment to this channel.
         /// </summary>
         /// <param name="fileAttachment">The file data to attach.</param>
+        /// <param name="fileName">The name of the file.</param>
         /// <param name="content">The message text content.</param>
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
-        public async Task<DiscordMessage> SendMessageAsync(byte[] fileAttachment, string content = null, 
+        public async Task<DiscordMessage> SendMessageAsync(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
             DiscordApiData firstOrOnlyMessageData = null;
@@ -155,7 +157,7 @@ namespace Discore
                     {
                         if (firstOrOnlyMessageData == null)
                         {
-                            DiscordApiData msgData = await channelsHttp.UploadFile(Id, fileAttachment, message, tts);
+                            DiscordApiData msgData = await channelsHttp.UploadFile(Id, fileAttachment, message, fileName, tts);
                             firstOrOnlyMessageData = msgData;
                         }
                         else
@@ -163,7 +165,7 @@ namespace Discore
                     });
             }
             else
-                firstOrOnlyMessageData = await channelsHttp.UploadFile(Id, fileAttachment, content, tts);
+                firstOrOnlyMessageData = await channelsHttp.UploadFile(Id, fileAttachment, content, fileName, tts);
 
             return new DiscordMessage(app, firstOrOnlyMessageData);
         }
