@@ -444,6 +444,17 @@ namespace Discore
 
             return null;
         }
+
+        public DiscordAvatarData GetAvatar(string key)
+        {
+            AssertContainer();
+
+            string nestedData = GetString(key);
+            if (!string.IsNullOrWhiteSpace(nestedData))
+                return new DiscordAvatarData(nestedData);
+
+            return null;
+        }
         #endregion
 
         #region Set*
@@ -529,6 +540,15 @@ namespace Discore
             AssertContainer();
 
             DiscordApiData apiData = new DiscordApiData(value.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+            data[key] = apiData;
+            return apiData;
+        }
+
+        public DiscordApiData Set(string key, DiscordAvatarData avatar)
+        {
+            AssertContainer();
+
+            DiscordApiData apiData = new DiscordApiData(avatar.ToFormattedString());
             data[key] = apiData;
             return apiData;
         }

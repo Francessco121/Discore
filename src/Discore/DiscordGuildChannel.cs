@@ -53,6 +53,24 @@ namespace Discore
             PermissionOverwrites = permissionOverwrites;
         }
 
+        public override DiscordApiData Serialize()
+        {
+            DiscordApiData data = base.Serialize();
+            data.Set("guild_id", GuildId);
+            data.Set("name", Name);
+            data.Set("position", Position);
+
+            {
+                DiscordApiData overwrites = DiscordApiData.CreateArray();
+
+                foreach (DiscordOverwrite ow in PermissionOverwrites)
+                    overwrites.Values.Add(ow.Serialize());
+
+                data.Set("permission_overwrites", overwrites);
+            }
+            return data;
+        }
+
         /// <summary>
         /// Gets a list of all invites for this channel.
         /// </summary>
