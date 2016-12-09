@@ -78,11 +78,11 @@ namespace Discore.WebSocket.Net
             data.Set("compress", true);
             data.Set("large_threshold", 250);
 
-            if (app.ShardManager.ShardCount > 1)
+            if (app.ShardManager.TotalShardCount > 1)
             {
                 DiscordApiData shardData = new DiscordApiData(DiscordApiDataType.Array);
                 shardData.Values.Add(new DiscordApiData(shard.Id));
-                shardData.Values.Add(new DiscordApiData(app.ShardManager.ShardCount));
+                shardData.Values.Add(new DiscordApiData(app.ShardManager.TotalShardCount));
                 data.Set("shard", shardData);
             }
 

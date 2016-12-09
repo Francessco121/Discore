@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 namespace Discore.WebSocket
 {
@@ -9,23 +8,33 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the number of shards currently being managed.
         /// </summary>
-        public int ShardCount { get { return shards?.Length ?? 0; } }
+        public int ManagedShardCount { get { return shards?.Length ?? 0; } }
         /// <summary>
-        /// Gets a list of all shards currently being managed.
+        /// Gets the total number of shards currently used by the Discord application.
+        /// <para>This can be more than the number of managed shards, as other processes could be handling some shards.</para>
         /// </summary>
-        public IReadOnlyList<Shard> Shards { get { return new ReadOnlyCollection<Shard>(shards); } }
+        public int TotalShardCount { get; private set; }
+        /// <summary>
+        /// Gets a list of all shards currently being managed,
+        /// or null if no shards have been created yet.
+        /// </summary>
+        public IReadOnlyList<Shard> Shards { get { return shards; } }
 
         DiscordWebSocketApplication app;
+        DiscoreLogger log;
         Shard[] shards;
 
         internal ShardManager(DiscordWebSocketApplication app)
         {
             this.app = app;
+
+            log = new DiscoreLogger("ShardManager");
         }
 
         /// <summary>
         /// Creates a single shard to be managed.
-        /// This is useful if you know your application only requires one shard.
+        /// This is useful if you know your application only requires one shard, or for testing.
+        /// <para>Will shutdown existing shards.</para>
         /// </summary>
         /// <returns>Returns the created shard.</returns>
         public Shard CreateSingleShard()
@@ -35,9 +44,40 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
+        /// Creates the minimum number of shards required by the Discord application.
+        /// <para>Will shutdown existing shards.</para>
+        /// </summary>
+        public void CreateMinimumRequiredShards()
+        {
+            int numShards;
+            try
+            {
+                DiscordApiData data = app.HttpApi.InternalApi.Gateway.GetBot().Result;
+                numShards = data.GetInteger("shards").Value;
+
+                // GET /gateway/bot also specifies the gateway url, update local storage
+                // with this value if it differs so we don't need to call GET /gateway
+                // later on when connecting.
+                string gatewayUrl = data.GetString("url");
+                DiscoreLocalStorage localStorage = DiscoreLocalStorage.Instance;
+                if (localStorage.GatewayUrl != gatewayUrl)
+                {
+                    localStorage.GatewayUrl = gatewayUrl;
+                    localStorage.Save();
+                }
+            }
+            catch (AggregateException aex) { throw aex.InnerException; }
+
+            // Create the minimum shards specified by the Discord API.
+            CreateShards(numShards);
+        }
+
+        /// <summary>
         /// Creates the specified number of shards, where the shard ids range
         /// from 0 to the number specified - 1.
+        /// <para>Will shutdown existing shards.</para>
         /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown if the number of shards specified is less than 1.</exception>
         public void CreateShards(int numberOfShards = 1)
         {
             if (numberOfShards < 1)
@@ -52,16 +92,35 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Creates shards for each shard id specified.
+        /// <para>Will shutdown existing shards.</para>
         /// </summary>
-        public void CreateShards(ICollection<int> shardIds)
+        /// <param name="shardIds">A collection of shard ids to be managed by this process.</param>
+        /// <param name="totalShards">
+        /// The total number of shards for the Discord application.
+        /// If null, equals the number of shard ids specified by <paramref name="shardIds"/>.
+        /// </param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="shardIds"/> is null.</exception>
+        /// <exception cref="ArgumentException">Thrown if no shard ids are specified.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">
+        /// Thrown if <paramref name="totalShards"/> is specified, 
+        /// but it is less than the number of shard ids specified.
+        /// </exception>
+        public void CreateShards(ICollection<int> shardIds, int? totalShards = null)
         {
             if (shardIds == null)
                 throw new ArgumentNullException(nameof(shardIds));
             if (shardIds.Count == 0)
                 throw new ArgumentException("At least one shard must be specified.", nameof(shardIds));
+            if (totalShards.HasValue && totalShards.Value < shardIds.Count)
+                throw new ArgumentOutOfRangeException(nameof(totalShards),
+                    "Number of total shards must be greater than or equal to the number of shard ids specified.");
 
             // Stop existing shards
-            ShutdownShards();
+            if (shards != null)
+                ShutdownShards();
+
+            // Set total shard count
+            TotalShardCount = totalShards ?? shardIds.Count;
 
             // Create new shards
             shards = new Shard[shardIds.Count];
@@ -71,15 +130,18 @@ namespace Discore.WebSocket
                 Shard shard = new Shard(app, id);
                 shards[i++] = shard;
             }
+
+            log.LogInfo($"Created {shardIds.Count} managed shard(s), out of {TotalShardCount} total.");
         }
 
         /// <summary>
         /// Attempts to start all created shards that are currently not running.
         /// <para>
-        /// If this returns false, there either were no shards to start, or one of them failed.
+        /// This returns false if at least one shard failed to start.
         /// </para>
         /// </summary>
         /// <returns>Returns whether every shard was successfully started.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
         public bool StartShards()
         {
             if (shards != null)
@@ -98,16 +160,17 @@ namespace Discore.WebSocket
                 return allSucceeded;
             }
             else
-                return false;
+                throw new InvalidOperationException("No shards have been created.");
         }
 
         /// <summary>
         /// Attempts to stop all created shards that are still running.
         /// <para>
-        /// If this returns false, there either were no shards to stop, or one of them failed to disconnect.
+        /// Retirns false if at least one shard failed to stop.
         /// </para>
         /// </summary>
         /// <returns>Returns whether every shard was successfully stopped.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
         public bool ShutdownShards()
         {
             if (shards != null)
@@ -127,7 +190,7 @@ namespace Discore.WebSocket
                 return allDisconnected;
             }
             else
-                return false;
+                throw new InvalidOperationException("No shards have been created.");
         }
 
         public void Dispose()
