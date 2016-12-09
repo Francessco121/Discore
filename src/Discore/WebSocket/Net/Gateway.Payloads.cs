@@ -17,6 +17,7 @@ namespace Discore.WebSocket.Net
             payloadHandlers[GatewayOPCode.Hello] = HandleHelloPayload;
             payloadHandlers[GatewayOPCode.HeartbeatAck] = HandleHeartbeatAckPayload;
             payloadHandlers[GatewayOPCode.InvalidSession] = HandleInvalidSessionPayload;
+            payloadHandlers[GatewayOPCode.Reconnect] = HandleReconnectPayload;
         }
 
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
