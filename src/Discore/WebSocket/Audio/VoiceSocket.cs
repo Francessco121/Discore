@@ -245,7 +245,7 @@ namespace Discore.WebSocket.Audio
         {
             DiscordApiData selectProtocol = new DiscordApiData();
             selectProtocol.Set("protocol", "udp");
-            DiscordApiData data = selectProtocol.Set("data", DiscordApiData.CreateContainer());
+            DiscordApiData data = selectProtocol.Set("data", DiscordApiData.ContainerType);
             data.Set("address", ip);
             data.Set("port", port);
             data.Set("mode", "xsalsa20_poly1305");

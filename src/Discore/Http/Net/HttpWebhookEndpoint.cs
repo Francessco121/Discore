@@ -23,7 +23,7 @@ namespace Discore.Http.Net
             if (name.Length < 2 || name.Length > 200)
                 throw new DiscoreException($"{nameof(name)} must be atleast 2 characters and no more than 200 characters");
 
-            DiscordApiData container = DiscordApiData.CreateContainer();
+            DiscordApiData container = DiscordApiData.ContainerType;
             container.Set("name", name);
             container.Set("avatar", avatar.ToFormattedString());
 
@@ -62,7 +62,7 @@ namespace Discore.Http.Net
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
 
-            DiscordApiData postData = DiscordApiData.CreateContainer();
+            DiscordApiData postData = DiscordApiData.ContainerType;
             if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
             if (avatar != null) postData.Set("avatar", avatar.ToFormattedString());
 
@@ -74,7 +74,7 @@ namespace Discore.Http.Net
             if (id == null) throw new ArgumentNullException(nameof(id));
             if (string.IsNullOrWhiteSpace(token)) throw new ArgumentNullException(nameof(token));
 
-            DiscordApiData postData = DiscordApiData.CreateContainer();
+            DiscordApiData postData = DiscordApiData.ContainerType;
             if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
             if (avatar != null) postData.Set("avatar", avatar.ToFormattedString());
 
@@ -100,7 +100,7 @@ namespace Discore.Http.Net
         {
             if (string.IsNullOrWhiteSpace(content)) throw new ArgumentNullException(nameof(content));
 
-            DiscordApiData postData = DiscordApiData.CreateContainer();
+            DiscordApiData postData = DiscordApiData.ContainerType;
 
             if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
             if (avatar != null) postData.Set("avatar", avatar.ToString());
@@ -121,7 +121,7 @@ namespace Discore.Http.Net
             if (file == null || file.Length == 0)
                 throw new ArgumentNullException($"{nameof(file)} can't be null or empty");
 
-            DiscordApiData postData = DiscordApiData.CreateContainer();
+            DiscordApiData postData = DiscordApiData.ContainerType;
 
             if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
             if (avatar != null) postData.Set("avatar", avatar.ToString());
@@ -148,7 +148,7 @@ namespace Discore.Http.Net
             Uri avatar = null,
             bool tts = false)
         {
-            DiscordApiData postData = DiscordApiData.CreateContainer();
+            DiscordApiData postData = DiscordApiData.ContainerType;
 
             if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
             if (avatar != null) postData.Set("avatar", avatar.ToString());

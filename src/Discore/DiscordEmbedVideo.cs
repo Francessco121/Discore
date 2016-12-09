@@ -26,7 +26,7 @@
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.CreateContainer();
+            DiscordApiData data = DiscordApiData.ContainerType;
             data.Set("url", Url);
             data.Set("width", Width);
             data.Set("height", Height);

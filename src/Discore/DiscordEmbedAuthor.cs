@@ -32,7 +32,7 @@
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.CreateContainer();
+            DiscordApiData data = DiscordApiData.ContainerType;
             data.Set("name", Name);
             data.Set("url", Url);
             data.Set("icon_url", IconUrl);
