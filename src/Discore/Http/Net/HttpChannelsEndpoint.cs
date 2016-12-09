@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Discore.Http.Net
@@ -81,15 +82,15 @@ namespace Discore.Http.Net
         {
             return await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions", "DeleteAllReactions");
         }
-
-        public async Task<DiscordApiData> UploadFile(Snowflake channelId, byte[] file, 
+        
+        public async Task<DiscordApiData> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
             string message = null, bool? tts = null, Snowflake? nonce = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
                 $"{RestClient.BASE_URL}/channels/{channelId}/messages");
 
             MultipartFormDataContent data = new MultipartFormDataContent();
-            data.Add(new ByteArrayContent(file), "file", "file.jpeg");
+            data.Add(new ByteArrayContent(file), "file", filename);
             request.Content = data;
 
             if (message != null) request.Properties.Add("content", message);
@@ -143,10 +144,10 @@ namespace Discore.Http.Net
             int? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("max_age", maxAge);
-            data.Set("max_uses", maxUses);
-            data.Set("temporary", temporary);
-            data.Set("unique", unique);
+            if (maxAge.HasValue) data.Set("max_age", maxAge.Value);
+            if (maxUses.HasValue) data.Set("max_uses", maxUses.Value);
+            if (temporary.HasValue) data.Set("temporary", temporary.Value);
+            if (unique.HasValue) data.Set("unique", unique.Value);
 
             return await Rest.Post($"channels/{channelId}/invites", data, "CreateInvite");
         }

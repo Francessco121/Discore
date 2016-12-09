@@ -143,14 +143,11 @@ namespace Discore.Http.Net
 
         public async Task<DiscordApiData> ExecuteWebhook(Snowflake id,
             string token,
-            DiscordApiData[] embeds,
+            DiscordApiData embeds,
             string username = null,
             Uri avatar = null,
             bool tts = false)
         {
-            if (embeds == null || embeds.Length < 1 || embeds.Length > 2000)
-                throw new DiscoreException($"{nameof(embeds)} must have atleast 1 entry");
-
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
             if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
