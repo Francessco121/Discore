@@ -32,7 +32,7 @@
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.CreateContainer();
+            DiscordApiData data = DiscordApiData.ContainerType;
             data.Set("url", Url);
             data.Set("proxy_url", ProxyUrl);
             data.Set("width", Width);

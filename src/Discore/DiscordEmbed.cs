@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// Embedded content in a message.
     /// </summary>
-    public sealed class DiscordEmbed
+    public sealed class DiscordEmbed : IDiscordSerializable
     {
         /// <summary>
         /// Gets the title of this embed.
@@ -108,6 +108,34 @@ namespace Discore
         public override string ToString()
         {
             return Title;
+        }
+
+        public DiscordApiData Serialize()
+        {
+            DiscordApiData data = DiscordApiData.ContainerType;
+            data.Set("title", Title);
+            data.Set("type", Type);
+            data.Set("description", Description);
+            data.Set("url", Url);
+            data.Set("timestamp", Timestamp);
+            data.Set("color", Color);
+            data.Set("footer", Footer?.Serialize());
+            data.Set("image", Image?.Serialize());
+            data.Set("thumbnail", Thumbnail?.Serialize());
+            data.Set("video", Video?.Serialize());
+            data.Set("provider", Provider?.Serialize());
+            data.Set("author", Author?.Serialize());
+
+            if (Fields != null)
+            {
+                DiscordApiData fields = DiscordApiData.ArrayType;
+                foreach (DiscordEmbedField field in Fields)
+                    fields.Values.Add(field.Serialize());
+
+                data.Set("fields", fields);
+            }
+
+            return data;
         }
     }
 }

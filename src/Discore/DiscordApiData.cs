@@ -444,6 +444,17 @@ namespace Discore
 
             return null;
         }
+
+        public DiscordAvatarData GetAvatar(string key)
+        {
+            AssertContainer();
+
+            string nestedData = GetString(key);
+            if (!string.IsNullOrWhiteSpace(nestedData))
+                return new DiscordAvatarData(nestedData);
+
+            return null;
+        }
         #endregion
 
         #region Set*
@@ -529,6 +540,15 @@ namespace Discore
             AssertContainer();
 
             DiscordApiData apiData = new DiscordApiData(value.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+            data[key] = apiData;
+            return apiData;
+        }
+
+        public DiscordApiData Set(string key, DiscordAvatarData avatar)
+        {
+            AssertContainer();
+
+            DiscordApiData apiData = new DiscordApiData(avatar.ToFormattedString());
             data[key] = apiData;
             return apiData;
         }
@@ -733,29 +753,24 @@ namespace Discore
         }
         #endregion
 
+        static readonly DiscordApiData _valueType = new DiscordApiData(DiscordApiDataType.Value);
+        static readonly DiscordApiData _containerType = new DiscordApiData(DiscordApiDataType.Container);
+        static readonly DiscordApiData _arrayType = new DiscordApiData(DiscordApiDataType.Array);
+
         /// <summary>
         /// Creates a new value-type <see cref="DiscordApiData"/>.
         /// </summary>
-        public static DiscordApiData CreateValue()
-        {
-            return new DiscordApiData(DiscordApiDataType.Value);
-        }
+        public static DiscordApiData ValueType => _valueType;
 
         /// <summary>
         /// Creates a new container-type <see cref="DiscordApiData"/>.
         /// </summary>
-        public static DiscordApiData CreateContainer()
-        {
-            return new DiscordApiData(DiscordApiDataType.Container);
-        }
+        public static DiscordApiData ContainerType => _containerType;
 
         /// <summary>
         /// Creates a new array-type <see cref="DiscordApiData"/>.
         /// </summary>
-        public static DiscordApiData CreateArray()
-        {
-            return new DiscordApiData(DiscordApiDataType.Array);
-        }
+        public static DiscordApiData ArrayType => _arrayType;
 
         /// <summary>
         /// Serializes this api data object to a JSON string.

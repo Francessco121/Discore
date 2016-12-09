@@ -181,7 +181,7 @@ namespace Discore.Http
             Uri avatar = null,
             bool tts = false)
         {
-            DiscordApiData data = DiscordApiData.CreateArray();
+            DiscordApiData data = DiscordApiData.ArrayType;
             foreach (DiscordEmbed embed in embeds)
                 data.Values.Add(embed.Serialize());
 

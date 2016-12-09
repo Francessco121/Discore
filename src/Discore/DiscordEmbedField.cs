@@ -26,7 +26,7 @@
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.CreateContainer();
+            DiscordApiData data = DiscordApiData.ContainerType;
             data.Set("name", Name);
             data.Set("value", Value);
             data.Set("inline", IsInline);
