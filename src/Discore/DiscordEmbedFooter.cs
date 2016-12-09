@@ -26,7 +26,7 @@
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.ContainerType;
+            DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("text", Text);
             data.Set("icon_url", IconUrl);
             data.Set("proxy_icon_url", ProxyIconUrl);

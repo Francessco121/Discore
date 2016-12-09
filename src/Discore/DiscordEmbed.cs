@@ -112,7 +112,7 @@ namespace Discore
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.ContainerType;
+            DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("title", Title);
             data.Set("type", Type);
             data.Set("description", Description);
@@ -128,7 +128,7 @@ namespace Discore
 
             if (Fields != null)
             {
-                DiscordApiData fields = DiscordApiData.ArrayType;
+                DiscordApiData fields = DiscordApiData.CreateArray();
                 foreach (DiscordEmbedField field in Fields)
                     fields.Values.Add(field.Serialize());
 

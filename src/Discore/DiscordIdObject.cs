@@ -28,7 +28,7 @@ namespace Discore
 
         public virtual DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.ContainerType;
+            DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("id", Id);
             return data;
         }

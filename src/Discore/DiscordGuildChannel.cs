@@ -61,7 +61,7 @@ namespace Discore
             data.Set("position", Position);
 
             {
-                DiscordApiData overwrites = DiscordApiData.ArrayType;
+                DiscordApiData overwrites = DiscordApiData.CreateArray();
 
                 foreach (DiscordOverwrite ow in PermissionOverwrites)
                     overwrites.Values.Add(ow.Serialize());

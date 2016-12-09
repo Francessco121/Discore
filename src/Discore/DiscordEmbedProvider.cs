@@ -22,7 +22,7 @@
 
         public DiscordApiData Serialize()
         {
-            DiscordApiData data = DiscordApiData.ContainerType;
+            DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("name", Name);
             data.Set("url", Url);
             return data;
