@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordWebhook : DiscordIdObject, IDiscordSerializable
+    public sealed class DiscordWebhook : DiscordIdObject
     {
         /// <summary> 
         /// The Id of Guild this Webhook belongs to 
@@ -44,19 +44,6 @@
             Name = data.GetString("name");
             Avatar = new DiscordAvatarData(data.GetString("avatar"));
             Token = data.GetString("token");
-        }
-
-        public override DiscordApiData Serialize()
-        {
-            DiscordApiData data = base.Serialize();
-            data.Set("guild_id", Guild);
-            data.Set("channel_id", Channel);
-            data.Set("user", User?.Serialize());
-            data.Set("name", Name);
-            data.Set("avatar", Avatar);
-            data.Set("token", Token);
-
-            return data;
         }
     }
 }

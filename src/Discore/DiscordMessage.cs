@@ -208,23 +208,6 @@ namespace Discore
             }
         }
 
-        public override DiscordApiData Serialize()
-        {
-            DiscordApiData data = base.Serialize();
-
-            data.Set("content", Content);
-            data.Set("timestamp", Timestamp);
-            if (EditedTimestamp.HasValue) data.Set("edited_timestamp", EditedTimestamp.Value);
-            data.Set("tts", TextToSpeech);
-            data.Set("mention_everyone", MentionEveryone);
-            data.Set("nonce", Nonce);
-            data.Set("pinned", IsPinned);
-            data.Set("channel_id", ChannelId);
-            data.Set("webhook_id", WebhookId);
-
-            return data;
-        }
-
         /// <summary>
         /// Adds a reaction to this message.
         /// </summary>

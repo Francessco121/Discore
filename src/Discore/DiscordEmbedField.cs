@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordEmbedField : IDiscordSerializable
+    public sealed class DiscordEmbedField : DiscordSerializable
     {
         /// <summary>
         /// Gets the name of the field.
@@ -24,7 +24,7 @@
             IsInline = data.GetBoolean("inline").Value;
         }
 
-        public DiscordApiData Serialize()
+        internal override DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("name", Name);
