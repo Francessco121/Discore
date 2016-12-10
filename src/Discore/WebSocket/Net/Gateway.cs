@@ -196,9 +196,6 @@ namespace Discore.WebSocket.Net
 
                 while (!isDisposed)
                 {
-                    // Give 5s in between failed connections
-                    Thread.Sleep(5000);
-
                     try
                     {
                         if (Connect(gatewayResume))
