@@ -68,7 +68,8 @@ namespace Discore.WebSocket.Net
             payload.Set("op", (int)op);
             payload.Set("d", data);
 
-            socket.Send(payload);
+            outboundEventRateLimiter.Invoke(); // Check with the outbound event rate limiter
+            socket.Send(payload); // Send payload
         }
 
         void SendIdentifyPayload()
@@ -124,7 +125,8 @@ namespace Discore.WebSocket.Net
                 gameData.Set("name", game);
             }
 
-            SendPayload(GatewayOPCode.StatusUpdate, data);
+            gameStatusUpdateRateLimiter.Invoke(); // Check with the game status update limiter
+            SendPayload(GatewayOPCode.StatusUpdate, data); // Send status update
         }
 
         internal void SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)

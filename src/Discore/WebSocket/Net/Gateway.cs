@@ -10,6 +10,13 @@ namespace Discore.WebSocket.Net
 
         public event EventHandler<GatewayDisconnectCode> OnFatalDisconnection;
 
+        /// <summary>
+        /// Maximum number of missed heartbeats before timing out.
+        /// </summary>
+        const int HEARTBEAT_TIMEOUT_MISSED_PACKETS = 5;
+
+        const int GATEWAY_VERSION = 5;
+
         DiscordWebSocketApplication app;
         Shard shard;
 
@@ -21,11 +28,6 @@ namespace Discore.WebSocket.Net
         int heartbeatInterval;
         int heartbeatTimeoutAt;
 
-        /// <summary>
-        /// Maximum number of missed heartbeats before timing out.
-        /// </summary>
-        const int HEARTBEAT_TIMEOUT_MISSED_PACKETS = 5;
-
         Thread heartbeatThread;
 
         bool isDisposed;
@@ -33,7 +35,9 @@ namespace Discore.WebSocket.Net
 
         DiscoreCache cache;
 
-        const int GATEWAY_VERSION = 5;
+        GatewayRateLimiter connectionRateLimiter;
+        GatewayRateLimiter outboundEventRateLimiter;
+        GatewayRateLimiter gameStatusUpdateRateLimiter;
 
         internal Gateway(DiscordWebSocketApplication app, Shard shard)
         {
@@ -45,6 +49,11 @@ namespace Discore.WebSocket.Net
             string logName = $"Gateway#{shard.Id}";
                
             log = new DiscoreLogger(logName);
+
+            // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
+            connectionRateLimiter = new GatewayRateLimiter(5 * 1000, 1); // One connection attempt per 5 seconds
+            outboundEventRateLimiter = new GatewayRateLimiter(60 * 1000, 120); // 120 outbound events every 60 seconds
+            gameStatusUpdateRateLimiter = new GatewayRateLimiter(60 * 1000, 5); // 5 status updates per minute
 
             InitializePayloadHandlers();
             InitializeDispatchHandlers();
@@ -86,6 +95,8 @@ namespace Discore.WebSocket.Net
                     Reset();
 
                 string gatewayUrl = GetGatewayUrl();
+
+                connectionRateLimiter.Invoke(); // Check with the connection rate limiter.
                 if (socket.Connect($"{gatewayUrl}/?encoding=json&v={GATEWAY_VERSION}"))
                 {
                     if (gatewayResume)
