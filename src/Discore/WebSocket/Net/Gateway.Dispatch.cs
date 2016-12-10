@@ -207,6 +207,14 @@ namespace Discore.WebSocket.Net
 
             guildCache.Value = new DiscordGuild(guildCache, data);
 
+            IList<DiscordApiData> rolesArray = data.GetArray("roles");
+            for (int i = 0; i < rolesArray.Count; i++)
+                guildCache.Roles.Set(new DiscordRole(rolesArray[i]));
+
+            IList<DiscordApiData> emojisArray = data.GetArray("emojis");
+            for (int i = 0; i < emojisArray.Count; i++)
+                guildCache.Emojis.Set(new DiscordEmoji(emojisArray[i]));
+
             OnGuildUpdated?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
         }
 
@@ -236,7 +244,6 @@ namespace Discore.WebSocket.Net
         void HandleGuildBanAddEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            Snowflake userId = data.GetSnowflake("id").Value;
 
             DiscordUser user = cache.Users.Set(new DiscordUser(data));
 
@@ -250,9 +257,8 @@ namespace Discore.WebSocket.Net
         void HandleGuildBanRemoveEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            Snowflake userId = data.GetSnowflake("id").Value;
 
-            DiscordUser user = cache.Users.Get(userId);
+            DiscordUser user = cache.Users.Set(new DiscordUser(data));
 
             DiscoreGuildCache guildCache;
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
@@ -306,9 +312,10 @@ namespace Discore.WebSocket.Net
             DiscoreGuildCache guildCache;
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
             {
-                Snowflake userId = data.LocateSnowflake("user.id").Value;
+                DiscordApiData userData = data.Get("user");
+                DiscordUser user = cache.Users.Set(new DiscordUser(userData));
 
-                DiscoreMemberCache memberCache = guildCache.Members.Get(userId);
+                DiscoreMemberCache memberCache = guildCache.Members.Get(user.Id);
                 if (memberCache == null)
                 {
                     memberCache = new DiscoreMemberCache(guildCache);
@@ -379,7 +386,10 @@ namespace Discore.WebSocket.Net
                 for (int i = 0; i < membersData.Count; i++)
                 {
                     DiscordApiData memberData = membersData[i];
-                    Snowflake memberId = memberData.LocateSnowflake("user.id").Value;
+                    DiscordApiData userData = memberData.Get("user");
+                    DiscordUser user = cache.Users.Set(new DiscordUser(userData));
+
+                    Snowflake memberId = user.Id;
 
                     bool memberExistedPreviously = guildCache.Members.ContainsKey(memberId);
 
@@ -451,6 +461,9 @@ namespace Discore.WebSocket.Net
             if (isPrivate)
             {
                 // DM channel
+                DiscordApiData recipientData = data.Get("recipient");
+                cache.Users.Set(new DiscordUser(recipientData));
+
                 DiscordDMChannel dm = cache.SetDMChannel(new DiscordDMChannel(cache, app, data));
 
                 OnDMChannelCreated?.Invoke(this, new DMChannelEventArgs(shard, dm));
@@ -549,6 +562,16 @@ namespace Discore.WebSocket.Net
         #region Message
         void HandleMessageCreateEvent(DiscordApiData data)
         {
+            // Get author
+            DiscordApiData authorData = data.Get("author");
+            cache.Users.Set(new DiscordUser(authorData));
+
+            // Get mentioned users
+            IList<DiscordApiData> mentionsArray = data.GetArray("mentions");
+            for (int i = 0; i < mentionsArray.Count; i++)
+                cache.Users.Set(new DiscordUser(mentionsArray[i]));
+
+            // Create message
             DiscordMessage message = new DiscordMessage(cache, app, data);
 
             OnMessageCreated?.Invoke(this, new MessageEventArgs(shard, message));

@@ -127,7 +127,7 @@ namespace Discore
             if (!isWebSocket)
             {
                 // Get author
-                DiscordApiData authorData = data.Get("author"); // TODO: may be an issue if the author is a webhook.
+                DiscordApiData authorData = data.Get("author");
                 if (authorData != null)
                     author = new DiscordUser(authorData);
 
