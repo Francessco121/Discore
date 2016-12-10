@@ -7,16 +7,17 @@ namespace Discore.Http
 {
     public sealed class DiscordHttpVoiceEndpoint
     {
-        HttpVoiceEndpoint endpoint;
+        RestClient Rest;
 
-        internal DiscordHttpVoiceEndpoint(HttpVoiceEndpoint endpoint)
+        internal DiscordHttpVoiceEndpoint(RestClient restClient)
         {
-            this.endpoint = endpoint;
+            Rest = restClient;
         }
 
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceReaions()
         {
-            DiscordApiData data = await endpoint.ListVoiceRegions();
+            DiscordApiData data = await Rest.Get("/voice/regions", "ListVoiceRegions");
+
             List<DiscordVoiceRegion> toReturn = new List<DiscordVoiceRegion>();
             foreach (DiscordApiData item in data.Values)
                 toReturn.Add(new DiscordVoiceRegion(item));

@@ -23,8 +23,8 @@ namespace Discore.Http
 
             Users = new DiscordHttpUsersEndpoint(app, rest);
             Channels = new DiscordHttpChannelsEndpoint(app, rest);
-            Webhooks = new DiscordHttpWebhookEndpoint(api.Webhooks);
-            Voice = new DiscordHttpVoiceEndpoint(api.Voice);
+            Webhooks = new DiscordHttpWebhookEndpoint(rest);
+            Voice = new DiscordHttpVoiceEndpoint(rest);
         }
     }
 }

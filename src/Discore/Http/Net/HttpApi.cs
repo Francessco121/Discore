@@ -5,15 +5,15 @@
     /// </summary>
     class HttpApi
     {
-        public HttpWebhookEndpoint Webhooks { get; }
-        public HttpVoiceEndpoint Voice { get; }
+        public DiscordHttpWebhookEndpoint Webhooks { get; }
+        public DiscordHttpVoiceEndpoint Voice { get; }
 
         public HttpApi(IDiscordAuthenticator authenticator)
         {
             RestClient client = new RestClient(authenticator);
 
-            Webhooks = new HttpWebhookEndpoint(client);
-            Voice = new HttpVoiceEndpoint(client);
+            Webhooks = new DiscordHttpWebhookEndpoint(client);
+            Voice = new DiscordHttpVoiceEndpoint(client);
         }
     }
 }
