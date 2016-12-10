@@ -91,49 +91,6 @@ namespace Discore.WebSocket
             return VoiceConnectionsTable.TryGetValue(guild.Id, out connection);
         }
 
-        /// <summary>
-        /// Requests guild members from the Discord API, this can be used to retrieve
-        /// offline members in a guild that is considered "large". "Large" guilds
-        /// will not automatically have the offline members available.
-        /// <para>
-        /// Members requested here will be returned via the callback and available in the cache.
-        /// </para>
-        /// </summary>
-        /// <param name="callback">Action to be invoked if the members are successfully retrieved.</param>
-        /// <param name="guildId">The if of the guild to retrieve members from.</param>
-        /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
-        /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
-        public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId, 
-            string query = "", int limit = 0)
-        {
-            // Create GUILD_MEMBERS_CHUNK event handler
-            EventHandler<DiscordGuildMember[]> eventHandler = null;
-            eventHandler = (sender, members) => 
-            {
-                // Unhook event handler
-                InternalGateway.OnGuildMembersChunk -= eventHandler;
-
-                // Return members
-                callback(members);
-            };
-
-            // Hook in event handler
-            InternalGateway.OnGuildMembersChunk += eventHandler;
-
-            // Send gateway request
-            InternalGateway.SendRequestGuildMembersPayload(guildId, query, limit);
-        }
-
-        /// <summary>
-        /// Updates the status of the bot user.
-        /// </summary>
-        /// <param name="game">Either null, or an object with one key "name", representing the name of the game being played.</param>
-        /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
-        public void UpdateStatus(string game = null, int? idleSince = null)
-        {
-            InternalGateway.SendStatusUpdate(game, idleSince);
-        }
-
         internal DiscordVoiceConnection ConnectToVoice(DiscordGuildVoiceChannel voiceChannel)
         {
             DiscordVoiceConnection connection;

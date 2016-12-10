@@ -20,6 +20,32 @@ namespace Discore.WebSocket.Net
             payloadHandlers[GatewayOPCode.Reconnect] = HandleReconnectPayload;
         }
 
+        public void UpdateStatus(string game = null, int? idleSince = null)
+        {
+            SendStatusUpdate(game, idleSince);
+        }
+
+        public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
+            string query = "", int limit = 0)
+        {
+            // Create GUILD_MEMBERS_CHUNK event handler
+            EventHandler<DiscordGuildMember[]> eventHandler = null;
+            eventHandler = (sender, members) =>
+            {
+                // Unhook event handler
+                OnGuildMembersChunk -= eventHandler;
+
+                // Return members
+                callback(members);
+            };
+
+            // Hook in event handler
+            OnGuildMembersChunk += eventHandler;
+
+            // Send gateway request
+            SendRequestGuildMembersPayload(guildId, query, limit);
+        }
+
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
         {
             sequence = payload.GetInteger("s") ?? sequence;
@@ -112,7 +138,7 @@ namespace Discore.WebSocket.Net
             SendPayload(GatewayOPCode.Resume, data);
         }
 
-        internal void SendStatusUpdate(string game = null, int ? idleSince = null)
+        void SendStatusUpdate(string game = null, int ? idleSince = null)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("idle_since", idleSince);
@@ -129,7 +155,7 @@ namespace Discore.WebSocket.Net
             SendPayload(GatewayOPCode.StatusUpdate, data); // Send status update
         }
 
-        internal void SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
+        void SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("guild_id", guildId);
