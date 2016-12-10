@@ -3,6 +3,7 @@ using Discore.WebSocket.Net;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Discore.WebSocket
 {
@@ -141,43 +142,46 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
-        /// Attempts to start this shard.
+        /// Starts this shard.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
-        /// <returns>Returns whether this shard connected successfully.</returns>
-        public bool Start()
+        public void Start()
         {
             if (!isRunning)
             {
                 isRunning = true;
 
-                if (InternalGateway.Connect())
+                CleanUp();
+
+                // Keep trying to make the initial connection until successful, or the shard is stopped.
+                while (isRunning)
                 {
-                    log.LogVerbose("Successfully connected to gateway.");
-                    OnConnected?.Invoke(this, new ShardEventArgs(this));
-                    return true;
+                    if (InternalGateway.Connect())
+                    {
+                        log.LogVerbose("Successfully connected to gateway.");
+                        OnConnected?.Invoke(this, new ShardEventArgs(this));
+                        break;
+                    }
                 }
-                else
-                    return false;
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been started!");
         }
 
         /// <summary>
-        /// Attempts to stop this shard.
+        /// Stop this shard.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this shard is not running.</exception>
-        /// <returns>Returns whether this shard disconnected successfully.</returns>
-        public bool Stop()
+        public void Stop()
         {
             if (isRunning)
             {
                 isRunning = false;
 
                 CleanUp();
-
-                return InternalGateway.Disconnect();
+                // We aren't concerned with the return status of the gateway disconnection,
+                // as it should only "fail" if the gateway was already disconnected.
+                InternalGateway.Disconnect();
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");

@@ -136,28 +136,20 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Attempts to start all created shards that are currently not running.
-        /// <para>
-        /// This returns false if at least one shard failed to start.
-        /// </para>
         /// </summary>
-        /// <returns>Returns whether every shard was successfully started.</returns>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public bool StartShards()
+        public void StartShards()
         {
             if (shards != null)
             {
-                bool allSucceeded = true;
                 for (int i = 0; i < shards.Length; i++)
                 {
                     Shard shard = shards[i];
                     if (shard.IsRunning)
                         continue;
 
-                    if (!shard.Start())
-                        allSucceeded = false;
+                    shard.Start();
                 }
-
-                return allSucceeded;
             }
             else
                 throw new InvalidOperationException("No shards have been created.");
@@ -165,29 +157,20 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Attempts to stop all created shards that are still running.
-        /// <para>
-        /// Retirns false if at least one shard failed to stop.
-        /// </para>
         /// </summary>
-        /// <returns>Returns whether every shard was successfully stopped.</returns>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public bool ShutdownShards()
+        public void ShutdownShards()
         {
             if (shards != null)
             {
-                bool allDisconnected = true;
                 for (int i = 0; i < shards.Length; i++)
                 {
                     Shard shard = shards[i];
                     if (!shard.IsRunning)
                         continue;
 
-                    if (!shards[i].Stop())
-                        allDisconnected = false;
+                    shards[i].Stop();
                 }
-
-                shards = null;
-                return allDisconnected;
             }
             else
                 throw new InvalidOperationException("No shards have been created.");

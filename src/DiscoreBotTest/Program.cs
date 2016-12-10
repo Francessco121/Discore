@@ -27,15 +27,12 @@ namespace DiscoreBotTest
             app = new DiscordWebSocketApplication(auth);
             
             Shard shard = app.ShardManager.CreateSingleShard();
-            if (shard.Start())
-            {
-                TestShard(shard);
+            shard.Start();
+            
+            TestShard(shard);
 
-                while (shard.IsRunning)
-                    Thread.Sleep(1000);
-            }
-            else
-                Console.WriteLine("Failed to start shard!");
+            while (shard.IsRunning)
+                Thread.Sleep(1000);
 
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
