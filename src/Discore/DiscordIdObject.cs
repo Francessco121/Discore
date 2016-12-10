@@ -5,7 +5,7 @@ namespace Discore
     /// <summary>
     /// The base class for all Discord API objects that contain an id.
     /// </summary>
-    public abstract class DiscordIdObject : DiscordHashableObject, IDiscordSerializable
+    public abstract class DiscordIdObject : DiscordHashableObject
     {
         /// <summary>
         /// Gets the id of this Discord API object.
@@ -24,13 +24,6 @@ namespace Discore
         public override string ToString()
         {
             return Id.ToString();
-        }
-
-        public virtual DiscordApiData Serialize()
-        {
-            DiscordApiData data = DiscordApiData.CreateContainer();
-            data.Set("id", Id);
-            return data;
         }
 
         /// <summary>

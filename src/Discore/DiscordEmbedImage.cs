@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordEmbedImage : IDiscordSerializable
+    public sealed class DiscordEmbedImage : DiscordSerializable
     {
         /// <summary>
         /// Gets the source url of the image (only http(s)).
@@ -30,7 +30,7 @@
             Height = data.GetInteger("height").Value;
         }
 
-        public DiscordApiData Serialize()
+        internal override DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("url", Url);
