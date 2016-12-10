@@ -15,8 +15,10 @@ namespace Discore.Http
         {
             InternalApi = api;
 
-            Users = new DiscordHttpUsersEndpoint(app, api.Users);
-            Channels = new DiscordHttpChannelsEndpoint(app, api.Channels);
+            RestClient rest = new RestClient(app.Authenticator);
+
+            Users = new DiscordHttpUsersEndpoint(app, rest);
+            Channels = new DiscordHttpChannelsEndpoint(app, rest);
             Webhooks = new DiscordHttpWebhookEndpoint(api.Webhooks);
             Voice = new DiscordHttpVoiceEndpoint(api.Voice);
         }

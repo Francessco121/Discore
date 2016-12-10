@@ -6,8 +6,6 @@
     class HttpApi
     {
         public HttpGatewayEndpoint Gateway { get; }
-        public HttpUsersEndpoint Users { get; }
-        public HttpChannelsEndpoint Channels { get; }
         public HttpWebhookEndpoint Webhooks { get; }
         public HttpVoiceEndpoint Voice { get; }
 
@@ -16,8 +14,6 @@
             RestClient client = new RestClient(authenticator);
 
             Gateway = new HttpGatewayEndpoint(client);
-            Users = new HttpUsersEndpoint(client);
-            Channels = new HttpChannelsEndpoint(client);
             Webhooks = new HttpWebhookEndpoint(client);
             Voice = new HttpVoiceEndpoint(client);
         }

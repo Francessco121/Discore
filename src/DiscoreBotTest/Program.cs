@@ -45,10 +45,6 @@ namespace DiscoreBotTest
 
         private static void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
         {
-            DiscordChannel channel = e.Shard.Cache.Channels.Get(e.Message.ChannelId);
-            DiscordApiData data = channel.Serialize();
-
-            Console.WriteLine(data.SerializeToJson());
         }
 
         private static void DiscoreLogger_OnLog(object sender, DiscoreLogEventArgs e)

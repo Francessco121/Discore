@@ -1,266 +1,415 @@
-﻿using System;
-using System.IO;
+﻿using Discore.Http.Net;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
-using Discore.Http.Net;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpChannelsEndpoint
+    public sealed class DiscordHttpChannelsEndpoint : DiscordHttpApiEndpoint
     {
-        IDiscordApplication app;
-        HttpChannelsEndpoint endpoint;
-
-        internal DiscordHttpChannelsEndpoint(IDiscordApplication app, HttpChannelsEndpoint endpoint)
-        {
-            this.app = app;
-            this.endpoint = endpoint;
-        }
+        internal DiscordHttpChannelsEndpoint(IDiscordApplication app, RestClient rest)
+            : base(app, rest)
+        { }
 
         #region Channel Management
-
-        DiscordChannel GetChannelAsProperChannel(DiscordApiData data)
+        /// <summary>
+        /// Gets a DM or guild channel by ID.
+        /// </summary>
+        public async Task<DiscordChannel> Get(Snowflake channelId)
         {
-            DiscordChannel toReturn = null;
-
-            bool? isPrivate = data.GetBoolean("is_private");
-            string channelType = data.GetString("type");
-
-            if (isPrivate.HasValue)
-            {
-                if (!isPrivate.Value && !string.IsNullOrWhiteSpace(channelType))
-                {
-                    if (channelType == "voice") // if voice channel
-                        toReturn = new DiscordGuildVoiceChannel(app, data);
-
-                    // else we assume text channel
-                    toReturn = new DiscordGuildTextChannel(app, data);
-                }
-                else if (isPrivate.Value)
-                    toReturn = new DiscordDMChannel(app, data);
-            }
-
-            throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)} or something messed up bigtime.");
+            return await Get<DiscordChannel>(channelId);
         }
 
         /// <summary>
-        /// Get a Discord Channel
+        /// Gets a DM or guild channel by ID.
         /// </summary>
-        /// <typeparam name="T">Type to cast to</typeparam>
-        /// <param name="Id">Id of channel</param>
-        /// <returns></returns>
-        public async Task<T> GetChannel<T>(Snowflake Id) 
+        public async Task<T> Get<T>(Snowflake channelId) 
             where T : DiscordChannel
         {
-            DiscordApiData data = await endpoint.Get(Id);
+            DiscordApiData data = await Rest.Get($"channels/{channelId}", "GetChannel");
             return (T)GetChannelAsProperChannel(data);
         }
 
         /// <summary>
-        /// Modify a Discord Channel
+        /// Updates the settings of a text guild channel.
         /// </summary>
-        /// <param name="channel">The <see cref="DiscordChannel"/> to modify</param>
-        /// <param name="name">New name</param>
-        /// <param name="position">Position as it appears in the client</param>
-        /// <param name="topic"/>
-        /// <param name="bitrate">Voice bitrate limit; if its a <see cref="DiscordGuildChannelType.Voice"/></param>
-        /// <param name="userLimit"/>
-        public async Task<T> ModifyChannel<T>(
-            T channel,
-            string name = null,
-            int? position = null,
-            string topic = null,
-            int? bitrate = null,
-            int? userLimit = null)
-            where T : DiscordChannel
+        /// <param name="channelId">The id of the guild channel to modify.</param>
+        /// <param name="name">The name of the channel (or null to leave unchanged).</param>
+        /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
+        /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
+        public async Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
+            string name = null, int? position = null, string topic = null)
         {
-            DiscordApiData data = await endpoint.Modify(channel.Id, name, position, topic, bitrate, userLimit);
-            return (T)GetChannelAsProperChannel(data);            
+            return await Modify<DiscordGuildTextChannel>(channelId, name, position, topic);
         }
 
-        public async Task DeleteChannel(DiscordChannel channel)
-            => await endpoint.Delete(channel.Id);
+        /// <summary>
+        /// Updates the settings of a voice guild channel.
+        /// </summary>
+        /// <param name="channelId">The id of the guild channel to modify.</param>
+        /// <param name="name">The name of the channel (or null to leave unchanged).</param>
+        /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
+        /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
+        /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
+        public async Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
+            string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
+        {
+            return await Modify<DiscordGuildVoiceChannel>(channelId, name, position, null, bitrate, userLimit);
+        }
+
+        /// <summary>
+        /// Updates the settings of a text or voice guild channel.
+        /// </summary>
+        /// <param name="channelId">The id of the guild channel to modify.</param>
+        /// <param name="name">The name of the channel (or null to leave unchanged).</param>
+        /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
+        /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
+        /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
+        /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
+        public async Task<T> Modify<T>(Snowflake channelId,
+            string name = null, int? position = null, 
+            string topic = null,
+            int? bitrate = null, int? userLimit = null)
+            where T : DiscordGuildChannel
+        {
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            requestData.Set("name", name);
+            requestData.Set("position", position);
+            requestData.Set("topic", topic);
+            requestData.Set("bitrate", bitrate);
+            requestData.Set("user_limit", userLimit);
+
+            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, "ModifyChannel");
+            return (T)GetChannelAsProperChannel(returnData);            
+        }
+
+        /// <summary>
+        /// Deletes a guild channel, or closes a DM.
+        /// </summary>
+        public async Task<DiscordChannel> Delete(Snowflake channelId)
+        {
+            return await Delete<DiscordChannel>(channelId);
+        }
+
+        /// <summary>
+        /// Deletes a guild channel, or closes a DM.
+        /// </summary>
+        public async Task<T> Delete<T>(Snowflake channelId)
+            where T : DiscordChannel
+        {
+            DiscordApiData data = await Rest.Delete($"channels/{channelId}", "DeleteChannel");
+            return (T)GetChannelAsProperChannel(data);
+        }
+
+        DiscordChannel GetChannelAsProperChannel(DiscordApiData data)
+        {
+            bool isPrivate = data.GetBoolean("is_private") ?? false;
+
+            if (isPrivate) // if dm channel
+                return new DiscordDMChannel(App, data);
+            else
+            {
+                string channelType = data.GetString("type");
+
+                if (channelType == "voice") // if voice channel
+                    return new DiscordGuildVoiceChannel(App, data);
+                else if (channelType == "text") // if text channel
+                    return new DiscordGuildTextChannel(App, data);
+            }
+
+            throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
+        }
+        #endregion
+
+        #region Permission Management
+        /// <summary>
+        /// Edits a guild channel permission overwrite for a user or role.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> EditPermissions(Snowflake channelId, Snowflake overwriteId,
+            DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
+        {
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("allow", (int)allow);
+            data.Set("deny", (int)deny);
+            data.Set("type", type.ToString().ToLower());
+
+            return (await Rest.Put($"channels/{channelId}/permissions/{overwriteId}", data, "EditPermissions")).IsNull;
+        }
+
+        /// <summary>
+        /// Deletes a guild channel permission overwrite for a user or role.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeletePermission(Snowflake channelId, Snowflake overwriteId)
+        {
+            return (await Rest.Delete($"channels/{channelId}/permissions/{overwriteId}", "DeletePermission")).IsNull;
+        }
         #endregion
 
         #region Message Management
-
-        public async Task<DiscordMessage> GetMessage(DiscordChannel channel, DiscordMessage message)
-            => await GetMessage(channel.Id, message.Id);
-
-        public async Task<DiscordMessage> GetMessage(Snowflake channelId, Snowflake messageId)
-            => new DiscordMessage(app, await endpoint.GetMessage(channelId, messageId));
-
-        public async Task<IEnumerable<DiscordMessage>> GetMessages(DiscordChannel channel,
-            DiscordMessage baseMessage = null,
-            int? limit = null,
-           DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
-            => await GetMessages(channel.Id, baseMessage?.Id, limit, getStrategy);
-
-        public async Task<IEnumerable<DiscordMessage>> GetMessages(Snowflake channelId, 
-            Snowflake? baseMessageId = null, 
-            int? limit = null,
+        /// <summary>
+        /// Gets messages from a text channel.
+        /// </summary>
+        public async Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake channelId,
+            Snowflake? baseMessageId = null, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
-            List<DiscordMessage> toReturn = new List<DiscordMessage>();
-            DiscordApiData data = await endpoint.GetMessages(channelId, baseMessageId, limit, getStrategy);
-            foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordMessage(app, item));
+            string strat = getStrategy.ToString().ToLower();
+            string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
 
-            return toReturn;
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages?{strat}={baseMessageId}{limitStr}", "GetChannelMessages");
+            DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
+
+            for (int i = 0; i < messages.Length; i++)
+                messages[i] = new DiscordMessage(App, data.Values[i]);
+
+            return messages;
         }
 
-        public async Task<DiscordMessage> CreateMessage(DiscordChannel channel, string content, bool tts = false, DiscordIdObject nonce = null)
-            => await CreateMessage(channel.Id, content, tts, nonce);
-
-        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, DiscordIdObject nonce = null)
-            => new DiscordMessage(app, await endpoint.CreateMessage(channelId, content, tts, nonce?.Id));
-
-        public async Task<DiscordMessage> UploadFile(DiscordChannel channel, string content, byte[] file, string filename = "unknown.jpg", bool tts = false,
-           DiscordIdObject nonce = null)
-            => await UploadFile(channel.Id, content, file, filename, tts, nonce);
-
-        public async Task<DiscordMessage> UploadFile(Snowflake channelId, string content, byte[] file, string filename = "unknown.jpg", bool tts = false,
-            DiscordIdObject nonce = null)
-            => new DiscordMessage(app, await endpoint.UploadFile(channelId, file, filename, content, tts, nonce?.Id));
-
-        public async Task<DiscordMessage> UploadFile(DiscordChannel channel, string content, FileInfo file, bool tts = false, DiscordIdObject nonce = null)
-            => await UploadFile(channel.Id, content, file, tts, nonce);
-
-        public async Task<DiscordMessage> UploadFile(Snowflake channelId, string content, FileInfo file, bool tts = false, DiscordIdObject nonce = null)
+        /// <summary>
+        /// Gets a single message by ID from a channel.
+        /// </summary>
+        public async Task<DiscordMessage> GetMessage(Snowflake channelId, Snowflake messageId)
         {
-            using (FileStream fs = file.OpenRead())
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}", "GetChannelMessage");
+            return new DiscordMessage(App, data);
+        }
+
+        /// <summary>
+        /// Posts a message to a text channel.
+        /// </summary>
+        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, Snowflake? nonce = null)
+        {
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            requestData.Set("content", content);
+            requestData.Set("tts", tts);
+            requestData.Set("nonce", nonce);
+
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData, "CreateMessage");
+            return new DiscordMessage(App, returnData);
+        }
+
+        /// <summary>
+        /// Uploads a file to a text channel with an optional message.
+        /// </summary>
+        public async Task<DiscordMessage> UploadFile(Snowflake channelId, FileInfo fileInfo, 
+            string message = null, bool tts = false, Snowflake? nonce = null)
+        {
+            using (FileStream fs = fileInfo.OpenRead())
             using (MemoryStream ms = new MemoryStream())
             {
-                await ms.CopyToAsync(ms);
-                return new DiscordMessage(app, await endpoint.UploadFile(channelId, ms.ToArray(), file.Name, content, tts, nonce?.Id));
+                await fs.CopyToAsync(ms);
+                return await UploadFile(channelId, ms.ToArray(), fileInfo.Name, message, tts, nonce);
             }
         }
 
-        public async Task<DiscordMessage> EditMessage(DiscordMessage message, string content)
-            => await EditMessage(message.ChannelId, message.Id, content);
-
-        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
-            => new DiscordMessage(app, await endpoint.EditMessage(channelId, messageId, content));
-
-        public async Task DeleteMessage(DiscordMessage message)
-            => await DeleteMessage(message.ChannelId, message.Id);
-
-        public async Task DeleteMessage(Snowflake channelId, Snowflake messageId)
-            => await endpoint.DeleteMessage(channelId, messageId);
-
-        public async Task DeleteMessages(DiscordChannel channel, IEnumerable<DiscordMessage> messages)
+        /// <summary>
+        /// Uploads a file to a text channel with an optional message.
+        /// </summary>
+        public async Task<DiscordMessage> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
+            string message = null, bool? tts = null, Snowflake? nonce = null)
         {
-            List<Snowflake> msgIds = new List<Snowflake>(messages.Count());
-            foreach (DiscordMessage msg in messages)
-                msgIds.Add(msg.Id);
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
+                $"{RestClient.BASE_URL}/channels/{channelId}/messages");
 
-            await DeleteMessages(channel.Id, msgIds);
+            MultipartFormDataContent data = new MultipartFormDataContent();
+            data.Add(new ByteArrayContent(file), "file", filename);
+            request.Content = data;
+
+            if (message != null) request.Properties.Add("content", message);
+            if (tts.HasValue) request.Properties.Add("tts", tts.Value);
+            if (nonce.HasValue) request.Properties.Add("nonce", nonce.Value);
+
+            DiscordApiData returnData = await Rest.Send(request, "UploadFile");
+            return new DiscordMessage(App, returnData);
         }
 
-        public async Task DeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messages)
-            => await endpoint.BulkDeleteMessages(channelId, messages);
+        /// <summary>
+        /// Edits an existing message in a text channel.
+        /// </summary>
+        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
+        {
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            requestData.Set("content", content);
 
+            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}/messages/{messageId}", requestData, "EditMessage");
+            return new DiscordMessage(App, returnData);
+        }
+
+        /// <summary>
+        /// Deletes a message from a text channel.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeleteMessage(Snowflake channelId, Snowflake messageId)
+        {
+            DiscordApiData data = await Rest.Delete($"channels/{channelId}/messages/{messageId}", "DeleteMessage");
+            return data.IsNull;
+        }
+
+        /// <summary>
+        /// Deletes a group of messages all at once from a text channel.
+        /// This is much faster than calling DeleteMessage for each message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> BulkDeleteMessages(Snowflake channelId, ICollection<DiscordMessage> messages)
+        {
+            Snowflake[] msgIds = new Snowflake[messages.Count];
+            int i = 0;
+            foreach (DiscordMessage msg in messages)
+                msgIds[i++] = (msg.Id);
+
+            return await BulkDeleteMessages(channelId, msgIds);
+        }
+
+        /// <summary>
+        /// Deletes a group of messages all at once from a text channel.
+        /// This is much faster than calling DeleteMessage for each message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds)
+        {
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            DiscordApiData messages = requestData.Set("messages", new DiscordApiData(DiscordApiDataType.Array));
+
+            foreach (Snowflake messageId in messageIds)
+                messages.Values.Add(new DiscordApiData(messageId));
+
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages/bulk-delete", requestData, "BulkDeleteMessages");
+            return returnData.IsNull;
+        }
+
+        /// <summary>
+        /// Gets a list of all pinned messages in a text channel.
+        /// </summary>
+        public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
+        {
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/pins", "GetPinnedMessages");
+            DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
+
+            for (int i = 0; i < messages.Length; i++)
+                messages[i] = new DiscordMessage(App, data.Values[i]);
+
+            return messages;
+        }
+
+        /// <summary>
+        /// Pins a message in a text channel.
+        /// </summary>
+        public async Task<bool> AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
+        {
+            return (await Rest.Put($"channels/{channelId}/pins/{messageId}", "AddPinnedChannelMessage")).IsNull;
+        }
+
+        /// <summary>
+        /// Unpins a message from a text channel.
+        /// </summary>
+        public async Task<bool> DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
+        {
+            return (await Rest.Delete($"channels/{channelId}/pins/{messageId}", "DeletePinnedChannelMessage")).IsNull;
+        }
         #endregion
 
         #region Reaction Management
+        /// <summary>
+        /// Adds a reaction to a message.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
+        {
+            return (await Rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "CreateReaction")).IsNull;
+        }
 
         /// <summary>
-        /// Gets a enumerable list of <see cref="DiscordUser"/> that reacted to a <see cref="DiscordMessage"/> using a particular <see cref="DiscordEmoji"/>
+        /// Deletes a reaction the currently authenticated user has made for a message.
         /// </summary>
-        /// <param name="message"><see cref="DiscordMessage"/> to check</param>
-        /// <param name="emoji"><see cref="DiscordEmoji"/> to search for</param>
-        /// <returns></returns>
-        public async Task<IEnumerable<DiscordUser>> GetUsersThatReacted(DiscordMessage message, DiscordReactionEmoji emoji)
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeleteOwnReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
-            List<DiscordUser> toReturn = new List<DiscordUser>();
-            DiscordApiData data = await endpoint.GetReactions(message.ChannelId, message.Id, emoji);
-            foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordUser(item));
-
-            return toReturn;
+            return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "DeleteOwnReaction")).IsNull;
         }
 
-        public async Task AddReaction(DiscordMessage message, DiscordReactionEmoji emoji)
-            => await endpoint.CreateReaction(message.ChannelId, message.Id, emoji);
-
-        public async Task RemoveReaction(DiscordMessage message, DiscordReactionEmoji emoji, DiscordUser owner = null)
+        /// <summary>
+        /// Deletes a reaction posted by any user.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeleteUserReaction(Snowflake channelId, Snowflake messageId, Snowflake userId, DiscordReactionEmoji emoji)
         {
-            if (owner != null) //we are deleting someone else's (or our own) reaction
-                await endpoint.DeleteUserReaction(message.ChannelId, message.Id, owner.Id, emoji);
-            else //we are deff deleting our own
-                await endpoint.DeleteOwnReaction(message.ChannelId, message.Id, emoji);
+            return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}", "DeleteUserReaction")).IsNull;
         }
 
-        public async Task ClearAllReactions(DiscordMessage message)
-            => await endpoint.DeleteAllReactions(message.ChannelId, message.Id);
+        /// <summary>
+        /// Gets a list of all users who reacted to the specified message with the specified emoji.
+        /// </summary>
+        public async Task<IReadOnlyList<DiscordUser>> GetReactions(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
+        {
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}", "GetReactions");
 
+            DiscordUser[] users = new DiscordUser[data.Values.Count];
+            for (int i = 0; i < users.Length; i++)
+                users[i] = new DiscordUser(data.Values[i]);
+
+            return users;
+        }
+
+        /// <summary>
+        /// Deletes all reactions on a message.
+        /// </summary>
+        public async Task DeleteAllReactions(Snowflake channelId, Snowflake messageId)
+        {
+            await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions", "DeleteAllReactions");
+        }
         #endregion
 
         #region Invite Management
-
-        public async Task<IEnumerable<DiscordInvite>> GetInvites(DiscordChannel channel)
-            => await GetInvites(channel.Id);
-
-        public async Task<IEnumerable<DiscordInvite>> GetInvites(Snowflake Id)
+        /// <summary>
+        /// Gets a list of all invites for the specified guild channel.
+        /// </summary>
+        public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites(Snowflake channelId)
         {
-            List<DiscordInvite> toReturn = new List<DiscordInvite>();
-            DiscordApiData data = await endpoint.GetInvites(Id);
-            foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordInvite(item));
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/invites", "GetInvites");
 
-            return toReturn;
+            DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
+            for (int i = 0; i < invites.Length; i++)
+                invites[i] = new DiscordInviteMetadata(data.Values[i]);
+
+            return invites;
         }
 
-        public async Task<DiscordInvite> CreateInvite(DiscordChannel channel,
-            TimeSpan? maxAge = null, int maxUses = 0, bool temporary = false, bool unique = false)
-            => await CreateInvite(channel.Id, maxAge, maxUses, temporary, unique);
-
-        public async Task<DiscordInvite> CreateInvite(Snowflake Id,
-            TimeSpan? maxAge = null, int maxUses = 0, bool temporary = false, bool unique = false)
+        /// <summary>
+        /// Creates a new invite for the specified guild channel.
+        /// </summary>
+        /// <param name="channelId">The ID of the guild channel.</param>
+        /// <param name="maxAge">The duration of invite before expiry, or 0 or null for never.</param>
+        /// <param name="maxUses">The max number of uses or 0 or null for unlimited.</param>
+        /// <param name="temporary">Whether this invite only grants temporary membership.</param>
+        /// <param name="unique">
+        /// If true, don't try to reuse a similar invite 
+        /// (useful for creating many unique one time use invites).
+        /// </param>
+        public async Task<DiscordInvite> CreateInvite(Snowflake channelId,
+            TimeSpan? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
         {
-            if (!maxAge.HasValue) maxAge = TimeSpan.FromHours(24); //we default to 24 hours, just like Discord's api
-            return new DiscordInvite(await endpoint.CreateInvite(Id, maxAge.Value.Seconds, maxUses, temporary, unique));
-        }
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            if (maxAge.HasValue) requestData.Set("max_age", maxAge.Value);
+            if (maxUses.HasValue) requestData.Set("max_uses", maxUses.Value);
+            if (temporary.HasValue) requestData.Set("temporary", temporary.Value);
+            if (unique.HasValue) requestData.Set("unique", unique.Value);
 
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/invites", requestData, "CreateInvite");
+            return new DiscordInvite(returnData);
+        }
         #endregion
 
-        #region Pinned Messages Management
-
-        public async Task<IEnumerable<DiscordMessage>> GetPinnedMessages(DiscordChannel channel)
-            => await GetPinnedMessages(channel.Id);
-
-        public async Task<IEnumerable<DiscordMessage>> GetPinnedMessages(Snowflake Id)
+        /// <summary>
+        /// Causes the current authenticated user to appear as typing in this channel.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> TriggerTypingIndicator(Snowflake channelId)
         {
-            List<DiscordMessage> toReturn = new List<DiscordMessage>();
-            DiscordApiData data = await endpoint.GetPinnedMessages(Id);
-            foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordMessage(app, item));
-
-            return toReturn;
+            return (await Rest.Post($"channels/{channelId}/typing", "TriggerTypingIndicator")).IsNull;
         }
-
-        public async Task PinMessage(DiscordMessage message)
-            => await PinMessage(message.ChannelId, message.Id);
-
-        public async Task PinMessage(Snowflake channelId, Snowflake messageId)
-            => await endpoint.AddPinnedChannelMessage(channelId, messageId);
-
-        public async Task UnpinMessage(DiscordMessage message)
-            => await UnpinMessage(message.ChannelId, message.Id);
-
-        public async Task UnpinMessage(Snowflake channelId, Snowflake messageId)
-            => await endpoint.DeletePinnedChannelMessage(channelId, messageId);
-
-        #endregion
-
-        #region Extra
-        public async Task<bool> StartTyping(DiscordChannel channel)
-            => await StartTyping(channel.Id);
-
-        public async Task<bool> StartTyping(Snowflake Id)
-            => (await endpoint.TriggerTypingIndicator(Id)).IsNull;
-
-        #endregion
     }
 }

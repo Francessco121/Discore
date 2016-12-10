@@ -1,4 +1,4 @@
-﻿using Discore.Http.Net;
+﻿using Discore.Http;
 using System;
 using System.Threading.Tasks;
 
@@ -14,21 +14,21 @@ namespace Discore
         /// </summary>
         public DiscordChannelType ChannelType { get; }
 
-        HttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelsEndpoint channelsHttp;
 
         internal DiscordChannel(IDiscordApplication app, DiscordApiData data, DiscordChannelType type)
             : base(data)
         {
             ChannelType = type;
-            channelsHttp = app.HttpApi.InternalApi.Channels;
+            channelsHttp = app.HttpApi.Channels;
         }
 
         /// <summary>
         /// Deletes/closes this channel.
         /// </summary>
-        public void Delete()
+        public DiscordChannel Delete()
         {
-            try { DeleteAsync().Wait(); }
+            try { return DeleteAsync().Result; }
             catch (AggregateException aex) { throw aex.InnerException; }
         }
 
@@ -36,10 +36,9 @@ namespace Discore
         /// Deletes/closes this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeleteAsync()
+        public async Task<DiscordChannel> DeleteAsync()
         {
-            DiscordApiData data = await channelsHttp.Delete(Id);
-            return data.IsNull;
+            return await channelsHttp.Delete(Id);
         }
     }
 }

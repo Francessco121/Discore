@@ -1,4 +1,4 @@
-﻿using Discore.Http.Net;
+﻿using Discore.Http;
 using System;
 using System.Threading.Tasks;
 
@@ -24,12 +24,12 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        HttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelsEndpoint channelsHttp;
 
         internal DiscordOverwrite(IDiscordApplication app, Snowflake channelId, DiscordApiData data)
             : base(data)
         {
-            channelsHttp = app.HttpApi.InternalApi.Channels;
+            channelsHttp = app.HttpApi.Channels;
 
             ChannelId = channelId;
 
@@ -63,8 +63,7 @@ namespace Discore
         /// <returns>Returns whether the operation was successful</returns>
         public async Task<bool> EditAsync(DiscordPermission allow, DiscordPermission deny)
         {
-            DiscordApiData data = await channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
-            return data.IsNull;
+            return await channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
         }
 
         /// <summary>
@@ -85,8 +84,7 @@ namespace Discore
         /// <returns>Returns whether the operation was successful</returns>
         public async Task<bool> DeleteAsync()
         {
-            DiscordApiData data = await channelsHttp.DeletePermission(ChannelId, Id);
-            return data.IsNull;
+            return await channelsHttp.DeletePermission(ChannelId, Id);
         }
 
         public override string ToString()

@@ -5,6 +5,8 @@ namespace Discore
 {
     public interface ITextChannel
     {
+        Snowflake Id { get; }
+
         /// <summary>
         /// Sends a message to this channel.
         /// </summary>
@@ -79,7 +81,7 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        IList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
+        IReadOnlyList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before);
         /// <summary>
         /// Gets a list of messages in this channel.
@@ -87,16 +89,16 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        Task<IList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null,
+        Task<IReadOnlyList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before);
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
-        IList<DiscordMessage> GetPinnedMessages();
+        IReadOnlyList<DiscordMessage> GetPinnedMessages();
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
-        Task<IList<DiscordMessage>> GetPinnedMessagesAsync();
+        Task<IReadOnlyList<DiscordMessage>> GetPinnedMessagesAsync();
 
         /// <summary>
         /// Gets the id of the last message sent in this channel.

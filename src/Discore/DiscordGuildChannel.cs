@@ -1,4 +1,4 @@
-﻿using Discore.Http.Net;
+﻿using Discore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -32,12 +32,14 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        HttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelsEndpoint channelsHttp;
 
         internal DiscordGuildChannel(IDiscordApplication app, DiscordApiData data, DiscordGuildChannelType type, 
             Snowflake? guildId) 
             : base(app, data, DiscordChannelType.Guild)
         {
+            channelsHttp = app.HttpApi.Channels;
+
             GuildChannelType = type;
 
             GuildId = guildId ?? data.GetSnowflake("guild_id").Value;
@@ -67,22 +69,17 @@ namespace Discore
         /// </summary>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvitesAsync()
         {
-            DiscordApiData data = await channelsHttp.GetInvites(Id);
-            DiscordInviteMetadata[] list = new DiscordInviteMetadata[data.Values.Count];
-            for (int i = 0; i < list.Length; i++)
-                list[i] = new DiscordInviteMetadata(data.Values[i]);
-
-            return list;
+            return await channelsHttp.GetInvites(Id);
         }
 
         /// <summary>
         /// Creates an invite to this guild, through this channel.
         /// </summary>
-        /// <param name="maxAge">Duration of invite in seconds before expiry, or 0 or null for never.</param>
+        /// <param name="maxAge">Duration of invite before expiry, or 0 or null for never.</param>
         /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
         /// <param name="temporary">Whether this invite only grants temporary membership.</param>
         /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
-        public DiscordInvite CreateInvite(int? maxAge = null, int? maxUses = null,
+        public DiscordInvite CreateInvite(TimeSpan? maxAge = null, int? maxUses = null,
             bool? temporary = null, bool? unique = null)
         {
             try { return CreateInviteAsync(maxAge, maxUses, temporary, unique).Result; }
@@ -92,15 +89,14 @@ namespace Discore
         /// <summary>
         /// Creates an invite to this guild, through this channel.
         /// </summary>
-        /// <param name="maxAge">Duration of invite in seconds before expiry, or 0 or null for never.</param>
+        /// <param name="maxAge">Duration of invite before expiry, or 0 or null for never.</param>
         /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
         /// <param name="temporary">Whether this invite only grants temporary membership.</param>
         /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
-        public async Task<DiscordInvite> CreateInviteAsync(int? maxAge = null, int? maxUses = null, 
+        public async Task<DiscordInvite> CreateInviteAsync(TimeSpan? maxAge = null, int? maxUses = null, 
             bool? temporary = null, bool? unique = null)
         {
-            DiscordApiData data = await channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
-            return new DiscordInvite(data);
+            return await channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
         }
 
         /// <summary>
@@ -156,13 +152,13 @@ namespace Discore
         async Task<bool> EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
             DiscordOverwriteType type)
         {
-            DiscordApiData data = await channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
-            return data.IsNull;
+            return await channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
         }
 
         /// <summary>
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool DeletePermission(DiscordGuildMember member)
         {
             try { return DeletePermissionAsync(member).Result; }
@@ -172,6 +168,7 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeletePermissionAsync(DiscordGuildMember member)
         {
             return await DeletePermission(member.Id);
@@ -180,6 +177,7 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite for a role.
         /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool DeletePermission(DiscordRole role)
         {
             try { return DeletePermissionAsync(role).Result; }
@@ -189,6 +187,7 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite for a role.
         /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeletePermissionAsync(DiscordRole role)
         {
             return await DeletePermission(role.Id);
@@ -197,6 +196,7 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite.
         /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public bool DeletePermission(DiscordOverwrite overwrite)
         {
             try { return DeletePermissionAsync(overwrite).Result; }
@@ -206,6 +206,7 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite.
         /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeletePermissionAsync(DiscordOverwrite overwrite)
         {
             return await DeletePermission(overwrite.Id);
@@ -213,8 +214,7 @@ namespace Discore
 
         async Task<bool> DeletePermission(Snowflake overwriteId)
         {
-            DiscordApiData data = await channelsHttp.DeletePermission(Id, overwriteId);
-            return data.IsNull;
+            return await channelsHttp.DeletePermission(Id, overwriteId);
         }
 
         public override string ToString()

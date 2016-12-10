@@ -1,4 +1,4 @@
-﻿using Discore.Http.Net;
+﻿using Discore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,14 +13,14 @@ namespace Discore
         public string Topic { get; }
 
         IDiscordApplication app;
-        HttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelsEndpoint channelsHttp;
         Snowflake lastMessageId;
 
         internal DiscordGuildTextChannel(IDiscordApplication app, DiscordApiData data, Snowflake? guildId = null)
             : base(app, data, DiscordGuildChannelType.Text, guildId)
         {
             this.app = app;
-            channelsHttp = app.HttpApi.InternalApi.Channels;
+            channelsHttp = app.HttpApi.Channels;
 
             Topic = data.GetString("topic");
             lastMessageId = data.GetSnowflake("last_message_id").Value;
@@ -43,7 +43,7 @@ namespace Discore
             Snowflake lastId = lastMessageId;
             while (true)
             {
-                IList<DiscordMessage> messages = await GetMessagesAsync(lastId, 100, DiscordMessageGetStrategy.After);
+                IReadOnlyList<DiscordMessage> messages = await GetMessagesAsync(lastId, 100, DiscordMessageGetStrategy.After);
 
                 lastId = messages[0].Id;
 
@@ -59,9 +59,9 @@ namespace Discore
         /// Modifies this text channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
-        public void Modify(string name = null, int? position = null, string topic = null)
+        public DiscordGuildTextChannel Modify(string name = null, int? position = null, string topic = null)
         {
-            try { ModifyAsync(name, position, topic).Wait(); }
+            try { return ModifyAsync(name, position, topic).Result; }
             catch (AggregateException aex) { throw aex.InnerException; }
         }
 
@@ -69,9 +69,9 @@ namespace Discore
         /// Modifies this text channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
-        public async Task ModifyAsync(string name = null, int? position = null, string topic = null)
+        public async Task<DiscordGuildTextChannel> ModifyAsync(string name = null, int? position = null, string topic = null)
         {
-            await channelsHttp.Modify(Id, name, position, topic);
+            return await channelsHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
         }
 
         /// <summary>
@@ -96,23 +96,23 @@ namespace Discore
         /// <returns>Returns the created message (or first if split into multiple).</returns>
         public async Task<DiscordMessage> SendMessageAsync(string content, bool splitIfTooLong = false, bool tts = false)
         {
-            DiscordApiData firstOrOnlyMessageData = null;
+            DiscordMessage firstOrOnlyMessage = null;
 
             if (splitIfTooLong && content.Length > DiscordMessage.MAX_CHARACTERS)
             {
                 await SplitSendMessage(content,
                     async message =>
                     {
-                        DiscordApiData msgData = await channelsHttp.CreateMessage(Id, message, tts);
+                        DiscordMessage msg = await channelsHttp.CreateMessage(Id, message, tts);
 
-                        if (firstOrOnlyMessageData == null)
-                            firstOrOnlyMessageData = msgData;
+                        if (firstOrOnlyMessage == null)
+                            firstOrOnlyMessage = msg;
                     });
             }
             else
-                firstOrOnlyMessageData = await channelsHttp.CreateMessage(Id, content, tts);
+                firstOrOnlyMessage = await channelsHttp.CreateMessage(Id, content, tts);
 
-            return new DiscordMessage(app, firstOrOnlyMessageData);
+            return firstOrOnlyMessage;
         }
 
         /// <summary>
@@ -143,26 +143,26 @@ namespace Discore
         public async Task<DiscordMessage> SendMessageAsync(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
-            DiscordApiData firstOrOnlyMessageData = null;
+            DiscordMessage firstOrOnlyMessage = null;
 
             if (splitIfTooLong && content.Length > DiscordMessage.MAX_CHARACTERS)
             {
                 await SplitSendMessage(content,
                     async message =>
                     {
-                        if (firstOrOnlyMessageData == null)
+                        if (firstOrOnlyMessage == null)
                         {
-                            DiscordApiData msgData = await channelsHttp.UploadFile(Id, fileAttachment, message, fileName, tts);
-                            firstOrOnlyMessageData = msgData;
+                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, message, fileName, tts);
+                            firstOrOnlyMessage = msg;
                         }
                         else
                             await channelsHttp.CreateMessage(Id, message, tts);
                     });
             }
             else
-                firstOrOnlyMessageData = await channelsHttp.UploadFile(Id, fileAttachment, content, fileName, tts);
+                firstOrOnlyMessage = await channelsHttp.UploadFile(Id, fileAttachment, content, fileName, tts);
 
-            return new DiscordMessage(app, firstOrOnlyMessageData);
+            return firstOrOnlyMessage;
         }
 
         async Task SplitSendMessage(string content, Func<string, Task> createMessageCallback)
@@ -204,8 +204,7 @@ namespace Discore
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> BulkDeleteMessagesAsync(IEnumerable<Snowflake> messageIds)
         {
-            DiscordApiData data = await channelsHttp.BulkDeleteMessages(Id, messageIds);
-            return data.IsNull;
+            return await channelsHttp.BulkDeleteMessages(Id, messageIds);
         }
 
         /// <summary>
@@ -224,14 +223,13 @@ namespace Discore
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> TriggerTypingIndicatorAsync()
         {
-            DiscordApiData data = await channelsHttp.TriggerTypingIndicator(Id);
-            return data.IsNull;
+            return await channelsHttp.TriggerTypingIndicator(Id);
         }
 
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
-        public IList<DiscordMessage> GetPinnedMessages()
+        public IReadOnlyList<DiscordMessage> GetPinnedMessages()
         {
             try { return GetPinnedMessagesAsync().Result; }
             catch (AggregateException aex) { throw aex.InnerException; }
@@ -240,15 +238,9 @@ namespace Discore
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
-        public async Task<IList<DiscordMessage>> GetPinnedMessagesAsync()
+        public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessagesAsync()
         {
-            DiscordApiData messagesArray = await channelsHttp.GetPinnedMessages(Id);
-            DiscordMessage[] messages = new DiscordMessage[messagesArray.Values.Count];
-
-            for (int i = 0; i < messages.Length; i++)
-                messages[i] = new DiscordMessage(app, messagesArray.Values[i]);
-
-            return messages;
+            return await channelsHttp.GetPinnedMessages(Id);
         }
 
         /// <summary>
@@ -265,8 +257,7 @@ namespace Discore
         /// </summary>
         public async Task<DiscordMessage> GetMessageAsync(Snowflake messageId)
         {
-            DiscordApiData data = await channelsHttp.GetMessage(Id, messageId);
-            return new DiscordMessage(app, data);
+            return await channelsHttp.GetMessage(Id, messageId);
         }
 
         /// <summary>
@@ -275,7 +266,7 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public IList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
+        public IReadOnlyList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
             try { return GetMessagesAsync(baseMessageId, limit, getStrategy).Result; }
@@ -288,16 +279,10 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public async Task<IList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null,
+        public async Task<IReadOnlyList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
-            DiscordApiData messagesArray = await channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
-            DiscordMessage[] messages = new DiscordMessage[messagesArray.Values.Count];
-
-            for (int i = 0; i < messages.Length; i++)
-                messages[i] = new DiscordMessage(app, messagesArray.Values[i]);
-
-            return messages;
+            return await channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
         }
     }
 }
