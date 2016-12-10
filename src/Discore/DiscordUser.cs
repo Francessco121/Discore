@@ -37,16 +37,22 @@
         /// </summary>
         public string Email { get; }
 
-        internal DiscordUser(DiscordApiData data)
+        /// <summary>
+        /// Gets whether this account is a webhook user
+        /// </summary>
+        public bool IsWebhook { get; }
+
+        internal DiscordUser(DiscordApiData data, bool isWebhookUser = false)
             : base(data)
         {
+            IsWebhook        = isWebhookUser;
             Username         = data.GetString("username");
             Discriminator    = data.GetString("discriminator");
             Avatar           = data.GetString("avatar");
-            IsVerified       = data.GetBoolean("verified").Value;
+            IsVerified       = data.GetBoolean("verified").GetValueOrDefault();
             Email            = data.GetString("email");
-            IsBot            = data.GetBoolean("bot").Value;
-            HasTwoFactorAuth = data.GetBoolean("mfa_enabled").Value;
+            IsBot            = data.GetBoolean("bot").GetValueOrDefault();
+            HasTwoFactorAuth = data.GetBoolean("mfa_enabled").GetValueOrDefault();
         }
 
         public override string ToString()

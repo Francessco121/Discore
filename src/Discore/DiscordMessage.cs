@@ -129,7 +129,7 @@ namespace Discore
                 // Get author
                 DiscordApiData authorData = data.Get("author");
                 if (authorData != null)
-                    author = new DiscordUser(authorData);
+                    author = new DiscordUser(authorData, WebhookId.HasValue);
 
                 // Get mentions
                 IList<DiscordApiData> mentionsArray = data.GetArray("mentions");

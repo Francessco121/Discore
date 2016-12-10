@@ -564,7 +564,9 @@ namespace Discore.WebSocket.Net
         {
             // Get author
             DiscordApiData authorData = data.Get("author");
-            cache.Users.Set(new DiscordUser(authorData));
+            bool isWebhook = !string.IsNullOrWhiteSpace(data.GetString("webhook_id"));
+
+            cache.Users.Set(new DiscordUser(authorData, isWebhook));
 
             // Get mentioned users
             IList<DiscordApiData> mentionsArray = data.GetArray("mentions");
