@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Http;
+using System;
 using System.Collections.Generic;
 
 namespace Discore.WebSocket
@@ -52,13 +53,13 @@ namespace Discore.WebSocket
             int numShards;
             try
             {
-                DiscordApiData data = app.HttpApi.InternalApi.Gateway.GetBot().Result;
-                numShards = data.GetInteger("shards").Value;
+                GatewayBotResponse response = app.HttpApi.Gateway.GetBot().Result;
+                numShards = response.Shards;
 
                 // GET /gateway/bot also specifies the gateway url, update local storage
                 // with this value if it differs so we don't need to call GET /gateway
                 // later on when connecting.
-                string gatewayUrl = data.GetString("url");
+                string gatewayUrl = response.Url;
                 DiscoreLocalStorage localStorage = DiscoreLocalStorage.Instance;
                 if (localStorage.GatewayUrl != gatewayUrl)
                 {

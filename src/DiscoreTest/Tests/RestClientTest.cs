@@ -15,10 +15,9 @@ namespace DiscoreTest.Tests
         {
             DiscordBotUserToken auth = new DiscordBotUserToken("");
             DiscordWebSocketApplication app = new DiscordWebSocketApplication(auth);
-            DiscordApiData data = app.HttpApi.InternalApi.Gateway.Get().Result;
+            string gatewayUrl = app.HttpApi.Gateway.Get().Result;
 
-            TestHelper.Assert(data != null, "Response should not return null");
-            TestHelper.Assert(data.ContainsKey("url"), "Response did not contain expected contents.");
+            TestHelper.Assert(gatewayUrl != null, "Response should not return null");
         }
     }
 }

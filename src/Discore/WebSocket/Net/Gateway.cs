@@ -73,8 +73,7 @@ namespace Discore.WebSocket.Net
             {
                 try
                 {
-                    DiscordApiData getData = app.HttpApi.InternalApi.Gateway.Get().Result;
-                    gatewayUrl = getData.GetString("url");
+                    gatewayUrl = app.HttpApi.Gateway.Get().Result;
                 }
                 catch (AggregateException aex) { throw aex.InnerException; }
 

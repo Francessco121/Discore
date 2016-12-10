@@ -9,6 +9,8 @@ namespace Discore.Http
         public DiscordHttpWebhookEndpoint Webhooks { get; }
         public DiscordHttpVoiceEndpoint Voice { get; }
 
+        internal DiscordHttpGatewayEndpoint Gateway { get; }
+
         internal HttpApi InternalApi { get; }
 
         internal DiscordHttpApi(IDiscordApplication app, HttpApi api)
@@ -16,6 +18,8 @@ namespace Discore.Http
             InternalApi = api;
 
             RestClient rest = new RestClient(app.Authenticator);
+
+            Gateway = new DiscordHttpGatewayEndpoint(app, rest);
 
             Users = new DiscordHttpUsersEndpoint(app, rest);
             Channels = new DiscordHttpChannelsEndpoint(app, rest);

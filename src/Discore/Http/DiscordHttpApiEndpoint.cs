@@ -1,4 +1,6 @@
-﻿namespace Discore.Http.Net
+﻿using Discore.Http.Net;
+
+namespace Discore.Http
 {
     public abstract class DiscordHttpApiEndpoint
     {
