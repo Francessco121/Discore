@@ -30,9 +30,7 @@ namespace Discore.WebSocket
             Authenticator = authenticator;
 
             ShardManager = new ShardManager(this);
-
-            HttpApi api = new HttpApi(authenticator);
-            HttpApi = new DiscordHttpApi(this, api);
+            HttpApi = new DiscordHttpApi(this);
         }
 
         public void Dispose()

@@ -19,9 +19,7 @@ namespace Discore.Http
         public DiscordHttpApplication(IDiscordAuthenticator authenticator)
         {
             Authenticator = authenticator;
-
-            HttpApi api = new HttpApi(authenticator);
-            HttpApi = new DiscordHttpApi(this, api);
+            HttpApi = new DiscordHttpApi(this);
         }
     }
 }

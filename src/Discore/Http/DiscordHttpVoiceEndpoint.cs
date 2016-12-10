@@ -5,24 +5,21 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpVoiceEndpoint
+    public sealed class DiscordHttpVoiceEndpoint : DiscordHttpApiEndpoint
     {
-        RestClient Rest;
-
-        internal DiscordHttpVoiceEndpoint(RestClient restClient)
-        {
-            Rest = restClient;
-        }
+        internal DiscordHttpVoiceEndpoint(IDiscordApplication app, RestClient rest) 
+            : base(app, rest)
+        { }
 
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceReaions()
         {
             DiscordApiData data = await Rest.Get("/voice/regions", "ListVoiceRegions");
 
-            List<DiscordVoiceRegion> toReturn = new List<DiscordVoiceRegion>();
-            foreach (DiscordApiData item in data.Values)
-                toReturn.Add(new DiscordVoiceRegion(item));
+            DiscordVoiceRegion[] regions = new DiscordVoiceRegion[data.Values.Count];
+            for (int i = 0; i < regions.Length; i++)
+                regions[i] = new DiscordVoiceRegion(data.Values[i]);
 
-            return toReturn;
+            return regions;
         }
     }
 }

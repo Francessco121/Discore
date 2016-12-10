@@ -8,14 +8,11 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpWebhookEndpoint
+    public sealed class DiscordHttpWebhookEndpoint : DiscordHttpApiEndpoint
     {
-        RestClient Rest;
-
-        internal DiscordHttpWebhookEndpoint(RestClient restClient)
-        {
-            Rest = restClient;
-        }
+        internal DiscordHttpWebhookEndpoint(IDiscordApplication app, RestClient rest) 
+            : base(app, rest)
+        { }
 
         /// <summary>
         /// Create a <see cref="DiscordWebhook"/> on a <see cref="ITextChannel"/>.
