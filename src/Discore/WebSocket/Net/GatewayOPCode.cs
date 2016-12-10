@@ -1,6 +1,6 @@
 ﻿namespace Discore.WebSocket.Net
 {
-    public enum GatewayOPCode
+    enum GatewayOPCode
     {
         Dispath = 0,
         Heartbeat,

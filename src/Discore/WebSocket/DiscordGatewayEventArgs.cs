@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Discore.WebSocket.Net
+namespace Discore.WebSocket
 {
     public abstract class DiscordGatewayEventArgs : EventArgs
     {

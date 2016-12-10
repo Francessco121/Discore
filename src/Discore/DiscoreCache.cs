@@ -1,4 +1,6 @@
-﻿namespace Discore
+﻿using Discore.Voice;
+
+namespace Discore
 {
     public sealed class DiscoreCache
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice.Net
 {
     internal enum OpusApplication : int
     {

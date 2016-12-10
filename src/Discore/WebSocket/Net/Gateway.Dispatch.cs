@@ -1,4 +1,4 @@
-﻿using Discore.WebSocket.Audio;
+﻿using Discore.Voice;
 using System;
 using System.Collections.Generic;
 

@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice.Net
 {
     internal abstract partial class OpusConverter
     {
         public unsafe static partial class UnsafeNativeMethods
         {
-            public class OpusWindows : IOpusConverter
+            public class OpusLinux : IOpusConverter
             {
                 IntPtr IOpusConverter.CreateEncoder(int Fs, int channels, int application, out OpusError error)
                 {
@@ -44,7 +44,7 @@ namespace Discore.WebSocket.Audio
                     return Decode(st, data, len, pcm, frame_size, decode_fec);
                 }
 
-                const string lib = "opus";
+                const string lib = "libopus.so.0";
 
                 [DllImport(lib, EntryPoint = "opus_encoder_create", CallingConvention = CallingConvention.Cdecl)]
                 static extern IntPtr CreateEncoder(int Fs, int channels, int application, out OpusError error);

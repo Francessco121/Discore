@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket.Audio
+﻿namespace Discore.Voice.Net
 {
     enum VoiceSocketOPCode : int
     {

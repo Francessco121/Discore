@@ -1,8 +1,8 @@
-﻿using Discore.WebSocket.Net;
+﻿using Discore.Voice.Net;
+using Discore.WebSocket;
 using System;
-using System.Threading;
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice
 {
     public class VoiceSessionEventArgs : EventArgs
     {

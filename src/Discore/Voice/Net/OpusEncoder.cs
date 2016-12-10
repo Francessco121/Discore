@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice.Net
 {
     internal class OpusEncoder : OpusConverter
     {

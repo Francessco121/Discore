@@ -25,7 +25,7 @@ namespace DiscoreBotTest
 
             DiscordBotUserToken auth = new DiscordBotUserToken(token);
             app = new DiscordWebSocketApplication(auth);
-
+            
             Shard shard = app.ShardManager.CreateSingleShard();
             if (shard.Start())
             {
@@ -46,7 +46,7 @@ namespace DiscoreBotTest
             shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
         }
 
-        private static void Gateway_OnMessageCreated(object sender, Discore.WebSocket.Net.MessageEventArgs e)
+        private static void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
         {
             DiscordChannel channel = e.Shard.Cache.Channels.Get(e.Message.ChannelId);
             DiscordApiData data = channel.Serialize();

@@ -1,9 +1,8 @@
 ﻿using Discore.Http;
 using Discore.Http.Net;
-using Discore.WebSocket;
 using System;
 
-namespace Discore
+namespace Discore.WebSocket
 {
     /// <summary>
     /// A Discord bot application.

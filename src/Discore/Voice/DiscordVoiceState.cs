@@ -1,4 +1,4 @@
-﻿namespace Discore
+﻿namespace Discore.Voice
 {
     /// <summary>
     /// Used to represent a user's voice connection status.

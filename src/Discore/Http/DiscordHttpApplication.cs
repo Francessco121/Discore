@@ -1,7 +1,6 @@
-﻿using Discore.Http;
-using Discore.Http.Net;
+﻿using Discore.Http.Net;
 
-namespace Discore
+namespace Discore.Http
 {
     /// <summary>
     /// A Discord application which only works with the Discord http/restful api.

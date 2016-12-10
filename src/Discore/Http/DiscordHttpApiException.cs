@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace Discore.Http.Net
+namespace Discore.Http
 {
     public class DiscordHttpClientException : DiscoreException
     {

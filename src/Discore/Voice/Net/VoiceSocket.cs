@@ -5,7 +5,7 @@ using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice.Net
 {
     class VoiceSocket : IDisposable
     {

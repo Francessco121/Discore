@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice.Net
 {
     class IPDiscoveryEventArgs : EventArgs
     {

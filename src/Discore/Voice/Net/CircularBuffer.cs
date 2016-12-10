@@ -2,7 +2,7 @@
 
 // http://naudio.codeplex.com/SourceControl/latest#NAudio/Utils/CircularBuffer.cs
 
-namespace Discore.WebSocket.Audio
+namespace Discore.Voice.Net
 {
     class CircularBuffer
     {

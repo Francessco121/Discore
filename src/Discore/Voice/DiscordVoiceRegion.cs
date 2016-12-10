@@ -1,4 +1,4 @@
-﻿namespace Discore
+﻿namespace Discore.Voice
 {
     /// <summary>
     /// A region for a voice server.
