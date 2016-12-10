@@ -45,17 +45,6 @@ namespace Discore
             Deny = (DiscordPermission)deny;
         }
 
-        public override DiscordApiData Serialize()
-        {
-            DiscordApiData data = base.Serialize();
-
-            data.Set("type", Type.ToString().ToLower());
-            data.Set("allow", (long)Allow);
-            data.Set("deny", (long)Deny);
-
-            return data;
-        }
-
         /// <summary>
         /// Edits the permissions of this overwrite.
         /// If successful, changes will be immediately reflected for this instance.
