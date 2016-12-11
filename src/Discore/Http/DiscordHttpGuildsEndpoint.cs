@@ -301,7 +301,7 @@ namespace Discore.Http
 
             DiscordIntegration[] integrations = new DiscordIntegration[data.Values.Count];
             for (int i = 0; i < integrations.Length; i++)
-                integrations[i] = new DiscordIntegration(data.Values[i]);
+                integrations[i] = new DiscordIntegration(data.Values[i], guildId);
 
             return integrations;
         }
@@ -360,7 +360,7 @@ namespace Discore.Http
         public async Task<DiscordGuildEmbed> GetGuildEmbed(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/embed", "GetGuildEmbed");
-            return new DiscordGuildEmbed(data);
+            return new DiscordGuildEmbed(guildId, data);
         }
 
         /// <summary>
@@ -371,7 +371,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/embed", requestData, "GetGuildEmbed");
-            return new DiscordGuildEmbed(returnData);
+            return new DiscordGuildEmbed(guildId, returnData);
         }
     }
 }
