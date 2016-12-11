@@ -170,7 +170,7 @@ namespace Discore
 
                 for (int i = 0; i < rolesData.Count; i++)
                 {
-                    DiscordRole role = new DiscordRole(rolesData[i]);
+                    DiscordRole role = new DiscordRole(Id, rolesData[i]);
                     roles.Add(role.Id, role);
                 }
 

@@ -141,7 +141,7 @@ namespace Discore.WebSocket.Net
 
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
             for (int i = 0; i < rolesArray.Count; i++)
-                guildCache.Roles.Set(new DiscordRole(rolesArray[i]));
+                guildCache.Roles.Set(new DiscordRole(guildId, rolesArray[i]));
 
             IList<DiscordApiData> emojisArray = data.GetArray("emojis");
             for (int i = 0; i < emojisArray.Count; i++)
@@ -209,7 +209,7 @@ namespace Discore.WebSocket.Net
 
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
             for (int i = 0; i < rolesArray.Count; i++)
-                guildCache.Roles.Set(new DiscordRole(rolesArray[i]));
+                guildCache.Roles.Set(new DiscordRole(guildId, rolesArray[i]));
 
             IList<DiscordApiData> emojisArray = data.GetArray("emojis");
             for (int i = 0; i < emojisArray.Count; i++)
@@ -415,7 +415,7 @@ namespace Discore.WebSocket.Net
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = guildCache.SetRole(new DiscordRole(roleData));
+                DiscordRole role = guildCache.SetRole(new DiscordRole(guildId, roleData));
 
                 OnGuildRoleCreated?.Invoke(this, new GuildRoleEventArgs(shard, guildCache.Value, role));
             }
@@ -429,7 +429,7 @@ namespace Discore.WebSocket.Net
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = guildCache.SetRole(new DiscordRole(roleData));
+                DiscordRole role = guildCache.SetRole(new DiscordRole(guildId, roleData));
 
                 OnGuildRoleUpdated?.Invoke(this, new GuildRoleEventArgs(shard, guildCache.Value, role));
             }
