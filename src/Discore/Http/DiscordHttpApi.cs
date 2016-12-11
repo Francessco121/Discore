@@ -8,6 +8,7 @@ namespace Discore.Http
         public DiscordHttpChannelsEndpoint Channels { get; }
         public DiscordHttpWebhookEndpoint Webhooks { get; }
         public DiscordHttpVoiceEndpoint Voice { get; }
+        public DiscordHttpGuildsEndpoint Guilds { get; }
 
         internal DiscordHttpGatewayEndpoint Gateway { get; }
 
@@ -21,6 +22,7 @@ namespace Discore.Http
             Channels = new DiscordHttpChannelsEndpoint(app, rest);
             Webhooks = new DiscordHttpWebhookEndpoint(app, rest);
             Voice = new DiscordHttpVoiceEndpoint(app, rest);
+            Guilds = new DiscordHttpGuildsEndpoint(app, rest);
         }
     }
 }
