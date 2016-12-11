@@ -42,9 +42,9 @@
         /// </summary>
         public bool IsSuppressed { get; }
 
-        internal DiscordVoiceState(DiscordApiData data)
+        internal DiscordVoiceState(DiscordApiData data, Snowflake? guildId = null)
         {
-            GuildId      = data.GetSnowflake("guild_id");
+            GuildId      = guildId ?? data.GetSnowflake("guild_id");
             ChannelId    = data.GetSnowflake("channel_id");
             UserId       = data.GetSnowflake("user_id").Value;
             SessionId    = data.GetString("session_id");

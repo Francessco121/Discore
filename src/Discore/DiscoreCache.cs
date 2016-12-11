@@ -1,4 +1,5 @@
-﻿using Discore.Voice;
+﻿using System;
+using Discore.Voice;
 
 namespace Discore
 {
@@ -72,7 +73,7 @@ namespace Discore
 
         public DiscoreCacheTable<DiscordGuildChannel> Channels { get; }
         public DiscoreCacheTable<DiscordGuildTextChannel> TextChannels { get; }
-        public DiscoreCacheTable<DiscordGuildVoiceChannel> VoiceChannels { get; }
+        public DiscoreCacheTable<DiscoreVoiceChannelCache> VoiceChannels { get; }
         public DiscoreCacheTable<DiscordRole> Roles { get; }
         public DiscoreCacheTable<DiscordEmoji> Emojis { get; }
         public DiscoreCacheTable<DiscoreMemberCache> Members { get; }
@@ -83,7 +84,7 @@ namespace Discore
 
             Channels = new DiscoreCacheTable<DiscordGuildChannel>();
             TextChannels = new DiscoreCacheTable<DiscordGuildTextChannel>();
-            VoiceChannels = new DiscoreCacheTable<DiscordGuildVoiceChannel>();
+            VoiceChannels = new DiscoreCacheTable<DiscoreVoiceChannelCache>();
             Roles = new DiscoreCacheTable<DiscordRole>();
             Emojis = new DiscoreCacheTable<DiscordEmoji>();
             Members = new DiscoreCacheTable<DiscoreMemberCache>();
@@ -126,13 +127,22 @@ namespace Discore
         /// <summary>
         /// Will update the cache with the specified voice channel and handle aliases.
         /// </summary>
-        internal DiscordGuildVoiceChannel SetChannel(DiscordGuildVoiceChannel voiceChannel)
+        internal DiscoreVoiceChannelCache SetChannel(DiscordGuildVoiceChannel voiceChannel)
         {
-            VoiceChannels.Set(voiceChannel);
+            DiscoreVoiceChannelCache voiceChannelCache = VoiceChannels.Get(voiceChannel.Id);
+            if (voiceChannelCache == null)
+            {
+                voiceChannelCache = new DiscoreVoiceChannelCache(this);
+                voiceChannelCache.Value = voiceChannel;
+                VoiceChannels.Set(voiceChannelCache);
+            }
+            else
+                voiceChannelCache.Value = voiceChannel;
+
             Channels.Set(voiceChannel);
             Parent.Channels.Set(voiceChannel);
 
-            return voiceChannel;
+            return voiceChannelCache;
         }
 
         /// <summary>
@@ -150,13 +160,13 @@ namespace Discore
         /// <summary>
         /// Will remove the voice channel from the cache and all aliases.
         /// </summary>
-        internal DiscordGuildVoiceChannel RemoveVoiceChannel(Snowflake id)
+        internal DiscoreVoiceChannelCache RemoveVoiceChannel(Snowflake id)
         {
-            DiscordGuildVoiceChannel channel = VoiceChannels.Remove(id);
+            DiscoreVoiceChannelCache channelCache = VoiceChannels.Remove(id);
             Channels.Remove(id);
             Parent.Channels.Remove(id);
 
-            return channel;
+            return channelCache;
         }
 
         internal override void Clear()
@@ -186,6 +196,25 @@ namespace Discore
         {
             Presence = null;
             VoiceState = null;
+        }
+    }
+
+    public sealed class DiscoreVoiceChannelCache : DiscoreTypeCache<DiscordGuildVoiceChannel>
+    {
+        public DiscoreGuildCache Parent { get; }
+
+        public DiscoreCacheTable<DiscoreMemberCache> ConnectedMembers { get; }
+
+        internal DiscoreVoiceChannelCache(DiscoreGuildCache parent)
+        {
+            Parent = parent;
+
+            ConnectedMembers = new DiscoreCacheTable<DiscoreMemberCache>();
+        }
+
+        internal override void Clear()
+        {
+            ConnectedMembers.Clear();
         }
     }
 }

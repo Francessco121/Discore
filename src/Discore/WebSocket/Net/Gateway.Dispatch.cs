@@ -150,6 +150,11 @@ namespace Discore.WebSocket.Net
             IList<DiscordApiData> membersArray = data.GetArray("members");
             for (int i = 0; i < membersArray.Count; i++)
             {
+                DiscordApiData memberData = membersArray[i];
+
+                DiscordApiData userData = memberData.Get("user");
+                cache.Users.Set(new DiscordUser(userData));
+
                 DiscoreMemberCache memberCache = new DiscoreMemberCache(guildCache);
                 memberCache.Value = new DiscordGuildMember(cache, membersArray[i], guildId);
 
@@ -166,16 +171,22 @@ namespace Discore.WebSocket.Net
                 if (channelType == "text")
                     channel = guildCache.SetChannel(new DiscordGuildTextChannel(app, channelData, guildId));
                 else if (channelType == "voice")
-                    channel = guildCache.SetChannel(new DiscordGuildVoiceChannel(app, channelData, guildId));
+                {
+                    DiscordGuildVoiceChannel voiceChannel = new DiscordGuildVoiceChannel(app, channelData, guildId);
+                    DiscoreVoiceChannelCache channelCache = guildCache.SetChannel(voiceChannel);
+                    channelCache.Clear(); // This is a GUILD_CREATE, so we need to wipe existing data.
+
+                    channel = voiceChannel;
+                }
             }
 
             IList<DiscordApiData> voiceStatesArray = data.GetArray("voice_states");
             for (int i = 0; i < voiceStatesArray.Count; i++)
             {
-                DiscordVoiceState state = new DiscordVoiceState(voiceStatesArray[i]);
+                DiscordVoiceState state = new DiscordVoiceState(voiceStatesArray[i], guildId);
                 DiscoreMemberCache memberCache;
                 if (guildCache.Members.TryGetValue(state.UserId, out memberCache))
-                    memberCache.VoiceState = state;
+                    UpdateMemberVoiceState(guildCache, memberCache, state);
             }
 
             IList<DiscordApiData> presencesArray = data.GetArray("presences");
@@ -482,7 +493,7 @@ namespace Discore.WebSocket.Net
                     if (type == "text")
                         channel = guildCache.SetChannel(new DiscordGuildTextChannel(app, data));
                     else if (type == "voice")
-                        channel = guildCache.SetChannel(new DiscordGuildVoiceChannel(app, data));
+                        channel = guildCache.SetChannel(new DiscordGuildVoiceChannel(app, data)).Value;
 
                     if (channel != null)
                         OnGuildChannelCreated?.Invoke(this, new GuildChannelEventArgs(shard, channel));
@@ -504,7 +515,7 @@ namespace Discore.WebSocket.Net
                 if (type == "text")
                     channel = guildCache.SetChannel(new DiscordGuildTextChannel(app, data));
                 else if (type == "voice")
-                    channel = guildCache.SetChannel(new DiscordGuildVoiceChannel(app, data));
+                    channel = guildCache.SetChannel(new DiscordGuildVoiceChannel(app, data)).Value;
 
                 if (channel != null)
                     OnGuildChannelUpdated?.Invoke(this, new GuildChannelEventArgs(shard, channel));
@@ -546,7 +557,7 @@ namespace Discore.WebSocket.Net
                     }
                     else if (type == "voice")
                     {
-                        channel = guildCache.RemoveVoiceChannel(id);
+                        channel = guildCache.RemoveVoiceChannel(id).Value;
 
                         // Channel wasn't found anywhere in the cache, but we can recreate it.
                         if (channel == null)
@@ -700,6 +711,34 @@ namespace Discore.WebSocket.Net
         }
 
         #region Voice
+        /// <summary>
+        /// Handles updating the cache list of members connected to voice channels,
+        /// as well as updating the voice state.
+        /// </summary>
+        void UpdateMemberVoiceState(DiscoreGuildCache guildCache, DiscoreMemberCache memberCache, DiscordVoiceState newState)
+        {
+            // Save old state
+            DiscordVoiceState previousState = memberCache.VoiceState;
+
+            // Set new state
+            memberCache.VoiceState = newState;
+
+            if (previousState != null && previousState.ChannelId.HasValue
+                && newState.ChannelId != previousState.ChannelId)
+            {
+                // Remove user from connected members list of previous state
+                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(previousState.ChannelId.Value);
+                voiceChannelCache.ConnectedMembers.Remove(memberCache.DictionaryId);
+            }
+
+            if (newState.ChannelId.HasValue)
+            {
+                // Add user to connected members list of new state
+                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(newState.ChannelId.Value);
+                voiceChannelCache.ConnectedMembers.Set(memberCache);
+            }
+        }
+
         void HandleVoiceStateUpdateEvent(DiscordApiData data)
         {
             Snowflake? guildId = data.GetSnowflake("guild_id");
@@ -713,14 +752,15 @@ namespace Discore.WebSocket.Net
                     DiscoreMemberCache memberCache;
                     if (guildCache.Members.TryGetValue(userId, out memberCache))
                     {
-                        memberCache.VoiceState = new DiscordVoiceState(data);
+                        DiscordVoiceState newState = new DiscordVoiceState(data, guildId.Value);
+                        UpdateMemberVoiceState(guildCache, memberCache, newState);
 
                         if (userId == shard.User.Id)
                         {
                             // If this voice state belongs to the current authenticated user,
                             // then we need to notify the connection of the session id.
                             DiscordVoiceConnection connection;
-                            if (shard.VoiceConnectionsTable.TryGetValue(guildId.Value, out connection))
+                            if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                             {
                                 if (memberCache.VoiceState.ChannelId != null)
                                 {
@@ -748,7 +788,7 @@ namespace Discore.WebSocket.Net
                 string endpoint = data.GetString("endpoint");
 
                 DiscordVoiceConnection connection;
-                if (shard.VoiceConnectionsTable.TryGetValue(guildId.Value, out connection))
+                if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
                     // Notify the connection of the server update
                     connection.OnVoiceServerUpdated(token, endpoint);

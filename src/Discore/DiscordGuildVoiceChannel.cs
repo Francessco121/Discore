@@ -1,5 +1,6 @@
 ﻿using Discore.Http;
-using System;
+using Discore.Voice;
+using Discore.WebSocket;
 using System.Threading.Tasks;
 
 namespace Discore

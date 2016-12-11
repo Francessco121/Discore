@@ -1,5 +1,6 @@
 ﻿using Discore.Voice.Net;
 using Discore.WebSocket;
+using Discore.WebSocket.Net;
 using System;
 
 namespace Discore.Voice
@@ -74,7 +75,7 @@ namespace Discore.Voice
             get
             {
                 return voiceState != null && voiceState.ChannelId.HasValue 
-                    ? guildCache.VoiceChannels.Get(voiceState.ChannelId.Value) 
+                    ? guildCache.VoiceChannels.Get(voiceState.ChannelId.Value).Value 
                     : intialVoiceChannel;
             }
         }
@@ -98,6 +99,8 @@ namespace Discore.Voice
         DiscoreGuildCache guildCache;
         DiscoreMemberCache memberCache;
 
+        Gateway gateway;
+
         VoiceSocket socket;
         DiscordVoiceState voiceState;
         DiscoreLogger log;
@@ -110,11 +113,12 @@ namespace Discore.Voice
 
         bool isSpeaking;
 
-        internal DiscordVoiceConnection(Shard shard, DiscoreGuildCache guildCache, DiscoreMemberCache memberCache,
+        internal DiscordVoiceConnection(Shard shard, Gateway gateway, DiscoreGuildCache guildCache, DiscoreMemberCache memberCache,
             DiscordGuildVoiceChannel intialVoiceChannel)
         {
             Shard = shard;
 
+            this.gateway = gateway;
             this.guildCache = guildCache;
             this.memberCache = memberCache;
 
@@ -265,10 +269,9 @@ namespace Discore.Voice
 
                 log.LogVerbose("[Invalidate] Disconnecting...");
 
-                Shard.InternalGateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false);
+                gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false);
 
-                DiscordVoiceConnection temp;
-                Shard.VoiceConnectionsTable.TryRemove(Guild.Id, out temp);
+                Shard.Voice.RemoveVoiceConnection(Guild.Id);
 
                 OnInvalidated?.Invoke(this, new VoiceSessionEventArgs(Shard, this));
             }
