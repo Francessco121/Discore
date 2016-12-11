@@ -212,17 +212,7 @@ namespace Discore
         /// Adds a reaction to this message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool AddReaction(DiscordReactionEmoji emoji)
-        {
-            try { return AddReactionAsync(emoji).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Adds a reaction to this message.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> AddReactionAsync(DiscordReactionEmoji emoji)
+        public async Task<bool> AddReaction(DiscordReactionEmoji emoji)
         {
             return await channelsHttp.CreateReaction(ChannelId, Id, emoji);
         }
@@ -231,17 +221,7 @@ namespace Discore
         /// Removes a reaction from this message added from the current authenticated user.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
-        {
-            try { return RemoveMyReactionAsync(reactionEmoji).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Removes a reaction from this message added from the current authenticated user.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> RemoveMyReactionAsync(DiscordReactionEmoji reactionEmoji)
+        public async Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
             return await channelsHttp.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
         }
@@ -252,19 +232,7 @@ namespace Discore
         /// <param name="user">The user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
-        {
-            try { return RemoveReactionAsync(user, reactionEmoji).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Removes a reaction from this message.
-        /// </summary>
-        /// <param name="user">The user who added the reacted.</param>
-        /// <param name="reactionEmoji"></param>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> RemoveReactionAsync(DiscordUser user, DiscordReactionEmoji reactionEmoji)
+        public async Task<bool> RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
             return await channelsHttp.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
         }
@@ -272,16 +240,7 @@ namespace Discore
         /// <summary>
         /// Gets all users who reacted with the specified emoji to this message.
         /// </summary>
-        public IReadOnlyList<DiscordUser> GetReactions(DiscordReactionEmoji reactionEmoji)
-        {
-            try { return GetReactionsAsync(reactionEmoji).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Gets all users who reacted with the specified emoji to this message.
-        /// </summary>
-        public async Task<IReadOnlyList<DiscordUser>> GetReactionsAsync(DiscordReactionEmoji reactionEmoji)
+        public async Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
             return await channelsHttp.GetReactions(ChannelId, Id, reactionEmoji);
         }
@@ -289,16 +248,7 @@ namespace Discore
         /// <summary>
         /// Deletes all reactions to this message.
         /// </summary>
-        public void DeleteAllReactions()
-        {
-            try { DeleteAllReactionsAsync().Wait(); }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes all reactions to this message.
-        /// </summary>
-        public async Task DeleteAllReactionsAsync()
+        public async Task DeleteAllReactions()
         {
             await channelsHttp.DeleteAllReactions(ChannelId, Id);
         }
@@ -307,17 +257,7 @@ namespace Discore
         /// Pins this message to the channel it was sent in.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool Pin()
-        {
-            try { return PinAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Pins this message to the channel it was sent in.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> PinAsync()
+        public async Task<bool> Pin()
         {
             return await channelsHttp.AddPinnedChannelMessage(ChannelId, Id);
         }
@@ -326,17 +266,7 @@ namespace Discore
         /// Unpins this message from the channel it was sent in.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool Unpin()
-        {
-            try { return UnpinAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Unpins this message from the channel it was sent in.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> UnpinAsync()
+        public async Task<bool> Unpin()
         {
             return await channelsHttp.DeletePinnedChannelMessage(ChannelId, Id);
         }
@@ -347,19 +277,7 @@ namespace Discore
         /// </summary>
         /// <param name="newContent">The new contents.</param>
         /// <returns>Returns the editted message.</returns>
-        public DiscordMessage Edit(string newContent)
-        {
-            try { return EditAsync(newContent).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Changes the contents of this message.
-        /// Note: changes will not be reflected in this message instance.
-        /// </summary>
-        /// <param name="newContent">The new contents.</param>
-        /// <returns>Returns the editted message.</returns>
-        public async Task<DiscordMessage> EditAsync(string newContent)
+        public async Task<DiscordMessage> Edit(string newContent)
         {
             return await channelsHttp.EditMessage(ChannelId, Id, newContent);
         }
@@ -367,16 +285,7 @@ namespace Discore
         /// <summary>
         /// Deletes this message.
         /// </summary>
-        public bool Delete()
-        {
-            try { return DeleteAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes this message.
-        /// </summary>
-        public async Task<bool> DeleteAsync()
+        public async Task<bool> Delete()
         {
             return await channelsHttp.DeleteMessage(ChannelId, Id);
         }

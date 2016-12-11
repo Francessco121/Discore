@@ -235,12 +235,11 @@ namespace Discore.Http
         /// This is much faster than calling DeleteMessage for each message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(Snowflake channelId, ICollection<DiscordMessage> messages)
+        public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages)
         {
-            Snowflake[] msgIds = new Snowflake[messages.Count];
-            int i = 0;
+            List<Snowflake> msgIds = new List<Snowflake>();
             foreach (DiscordMessage msg in messages)
-                msgIds[i++] = (msg.Id);
+                msgIds.Add(msg.Id);
 
             return await BulkDeleteMessages(channelId, msgIds);
         }

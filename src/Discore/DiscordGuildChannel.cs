@@ -58,16 +58,7 @@ namespace Discore
         /// <summary>
         /// Gets a list of all invites for this channel.
         /// </summary>
-        public IReadOnlyList<DiscordInviteMetadata> GetInvites()
-        {
-            try { return GetInvitesAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Gets a list of all invites for this channel.
-        /// </summary>
-        public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvitesAsync()
+        public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
         {
             return await channelsHttp.GetInvites(Id);
         }
@@ -79,21 +70,7 @@ namespace Discore
         /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
         /// <param name="temporary">Whether this invite only grants temporary membership.</param>
         /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
-        public DiscordInvite CreateInvite(TimeSpan? maxAge = null, int? maxUses = null,
-            bool? temporary = null, bool? unique = null)
-        {
-            try { return CreateInviteAsync(maxAge, maxUses, temporary, unique).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Creates an invite to this guild, through this channel.
-        /// </summary>
-        /// <param name="maxAge">Duration of invite before expiry, or 0 or null for never.</param>
-        /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
-        /// <param name="temporary">Whether this invite only grants temporary membership.</param>
-        /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
-        public async Task<DiscordInvite> CreateInviteAsync(TimeSpan? maxAge = null, int? maxUses = null, 
+        public async Task<DiscordInvite> CreateInvite(TimeSpan? maxAge = null, int? maxUses = null, 
             bool? temporary = null, bool? unique = null)
         {
             return await channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
@@ -106,20 +83,7 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
-        {
-            try { return EditPermissionsAsync(member, allow, deny).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Adds/edits a guild member permission overwrite for this channel.
-        /// </summary>
-        /// <param name="member">The member this overwrite will change permissions for.</param>
-        /// <param name="allow">Specifically allowed permissions.</param>
-        /// <param name="deny">Specifically denied permissions.</param>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> EditPermissionsAsync(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
+        public async Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
             return await EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
         }
@@ -131,20 +95,7 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
-        {
-            try { return EditPermissionsAsync(role, allow, deny).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Adds/edits a role permission overwrite for this channel.
-        /// </summary>
-        /// <param name="role">The role this overwrite will change permissions for.</param>
-        /// <param name="allow">Specifically allowed permissions.</param>
-        /// <param name="deny">Specifically denied permissions.</param>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> EditPermissionsAsync(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
+        public async Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
             return await EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
         }
@@ -159,17 +110,7 @@ namespace Discore
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool DeletePermission(DiscordGuildMember member)
-        {
-            try { return DeletePermissionAsync(member).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite for a guild member.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeletePermissionAsync(DiscordGuildMember member)
+        public async Task<bool> DeletePermission(DiscordGuildMember member)
         {
             return await DeletePermission(member.Id);
         }
@@ -178,17 +119,7 @@ namespace Discore
         /// Deletes a permission overwrite for a role.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool DeletePermission(DiscordRole role)
-        {
-            try { return DeletePermissionAsync(role).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite for a role.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeletePermissionAsync(DiscordRole role)
+        public async Task<bool> DeletePermission(DiscordRole role)
         {
             return await DeletePermission(role.Id);
         }
@@ -197,17 +128,7 @@ namespace Discore
         /// Deletes a permission overwrite.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool DeletePermission(DiscordOverwrite overwrite)
-        {
-            try { return DeletePermissionAsync(overwrite).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeletePermissionAsync(DiscordOverwrite overwrite)
+        public async Task<bool> DeletePermission(DiscordOverwrite overwrite)
         {
             return await DeletePermission(overwrite.Id);
         }

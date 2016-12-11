@@ -187,7 +187,7 @@ namespace Discore.Http
 
             DiscordRole[] roles = new DiscordRole[data.Values.Count];
             for (int i = 0; i < roles.Length; i++)
-                roles[i] = new DiscordRole(data.Values[i]);
+                roles[i] = new DiscordRole(guildId, data.Values[i]);
 
             return roles;
         }
@@ -198,7 +198,7 @@ namespace Discore.Http
         public async Task<DiscordRole> CreateGuildRole(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Post($"guilds/{guildId}/roles", "CreateGuildRole");
-            return new DiscordRole(data);
+            return new DiscordRole(guildId, data);
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace Discore.Http
 
             DiscordRole[] roles = new DiscordRole[returnData.Values.Count];
             for (int i = 0; i < roles.Length; i++)
-                roles[i] = new DiscordRole(returnData.Values[i]);
+                roles[i] = new DiscordRole(guildId, returnData.Values[i]);
 
             return roles;
         }
@@ -228,7 +228,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData, "ModifyGuildRole");
-            return new DiscordRole(returnData);
+            return new DiscordRole(guildId, returnData);
         }
 
         /// <summary>
@@ -237,7 +237,7 @@ namespace Discore.Http
         public async Task<DiscordRole> DeleteGuildRole(Snowflake guildId, Snowflake roleId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}/roles/{roleId}", "DeleteGuildRole");
-            return new DiscordRole(data);
+            return new DiscordRole(guildId, data);
         }
 
         /// <summary>

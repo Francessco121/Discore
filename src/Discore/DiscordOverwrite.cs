@@ -50,18 +50,7 @@ namespace Discore
         /// If successful, changes will be immediately reflected for this instance.
         /// </summary>
         /// <returns>Returns whether the operation was successful</returns>
-        public bool Edit(DiscordPermission allow, DiscordPermission deny)
-        {
-            try { return EditAsync(allow, deny).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Edits the permissions of this overwrite.
-        /// If successful, changes will be immediately reflected for this instance.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful</returns>
-        public async Task<bool> EditAsync(DiscordPermission allow, DiscordPermission deny)
+        public async Task<bool> Edit(DiscordPermission allow, DiscordPermission deny)
         {
             return await channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
         }
@@ -71,18 +60,7 @@ namespace Discore
         /// If successful, changes will be immediately reflected for the channel this overwrite was in.
         /// </summary>
         /// <returns>Returns whether the operation was successful</returns>
-        public bool Delete()
-        {
-            try { return DeleteAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes this overwrite.
-        /// If successful, changes will be immediately reflected for the channel this overwrite was in.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful</returns>
-        public async Task<bool> DeleteAsync()
+        public async Task<bool> Delete()
         {
             return await channelsHttp.DeletePermission(ChannelId, Id);
         }

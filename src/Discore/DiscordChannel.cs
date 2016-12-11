@@ -1,5 +1,4 @@
 ﻿using Discore.Http;
-using System;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -26,17 +25,8 @@ namespace Discore
         /// <summary>
         /// Deletes/closes this channel.
         /// </summary>
-        public DiscordChannel Delete()
-        {
-            try { return DeleteAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Deletes/closes this channel.
-        /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<DiscordChannel> DeleteAsync()
+        public async Task<DiscordChannel> Delete()
         {
             return await channelsHttp.Delete(Id);
         }

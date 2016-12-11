@@ -9,6 +9,10 @@
     public sealed class DiscordRole : DiscordIdObject
     {
         /// <summary>
+        /// Gets the id of the guild this role is for.
+        /// </summary>
+        public Snowflake GuildId { get; }
+        /// <summary>
         /// Gets the name of this role.
         /// </summary>
         public string Name { get; }
@@ -37,9 +41,11 @@
         /// </summary>
         public bool IsMentionable { get; }
 
-        internal DiscordRole(DiscordApiData data)
+        internal DiscordRole(Snowflake guildId, DiscordApiData data)
             : base(data)
         {
+            GuildId = guildId;
+
             Name = data.GetString("name");
             IsHoisted = data.GetBoolean("hoist").Value;
             Position = data.GetInteger("position").Value;

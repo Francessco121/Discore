@@ -53,21 +53,12 @@ namespace Discore
         /// <summary>
         /// Gets the id of the last message sent in this channel.
         /// </summary>
-        public Snowflake GetLastMessageId()
-        {
-            try { return GetLastMessageIdAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Gets the id of the last message sent in this channel.
-        /// </summary>
-        public async Task<Snowflake> GetLastMessageIdAsync()
+        public async Task<Snowflake> GetLastMessageId()
         {
             Snowflake lastId = lastMessageId;
             while (true)
             {
-                IReadOnlyList<DiscordMessage> messages = await GetMessagesAsync(lastId, 100, DiscordMessageGetStrategy.After);
+                IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, DiscordMessageGetStrategy.After);
 
                 lastId = messages[0].Id;
 
@@ -86,20 +77,7 @@ namespace Discore
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
-        public DiscordMessage SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
-        {
-            try { return SendMessageAsync(content, splitIfTooLong, tts).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Sends a message to this channel.
-        /// </summary>
-        /// <param name="content">The message text content.</param>
-        /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
-        /// <param name="tts">Whether this should be played over text-to-speech.</param>
-        /// <returns>Returns the created message (or first if split into multiple).</returns>
-        public async Task<DiscordMessage> SendMessageAsync(string content, bool splitIfTooLong = false, bool tts = false)
+        public async Task<DiscordMessage> SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
         {
             DiscordMessage firstOrOnlyMessage = null;
 
@@ -129,23 +107,7 @@ namespace Discore
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
-        public DiscordMessage SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
-            bool splitIfTooLong = false, bool tts = false)
-        {
-            try { return SendMessageAsync(fileAttachment, fileName, content, splitIfTooLong, tts).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Sends a message with a file attachment to this channel.
-        /// </summary>
-        /// <param name="fileAttachment">The file data to attach.</param>
-        /// <param name="fileName">The name of the file.</param>
-        /// <param name="content">The message text content.</param>
-        /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
-        /// <param name="tts">Whether this should be played over text-to-speech.</param>
-        /// <returns>Returns the created message (or first if split into multiple).</returns>
-        public async Task<DiscordMessage> SendMessageAsync(byte[] fileAttachment, string fileName = null, string content = null,
+        public async Task<DiscordMessage> SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
             DiscordMessage firstOrOnlyMessage = null;
@@ -196,10 +158,9 @@ namespace Discore
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
+        public async Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages)
         {
-            try { return BulkDeleteMessagesAsync(messageIds).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
+            return await channelsHttp.BulkDeleteMessages(Id, messages);
         }
 
         /// <summary>
@@ -207,7 +168,7 @@ namespace Discore
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessagesAsync(IEnumerable<Snowflake> messageIds)
+        public async Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
         {
             return await channelsHttp.BulkDeleteMessages(Id, messageIds);
         }
@@ -216,17 +177,7 @@ namespace Discore
         /// Causes the current authenticated user to appear as typing in this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public bool TriggerTypingIndicator()
-        {
-            try { return TriggerTypingIndicatorAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Causes the current authenticated user to appear as typing in this channel.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> TriggerTypingIndicatorAsync()
+        public async Task<bool> TriggerTypingIndicator()
         {
             return await channelsHttp.TriggerTypingIndicator(Id);
         }
@@ -234,16 +185,7 @@ namespace Discore
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
-        public IReadOnlyList<DiscordMessage> GetPinnedMessages()
-        {
-            try { return GetPinnedMessagesAsync().Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Gets a list of all pinned messages in this channel.
-        /// </summary>
-        public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessagesAsync()
+        public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages()
         {
             return await channelsHttp.GetPinnedMessages(Id);
         }
@@ -251,16 +193,7 @@ namespace Discore
         /// <summary>
         /// Gets a message in this channel.
         /// </summary>
-        public DiscordMessage GetMessage(Snowflake messageId)
-        {
-            try { return GetMessageAsync(messageId).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Gets a message in this channel.
-        /// </summary>
-        public async Task<DiscordMessage> GetMessageAsync(Snowflake messageId)
+        public async Task<DiscordMessage> GetMessage(Snowflake messageId)
         {
             return await channelsHttp.GetMessage(Id, messageId);
         }
@@ -271,20 +204,7 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public IReadOnlyList<DiscordMessage> GetMessages(Snowflake baseMessageId, int? limit = null,
-            DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
-        {
-            try { return GetMessagesAsync(baseMessageId, limit, getStrategy).Result; }
-            catch (AggregateException aex) { throw aex.InnerException; }
-        }
-
-        /// <summary>
-        /// Gets a list of messages in this channel.
-        /// </summary>
-        /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
-        /// <param name="limit">Maximum number of messages to be returned.</param>
-        /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public async Task<IReadOnlyList<DiscordMessage>> GetMessagesAsync(Snowflake baseMessageId, int? limit = null, 
+        public async Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null, 
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
             return await channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
