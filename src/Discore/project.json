@@ -26,6 +26,6 @@
   "buildOptions": {
     "allowUnsafe": true,
     "xmlDoc": true,
-    "nowarn": [ "1591" ]
+    "nowarn": [ "1591", "1573" ]
   }
 }
