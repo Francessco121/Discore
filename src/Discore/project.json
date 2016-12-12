@@ -1,9 +1,21 @@
 {
   "title": "Discore",
+  "version": "2.0.0.0",
   "copyright": "Bundled Sticks Inkorporated 2016",
-  "description": "A .NET Core library for interacting with the Discord API.",
+  "description": "Discore aims to fully implement two sides of the Discord API: the HTTP API, and the realtime WebSocket API. It's designed for creating Discord bot applications, as well as applications that do not require realtime data. Please note! Discore is not an official Discord API wrapper.",
+  "authors": [ "Ethan Lafrenais", "Tristan Smith" ],
 
-  "version": "2.0.0-*",
+  "packOptions": {
+    "licenseUrl": "https://github.com/BundledSticksInkorperated/Discore/blob/master/LICENSE.md",
+    "requireLicenseAcceptance": true,
+    "projectUrl": "https://bundledsticksinkorperated.github.io/Discore/",
+    "summary": "A .NET Core library for interacting with the Discord API.",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/BundledSticksInkorperated/Discore.git"
+    },
+    "tags": [ "Discord", "Discore", "DiscordApi" ]
+  },
 
   "dependencies": {
     "NETStandard.Library": "1.6.1",
