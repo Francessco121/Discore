@@ -1,9 +1,11 @@
 # Discore
 ***Discord + .NET Core = Discore***
 
-Discore is a [.NET Core](https://dotnet.github.io/) library for interacting with the [Discord](https://discordapp.com/) API.
+A [.NET Core](https://dotnet.github.io/) library for interacting with the [Discord](https://discordapp.com/) API.
 
-Discore aims to fully implement two sides of the Discord API; the HTTP API, and the realtime WebSocket API. It's designed for creating Discord bot applications, as well as applications that do not require realtime data.
+Discore aims to fully implement two sides of the Discord API: the HTTP API, and the realtime WebSocket API. It's designed for creating Discord bot applications, as well as applications that do not require realtime data.
+
+**Please note!** Discore is **not** an official Discord API wrapper.
 
 Released under the [MIT License](../master/LICENSE.md).
 
@@ -63,3 +65,6 @@ namespace DiscorePingPong
     }
 }
 ```
+
+## Alternatives
+- [Discord.Net](https://github.com/RogueException/Discord.Net)
