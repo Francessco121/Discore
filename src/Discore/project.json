@@ -1,7 +1,7 @@
 {
   "title": "Discore",
   "copyright": "Bundled Sticks Inkorporated 2016",
-  "description": ".NET Core Library for Discord",
+  "description": "A .NET Core library for interacting with the Discord API.",
 
   "version": "2.0.0-*",
 
