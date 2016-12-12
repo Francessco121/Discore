@@ -110,7 +110,7 @@ namespace Discore.WebSocket.Net
             foreach (DiscordApiData unavailableGuildData in data.GetArray("guilds"))
             {
                 DiscoreGuildCache guildCache = new DiscoreGuildCache(cache);
-                guildCache.Value = new DiscordGuild(unavailableGuildData);
+                guildCache.Value = new DiscordGuild(app, guildCache, unavailableGuildData);
 
                 cache.Guilds.Set(guildCache);
             }
@@ -130,18 +130,18 @@ namespace Discore.WebSocket.Net
             if (guildCache == null)
             {
                 guildCache = new DiscoreGuildCache(cache);
-                guildCache.Value = new DiscordGuild(guildCache, data);
+                guildCache.Value = new DiscordGuild(app, guildCache, data);
 
                 cache.Guilds.Set(guildCache);
             }
             else
-                guildCache.Value = new DiscordGuild(guildCache, data);
+                guildCache.Value = new DiscordGuild(app, guildCache, data);
 
             guildCache.Clear();
 
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
             for (int i = 0; i < rolesArray.Count; i++)
-                guildCache.Roles.Set(new DiscordRole(guildId, rolesArray[i]));
+                guildCache.Roles.Set(new DiscordRole(app, guildId, rolesArray[i]));
 
             IList<DiscordApiData> emojisArray = data.GetArray("emojis");
             for (int i = 0; i < emojisArray.Count; i++)
@@ -156,7 +156,7 @@ namespace Discore.WebSocket.Net
                 cache.Users.Set(new DiscordUser(userData));
 
                 DiscoreMemberCache memberCache = new DiscoreMemberCache(guildCache);
-                memberCache.Value = new DiscordGuildMember(cache, membersArray[i], guildId);
+                memberCache.Value = new DiscordGuildMember(app, cache, membersArray[i], guildId);
 
                 guildCache.Members.Set(memberCache);
             }
@@ -216,11 +216,11 @@ namespace Discore.WebSocket.Net
                 cache.Guilds.Set(guildCache);
             }
 
-            guildCache.Value = new DiscordGuild(guildCache, data);
+            guildCache.Value = new DiscordGuild(app, guildCache, data);
 
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
             for (int i = 0; i < rolesArray.Count; i++)
-                guildCache.Roles.Set(new DiscordRole(guildId, rolesArray[i]));
+                guildCache.Roles.Set(new DiscordRole(app, guildId, rolesArray[i]));
 
             IList<DiscordApiData> emojisArray = data.GetArray("emojis");
             for (int i = 0; i < emojisArray.Count; i++)
@@ -330,14 +330,14 @@ namespace Discore.WebSocket.Net
                 if (memberCache == null)
                 {
                     memberCache = new DiscoreMemberCache(guildCache);
-                    memberCache.Value = new DiscordGuildMember(cache, data, guildId);
+                    memberCache.Value = new DiscordGuildMember(app, cache, data, guildId);
 
                     guildCache.Members.Set(memberCache);
                 }
                 else
                 {
                     memberCache.Clear();
-                    memberCache.Value = new DiscordGuildMember(cache, data, guildId);
+                    memberCache.Value = new DiscordGuildMember(app, cache, data, guildId);
                 }
 
                 OnGuildMemberAdded?.Invoke(this, new GuildMemberEventArgs(shard, guildCache.Value, memberCache.Value));
@@ -426,7 +426,7 @@ namespace Discore.WebSocket.Net
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = guildCache.SetRole(new DiscordRole(guildId, roleData));
+                DiscordRole role = guildCache.SetRole(new DiscordRole(app, guildId, roleData));
 
                 OnGuildRoleCreated?.Invoke(this, new GuildRoleEventArgs(shard, guildCache.Value, role));
             }
@@ -440,7 +440,7 @@ namespace Discore.WebSocket.Net
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = guildCache.SetRole(new DiscordRole(guildId, roleData));
+                DiscordRole role = guildCache.SetRole(new DiscordRole(app, guildId, roleData));
 
                 OnGuildRoleUpdated?.Invoke(this, new GuildRoleEventArgs(shard, guildCache.Value, role));
             }

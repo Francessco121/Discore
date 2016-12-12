@@ -25,7 +25,7 @@ namespace Discore.Http
         /// </summary>
         public IReadOnlyCollection<DiscordIntegration> Integrations { get; }
 
-        internal DiscordConnection(DiscordApiData data)
+        internal DiscordConnection(IDiscordApplication app, DiscordApiData data)
             : base(data)
         {
             Name = data.GetString("name");
@@ -36,7 +36,7 @@ namespace Discore.Http
             DiscordIntegration[] integrations = new DiscordIntegration[integrationsData.Count];
 
             for (int i = 0; i < integrationsData.Count; i++)
-                integrations[i] = new DiscordIntegration(integrationsData[i]);
+                integrations[i] = new DiscordIntegration(app, integrationsData[i]);
 
             Integrations = new ReadOnlyCollection<DiscordIntegration>(integrations);
         }

@@ -17,7 +17,7 @@ namespace Discore
         /// </summary>
         public int UserLimit { get; }
 
-        DiscordHttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
 
         internal DiscordGuildVoiceChannel(IDiscordApplication app, DiscordApiData data, Snowflake? guildId = null)
             : base(app, data, DiscordGuildChannelType.Voice, guildId)

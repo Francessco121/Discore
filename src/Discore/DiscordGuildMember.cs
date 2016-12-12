@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Discore.Http;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -40,23 +42,26 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
+        DiscordHttpGuildEndpoint guildsHttp;
         DiscoreCache cache;
         DiscordUser user;
 
-        internal DiscordGuildMember(DiscoreCache cache, DiscordApiData data, Snowflake guildId)
-            : this(data, guildId, true)
+        internal DiscordGuildMember(IDiscordApplication app, DiscoreCache cache, DiscordApiData data, Snowflake guildId)
+            : this(app, data, guildId, true)
         {
             this.cache = cache;
         }
 
-        internal DiscordGuildMember(DiscordApiData data, Snowflake guildId)
-            : this(data, guildId, false)
+        internal DiscordGuildMember(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
+            : this(app, data, guildId, false)
         { }
 
-        private DiscordGuildMember(DiscordApiData data, Snowflake guildId, bool isWebSocket)
+        private DiscordGuildMember(IDiscordApplication app, DiscordApiData data, Snowflake guildId, bool isWebSocket)
             // We do not specify the base constructor here because the member ID must be
             // manually retrieved, as it is actually the user id rather than a unique one.
         {
+            guildsHttp = app.HttpApi.Guilds;
+
             GuildId = guildId;
 
             Nickname = data.GetString("nick");
@@ -97,6 +102,34 @@ namespace Discore
             newMember.Nickname = updateData.GetString("nick");
 
             return newMember;
+        }
+
+        /// <summary>
+        /// Modifies the attributes of this member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Modify(ModifyGuildMemberParameters parameters)
+        {
+            return await guildsHttp.ModifyMember(GuildId, Id, parameters);
+        }
+
+        /// <summary>
+        /// Removes this user from the guild they are a member of.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Kick()
+        {
+            return await guildsHttp.RemoveMember(GuildId, Id);
+        }
+
+        /// <summary>
+        /// Bans this user from the guild they are a member of.
+        /// </summary>
+        /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Ban(int? deleteMessageDays = null)
+        {
+            return await guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
         }
 
         public override string ToString()

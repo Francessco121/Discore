@@ -15,25 +15,10 @@ namespace Discore.Http
         { }
 
         /// <summary>
-        /// Create a <see cref="DiscordWebhook"/> on a <see cref="ITextChannel"/>.
+        /// Creates a webhook.
         /// </summary>
-        /// <param name="name">Webhook bot's username that shows in chat.</param>
-        /// <param name="avatar">Webhook bot's avatar.</param>
-        /// <param name="channel">The channel the webhook will post to.</param>
-        /// <returns><see cref="DiscordWebhook"/></returns>
-        public async Task<DiscordWebhook> CreateWebhook(string name, DiscordAvatarData avatar, ITextChannel channel)
-        {
-            return await CreateWebhook(name, avatar, channel.Id);
-        }
-
-        /// <summary>
-        /// Create a <see cref="DiscordWebhook"/> on a DiscordChannel.
-        /// </summary>
-        /// <param name="name">Webhook bot's username that shows in chat.</param>
-        /// <param name="avatar">Webhook bot's avatar.</param>
-        /// <param name="channelId">The channel the webhook will post to.</param>
-        /// <returns><see cref="DiscordWebhook"/></returns>
-        public async Task<DiscordWebhook> CreateWebhook(string name, DiscordAvatarData avatar, Snowflake channelId)
+        /// <param name="channelId">The id of the channel the webhook will post to.</param>
+        public async Task<DiscordWebhook> Create(string name, DiscordAvatarData avatar, Snowflake channelId)
         {
             DiscordApiData apiData = DiscordApiData.CreateContainer();
             apiData.Set("name", name);
@@ -41,157 +26,97 @@ namespace Discore.Http
 
             DiscordApiData returnData = await Rest.Post($"channels/{channelId}/webhooks", apiData, "CreateWebhook");
 
-            return new DiscordWebhook(returnData);
+            return new DiscordWebhook(App, returnData);
         }
 
         /// <summary>
-        /// Get a <see cref="DiscordWebhook"/> via its <see cref="Snowflake"/>.
+        /// Gets a webhook via its ID.
         /// </summary>
-        /// <returns><see cref="DiscordWebhook"/></returns>
-        public async Task<DiscordWebhook> GetWebhook(Snowflake id)
+        public async Task<DiscordWebhook> Get(Snowflake webhookId)
         {
-            DiscordApiData apiData = await Rest.Get($"webhooks/{id}", "GetWebhook");
+            DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}", "GetWebhook");
 
-            return new DiscordWebhook(apiData);
+            return new DiscordWebhook(App, apiData);
         }
 
         /// <summary>
-        /// Same as <see cref="GetWebhook(Snowflake)"/>, except this call does not require authentication and returns no user in the webhook object.
+        /// Gets a webhook via its ID.
+        /// <para>This call does not require authentication and returns no user in the webhook object.</para>
         /// </summary>
-        /// <returns><see cref="DiscordWebhook"/></returns>
-        public async Task<DiscordWebhook> GetWebhookWithToken(Snowflake id, string token)
+        public async Task<DiscordWebhook> GetWithToken(Snowflake webhookId, string token)
         {
-            DiscordApiData apiData = await Rest.Get($"webhooks/{id}/{token}", "GetWebhook");
+            DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}/{token}", "GetWebhook");
 
-            return new DiscordWebhook(apiData);
+            return new DiscordWebhook(App, apiData);
         }
 
         /// <summary>
-        /// Get a List of <see cref="DiscordWebhook"/> on a Discord Channel.
+        /// Gets a list of webhooks active for the specified guild text channel.
         /// </summary>
-        /// <param name="channel">Discord Channel to poll.</param>
-        /// <returns><see cref="DiscordChannel"/>(s)</returns>
-        public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(ITextChannel channel)
+        public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake channelId)
         {
-            return await GetChannelWebhooks(channel.Id);
-        }
-
-        /// <summary>
-        /// Get a List of <see cref="DiscordWebhook"/> on a Discord Channel.
-        /// </summary>
-        /// <param name="id">Discord Channel to poll.</param>
-        /// <returns><see cref="DiscordChannel"/>(s)</returns>
-        public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake id)
-        {
-            DiscordApiData apiData = await Rest.Get($"channels/{id}/webhooks", "GetChannelWebhooks");
+            DiscordApiData apiData = await Rest.Get($"channels/{channelId}/webhooks", "GetChannelWebhooks");
 
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
             for (int i = 0; i < apiData.Values.Count; i++)
-                webhooks[i] = new DiscordWebhook(apiData.Values[i]);
+                webhooks[i] = new DiscordWebhook(App, apiData.Values[i]);
 
             return webhooks;
         }
 
         /// <summary>
-        /// Returns a list of guild webhook objects.
+        /// Gets a list of all webhooks in a guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(DiscordGuildTextChannel channel)
+        public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake guildId)
         {
-            return await GetGuildWebhooks(channel.Id);
-        }
-
-        /// <summary>
-        /// Returns a list of guild webhook objects.
-        /// </summary>
-        public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake id)
-        {
-            DiscordApiData apiData = await Rest.Get($"guilds/{id}/webhooks", "GetGuildWebhooks");
+            DiscordApiData apiData = await Rest.Get($"guilds/{guildId}/webhooks", "GetGuildWebhooks");
 
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
             for (int i = 0; i < apiData.Values.Count; i++)
-                webhooks[i] = new DiscordWebhook(apiData.Values[i]);
+                webhooks[i] = new DiscordWebhook(App, apiData.Values[i]);
 
             return webhooks;
         }
 
         /// <summary>
-        /// Modify a <see cref="DiscordWebhook"/>. Returns the updated webhook object on success. All parameters to this endpoint are optional.
+        /// Modifies an exsting webhook.
         /// </summary>
-        /// <param name="webhook"><see cref="DiscordWebhook"/> to modify.</param>
-        /// <param name="name">Only updateed if not null.</param>
-        /// <param name="avatar">Only updated if not null.</param>
-        /// <returns><see cref="DiscordWebhook"/></returns>
-        public async Task<DiscordWebhook> ModifyWebhook(DiscordWebhook webhook, string name = null, DiscordAvatarData avatar = null)
-        {
-            return await ModifyWebhook(webhook.Id, name, avatar);
-        }
-
-        /// <summary>
-        /// Modify an exsting <see cref="DiscordWebhook"/> via its <see cref="Snowflake"/> Returns the updated webhook object on success. All parameters to this endpoint are optional.
-        /// </summary>
-        /// <param name="id"><see cref="Snowflake"/> of the <see cref="DiscordWebhook"/> to modify.</param>
-        /// <param name="name">Only updateed if not null.</param>
-        /// <param name="avatar">Only updated if not null.</param>
-        /// <returns><see cref="DiscordWebhook"/></returns>
-        public async Task<DiscordWebhook> ModifyWebhook(Snowflake id, string name = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordWebhook> Modify(Snowflake webhookId, string name = null, DiscordAvatarData avatar = null)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
             if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
             if (avatar != null) postData.Set("avatar", avatar);
 
-            DiscordApiData apiData = await Rest.Patch($"webhooks/{id}", postData, "ModifyWebhook");
+            DiscordApiData apiData = await Rest.Patch($"webhooks/{webhookId}", postData, "ModifyWebhook");
 
-            return new DiscordWebhook(apiData);
+            return new DiscordWebhook(App, apiData);
         }
 
         /// <summary>
-        /// Delete a webhook permanently. User must be owner.
+        /// Deletes a webhook permanently. The currently authenticated user must be the owner.
         /// </summary>
-        public async Task<bool> DeleteWebhook(DiscordWebhook webhook)
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Delete(Snowflake webhookId)
         {
-            return await DeleteWebhook(webhook.Id);
+            return (await Rest.Delete($"webhooks/{webhookId}", "DeleteWebhook")).IsNull;
         }
 
         /// <summary>
-        /// Delete a webhook permanently. User must be owner.
+        /// Deletes a webhook permanently.
         /// </summary>
-        public async Task<bool> DeleteWebhook(Snowflake id)
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeleteWithToken(Snowflake webhookId, string token)
         {
-            return (await Rest.Delete($"webhooks/{id}", "DeleteWebhook")).IsNull;
+            return (await Rest.Delete($"webhooks/{webhookId}/{token}", "DeleteWebhook")).IsNull;
         }
 
         /// <summary>
-        /// Same as <see cref="DeleteWebhook(DiscordWebhook)"/>, except this call does not require authentication.
+        /// Executes a webhook with a message as the content.
         /// </summary>
-        public async Task<bool> DeleteWebhookWithToken(DiscordWebhook webhook)
-        {
-            return await DeleteWebhookWithToken(webhook.Id, webhook.Token);
-        }
-
-        /// <summary>
-        /// Same as <see cref="DeleteWebhook(Snowflake)"/>, except this call does not require authentication.
-        /// </summary>
-        public async Task<bool> DeleteWebhookWithToken(Snowflake id, string token)
-        {
-            return (await Rest.Delete($"webhooks/{id}/{token}", "DeleteWebhook")).IsNull;
-        }
-
-        /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with a message
-        /// </summary>
-        public async Task<bool> ExecuteWebhook(DiscordWebhook webhook,
-            string content, string username = null,
-            Uri avatar = null, bool tts = false)
-        {
-            return await ExecuteWebhook(webhook.Id, webhook.Token, content, username, avatar, tts);
-        }
-
-        /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with a message
-        /// </summary>
-        public async Task<bool> ExecuteWebhook(Snowflake id, string token,
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(Snowflake webhookId, string token,
             string content, string username = null,
             Uri avatar = null, bool tts = false)
         {
@@ -204,13 +129,14 @@ namespace Discore.Http
             postData.Set("tts", tts);
             postData.Set("content", content);
 
-            return (await Rest.Post($"webhooks/{id}/{token}", postData, "ExecuteWebhook")).IsNull;
+            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, "ExecuteWebhook")).IsNull;
         }
 
         /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with a file
+        /// Executes a webhook with a file as the content.
         /// </summary>
-        public async Task<bool> ExecuteWebhook(Snowflake id, string token,
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(Snowflake webhookId, string token,
             byte[] file, string filename = "unknown.jpg",
             string username = null, Uri avatar = null, bool tts = false)
         {
@@ -220,7 +146,7 @@ namespace Discore.Http
             if (avatar != null) postData.Set("avatar", avatar.ToString());
             postData.Set("tts", tts);
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/webhooks/{id.Id}/{token}");
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/webhooks/{webhookId}/{token}");
 
             MultipartFormDataContent form = new MultipartFormDataContent();
 
@@ -235,19 +161,10 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with a file
+        /// Executes a webhook with a file as the content.
         /// </summary>
-        public async Task<bool> ExecuteWebhook(DiscordWebhook webhook,
-            FileInfo file, string username = null,
-            Uri avatar = null, bool tts = false)
-        {
-            return await ExecuteWebhook(webhook.Id, webhook.Token, file, username, avatar, tts);
-        }
-
-        /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with a file
-        /// </summary>
-        public async Task<bool> ExecuteWebhook(Snowflake id, string token,
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(Snowflake webhookId, string token,
             FileInfo file, string username = null,
             Uri avatar = null, bool tts = false)
         {
@@ -255,24 +172,15 @@ namespace Discore.Http
             using (MemoryStream ms = new MemoryStream())
             {
                 await fs.CopyToAsync(ms);
-                return await ExecuteWebhook(id, token, ms.ToArray(), file.Name, username, avatar, tts);
+                return await Execute(webhookId, token, ms.ToArray(), file.Name, username, avatar, tts);
             }
         }
 
         /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with <see cref="DiscordEmbed"/>
+        /// Executes a webhook with embeds as the contents.
         /// </summary>
-        public async Task<bool> ExecuteWebhook(DiscordWebhook webhook,
-            IEnumerable<DiscordEmbed> embeds, string username = null,
-            Uri avatar = null, bool tts = false)
-        {
-            return await ExecuteWebhook(webhook.Id, webhook.Token, embeds, username, avatar, tts);
-        }
-
-        /// <summary>
-        /// Execute a <see cref="DiscordWebhook"/> with <see cref="DiscordEmbed"/>
-        /// </summary>
-        public async Task<bool> ExecuteWebhook(Snowflake id, string token,
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(Snowflake webhookId, string token,
             IEnumerable<DiscordEmbed> embeds, string username = null,
             Uri avatar = null, bool tts = false)
         {
@@ -287,7 +195,7 @@ namespace Discore.Http
             postData.Set("tts", tts);
             postData.Set("embeds", embeds);
 
-            return (await Rest.Post($"webhooks/{id}/{token}", postData, "ExecuteWebhook")).IsNull;
+            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, "ExecuteWebhook")).IsNull;
         }
     }
 }

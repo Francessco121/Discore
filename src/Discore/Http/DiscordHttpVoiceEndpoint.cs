@@ -11,7 +11,7 @@ namespace Discore.Http
             : base(app, rest)
         { }
 
-        public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceReaions()
+        public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions()
         {
             DiscordApiData data = await Rest.Get("/voice/regions", "ListVoiceRegions");
 

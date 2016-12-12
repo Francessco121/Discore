@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Discore.Http;
+using System;
+using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -52,15 +54,19 @@ namespace Discore
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        internal DiscordIntegration(DiscordApiData data, Snowflake guildId)
-            : this(data)
+        DiscordHttpGuildEndpoint guildsHttp;
+
+        internal DiscordIntegration(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
+            : this(app, data)
         {
             GuildId = guildId;
         }
 
-        internal DiscordIntegration(DiscordApiData data)
+        internal DiscordIntegration(IDiscordApplication app, DiscordApiData data)
             : base(data)
         {
+            guildsHttp = app.HttpApi.Guilds;
+
             Name = data.GetString("name");
             Type = data.GetString("type");
             IsEnabled = data.GetBoolean("enabled");
@@ -75,6 +81,48 @@ namespace Discore
 
             DiscordApiData accountData = data.Get("account");
             Account = new DiscordIntegrationAccount(accountData);
+        }
+
+        /// <summary>
+        /// Changes the attributes of this integration, if this is a guild integration.
+        /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
+        public async Task<bool> Modify(ModifyIntegrationParameters parameters)
+        {
+            if (!GuildId.HasValue)
+                throw new InvalidOperationException("This integration does not represent a guild integration");
+
+            return await guildsHttp.ModifyIntegration(GuildId.Value, Id, parameters);
+        }
+
+        /// <summary>
+        /// Deletes this integration, if this is a guild integration.
+        /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
+        public async Task<bool> Delete()
+        {
+            if (!GuildId.HasValue)
+                throw new InvalidOperationException("This integration does not represent a guild integration");
+
+            return await guildsHttp.DeleteIntegration(GuildId.Value, Id);
+        }
+
+        /// <summary>
+        /// Synchronizes this integration, if this is a guild integration.
+        /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
+        public async Task<bool> Sync()
+        {
+            if (!GuildId.HasValue)
+                throw new InvalidOperationException("This integration does not represent a guild integration");
+
+            return await guildsHttp.SyncIntegration(GuildId.Value, Id);
         }
 
         public override string ToString()

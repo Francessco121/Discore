@@ -1,4 +1,7 @@
-﻿namespace Discore
+﻿using Discore.Http;
+using System.Threading.Tasks;
+
+namespace Discore
 {
     public class DiscordInvite
     {
@@ -17,8 +20,12 @@
         /// </summary>
         public DiscordInviteChannel Channel { get; }
 
-        internal DiscordInvite(DiscordApiData data)
+        DiscordHttpInviteEndpoint invitesHttp;
+
+        internal DiscordInvite(IDiscordApplication app, DiscordApiData data)
         {
+            invitesHttp = app.HttpApi.Invites;
+
             Code = data.GetString("code");
 
             DiscordApiData guildData = data.Get("guild");
@@ -28,6 +35,23 @@
             DiscordApiData channelData = data.Get("channel");
             if (channelData != null)
                 Channel = new DiscordInviteChannel(channelData);
+        }
+
+        /// <summary>
+        /// Deletes this invite.
+        /// </summary>
+        public async Task<DiscordInvite> Delete()
+        {
+            return await invitesHttp.Delete(Code);
+        }
+
+        /// <summary>
+        /// Accepts this invite.
+        /// Note: This does not work for bot accounts.
+        /// </summary>
+        public async Task<DiscordInvite> Accept()
+        {
+            return await invitesHttp.Accept(Code);
         }
     }
 }

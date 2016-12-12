@@ -39,8 +39,8 @@ namespace Discore
         /// </summary>
         public bool IsRevoked { get; }
 
-        public DiscordInviteMetadata(DiscordApiData data)
-            : base(data)
+        public DiscordInviteMetadata(IDiscordApplication app, DiscordApiData data)
+            : base(app, data)
         {
             DiscordApiData inviterData = data.Get("inviter");
             if (inviterData != null)

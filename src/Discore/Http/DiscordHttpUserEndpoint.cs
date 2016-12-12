@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpUsersEndpoint : DiscordHttpApiEndpoint
+    public sealed class DiscordHttpUserEndpoint : DiscordHttpApiEndpoint
     {
-        internal DiscordHttpUsersEndpoint(IDiscordApplication app, RestClient rest)
+        internal DiscordHttpUserEndpoint(IDiscordApplication app, RestClient rest)
             : base(app, rest)
         { }
 
@@ -73,7 +73,7 @@ namespace Discore.Http
             DiscordConnection[] connections = new DiscordConnection[data.Values.Count];
 
             for (int i = 0; i < connections.Length; i++)
-                connections[i] = new DiscordConnection(data.Values[i]);
+                connections[i] = new DiscordConnection(App, data.Values[i]);
 
             return connections;
         }

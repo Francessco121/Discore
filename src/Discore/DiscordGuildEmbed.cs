@@ -1,4 +1,7 @@
-﻿namespace Discore
+﻿using Discore.Http;
+using System.Threading.Tasks;
+
+namespace Discore
 {
     public sealed class DiscordGuildEmbed
     {
@@ -15,12 +18,24 @@
         /// </summary>
         public Snowflake GuildId { get; }
 
-        internal DiscordGuildEmbed(Snowflake guildId, DiscordApiData data)
+        DiscordHttpGuildEndpoint guildsHttp;
+
+        internal DiscordGuildEmbed(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
         {
+            guildsHttp = app.HttpApi.Guilds;
+
             GuildId = guildId;
 
             Enabled = data.GetBoolean("enabled").Value;
             ChannelId = data.GetSnowflake("channel_id").Value;
+        }
+
+        /// <summary>
+        /// Modifies the properties of this guild embed.
+        /// </summary>
+        public async Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
+        {
+            return await guildsHttp.ModifyEmbed(GuildId, parameters);
         }
     }
 }

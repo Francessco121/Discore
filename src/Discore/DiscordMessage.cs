@@ -90,7 +90,7 @@ namespace Discore
         public Snowflake? WebhookId { get; }
 
         IDiscordApplication app;
-        DiscordHttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
 
         DiscoreCache cache;
         DiscordUser author;
@@ -259,7 +259,7 @@ namespace Discore
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Pin()
         {
-            return await channelsHttp.AddPinnedChannelMessage(ChannelId, Id);
+            return await channelsHttp.AddPinnedMessage(ChannelId, Id);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace Discore
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Unpin()
         {
-            return await channelsHttp.DeletePinnedChannelMessage(ChannelId, Id);
+            return await channelsHttp.DeletePinnedMessage(ChannelId, Id);
         }
 
         /// <summary>

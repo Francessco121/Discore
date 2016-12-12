@@ -1,41 +1,53 @@
-﻿namespace Discore
+﻿using Discore.Http;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace Discore
 {
     public sealed class DiscordWebhook : DiscordIdObject
     {
         /// <summary> 
-        /// The Id of Guild this Webhook belongs to 
+        /// Gets the ID of the guild this webhook belongs to.
         /// </summary> 
-        public Snowflake Guild { get; }
+        public Snowflake GuildId { get; }
         /// <summary> 
-        /// The Id of the Channel this Webhook was created on 
+        /// Gets the ID of the channel this webhook is active for.
         /// </summary> 
-        public Snowflake Channel { get; }
+        public Snowflake ChannelId { get; }
         /// <summary> 
-        /// The User that created this Webhook 
+        /// Gets the wser that created this webhook.
         /// </summary> 
         public DiscordUser User { get; }
         /// <summary> 
-        /// The public name of this Webhook 
+        /// Gets the public name of this webhook.
         /// </summary> 
         public string Name { get; }
         /// <summary> 
-        /// The Avatar of this Webhook 
+        /// Gets the avatar of this webhook.
         /// </summary> 
         public DiscordAvatarData Avatar { get; }
         /// <summary> 
-        /// The token of this Webhook<para/> 
-        /// This is only populated if the we created the webhook, otherwise its empty/null<para/> 
-        /// Its used for Executing, Updating, and Deleting said webhook without the need of authorization<para/> 
-        /// We as a bot user can't modify or execute a webhook that we don't own 
+        /// Gets the token of this webhook. 
+        /// <para>This is only populated if the current authenticated user created the webhook, otherwise it's empty/null.</para> 
+        /// <para>It's used for Executing, Updating, and Deleting this webhook without the need of authorization.</para> 
         /// </summary> 
         public string Token { get; }
+        /// <summary>
+        /// Gets whether this webhook instance contains the webhook token.
+        /// </summary>
         public bool HasToken { get { return !string.IsNullOrWhiteSpace(Token); } }
 
-        internal DiscordWebhook(DiscordApiData data)
-            :base(data)
+        DiscordHttpWebhookEndpoint webhookHttp;
+
+        internal DiscordWebhook(IDiscordApplication app, DiscordApiData data)
+            : base(data)
         {
-            Guild = data.GetSnowflake("guild_id").Value;
-            Channel = data.GetSnowflake("channel_id").Value;
+            webhookHttp = app.HttpApi.Webhooks;
+
+            GuildId = data.GetSnowflake("guild_id").Value;
+            ChannelId = data.GetSnowflake("channel_id").Value;
 
             DiscordApiData userData = data.Get("user");
             if (!userData.IsNull)
@@ -44,6 +56,73 @@
             Name = data.GetString("name");
             Avatar = new DiscordAvatarData(data.GetString("avatar"));
             Token = data.GetString("token");
+        }
+
+        /// <summary>
+        /// Modifies the settings of this webhook.
+        /// </summary>
+        public async Task<DiscordWebhook> Modify(string name = null, DiscordAvatarData avatar = null)
+        {
+            return await webhookHttp.Modify(Id, name, avatar);
+        }
+
+        /// <summary>
+        /// Deletes this webhook permanently.
+        /// Current authenticated user might be the owner.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Delete()
+        {
+            return await webhookHttp.Delete(Id);
+        }
+
+        /// <summary>
+        /// Deletes this webhook permanently.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> DeleteWithToken(string token)
+        {
+            return await webhookHttp.DeleteWithToken(Id, token);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a message as the content.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(string token, string content, 
+            string username = null, Uri avatar = null, bool tts = false)
+        {
+            return await webhookHttp.Execute(Id, token, content, username, avatar, tts);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a file as the content.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(string token, byte[] file, 
+            string filename = "unknown.jpg", string username = null, Uri avatar = null, bool tts = false)
+        {
+            return await webhookHttp.Execute(Id, token, file, filename, username, avatar, tts);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a file as the content.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(string token, FileInfo fileInfo, 
+            string username = null, Uri avatar = null, bool tts = false)
+        {
+            return await webhookHttp.Execute(Id, token, fileInfo, username, avatar, tts);
+        }
+
+        /// <summary>
+        /// Executes this webhook with embeds as the contents.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(string token, IEnumerable<DiscordEmbed> embeds, 
+            string username = null, Uri avatar = null, bool tts = false)
+        {
+            return await webhookHttp.Execute(Id, token, embeds, username, avatar, tts);
         }
     }
 }

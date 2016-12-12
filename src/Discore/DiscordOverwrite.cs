@@ -24,7 +24,7 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        DiscordHttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
 
         internal DiscordOverwrite(IDiscordApplication app, Snowflake channelId, DiscordApiData data)
             : base(data)

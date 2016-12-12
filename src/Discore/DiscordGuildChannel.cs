@@ -32,7 +32,7 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
 
         internal DiscordGuildChannel(IDiscordApplication app, DiscordApiData data, DiscordGuildChannelType type, 
             Snowflake? guildId) 

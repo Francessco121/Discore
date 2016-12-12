@@ -1,4 +1,7 @@
-﻿namespace Discore
+﻿using Discore.Http;
+using System.Threading.Tasks;
+
+namespace Discore
 {
     /// <summary>
     /// Roles represent a set of permissions attached to a group of users. Roles have unique names, 
@@ -41,9 +44,13 @@
         /// </summary>
         public bool IsMentionable { get; }
 
-        internal DiscordRole(Snowflake guildId, DiscordApiData data)
+        DiscordHttpGuildEndpoint guildsHttp;
+
+        internal DiscordRole(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
             : base(data)
         {
+            guildsHttp = app.HttpApi.Guilds;
+
             GuildId = guildId;
 
             Name = data.GetString("name");
@@ -57,6 +64,22 @@
 
             long permissions = data.GetInt64("permissions").Value;
             Permissions = (DiscordPermission)permissions;
+        }
+
+        /// <summary>
+        /// Modifies the settings of this role.
+        /// </summary>
+        public async Task<DiscordRole> Modify(ModifyRoleParameters parameters)
+        {
+            return await guildsHttp.ModifyRole(GuildId, Id, parameters);
+        }
+
+        /// <summary>
+        /// Deletes this role.
+        /// </summary>
+        public async Task<DiscordRole> Delete()
+        {
+            return await guildsHttp.DeleteRole(GuildId, Id);
         }
 
         public override string ToString()

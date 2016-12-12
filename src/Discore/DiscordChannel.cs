@@ -13,7 +13,7 @@ namespace Discore
         /// </summary>
         public DiscordChannelType ChannelType { get; }
 
-        DiscordHttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
 
         internal DiscordChannel(IDiscordApplication app, DiscordApiData data, DiscordChannelType type)
             : base(data)

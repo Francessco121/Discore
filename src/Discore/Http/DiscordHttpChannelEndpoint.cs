@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpChannelsEndpoint : DiscordHttpApiEndpoint
+    public sealed class DiscordHttpChannelEndpoint : DiscordHttpApiEndpoint
     {
-        internal DiscordHttpChannelsEndpoint(IDiscordApplication app, RestClient rest)
+        internal DiscordHttpChannelEndpoint(IDiscordApplication app, RestClient rest)
             : base(app, rest)
         { }
 
@@ -117,7 +117,7 @@ namespace Discore.Http
             data.Set("deny", (int)deny);
             data.Set("type", type.ToString().ToLower());
 
-            return (await Rest.Put($"channels/{channelId}/permissions/{overwriteId}", data, "EditPermissions")).IsNull;
+            return (await Rest.Put($"channels/{channelId}/permissions/{overwriteId}", data, "EditChannelPermissions")).IsNull;
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeletePermission(Snowflake channelId, Snowflake overwriteId)
         {
-            return (await Rest.Delete($"channels/{channelId}/permissions/{overwriteId}", "DeletePermission")).IsNull;
+            return (await Rest.Delete($"channels/{channelId}/permissions/{overwriteId}", "DeleteChannelPermission")).IsNull;
         }
         #endregion
 
@@ -266,7 +266,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/pins", "GetPinnedMessages");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/pins", "GetPinnedChannelMessages");
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
@@ -278,7 +278,7 @@ namespace Discore.Http
         /// <summary>
         /// Pins a message in a text channel.
         /// </summary>
-        public async Task<bool> AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
+        public async Task<bool> AddPinnedMessage(Snowflake channelId, Snowflake messageId)
         {
             return (await Rest.Put($"channels/{channelId}/pins/{messageId}", "AddPinnedChannelMessage")).IsNull;
         }
@@ -286,7 +286,7 @@ namespace Discore.Http
         /// <summary>
         /// Unpins a message from a text channel.
         /// </summary>
-        public async Task<bool> DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
+        public async Task<bool> DeletePinnedMessage(Snowflake channelId, Snowflake messageId)
         {
             return (await Rest.Delete($"channels/{channelId}/pins/{messageId}", "DeletePinnedChannelMessage")).IsNull;
         }
@@ -349,11 +349,11 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites(Snowflake channelId)
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/invites", "GetInvites");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/invites", "GetChannelInvites");
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
-                invites[i] = new DiscordInviteMetadata(data.Values[i]);
+                invites[i] = new DiscordInviteMetadata(App, data.Values[i]);
 
             return invites;
         }
@@ -378,8 +378,8 @@ namespace Discore.Http
             if (temporary.HasValue) requestData.Set("temporary", temporary.Value);
             if (unique.HasValue) requestData.Set("unique", unique.Value);
 
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/invites", requestData, "CreateInvite");
-            return new DiscordInvite(returnData);
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/invites", requestData, "CreateChannelInvite");
+            return new DiscordInvite(App, returnData);
         }
         #endregion
 

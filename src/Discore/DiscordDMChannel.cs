@@ -16,7 +16,7 @@ namespace Discore
         public DiscordUser Recipient { get { return cache != null ? cache.Users[recipientId] : recipient; } }
 
         IDiscordApplication app;
-        DiscordHttpChannelsEndpoint channelsHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
         Snowflake lastMessageId;
 
         DiscoreCache cache;
