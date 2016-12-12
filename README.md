@@ -1,11 +1,65 @@
-# [Discore](https://bundledsticksinkorperated.github.io/Discore/) v2
-### _Discord + .NET Core = Discore_
+# Discore
+#### *Discord + .NET Core = Discore*
 
-There is a [NuGet](https://www.nuget.org/packages/Discore) package, install with `Install-Package Discore -Pre` from the Package Manager Console. 
-The NuGet package is updated after each commit (suffixed with the SHA1 commit hash) so some things will change/break/explode without warning.
+Discore is a [.NET Core](https://dotnet.github.io/) library for interacting with the [Discord](https://discordapp.com/) API.
 
-Discore is library written in pure [.NET Core](https://dotnet.github.io/) for creating various kinds of bots for the popular communications client [Discord](https://discordapp.com/)
+Discore aims to fully implement two sides of the Discord API; the HTTP API, and the realtime WebSocket API. It's designed for creating Discord bot applications, as well as applications that do not require realtime data.
 
-Built out of curiosity and for personal use, released under the [MIT License](../blob/master/LICENSE.md).
+Released under the [MIT License](../master/LICENSE.md).
 
-Most of the public Classes/Methods are documented in source via XML comments. Eventually there will be proper documentation.
+## Example Bot: Ping Pong
+```csharp
+using Discore;
+using Discore.WebSocket;
+using System;
+using System.Threading;
+
+namespace DiscorePingPong
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            // Create authenticator using a bot user token.
+            DiscordBotUserToken token = new DiscordBotUserToken("<bot user token goes here>");
+
+            // Create a WebSocket application.
+            DiscordWebSocketApplication app = new DiscordWebSocketApplication(token);
+
+            // Create and start a single shard.
+            Shard shard = app.ShardManager.CreateSingleShard();
+            shard.Start();
+
+            // Subscribe to the message creation event.
+            shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
+
+            // Wait for the shard to end before closing the program.
+            while (shard.IsRunning)
+                Thread.Sleep(100);
+        }
+
+        private static async void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
+        {
+            Shard shard = e.Shard;
+            DiscordMessage message = e.Message;
+
+            if (message.Author == shard.User)
+                // Ignore messages created by our bot.
+                return;
+
+            if (message.Content == "!ping")
+            {
+                // Grab the DM or guild text channel this message was posted in from cache.
+                ITextChannel textChannel = (ITextChannel)shard.Cache.Channels.Get(message.ChannelId);
+
+                try
+                {
+                    // Reply to the user who posted "!ping".
+                    await textChannel.SendMessage($"<@{message.Author.Id}> Pong!");
+                }
+                catch (Exception) {  /* Message failed to send... :( */ }
+            }
+        }
+    }
+}
+```
