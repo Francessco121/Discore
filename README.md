@@ -1,5 +1,5 @@
 # Discore
-#### *Discord + .NET Core = Discore*
+***Discord + .NET Core = Discore***
 
 Discore is a [.NET Core](https://dotnet.github.io/) library for interacting with the [Discord](https://discordapp.com/) API.
 
