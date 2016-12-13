@@ -27,11 +27,11 @@ namespace Discore
         /// <summary>
         /// Gets the timestamp of this embed.
         /// </summary>
-        public DateTime Timestamp { get; }
+        public DateTime? Timestamp { get; }
         /// <summary>
         /// Gets the color code of this embed.
         /// </summary>
-        public int Color { get; private set; }
+        public int? Color { get; private set; }
         /// <summary>
         /// Gets the footer information.
         /// </summary>
@@ -67,8 +67,8 @@ namespace Discore
             Type        = data.GetString("type");
             Description = data.GetString("description");
             Url         = data.GetString("url");
-            Timestamp   = data.GetDateTime("timestamp").Value;
-            Color       = data.GetInteger("color").Value;
+            Timestamp   = data.GetDateTime("timestamp");
+            Color       = data.GetInteger("color");
 
             DiscordApiData footerData = data.Get("footer");
             if (footerData != null)
