@@ -101,6 +101,8 @@ namespace Discore.WebSocket
                         OnConnected?.Invoke(this, new ShardEventArgs(this));
                         break;
                     }
+                    else
+                        log.LogInfo("Failed to connect to gateway, trying again...");
                 }
             }
             else

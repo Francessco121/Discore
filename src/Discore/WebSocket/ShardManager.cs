@@ -116,9 +116,12 @@ namespace Discore.WebSocket
                 throw new ArgumentOutOfRangeException(nameof(totalShards),
                     "Number of total shards must be greater than or equal to the number of shard ids specified.");
 
-            // Stop existing shards
+            // Stop/cleanup existing shards
             if (shards != null)
-                ShutdownShards();
+            {
+                StopShards();
+                DisposeShards();
+            }
 
             // Set total shard count
             TotalShardCount = totalShards ?? shardIds.Count;
@@ -160,7 +163,7 @@ namespace Discore.WebSocket
         /// Attempts to stop all created shards that are still running.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public void ShutdownShards()
+        public void StopShards()
         {
             if (shards != null)
             {
@@ -177,13 +180,16 @@ namespace Discore.WebSocket
                 throw new InvalidOperationException("No shards have been created.");
         }
 
+        void DisposeShards()
+        {
+            for (int i = 0; i < shards.Length; i++)
+                shards[i].Dispose();
+        }
+
         public void Dispose()
         {
             if (shards != null)
-            {
-                for (int i = 0; i < shards.Length; i++)
-                    shards[i].Dispose();
-            }
+                DisposeShards();
         }
     }
 }

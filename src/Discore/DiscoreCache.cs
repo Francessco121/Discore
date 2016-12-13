@@ -65,6 +65,11 @@ namespace Discore
         internal DiscoreTypeCache() { }
 
         internal abstract void Clear();
+
+        public override string ToString()
+        {
+            return Value.ToString();
+        }
     }
 
     public sealed class DiscoreGuildCache : DiscoreTypeCache<DiscordGuild>
