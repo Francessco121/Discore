@@ -17,6 +17,10 @@ namespace Discore
         /// </summary>
         public DiscordGuildMember Member { get; }
         /// <summary>
+        /// The guild the member is in.
+        /// </summary>
+        public DiscordGuild Guild { get; }
+        /// <summary>
         /// The channel (if applicable) the permissions were checked against.
         /// </summary>
         public DiscordGuildChannel Channel { get; }
@@ -25,11 +29,13 @@ namespace Discore
         /// Creates a new <see cref="DiscordPermissionException"/> instance.
         /// </summary>
         /// <param name="member">The member that didn't have the right permissions.</param>
+        /// <param name="guild">The guild the member is in.</param>
         /// <param name="permission">The permissions that caused the exception.</param>
-        public DiscordPermissionException(DiscordGuildMember member, DiscordPermission permission)
+        public DiscordPermissionException(DiscordGuildMember member, DiscordGuild guild, DiscordPermission permission)
             : base($"\"{member.User.Username}\" does not have permissions: {GetPermissions(permission)}")
         {
             Permission = permission;
+            Guild = guild;
             Member = member;
         }
 
@@ -37,13 +43,15 @@ namespace Discore
         /// Creates a new <see cref="DiscordPermissionException"/> instance.
         /// </summary>
         /// <param name="member">The member that didn't have the right permissions.</param>
+        /// <param name="guild">The guild the member is in.</param>
         /// <param name="channel">The channel the permissions were checked against.</param>
         /// <param name="permission">The permissions that caused the exception.</param>
-        public DiscordPermissionException(DiscordGuildMember member, DiscordGuildChannel channel, DiscordPermission permission)
+        public DiscordPermissionException(DiscordGuildMember member, DiscordGuild guild, DiscordGuildChannel channel, DiscordPermission permission)
             : base($"\"{member.User.Username}\" does not have permissions: {GetPermissions(permission)} in channel \"{channel.Name}\"")
         {
             Permission = permission;
             Member = member;
+            Guild = guild;
             Channel = channel;
         }
 
