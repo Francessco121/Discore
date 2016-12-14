@@ -23,9 +23,9 @@ namespace Discore
         public int Position { get; }
 
         /// <summary>
-        /// Gets a list of all permission overwrites associated with this channel.
+        /// Gets a dictionary of all permission overwrites associated with this channel.
         /// </summary>
-        public IReadOnlyList<DiscordOverwrite> PermissionOverwrites { get; }
+        public IReadOnlyDictionary<Snowflake, DiscordOverwrite> PermissionOverwrites { get; }
 
         /// <summary>
         /// Gets the id of the guild this channel is in.
@@ -47,10 +47,13 @@ namespace Discore
             Position = data.GetInteger("position").Value;
 
             IList<DiscordApiData> overwrites = data.GetArray("permission_overwrites");
-            DiscordOverwrite[] permissionOverwrites = new DiscordOverwrite[overwrites.Count];
+            Dictionary<Snowflake, DiscordOverwrite> permissionOverwrites = new Dictionary<Snowflake, DiscordOverwrite>();
 
             for (int i = 0; i < overwrites.Count; i++)
-                permissionOverwrites[i] = new DiscordOverwrite(app, Id, overwrites[i]);
+            {
+                DiscordOverwrite overwrite = new DiscordOverwrite(app, Id, overwrites[i]);
+                permissionOverwrites.Add(overwrite.Id, overwrite);
+            }
 
             PermissionOverwrites = permissionOverwrites;
         }
