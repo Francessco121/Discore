@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// Embedded content in a message.
     /// </summary>
-    public sealed class DiscordEmbed : DiscordSerializable
+    public sealed class DiscordEmbed
     {
         /// <summary>
         /// Gets the title of this embed.
@@ -110,7 +110,7 @@ namespace Discore
             return Title;
         }
 
-        internal override DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("title", Title);

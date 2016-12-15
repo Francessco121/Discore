@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordEmbedAuthor : DiscordSerializable
+    public sealed class DiscordEmbedAuthor
     {
         /// <summary>
         /// Gets the name of the author.
@@ -30,7 +30,7 @@
             ProxyIconUrl = data.GetString("proxy_icon_url");
         }
 
-        internal override DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("name", Name);

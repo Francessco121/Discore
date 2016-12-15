@@ -3,7 +3,7 @@
     /// <summary>
     /// The web provider of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public sealed class DiscordEmbedProvider : DiscordSerializable
+    public sealed class DiscordEmbedProvider
     {
         /// <summary>
         /// Gets the name of this provider.
@@ -20,7 +20,7 @@
             Url = data.GetString("url");
         }
 
-        internal override DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("name", Name);
