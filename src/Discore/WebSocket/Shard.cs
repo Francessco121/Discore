@@ -1,5 +1,6 @@
 ﻿using Discore.WebSocket.Net;
 using System;
+using System.Threading;
 
 namespace Discore.WebSocket
 {
@@ -92,18 +93,28 @@ namespace Discore.WebSocket
 
                 CleanUp();
 
-                // Keep trying to make the initial connection until successful, or the shard is stopped.
-                while (isRunning)
+                ThreadPool.QueueUserWorkItem(_ =>
                 {
-                    if (gateway.Connect())
+                    // Keep trying to make the initial connection until successful, or the shard is stopped.
+                    while (isRunning)
                     {
-                        log.LogVerbose("Successfully connected to gateway.");
-                        OnConnected?.Invoke(this, new ShardEventArgs(this));
-                        break;
+                        try
+                        {
+                            if (gateway.Connect())
+                            {
+                                log.LogVerbose("Successfully connected to gateway.");
+                                OnConnected?.Invoke(this, new ShardEventArgs(this));
+                                break;
+                            }
+                            else
+                                log.LogInfo("Failed to connect to gateway, trying again...");
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogInfo($"Failed to connect to gateway, trying again... Exception: {ex}");
+                        }
                     }
-                    else
-                        log.LogInfo("Failed to connect to gateway, trying again...");
-                }
+                });
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been started!");
