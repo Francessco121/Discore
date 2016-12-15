@@ -9,6 +9,9 @@ Discore aims to fully implement two sides of the Discord API: the HTTP API, and 
 
 Released under the [MIT License](../master/LICENSE.md).
 
+## NuGet
+Each release is available through [NuGet packages](https://www.nuget.org/packages/Discore/).
+
 ## Example Bot: Ping Pong
 ```csharp
 using Discore;
