@@ -76,6 +76,12 @@ namespace Discore.WebSocket.Net
                 // If connect was successful, start send/receive threads
                 if (socket.State == WebSocketState.Open)
                 {
+                    // Let existing threads end if they haven't already
+                    if (sendThread != null)
+                        sendThread.Join(1000 * 10);
+                    if (receiveThread != null)
+                        receiveThread.Join(1000 * 10);
+
                     sendThread = new Thread(SendLoop);
                     sendThread.Name = "DiscoreWebSocket Send Thread";
                     sendThread.IsBackground = true;
@@ -109,18 +115,20 @@ namespace Discore.WebSocket.Net
         {
             if (State == WebSocketState.Open)
             {
-                cancelTokenSource.Cancel();
-                
                 try
                 {
                     socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None).Wait();
-                    OnDisconnected?.Invoke(this, WebSocketCloseStatus.NormalClosure);
-                    return true;
                 }
-                catch
+                catch { }
+                finally
                 {
-                    return false;
+                    cancelTokenSource.Cancel();
+
+                    log.LogVerbose("Disconnected.");
+                    OnDisconnected?.Invoke(this, WebSocketCloseStatus.NormalClosure);
                 }
+
+                return true;
             }
             else
             {

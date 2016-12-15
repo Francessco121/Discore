@@ -13,7 +13,7 @@ namespace Discore.WebSocket.Net
         /// <summary>
         /// Maximum number of missed heartbeats before timing out.
         /// </summary>
-        const int HEARTBEAT_TIMEOUT_MISSED_PACKETS = 5;
+        const int HEARTBEAT_TIMEOUT_MISSED_PACKETS = 3;
 
         const int GATEWAY_VERSION = 5;
 
@@ -96,7 +96,20 @@ namespace Discore.WebSocket.Net
                 string gatewayUrl = GetGatewayUrl();
 
                 connectionRateLimiter.Invoke(); // Check with the connection rate limiter.
-                if (socket.Connect($"{gatewayUrl}/?encoding=json&v={GATEWAY_VERSION}"))
+
+                bool connectedToSocket;
+
+                try
+                {
+                    // Attempt to connect to the WebSocket API.
+                    connectedToSocket = socket.Connect($"{gatewayUrl}/?encoding=json&v={GATEWAY_VERSION}");
+                }
+                catch
+                {
+                    connectedToSocket = false;
+                }
+
+                if (connectedToSocket)
                 {
                     if (gatewayResume)
                         SendResumePayload();
@@ -105,7 +118,7 @@ namespace Discore.WebSocket.Net
 
                     int timeoutAt = Environment.TickCount + (10 * 1000); // Give Discord 10s to send Hello payload
 
-                    while (heartbeatInterval <= 0 && Environment.TickCount < timeoutAt)
+                    while (heartbeatInterval <= 0 && !TimeHelper.HasTickCountHit(timeoutAt))
                         Thread.Sleep(1);
 
                     if (heartbeatInterval > 0)
@@ -163,7 +176,7 @@ namespace Discore.WebSocket.Net
 
             while (socket.State == WebSocketState.Open)
             {
-                if (Environment.TickCount > heartbeatTimeoutAt)
+                if (TimeHelper.HasTickCountHit(heartbeatTimeoutAt))
                 {
                     timedOut = true;
                     break;
