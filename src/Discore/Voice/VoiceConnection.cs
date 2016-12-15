@@ -277,6 +277,9 @@ namespace Discore.Voice
             }
         }
 
+        /// <summary>
+        /// Invalidates the connection and releases all resources used by this voice connection.
+        /// </summary>
         public void Dispose()
         {
             if (!isDisposed)

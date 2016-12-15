@@ -5,6 +5,9 @@ namespace Discore
 {
     public interface ITextChannel
     {
+        /// <summary>
+        /// Gets the ID of this text channel.
+        /// </summary>
         Snowflake Id { get; }
 
         /// <summary>

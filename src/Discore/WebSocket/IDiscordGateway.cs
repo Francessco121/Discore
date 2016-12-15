@@ -5,6 +5,9 @@ namespace Discore.WebSocket
 {
     public interface IDiscordGateway
     {
+        /// <summary>
+        /// Gets the shard that is managing this gateway connection.
+        /// </summary>
         Shard Shard { get; }
 
         /// <summary>

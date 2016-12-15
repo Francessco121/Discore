@@ -50,7 +50,7 @@ namespace Discore.Http
 
             DiscordGuildChannel[] channels = new DiscordGuildChannel[data.Values.Count];
             for (int i = 0; i < channels.Length; i++)
-                channels[i] = (DiscordGuildChannel)GetChannelAsProperChannel(data.Values[i]);
+                channels[i] = (DiscordGuildChannel)DeserializeChannelData(data.Values[i]);
 
             return channels;
         }
@@ -63,7 +63,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/channels", "CreateGuildChannel");
-            return (DiscordGuildChannel)GetChannelAsProperChannel(returnData);
+            return (DiscordGuildChannel)DeserializeChannelData(returnData);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Discore.Http
 
             DiscordGuildChannel[] channels = new DiscordGuildChannel[returnData.Values.Count];
             for (int i = 0; i < channels.Length; i++)
-                channels[i] = (DiscordGuildChannel)GetChannelAsProperChannel(returnData.Values[i]);
+                channels[i] = (DiscordGuildChannel)DeserializeChannelData(returnData.Values[i]);
 
             return channels;
         }

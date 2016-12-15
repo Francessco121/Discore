@@ -29,7 +29,7 @@ namespace Discore.Http
             where T : DiscordChannel
         {
             DiscordApiData data = await Rest.Get($"channels/{channelId}", "GetChannel");
-            return (T)GetChannelAsProperChannel(data);
+            return (T)DeserializeChannelData(data);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Discore.Http
             requestData.Set("user_limit", userLimit);
 
             DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, "ModifyChannel");
-            return (T)GetChannelAsProperChannel(returnData);            
+            return (T)DeserializeChannelData(returnData);            
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Discore.Http
             where T : DiscordChannel
         {
             DiscordApiData data = await Rest.Delete($"channels/{channelId}", "DeleteChannel");
-            return (T)GetChannelAsProperChannel(data);
+            return (T)DeserializeChannelData(data);
         }
         #endregion
 

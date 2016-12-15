@@ -1,14 +1,28 @@
-﻿using System;
-using Discore.Voice;
+﻿using Discore.Voice;
 
 namespace Discore
 {
     public sealed class DiscoreCache
     {
+        /// <summary>
+        /// Gets a table of all cached guilds.
+        /// </summary>
         public DiscoreCacheTable<DiscoreGuildCache> Guilds { get; }
+        /// <summary>
+        /// Gets a table of all cached users.
+        /// </summary>
         public DiscoreCacheTable<DiscordUser> Users { get; }
+        /// <summary>
+        /// Gets a table of all cached channels.
+        /// </summary>
         public DiscoreCacheTable<DiscordChannel> Channels { get; }
+        /// <summary>
+        /// Gets a table of all cached DM channels.
+        /// </summary>
         public DiscoreCacheTable<DiscordDMChannel> DirectMessageChannels { get; }
+        /// <summary>
+        /// Gets a table of all cached roles.
+        /// </summary>
         public DiscoreCacheTable<DiscordRole> Roles { get; }
 
         internal DiscoreCache()
@@ -74,13 +88,34 @@ namespace Discore
 
     public sealed class DiscoreGuildCache : DiscoreTypeCache<DiscordGuild>
     {
+        /// <summary>
+        /// Gets the parent cache.
+        /// </summary>
         public DiscoreCache Parent { get; }
 
+        /// <summary>
+        /// Gets a table of all cached channels in this guild.
+        /// </summary>
         public DiscoreCacheTable<DiscordGuildChannel> Channels { get; }
+        /// <summary>
+        /// Gets a table of all cached text channels in this guild.
+        /// </summary>
         public DiscoreCacheTable<DiscordGuildTextChannel> TextChannels { get; }
+        /// <summary>
+        /// Gets a table of all cached voice channels in this guild.
+        /// </summary>
         public DiscoreCacheTable<DiscoreVoiceChannelCache> VoiceChannels { get; }
+        /// <summary>
+        /// Gets a table of all cached roles in this guild.
+        /// </summary>
         public DiscoreCacheTable<DiscordRole> Roles { get; }
+        /// <summary>
+        /// Gets a table of all cached emojis in this guild.
+        /// </summary>
         public DiscoreCacheTable<DiscordEmoji> Emojis { get; }
+        /// <summary>
+        /// Gets a table of all cached members in this guild.
+        /// </summary>
         public DiscoreCacheTable<DiscoreMemberCache> Members { get; }
 
         internal DiscoreGuildCache(DiscoreCache parent)
@@ -187,9 +222,18 @@ namespace Discore
 
     public sealed class DiscoreMemberCache : DiscoreTypeCache<DiscordGuildMember>
     {
+        /// <summary>
+        /// Gets the cache of the guild this member is in.
+        /// </summary>
         public DiscoreGuildCache Parent { get; }
 
+        /// <summary>
+        /// Gets the current presence state of this member (or null if not available).
+        /// </summary>
         public DiscordUserPresence Presence { get; internal set; }
+        /// <summary>
+        /// Gets the current voice state of this member (or null if not available).
+        /// </summary>
         public DiscordVoiceState VoiceState { get; internal set; }
 
         internal DiscoreMemberCache(DiscoreGuildCache parent)
@@ -206,8 +250,14 @@ namespace Discore
 
     public sealed class DiscoreVoiceChannelCache : DiscoreTypeCache<DiscordGuildVoiceChannel>
     {
+        /// <summary>
+        /// Gets the cache of the guild this voice channels is in.
+        /// </summary>
         public DiscoreGuildCache Parent { get; }
 
+        /// <summary>
+        /// Gets a table of all members currently connected to this voice channel.
+        /// </summary>
         public DiscoreCacheTable<DiscoreMemberCache> ConnectedMembers { get; }
 
         internal DiscoreVoiceChannelCache(DiscoreGuildCache parent)

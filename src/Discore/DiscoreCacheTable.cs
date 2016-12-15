@@ -79,13 +79,17 @@ namespace Discore
         }
 
         /// <summary>
-        /// Gets an item by its id, or null if the entry is not found.
+        /// Gets an item by its ID, or null if the entry is not found.
         /// </summary>
         public T Get(Snowflake id)
         {
             return table[id] as T;
         }
 
+        /// <summary>
+        /// Gets a list of items by their ID's.
+        /// Any entry not found will be null.
+        /// </summary>
         public T[] Get(ICollection<Snowflake> ids)
         {
             T[] array = new T[ids.Count];
@@ -97,11 +101,18 @@ namespace Discore
             return array;
         }
 
+        /// <summary>
+        /// Gets an item by its ID, or null if the entry is not found.
+        /// </summary>
         public T this[Snowflake id]
         {
             get { return Get(id); }
         }
 
+        /// <summary>
+        /// Gets a list of items by their ID's.
+        /// Any entry not found will be null.
+        /// </summary>
         public T[] this[ICollection<Snowflake> ids]
         {
             get { return Get(ids); }
@@ -116,21 +127,34 @@ namespace Discore
             return item != null;
         }
 
+        /// <summary>
+        /// Returns whether this cache table contains the specified item.
+        /// </summary>
         public bool Contains(T item)
         {
             return table.ContainsValue(item);
         }
 
+        /// <summary>
+        /// Returns whether this cache table contains the specified key.
+        /// </summary>
         public bool ContainsKey(Snowflake key)
         {
             return table.ContainsKey(key);
         }
 
+        /// <summary>
+        /// Returns whether this cache table contains the specified item.
+        /// </summary>
         public bool ContainsValue(T value)
         {
             return table.ContainsValue(value);
         }
 
+        /// <summary>
+        /// Copies all of the keys in this table to the specified array.
+        /// </summary>
+        /// <param name="arrayIndex">Position to start copying to in the specified array.</param>
         public void CopyTo(Snowflake[] array, int arrayIndex)
         {
             int i = arrayIndex;
@@ -141,6 +165,10 @@ namespace Discore
             }
         }
 
+        /// <summary>
+        /// Copies all of the values in this table to the specified array.
+        /// </summary>
+        /// <param name="arrayIndex">Position to start copying to in the specified array.</param>
         public void CopyTo(T[] array, int arrayIndex)
         {
             int i = arrayIndex;
@@ -151,6 +179,10 @@ namespace Discore
             }
         }
 
+        /// <summary>
+        /// Copies all of the entries in this table to the specified array.
+        /// </summary>
+        /// <param name="arrayIndex">Position to start copying to in the specified array.</param>
         public void CopyTo(KeyValuePair<Snowflake, T>[] array, int arrayIndex)
         {
             int i = arrayIndex;

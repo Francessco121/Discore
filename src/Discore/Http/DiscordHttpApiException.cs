@@ -2,12 +2,21 @@
 
 namespace Discore.Http
 {
-    public class DiscordHttpClientException : DiscoreException
+    /// <summary>
+    /// An exception representing an error sent by the Discord HTTP API.
+    /// </summary>
+    public class DiscordHttpApiException : DiscoreException
     {
+        /// <summary>
+        /// Gets the custom Discord HTTP error code.
+        /// </summary>
         public DiscordHttpErrorCode ErrorCode { get; }
+        /// <summary>
+        /// Gets the HTTP status code associated with the error.
+        /// </summary>
         public HttpStatusCode HttpStatusCode { get; }
 
-        internal DiscordHttpClientException(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
+        internal DiscordHttpApiException(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
             : base($"{message} ({errorCode})({(int)errorCode})")
         {
             ErrorCode = errorCode;

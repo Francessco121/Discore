@@ -14,7 +14,7 @@ namespace Discore.Http
             Rest = rest;
         }
 
-        protected DiscordChannel GetChannelAsProperChannel(DiscordApiData data)
+        protected DiscordChannel DeserializeChannelData(DiscordApiData data)
         {
             bool isPrivate = data.GetBoolean("is_private") ?? false;
 

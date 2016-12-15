@@ -55,19 +55,19 @@ namespace Discore.Http.Net
                                 sb.Append(", ");
                         }
 
-                        throw new DiscordHttpClientException(sb.ToString(), DiscordHttpErrorCode.None, response.StatusCode);
+                        throw new DiscordHttpApiException(sb.ToString(), DiscordHttpErrorCode.None, response.StatusCode);
                     }
                     else
                     {
                         long code = data.GetInt64("code") ?? 0;
                         string message = data.GetString("message");
 
-                        throw new DiscordHttpClientException(message, (DiscordHttpErrorCode)code, response.StatusCode);
+                        throw new DiscordHttpApiException(message, (DiscordHttpErrorCode)code, response.StatusCode);
                     }
                 }
             }
             else
-                throw new DiscordHttpClientException($"Unknown error. Response: {json}",
+                throw new DiscordHttpApiException($"Unknown error. Response: {json}",
                     DiscordHttpErrorCode.None, response.StatusCode);
         }
 
