@@ -77,10 +77,12 @@ namespace Discore
             RoleId = data.GetSnowflake("role_id");
 
             DiscordApiData userData = data.Get("user");
-            User = new DiscordUser(userData);
+            if (userData != null)
+                User = new DiscordUser(userData);
 
             DiscordApiData accountData = data.Get("account");
-            Account = new DiscordIntegrationAccount(accountData);
+            if (accountData != null)
+                Account = new DiscordIntegrationAccount(accountData);
         }
 
         /// <summary>

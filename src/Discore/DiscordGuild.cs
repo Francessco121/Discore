@@ -153,7 +153,7 @@ namespace Discore
             IsEmbedEnabled              = data.GetBoolean("embed_enabled") ?? false;
             VerificationLevel           = data.GetInteger("verification_level").Value;
             MFALevel                    = data.GetInteger("mfa_level").Value;
-            DefaultMessageNotifications = data.GetInteger("default_messages_notifications") ?? 0;
+            DefaultMessageNotifications = data.GetInteger("default_message_notifications") ?? 0;
             MemberCount                 = data.GetInteger("member_count").Value;
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");

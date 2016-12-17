@@ -25,7 +25,7 @@ namespace Discore
             webhookHttp = app.HttpApi.Webhooks;
 
             Topic = data.GetString("topic");
-            lastMessageId = data.GetSnowflake("last_message_id").Value;
+            lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Discore
             {
                 IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, DiscordMessageGetStrategy.After);
 
-                lastId = messages[0].Id;
+                lastId = messages.Count == 0 ? default(Snowflake) : messages[0].Id;
 
                 if (messages.Count < 100)
                     break;

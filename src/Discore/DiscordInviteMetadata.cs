@@ -51,7 +51,7 @@ namespace Discore
             MaxAge = data.GetInteger("max_age").Value;
             IsTemporary = data.GetBoolean("temporary").Value;
             CreatedAt = data.GetDateTime("created_at").Value;
-            IsRevoked = data.GetBoolean("revoked").Value;
+            IsRevoked = data.GetBoolean("revoked") ?? false;
         }
     }
 }

@@ -1,10 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-namespace Discore.Http
+namespace Discore
 {
-    public sealed class DiscordConnection : DiscordIdObject
+    public sealed class DiscordConnection
     {
+        /// <summary>
+        /// Gets the id of this connection.
+        /// </summary>
+        public string Id { get; }
+
         /// <summary>
         /// Gets the username of the connection account.
         /// </summary>
@@ -26,8 +31,8 @@ namespace Discore.Http
         public IReadOnlyCollection<DiscordIntegration> Integrations { get; }
 
         internal DiscordConnection(IDiscordApplication app, DiscordApiData data)
-            : base(data)
         {
+            Id = data.GetString("id");
             Name = data.GetString("name");
             Type = data.GetString("type");
             IsRevoked = data.GetBoolean("revoked").Value;

@@ -3,8 +3,12 @@
     /// <summary>
     /// A region for a voice server.
     /// </summary>
-    public sealed class DiscordVoiceRegion : DiscordIdObject
+    public sealed class DiscordVoiceRegion
     {
+        /// <summary>
+        /// Gets the id of the region.
+        /// </summary>
+        public string Id { get; }
         /// <summary>
         /// Gets the name of the region.
         /// </summary>
@@ -35,8 +39,8 @@
         public bool IsCustom { get; }
 
         internal DiscordVoiceRegion(DiscordApiData data)
-            : base(data)
         {
+            Id             = data.GetString("id");
             Name           = data.GetString("name");
             SampleHostname = data.GetString("sample_hostname");
             SamplePort     = data.GetInteger("sample_port").Value;
