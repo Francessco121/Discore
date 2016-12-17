@@ -90,9 +90,9 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(string token, string content, 
-            string username = null, Uri avatar = null, bool tts = false)
+            string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, content, username, avatar, tts);
+            return await webhookHttp.Execute(Id, token, content, username, avatarUrl, tts);
         }
 
         /// <summary>
@@ -100,9 +100,9 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(string token, byte[] file, 
-            string filename = "unknown.jpg", string username = null, Uri avatar = null, bool tts = false)
+            string filename = "unknown.jpg", string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, file, filename, username, avatar, tts);
+            return await webhookHttp.Execute(Id, token, file, filename, username, avatarUrl, tts);
         }
 
         /// <summary>
@@ -110,9 +110,9 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(string token, FileInfo fileInfo, 
-            string username = null, Uri avatar = null, bool tts = false)
+            string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, fileInfo, username, avatar, tts);
+            return await webhookHttp.Execute(Id, token, fileInfo, username, avatarUrl, tts);
         }
 
         /// <summary>
@@ -120,9 +120,9 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
-            string username = null, Uri avatar = null, bool tts = false)
+            string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, embedBuilders, username, avatar, tts);
+            return await webhookHttp.Execute(Id, token, embedBuilders, username, avatarUrl, tts);
         }
     }
 }

@@ -24,15 +24,6 @@
             IsInline = data.GetBoolean("inline").Value;
         }
 
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = DiscordApiData.CreateContainer();
-            data.Set("name", Name);
-            data.Set("value", Value);
-            data.Set("inline", IsInline);
-            return data;
-        }
-
         public override string ToString()
         {
             return Name;

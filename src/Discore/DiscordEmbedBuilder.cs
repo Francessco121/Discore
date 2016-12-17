@@ -2,6 +2,9 @@
 
 namespace Discore
 {
+    /// <summary>
+    /// A class to create message embeds used when executing webhooks.
+    /// </summary>
     public class DiscordEmbedBuilder
     {
         DiscordApiData product;
@@ -44,11 +47,11 @@ namespace Discore
             return this;
         }
 
-        public DiscordEmbedBuilder SetFooter(string text, string icon = null)
+        public DiscordEmbedBuilder SetFooter(string text, string iconUrl = null)
         {
             DiscordApiData apiData = DiscordApiData.CreateContainer();
             apiData.Set("text", text);
-            apiData.Set("icon", icon);
+            apiData.Set("icon_url", iconUrl);
 
             product.Set("footer", apiData);
             return this;
@@ -83,6 +86,7 @@ namespace Discore
             return this;
         }
 
+        /// <param name="inline">Whether this field should display inline with other inline fields.</param>
         public DiscordEmbedBuilder AddField(string name, string value, bool inline)
         {
             DiscordApiData fieldArray = product.Get("fields");

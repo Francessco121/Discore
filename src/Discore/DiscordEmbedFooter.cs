@@ -23,14 +23,5 @@
             IconUrl = data.GetString("icon_url");
             ProxyIconUrl = data.GetString("proxy_icon_url");
         }
-
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = DiscordApiData.CreateContainer();
-            data.Set("text", Text);
-            data.Set("icon_url", IconUrl);
-            data.Set("proxy_icon_url", ProxyIconUrl);
-            return data;
-        }
     }
 }
