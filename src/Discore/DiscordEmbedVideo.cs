@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordEmbedVideo : DiscordSerializable
+    public sealed class DiscordEmbedVideo
     {
         /// <summary>
         /// Gets the source url of the video.
@@ -24,7 +24,7 @@
             Height = data.GetInteger("height").Value;
         }
 
-        internal override DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("url", Url);

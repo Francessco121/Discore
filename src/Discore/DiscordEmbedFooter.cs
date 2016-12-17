@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordEmbedFooter : DiscordSerializable
+    public sealed class DiscordEmbedFooter
     {
         /// <summary>
         /// Gets the footer text.
@@ -24,7 +24,7 @@
             ProxyIconUrl = data.GetString("proxy_icon_url");
         }
 
-        internal override DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("text", Text);

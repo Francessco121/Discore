@@ -3,7 +3,7 @@
     /// <summary>
     /// A thumbnail of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public sealed class DiscordEmbedThumbnail : DiscordSerializable
+    public sealed class DiscordEmbedThumbnail
     {
         /// <summary>
         /// Gets the url of the thumbnail.
@@ -30,7 +30,7 @@
             Height = data.GetInteger("height").Value;
         }
 
-        internal override DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = DiscordApiData.CreateContainer();
             data.Set("url", Url);
