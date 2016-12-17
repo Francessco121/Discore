@@ -1,5 +1,6 @@
 ﻿using Discore.WebSocket.Net;
 using System;
+using System.Net.WebSockets;
 using System.Threading;
 
 namespace Discore.WebSocket
@@ -23,6 +24,14 @@ namespace Discore.WebSocket
         /// Called when this shard first connects to the Discord gateway.
         /// </summary>
         public event EventHandler<ShardEventArgs> OnConnected;
+        /// <summary>
+        /// Called when the internal connection of this shard reconnected to the Discord gateway.
+        /// <para>
+        /// This can be used to reset things such as the user status,
+        /// which are reset when reconnecting.
+        /// </para>
+        /// </summary>
+        public event EventHandler<ShardEventArgs> OnReconnected;
         /// <summary>
         /// Called when this shard fails and cannot reconnect due to the error.
         /// </summary>
@@ -64,8 +73,14 @@ namespace Discore.WebSocket
 
             gateway = new Gateway(app, this);
             gateway.OnFatalDisconnection += Gateway_OnFatalDisconnection;
+            gateway.OnReconnected += Gateway_OnReconnected;
 
             Voice = new ShardVoiceManager(this, gateway);
+        }
+
+        private void Gateway_OnReconnected(object sender, EventArgs e)
+        {
+            OnReconnected?.Invoke(this, new ShardEventArgs(this));
         }
 
         private void Gateway_OnFatalDisconnection(object sender, GatewayDisconnectCode e)
@@ -100,7 +115,7 @@ namespace Discore.WebSocket
                     {
                         try
                         {
-                            if (gateway.Connect())
+                            if (gateway.SocketState == WebSocketState.Open || gateway.SocketState == WebSocketState.Connecting || gateway.Connect())
                             {
                                 log.LogVerbose("Successfully connected to gateway.");
                                 OnConnected?.Invoke(this, new ShardEventArgs(this));

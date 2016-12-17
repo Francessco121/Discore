@@ -7,7 +7,9 @@ namespace Discore.WebSocket.Net
     partial class Gateway : IDiscordGateway, IDisposable
     {
         public Shard Shard { get { return shard; } }
+        public WebSocketState SocketState { get { return socket.State; } }
 
+        public event EventHandler OnReconnected;
         public event EventHandler<GatewayDisconnectCode> OnFatalDisconnection;
 
         /// <summary>
@@ -85,10 +87,18 @@ namespace Discore.WebSocket.Net
         }
 
         /// <param name="gatewayResume">Will send a resume payload instead of an identify upon reconnecting when true.</param>
-        public bool Connect(bool gatewayResume = false)
+        /// <param name="waitForHeartbeatThread">Wether to wait for the heartbeat thread to end before reconnecting.</param>
+        public bool Connect(bool gatewayResume = false, bool waitForHeartbeatThread = true)
         {
             if (socket.State != WebSocketState.Connecting && socket.State != WebSocketState.Open)
             {
+                // Wait for previous heartbeat thread to end
+                if (waitForHeartbeatThread)
+                {
+                    if (heartbeatThread != null && heartbeatThread.IsAlive)
+                        heartbeatThread.Join();
+                }
+
                 // Reset gateway state
                 if (!gatewayResume)
                     Reset();
@@ -173,6 +183,7 @@ namespace Discore.WebSocket.Net
             heartbeatTimeoutAt = Environment.TickCount + (heartbeatInterval * HEARTBEAT_TIMEOUT_MISSED_PACKETS);
 
             bool timedOut = false;
+            int sendHeartbeatAt = Environment.TickCount; // default to now
 
             while (socket.State == WebSocketState.Open)
             {
@@ -182,15 +193,22 @@ namespace Discore.WebSocket.Net
                     break;
                 }
 
-                SendHeartbeatPayload();
-                Thread.Sleep(heartbeatInterval);
+                if (TimeHelper.HasTickCountHit(sendHeartbeatAt))
+                {
+                    SendHeartbeatPayload();
+                    sendHeartbeatAt = Environment.TickCount + heartbeatInterval;
+                }
+
+                Thread.Sleep(1000);
             }
 
             if (timedOut)
             {
+                log.LogInfo("Connection timed out, reconnecting...");
+
                 // Attempt reconnect
                 socket.Disconnect();
-                Reconnect();
+                Reconnect(false, false);
 
                 // Once the socket reconnects, we can let the heartbeat thread
                 // gracefully end, as it will be overwritten by the new handshake.
@@ -198,7 +216,8 @@ namespace Discore.WebSocket.Net
         }
 
         /// <param name="gatewayResume">Whether to perform a full-reconnect or just a resume.</param>
-        void Reconnect(bool gatewayResume = false)
+        /// <param name="waitForHeartbeatThread">Wether to wait for the heartbeat thread to end before reconnecting.</param>
+        void Reconnect(bool gatewayResume = false, bool waitForHeartbeatThread = true)
         {
             // Since a reconnect can be started from multiple threads,
             // ensure that we do not enter this loop simultaneously.
@@ -210,7 +229,7 @@ namespace Discore.WebSocket.Net
                 {
                     try
                     {
-                        if (Connect(gatewayResume))
+                        if (Connect(gatewayResume, waitForHeartbeatThread))
                             break;
                     }
                     catch (Exception ex)
@@ -220,6 +239,7 @@ namespace Discore.WebSocket.Net
                 }
 
                 isReconnecting = false;
+                OnReconnected?.Invoke(this, EventArgs.Empty);
             }
         }
 
