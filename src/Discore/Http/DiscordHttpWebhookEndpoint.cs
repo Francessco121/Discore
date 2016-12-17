@@ -177,16 +177,29 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Executes a webhook with a embed as contents.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        public async Task<bool> Execute(Snowflake webhookId, string token,
+            DiscordEmbedBuilder embed, string username = null,
+            Uri avatar = null, bool tts = false)
+        {
+            DiscordEmbedBuilder[] a = new DiscordEmbedBuilder[1] { embed };
+
+            return await Execute(webhookId, token, a, username, avatar, tts);
+        }
+
+        /// <summary>
         /// Executes a webhook with embeds as the contents.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
-            IEnumerable<DiscordEmbed> embeds, string username = null,
+            IEnumerable<DiscordEmbedBuilder> embeds, string username = null,
             Uri avatar = null, bool tts = false)
         {
             DiscordApiData data = DiscordApiData.CreateArray();
-            foreach (DiscordEmbed embed in embeds)
-                data.Values.Add(embed.Serialize());
+            foreach (DiscordEmbedBuilder embedBuilder in embeds)
+                data.Values.Add(embedBuilder.Build());
 
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
