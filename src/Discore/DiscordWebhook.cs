@@ -119,10 +119,10 @@ namespace Discore
         /// Executes this webhook with embeds as the contents.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Execute(string token, IEnumerable<DiscordEmbed> embeds, 
+        public async Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
             string username = null, Uri avatar = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, embeds, username, avatar, tts);
+            return await webhookHttp.Execute(Id, token, embedBuilders, username, avatar, tts);
         }
     }
 }

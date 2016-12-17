@@ -194,11 +194,11 @@ namespace Discore.Http
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
-            IEnumerable<DiscordEmbedBuilder> embeds, string username = null,
+            IEnumerable<DiscordEmbedBuilder> embedBuilders, string username = null,
             Uri avatar = null, bool tts = false)
         {
             DiscordApiData data = DiscordApiData.CreateArray();
-            foreach (DiscordEmbedBuilder embedBuilder in embeds)
+            foreach (DiscordEmbedBuilder embedBuilder in embedBuilders)
                 data.Values.Add(embedBuilder.Build());
 
             DiscordApiData postData = DiscordApiData.CreateContainer();
@@ -206,7 +206,12 @@ namespace Discore.Http
             if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
             if (avatar != null) postData.Set("avatar", avatar.ToString());
             postData.Set("tts", tts);
-            postData.Set("embeds", embeds);
+
+            DiscordApiData embedData = new DiscordApiData(DiscordApiDataType.Array);
+            foreach (DiscordEmbedBuilder builder in embedBuilders)
+                embedData.Values.Add(builder.Build());
+
+            postData.Set("embeds", embedData);
 
             return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, "ExecuteWebhook")).IsNull;
         }
