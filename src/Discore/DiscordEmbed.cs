@@ -109,33 +109,5 @@ namespace Discore
         {
             return Title;
         }
-
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = DiscordApiData.CreateContainer();
-            data.Set("title", Title);
-            data.Set("type", Type);
-            data.Set("description", Description);
-            data.Set("url", Url);
-            data.Set("timestamp", Timestamp);
-            data.Set("color", Color);
-            data.Set("footer", Footer?.Serialize());
-            data.Set("image", Image?.Serialize());
-            data.Set("thumbnail", Thumbnail?.Serialize());
-            data.Set("video", Video?.Serialize());
-            data.Set("provider", Provider?.Serialize());
-            data.Set("author", Author?.Serialize());
-
-            if (Fields != null)
-            {
-                DiscordApiData fields = DiscordApiData.CreateArray();
-                foreach (DiscordEmbedField field in Fields)
-                    fields.Values.Add(field.Serialize());
-
-                data.Set("fields", fields);
-            }
-
-            return data;
-        }
     }
 }

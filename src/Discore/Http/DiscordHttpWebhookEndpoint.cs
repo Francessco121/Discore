@@ -118,14 +118,15 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             string content, string username = null,
-            Uri avatar = null, bool tts = false)
+            string avatarUrl = null, bool tts = false)
         {
-            if (string.IsNullOrWhiteSpace(content)) throw new ArgumentNullException(nameof(content));
+            if (string.IsNullOrWhiteSpace(content))
+                throw new ArgumentNullException(nameof(content));
 
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
-            if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
-            if (avatar != null) postData.Set("avatar", avatar.ToString());
+            postData.Set("username", username);
+            postData.Set("avatar_url", avatarUrl);
             postData.Set("tts", tts);
             postData.Set("content", content);
 
@@ -138,12 +139,12 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             byte[] file, string filename = "unknown.jpg",
-            string username = null, Uri avatar = null, bool tts = false)
+            string username = null, string avatarUrl = null, bool tts = false)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
-            if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
-            if (avatar != null) postData.Set("avatar", avatar.ToString());
+            postData.Set("username", username);
+            postData.Set("avatar_url", avatarUrl);
             postData.Set("tts", tts);
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/webhooks/{webhookId}/{token}");
@@ -166,13 +167,13 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             FileInfo file, string username = null,
-            Uri avatar = null, bool tts = false)
+            string avatarUrl = null, bool tts = false)
         {
             using (FileStream fs = file.OpenRead())
             using (MemoryStream ms = new MemoryStream())
             {
                 await fs.CopyToAsync(ms);
-                return await Execute(webhookId, token, ms.ToArray(), file.Name, username, avatar, tts);
+                return await Execute(webhookId, token, ms.ToArray(), file.Name, username, avatarUrl, tts);
             }
         }
 
@@ -182,11 +183,11 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             DiscordEmbedBuilder embed, string username = null,
-            Uri avatar = null, bool tts = false)
+            string avatarUrl = null, bool tts = false)
         {
-            DiscordEmbedBuilder[] a = new DiscordEmbedBuilder[1] { embed };
+            DiscordEmbedBuilder[] builders = new DiscordEmbedBuilder[] { embed };
 
-            return await Execute(webhookId, token, a, username, avatar, tts);
+            return await Execute(webhookId, token, builders, username, avatarUrl, tts);
         }
 
         /// <summary>
@@ -195,7 +196,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             IEnumerable<DiscordEmbedBuilder> embedBuilders, string username = null,
-            Uri avatar = null, bool tts = false)
+            string avatarUrl = null, bool tts = false)
         {
             DiscordApiData data = DiscordApiData.CreateArray();
             foreach (DiscordEmbedBuilder embedBuilder in embedBuilders)
@@ -203,8 +204,8 @@ namespace Discore.Http
 
             DiscordApiData postData = DiscordApiData.CreateContainer();
 
-            if (!string.IsNullOrWhiteSpace(username)) postData.Set("username", username);
-            if (avatar != null) postData.Set("avatar", avatar.ToString());
+            postData.Set("username", username);
+            postData.Set("avatar_url", avatarUrl);
             postData.Set("tts", tts);
 
             DiscordApiData embedData = new DiscordApiData(DiscordApiDataType.Array);

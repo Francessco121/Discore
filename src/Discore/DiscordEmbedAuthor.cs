@@ -30,16 +30,6 @@
             ProxyIconUrl = data.GetString("proxy_icon_url");
         }
 
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = DiscordApiData.CreateContainer();
-            data.Set("name", Name);
-            data.Set("url", Url);
-            data.Set("icon_url", IconUrl);
-            data.Set("proxy_icon_url", ProxyIconUrl);
-            return data;
-        }
-
         public override string ToString()
         {
             return Name;

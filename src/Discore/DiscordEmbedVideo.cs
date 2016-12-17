@@ -24,15 +24,6 @@
             Height = data.GetInteger("height").Value;
         }
 
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = DiscordApiData.CreateContainer();
-            data.Set("url", Url);
-            data.Set("width", Width);
-            data.Set("height", Height);
-            return data;
-        }
-
         public override string ToString()
         {
             return Url;
