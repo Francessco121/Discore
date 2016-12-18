@@ -95,6 +95,14 @@ namespace Discore.Voice
         /// Gets the number of unsent voice data bytes.
         /// </summary>
         public int BytesToSend { get { return socket.BytesToSend; } }
+        /// <summary>
+        /// Gets or sets whether the sending of voice data is paused.
+        /// </summary>
+        public bool IsPaused
+        {
+            get { return socket.IsPaused; }
+            set { socket.IsPaused = value; }
+        }
 
         DiscoreGuildCache guildCache;
         DiscoreMemberCache memberCache;
