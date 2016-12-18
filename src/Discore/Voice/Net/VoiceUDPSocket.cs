@@ -46,6 +46,8 @@ namespace Discore.Voice.Net
             receiveThread.IsBackground = true;
 
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket.SendTimeout = 1000 * 10;
+            socket.ReceiveTimeout = 1000 * 10;
             socket.Connect(endpoint);
 
             receiveThread.Start();
@@ -53,7 +55,8 @@ namespace Discore.Voice.Net
 
         public void Disconnect()
         {
-            socket.Shutdown(SocketShutdown.Both);
+            try { socket.Shutdown(SocketShutdown.Both); }
+            catch { }
         }
 
         public void StartIPDiscovery(int ssrc)
@@ -97,13 +100,23 @@ namespace Discore.Voice.Net
             {
                 byte[] buffer = new byte[socket.ReceiveBufferSize];
 
-                while (socket != null)
+                while (socket != null && socket.Connected)
                 {
-                    EndPoint endpoint = this.endpoint;
 
-                    int read = socket.Receive(buffer);
-                    if (read == 70 && isAwaitingIPDiscovery)
-                        HandleIPDiscoveryPacket(buffer);
+                    try
+                    {
+                        int read = socket.Receive(buffer);
+                        if (read == 70 && isAwaitingIPDiscovery)
+                            HandleIPDiscoveryPacket(buffer);
+                    }
+                    catch (SocketException ex)
+                    {
+                        if (ex.SocketErrorCode != SocketError.TimedOut)
+                            // Since we have the receive timeout set to a finite value,
+                            // if the bot is deafened, or has no one in the voice channel with it,
+                            // it will time out on receiving, but this is okay.
+                            throw;
+                    }
                 }
             }
             catch (ObjectDisposedException) { }

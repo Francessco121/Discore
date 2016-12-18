@@ -12,6 +12,8 @@ namespace Discore.Voice.Net
         public DiscordGuildMember Member { get { return memberCache.Value; } }
         public bool IsConnected { get { return socket.State == WebSocketState.Open; } }
 
+        public bool IsPaused { get; set; }
+
         public int BytesToSend { get { return sendBuffer.Count; } }
 
         public event EventHandler<Exception> OnError;
@@ -162,24 +164,18 @@ namespace Discore.Voice.Net
             return false;
         }
 
-        public bool Disconnect()
+        public void Disconnect()
         {
-            if (socket.State == WebSocketState.Open)
-            {
-                // Cancel any async operations
-                cancelTokenSource.Cancel();
+            // Cancel any async operations
+            cancelTokenSource.Cancel();
 
+            if (socket.State == WebSocketState.Open)
                 // Close the socket if the error wasn't directly from the socket.
                 socket.Disconnect();
 
-                // Close the UDP socket if still open
-                if (udpSocket != null && udpSocket.IsConnected)
-                    udpSocket.Disconnect();
-
-                return true;
-            }
-
-            return false;
+            // Close the UDP socket if still open
+            if (udpSocket != null)
+                udpSocket.Disconnect();
         }
 
         public void JoinThreads()
@@ -383,8 +379,13 @@ namespace Discore.Voice.Net
                     // Is it time to send the next frame?
                     if (ticksToNextFrame <= 0)
                     {
+                        if (IsPaused)
+                        {
+                            // If we are paused, do nothing.
+                            Thread.Sleep(1);
+                        }
                         // If we have a frame to send
-                        if (hasFrame)
+                        else if (hasFrame)
                         {
                             hasFrame = false;
                             // Send the frame across UDP
