@@ -48,7 +48,7 @@ namespace Discore
                 return true;
 
             // Set default permissions to guild @everyone role permissions
-            DiscordPermission userPermissions = guild.Roles[guild.AtEveryoneRoleId].Permissions;
+            DiscordPermission userPermissions = guild.Roles[guild.Id].Permissions;
 
             // Apply guild-member role permissions
             foreach (DiscordRole role in guild.Roles.Values)
@@ -62,7 +62,7 @@ namespace Discore
 
             // Apply channel @everyone overwrites
             DiscordOverwrite channelEveryoneOverwrite;
-            if (forChannel.PermissionOverwrites.TryGetValue(guild.AtEveryoneRoleId, out channelEveryoneOverwrite))
+            if (forChannel.PermissionOverwrites.TryGetValue(guild.Id, out channelEveryoneOverwrite))
             {
                 userPermissions = (userPermissions | channelEveryoneOverwrite.Allow) & (~channelEveryoneOverwrite.Deny);
             }

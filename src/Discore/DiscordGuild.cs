@@ -94,11 +94,6 @@ namespace Discore
         public bool IsUnavailable { get; private set; }
 
         /// <summary>
-        /// Gets the id of the @everyone role, which contains the default permissions for everyone in this guild.
-        /// </summary>
-        public Snowflake AtEveryoneRoleId { get; }
-
-        /// <summary>
         /// Gets a table of all roles in this guild.
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordRole> Roles
