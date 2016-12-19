@@ -19,6 +19,9 @@ Requirements:
 
 [Which can be obtained here](https://www.microsoft.com/net/core#windowsvs2015).
 
+## Wiki
+For more information on how to use Discore, see our [documentation right here on GitHub](https://github.com/BundledSticksInkorperated/Discore/wiki).
+
 ## Example Bot: Ping Pong
 ```csharp
 using Discore;
