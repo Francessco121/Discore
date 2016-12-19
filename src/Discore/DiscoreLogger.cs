@@ -94,7 +94,7 @@ namespace Discore
                 // Prefix
                 msg = $"[{Prefix}] {msg}";
 
-            OnLog?.Invoke(null, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now)));
+            OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now)));
         }
 
         /// <summary>
