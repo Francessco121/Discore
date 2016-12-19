@@ -1,4 +1,6 @@
 # Discore
+[![NuGet](https://img.shields.io/nuget/v/Discore.svg?style=flat-square?maxAge=2592000)](https://www.nuget.org/packages/Discore/)
+
 ***Discord + .NET Core = Discore***
 
 A [.NET Core](https://dotnet.github.io/) library for interacting with the [Discord](https://discordapp.com/) API.
