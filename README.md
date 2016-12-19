@@ -10,7 +10,14 @@ Discore aims to fully implement two sides of the Discord API: the HTTP API, and 
 Released under the [MIT License](../master/LICENSE.md).
 
 ## NuGet
-Each release is available through [NuGet packages](https://www.nuget.org/packages/Discore/).
+Each release is available through our [NuGet packages](https://www.nuget.org/packages/Discore/).
+
+## Compiling
+Requirements:
+- Visual Studio 2015 with Update 3
+- .NET Core 1.0.1 tools Preview 2
+
+[Which can be obtained here](https://www.microsoft.com/net/core#windowsvs2015).
 
 ## Example Bot: Ping Pong
 ```csharp
