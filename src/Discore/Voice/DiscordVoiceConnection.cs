@@ -5,23 +5,23 @@ using System;
 
 namespace Discore.Voice
 {
-    public class VoiceSessionEventArgs : EventArgs
+    public class VoiceConnectionEventArgs : EventArgs
     {
         public Shard Shard { get; }
         public DiscordVoiceConnection Connection { get; }
 
-        internal VoiceSessionEventArgs(Shard shard, DiscordVoiceConnection connection)
+        internal VoiceConnectionEventArgs(Shard shard, DiscordVoiceConnection connection)
         {
             Shard = shard;
             Connection = connection;
         }
     }
 
-    public class VoiceSessionErrorEventArgs : VoiceSessionEventArgs
+    public class VoiceConnectionErrorEventArgs : VoiceConnectionEventArgs
     {
         public Exception Exception { get; }
 
-        internal VoiceSessionErrorEventArgs(Shard shard, DiscordVoiceConnection connection, Exception exception)
+        internal VoiceConnectionErrorEventArgs(Shard shard, DiscordVoiceConnection connection, Exception exception)
             : base(shard, connection)
         {
             Exception = exception;
@@ -36,21 +36,21 @@ namespace Discore.Voice
         public const int PCM_BLOCK_SIZE = 3840;
 
         /// <summary>
-        /// Called when the voice session first connects.
+        /// Called when the voice connection first connects.
         /// </summary>
-        public event EventHandler<VoiceSessionEventArgs> OnConnected;
+        public event EventHandler<VoiceConnectionEventArgs> OnConnected;
         /// <summary>
-        /// Called when the voice session is disconnected.
+        /// Called when the voice connection is disconnected.
         /// </summary>
-        public event EventHandler<VoiceSessionEventArgs> OnDisconnected;
+        public event EventHandler<VoiceConnectionEventArgs> OnDisconnected;
         /// <summary>
         /// Called when the voice connection unexpectedly closes.
         /// </summary>
-        public event EventHandler<VoiceSessionErrorEventArgs> OnError;
+        public event EventHandler<VoiceConnectionErrorEventArgs> OnError;
         /// <summary>
         /// Called when this voice connection is no longer useable. (eg. disconnected, error, failure to connect).
         /// </summary>
-        public event EventHandler<VoiceSessionEventArgs> OnInvalidated;
+        public event EventHandler<VoiceConnectionEventArgs> OnInvalidated;
 
         /// <summary>
         /// Gets the shard this connection is managed by.
@@ -151,7 +151,7 @@ namespace Discore.Voice
             {
                 socket.Disconnect();
                 Invalidate();
-                OnDisconnected?.Invoke(this, new VoiceSessionEventArgs(Shard, this));
+                OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
                 return true;
             }
             else
@@ -252,7 +252,7 @@ namespace Discore.Voice
         private void Socket_OnError(object sender, Exception e)
         {
             Disconnect();
-            OnError?.Invoke(this, new VoiceSessionErrorEventArgs(Shard, this, e));
+            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, e));
         }
 
         void Connect()
@@ -260,7 +260,7 @@ namespace Discore.Voice
             if (socket.Connect(endpoint, token))
             {
                 socket.SetSpeaking(isSpeaking);
-                OnConnected?.Invoke(this, new VoiceSessionEventArgs(Shard, this));
+                OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
             }
             else
             {
@@ -281,7 +281,7 @@ namespace Discore.Voice
 
                 Shard.Voice.RemoveVoiceConnection(Guild.Id);
 
-                OnInvalidated?.Invoke(this, new VoiceSessionEventArgs(Shard, this));
+                OnInvalidated?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
             }
         }
 
