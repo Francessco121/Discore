@@ -9,6 +9,10 @@ namespace Discore
         /// Gets the ID of this text channel.
         /// </summary>
         Snowflake Id { get; }
+        /// <summary>
+        /// Gets the type of this channel.
+        /// </summary>
+        DiscordChannelType ChannelType { get; }
 
         /// <summary>
         /// Sends a message to this channel.
