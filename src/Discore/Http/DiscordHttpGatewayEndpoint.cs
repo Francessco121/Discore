@@ -15,19 +15,28 @@ namespace Discore.Http
         }
     }
 
-    class DiscordHttpGatewayEndpoint : DiscordHttpApiEndpoint
+    public class DiscordHttpGatewayEndpoint : DiscordHttpApiEndpoint
     {
         internal DiscordHttpGatewayEndpoint(IDiscordApplication app, RestClient rest) 
             : base(app, rest)
         { }
 
-        public async Task<string> Get()
+        /// <summary>
+        /// Gets the minimum number of required shards for the current authenticated Discord application.
+        /// </summary>
+        public async Task<int> GetBotRequiredShards()
+        {
+            GatewayBotResponse response = await GetBot();
+            return response.Shards;
+        }
+
+        internal async Task<string> Get()
         {
             DiscordApiData data = await Rest.Get("gateway", "GetGateway");
             return data.GetString("url");
         }
 
-        public async Task<GatewayBotResponse> GetBot()
+        internal async Task<GatewayBotResponse> GetBot()
         {
             DiscordApiData data = await Rest.Get("gateway/bot", "GetGatewayBot");
             return new GatewayBotResponse(data);

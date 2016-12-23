@@ -28,8 +28,10 @@ namespace Discore.Http
         /// Gets the implementation of the /invites section of the HTTP API.
         /// </summary>
         public DiscordHttpInviteEndpoint Invites { get; }
-
-        internal DiscordHttpGatewayEndpoint Gateway { get; }
+        /// <summary>
+        /// Gets the implementation of the /gateway section of the HTTP API.
+        /// </summary>
+        public DiscordHttpGatewayEndpoint Gateway { get; }
 
         internal DiscordHttpApi(IDiscordApplication app)
         {
