@@ -111,10 +111,15 @@ namespace Discore.Voice.Net
                     }
                     catch (SocketException ex)
                     {
-                        if (ex.SocketErrorCode != SocketError.TimedOut)
+                        if (ex.SocketErrorCode != SocketError.TimedOut
+                            && ex.SocketErrorCode != SocketError.IOPending)
                             // Since we have the receive timeout set to a finite value,
                             // if the bot is deafened, or has no one in the voice channel with it,
                             // it will time out on receiving, but this is okay.
+
+                            // We also don't want to throw for an IO pending error,
+                            // this happens everytime the socket is shutdown while
+                            // still waiting to receive.
                             throw;
                     }
                 }
