@@ -41,14 +41,18 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
-        /// Initiates a voice connection to the specified voice channel.
+        /// Creates a voice connection to the specified voice channel.
+        /// If a voice connection already exists for the given channel,
+        /// a new connection is not created and the existing one is returned.
         /// </summary>
-        public DiscordVoiceConnection ConnectToVoice(DiscordGuildVoiceChannel voiceChannel)
+        public DiscordVoiceConnection CreateConnection(DiscordGuildVoiceChannel voiceChannel)
         {
             DiscordVoiceConnection connection;
-            if (voiceConnections.TryRemove(voiceChannel.GuildId, out connection))
-                // Close any existing connection.
-                connection.Disconnect();
+            if (voiceConnections.TryGetValue(voiceChannel.GuildId, out connection))
+            {
+                // Return existing connection
+                return connection;
+            }
 
             // Get the guild cache
             DiscoreGuildCache guildCache;
@@ -61,11 +65,7 @@ namespace Discore.WebSocket
                     // Create the new connection
                     connection = new DiscordVoiceConnection(shard, gateway, guildCache, memberCache, voiceChannel);
                     if (voiceConnections.TryAdd(voiceChannel.GuildId, connection))
-                    {
-                        // Initiate connection
-                        gateway.SendVoiceStateUpdatePayload(voiceChannel.GuildId, voiceChannel.Id, false, false);
                         return connection;
-                    }
                     else
                         // Connection already exists, just return the existing one.
                         return voiceConnections[voiceChannel.GuildId];

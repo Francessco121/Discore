@@ -84,6 +84,10 @@ namespace Discore.Voice
         /// </summary>
         public bool IsConnected { get { return socket.IsConnected; } }
         /// <summary>
+        /// Gets whether this connection is currently performing its handshake.
+        /// </summary>
+        public bool IsConnecting { get { return isConnecting; } }
+        /// <summary>
         /// Gets whether this connection is available to use.
         /// </summary>
         public bool IsValid { get { return isValid; } }
@@ -118,6 +122,7 @@ namespace Discore.Voice
         string endpoint;
         bool isDisposed;
         bool isValid;
+        bool isConnecting;
 
         bool isSpeaking;
 
@@ -139,6 +144,26 @@ namespace Discore.Voice
 
             socket = new VoiceSocket(guildCache, memberCache);
             socket.OnError += Socket_OnError;
+        }
+
+        /// <summary>
+        /// Initiates this voice connection.
+        /// </summary>
+        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
+        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
+        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
+        public void Connect(bool startMute = false, bool startDeaf = false)
+        {
+            if (isValid)
+            {
+                if (!isConnecting && !IsConnected)
+                {
+                    isConnecting = true;
+                    gateway.SendVoiceStateUpdatePayload(intialVoiceChannel.GuildId, intialVoiceChannel.Id, startMute, startDeaf);
+                }
+                else
+                    throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
+            }
         }
 
         /// <summary>
@@ -220,7 +245,7 @@ namespace Discore.Voice
                 if (!IsConnected && token != null && endpoint != null)
                     // Either the token or session id can be received first,
                     // so we must check if we are ready to start in both cases.
-                    Connect();
+                    ConnectSocket();
             }
         }
 
@@ -244,7 +269,7 @@ namespace Discore.Voice
 
                     // Either the token or session id can be received first,
                     // so we must check if we are ready to start in both cases.
-                    Connect();
+                    ConnectSocket();
                 }
             }
         }
@@ -255,10 +280,11 @@ namespace Discore.Voice
             OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, e));
         }
 
-        void Connect()
+        void ConnectSocket()
         {
             if (socket.Connect(endpoint, token))
             {
+                isConnecting = false;
                 socket.SetSpeaking(isSpeaking);
                 OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
             }
@@ -274,6 +300,7 @@ namespace Discore.Voice
             if (isValid)
             {
                 isValid = false;
+                isConnecting = false;
 
                 log.LogVerbose("[Invalidate] Disconnecting...");
 
