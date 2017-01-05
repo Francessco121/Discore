@@ -119,7 +119,7 @@ namespace Discore
                     {
                         if (firstOrOnlyMessage == null)
                         {
-                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, message, fileName, tts);
+                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, fileName, message, tts);
                             firstOrOnlyMessage = msg;
                         }
                         else
@@ -127,7 +127,7 @@ namespace Discore
                     });
             }
             else
-                firstOrOnlyMessage = await channelsHttp.UploadFile(Id, fileAttachment, content, fileName, tts);
+                firstOrOnlyMessage = await channelsHttp.UploadFile(Id, fileAttachment, fileName, content, tts);
 
             return firstOrOnlyMessage;
         }
