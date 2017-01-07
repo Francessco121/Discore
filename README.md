@@ -21,6 +21,9 @@ Requirements:
 
 [Which can be obtained here](https://www.microsoft.com/net/core#windowsvs2015).
 
+OR
+- [Visual Studio 2017 RC](https://www.microsoft.com/net/core#windowsvs2017) with the ".NET Core and Docker (Preview)" workload
+
 ## Wiki
 For more information on how to use Discore, see our [documentation right here on GitHub](https://github.com/BundledSticksInkorperated/Discore/wiki).
 
