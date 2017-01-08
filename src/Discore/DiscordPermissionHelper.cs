@@ -51,9 +51,13 @@ namespace Discore
             DiscordPermission userPermissions = guild.Roles[guild.Id].Permissions;
 
             // Apply guild-member role permissions
-            foreach (DiscordRole role in guild.Roles.Values)
+            foreach (Snowflake roleId in member.RoleIds)
             {
-                userPermissions = userPermissions | role.Permissions;
+                DiscordRole role;
+                if (guild.Roles.TryGetValue(roleId, out role))
+                {
+                    userPermissions = userPermissions | role.Permissions;
+                }
             }
 
             // Administrator overrides channel-specific overwrites
@@ -68,10 +72,10 @@ namespace Discore
             }
 
             // Apply channel-specific overwrites
-            foreach (DiscordRole role in guild.Roles.Values)
+            foreach (Snowflake roleId in member.RoleIds)
             {
                 DiscordOverwrite overwrite;
-                if (forChannel.PermissionOverwrites.TryGetValue(role.Id, out overwrite))
+                if (forChannel.PermissionOverwrites.TryGetValue(roleId, out overwrite))
                 {
                     userPermissions = (userPermissions | overwrite.Allow) & (~overwrite.Deny);
                 }
