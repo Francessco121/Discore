@@ -2,6 +2,7 @@
 using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
+using System.Threading;
 
 namespace Discore.Voice
 {
@@ -160,6 +161,19 @@ namespace Discore.Voice
                 {
                     isConnecting = true;
                     gateway.SendVoiceStateUpdatePayload(intialVoiceChannel.GuildId, intialVoiceChannel.Id, startMute, startDeaf);
+
+                    ThreadPool.QueueUserWorkItem(_ =>
+                    {
+                        // Wait 10s
+                        Thread.Sleep(10000);
+
+                        // If still not connected, timeout and disconnect.
+                        if (isConnecting)
+                        {
+                            socket.Disconnect();
+                            Invalidate();
+                        }
+                    });
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
