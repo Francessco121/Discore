@@ -233,7 +233,10 @@ namespace Discore.Voice
         /// </summary>
         public void ClearVoiceBuffer()
         {
-            socket.ClearVoiceBuffer();
+            if (isValid)
+            {
+                socket.ClearVoiceBuffer();
+            }
         }
 
         internal void OnVoiceStateUpdated(DiscordVoiceState voiceState)
