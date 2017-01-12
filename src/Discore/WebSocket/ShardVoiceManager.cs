@@ -72,7 +72,8 @@ namespace Discore.WebSocket
                     DiscordPermissionHelper.AssertPermission(DiscordPermission.Connect,
                         memberCache.Value, guildCache.Value, voiceChannel);
 
-                    if (guildCache.VoiceChannels.TryGetValue(voiceChannel.Id, out DiscoreVoiceChannelCache voiceChannelCache))
+                    DiscoreVoiceChannelCache voiceChannelCache;
+                    if (guildCache.VoiceChannels.TryGetValue(voiceChannel.Id, out voiceChannelCache))
                     {
                         bool isAdmin = DiscordPermissionHelper.HasPermission(DiscordPermission.Administrator,
                             memberCache.Value, guildCache.Value, voiceChannel);
