@@ -16,10 +16,9 @@ Each release is available through our [NuGet packages](https://www.nuget.org/pac
 
 ## Compiling
 Requirements:
-- Visual Studio 2015 with Update 3
-- .NET Core 1.0.1 tools Preview 2
-
-[Which can be obtained here](https://www.microsoft.com/net/core#windowsvs2015).
+- [Visual Studio 2015 with Update 3](https://www.microsoft.com/net/core#windowsvs2015)
+- [.NET Core 1.0.1 Tools Preview 2](https://www.microsoft.com/net/core#windowsvs2015)
+- [.NET Core 1.1 SDK](https://www.microsoft.com/net/download/core#/current)
 
 OR
 - [Visual Studio 2017 RC](https://www.microsoft.com/net/core#windowsvs2017) with the ".NET Core and Docker (Preview)" workload
