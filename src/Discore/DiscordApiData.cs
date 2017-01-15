@@ -501,23 +501,23 @@ namespace Discore
         /// Sets a value in this api data container.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData Set(string key, DiscordApiData value)
+        public DiscordApiData Set(string key, DiscordApiData apiData)
         {
             AssertContainer();
 
-            data[key] = value ?? new DiscordApiData(value);
-            return value;
+            data[key] = apiData ?? new DiscordApiData(apiData);
+            return apiData;
         }
 
         /// <summary>
         /// Sets a DiscordColor value in this api data container.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData Set(string key, DiscordColor value)
+        public DiscordApiData Set(string key, DiscordColor color)
         {
             AssertContainer();
 
-            DiscordApiData apiData = new DiscordApiData(value.ToHexadecimal());
+            DiscordApiData apiData = new DiscordApiData(color.ToHexadecimal());
             data[key] = apiData;
             return apiData;
         }
@@ -526,20 +526,20 @@ namespace Discore
         /// Sets a DiscordColor value in this api data container.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData Set(string key, DiscordColor? value)
+        public DiscordApiData Set(string key, DiscordColor? color)
         {
             AssertContainer();
 
-            DiscordApiData apiData = value.HasValue ? new DiscordApiData(value.Value) : new DiscordApiData(value: null);
+            DiscordApiData apiData = color.HasValue ? new DiscordApiData(color.Value) : new DiscordApiData(value: null);
             data[key] = apiData;
             return apiData;
         }
 
-        public DiscordApiData Set(string key, DateTime value)
+        public DiscordApiData Set(string key, DateTime dateTime)
         {
             AssertContainer();
 
-            DiscordApiData apiData = new DiscordApiData(value.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+            DiscordApiData apiData = new DiscordApiData(dateTime.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
             data[key] = apiData;
             return apiData;
         }
