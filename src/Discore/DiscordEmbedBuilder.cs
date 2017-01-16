@@ -35,7 +35,7 @@ namespace Discore
 
         public DiscordEmbedBuilder SetTimestamp(DateTime time)
         {
-            product.Set("timestamp", time);
+            product.Set("timestamp", time.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
             return this;
         }
         

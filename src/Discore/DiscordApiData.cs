@@ -539,7 +539,7 @@ namespace Discore
         {
             AssertContainer();
 
-            DiscordApiData apiData = new DiscordApiData(dateTime.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+            DiscordApiData apiData = new DiscordApiData(dateTime);
             data[key] = apiData;
             return apiData;
         }
