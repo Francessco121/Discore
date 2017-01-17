@@ -1,23 +1,10 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 
 namespace Discore
 {
     class DiscoreLocalStorage
     {
-        /// <summary>
-        /// Gets the existing or creates a new instance of the local storage API.
-        /// </summary>
-        public static DiscoreLocalStorage Instance
-        {
-            get
-            {
-                if (instance == null)
-                    instance = new DiscoreLocalStorage();
-
-                return instance;
-            }
-        }
-
         static DiscoreLocalStorage instance;
 
         public string GatewayUrl
@@ -34,7 +21,24 @@ namespace Discore
         private DiscoreLocalStorage()
         {
             log = new DiscoreLogger("DiscoreLocalStorage");
+        }
 
+        /// <summary>
+        /// Gets the existing or creates a new instance of the local storage API.
+        /// </summary>
+        public static async Task<DiscoreLocalStorage> GetInstanceAsync()
+        {
+            if (instance == null)
+            {
+                instance = new DiscoreLocalStorage();
+                await instance.OpenAsync();
+            }
+
+            return instance;
+        }
+
+        async Task OpenAsync()
+        {
             if (File.Exists(FILE_NAME))
             {
                 using (FileStream fs = File.Open(FILE_NAME, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -45,28 +49,28 @@ namespace Discore
                     if (!DiscordApiData.TryParseJson(json, out data))
                     {
                         log.LogWarning($"{FILE_NAME} contained invalid JSON, overwriting with a new file.");
-                        CreateNewFile();
+                        await CreateNewFileAsync();
                     }
                 }
             }
             else
-                CreateNewFile();
+                await CreateNewFileAsync();
         }
 
-        void CreateNewFile()
+        async Task CreateNewFileAsync()
         {
             // Save empty JSON for now.
             data = new DiscordApiData();
-            Save();
+            await SaveAsync();
         }
 
-        public void Save()
+        public async Task SaveAsync()
         {
             using (FileStream fs = File.Open(FILE_NAME, FileMode.Create, FileAccess.Write, FileShare.None))
             using (StreamWriter writer = new StreamWriter(fs))
             {
                 string json = data.SerializeToJson();
-                writer.Write(json);
+                await writer.WriteAsync(json);
             }
         }
     }

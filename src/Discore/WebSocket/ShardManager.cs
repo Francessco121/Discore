@@ -64,7 +64,7 @@ namespace Discore.WebSocket
                 if (localStorage.GatewayUrl != gatewayUrl)
                 {
                     localStorage.GatewayUrl = gatewayUrl;
-                    localStorage.Save();
+                    localStorage.SaveAsync();
                 }
             }
             catch (AggregateException aex) { throw aex.InnerException; }

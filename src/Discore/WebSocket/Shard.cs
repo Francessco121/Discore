@@ -115,7 +115,7 @@ namespace Discore.WebSocket
                     {
                         try
                         {
-                            if (gateway.SocketState == WebSocketState.Open || gateway.SocketState == WebSocketState.Connecting || gateway.Connect())
+                            if (gateway.SocketState == WebSocketState.Open || gateway.SocketState == WebSocketState.Connecting || gateway.ConnectAsync())
                             {
                                 log.LogVerbose("Successfully connected to gateway.");
                                 OnConnected?.Invoke(this, new ShardEventArgs(this));
@@ -148,7 +148,7 @@ namespace Discore.WebSocket
                 CleanUp();
                 // We aren't concerned with the return status of the gateway disconnection,
                 // as it should only "fail" if the gateway was already disconnected.
-                gateway.Disconnect();
+                gateway.DisconnectAsync();
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");

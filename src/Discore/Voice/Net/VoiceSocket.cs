@@ -4,13 +4,14 @@ using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.Voice.Net
 {
     class VoiceSocket : IDisposable
     {
         public DiscordGuildMember Member { get { return memberCache.Value; } }
-        public bool IsConnected { get { return socket.State == WebSocketState.Open; } }
+        public bool IsConnected { get { return socket.State == DiscoreWebSocketState.Open; } }
 
         public bool IsPaused { get; set; }
 
@@ -132,46 +133,52 @@ namespace Discore.Voice.Net
             }
         }
 
-        public bool Connect(string endpoint, string token)
+        /// <exception cref="InvalidOperationException">Thrown if this socket is already connected or connecting.</exception>
+        public async Task<bool> ConnectAsync(string endpoint, string token)
         {
-            if (socket.State != WebSocketState.Open && socket.State != WebSocketState.Connecting)
+            if (socket.State != DiscoreWebSocketState.Closed)
+                throw new InvalidOperationException("Failed to connect, the socket is already connected or connecting.");
+
+            endpoint = endpoint.Split(':')[0];
+            this.endpoint = endpoint;
+            this.token = token;
+
+            Reset();
+
+            string uri = $"wss://{endpoint}";
+            log.LogVerbose($"Connecting to voice websocket {uri}...");
+
+            if (await socket.ConnectAsync(uri, CancellationToken.None))
             {
-                endpoint = endpoint.Split(':')[0];
-                this.endpoint = endpoint;
-                this.token = token;
+                log.LogVerbose($"Connected to voice websocket {uri}.");
 
-                Reset();
+                // Create new threads
+                CreateThreads();
 
-                string uri = $"wss://{endpoint}";
-                log.LogVerbose($"Connecting to voice websocket {uri}...");
-                if (socket.Connect(uri))
-                {
-                    log.LogVerbose($"Connected to voice websocket {uri}.");
+                // Start the threads
+                heartbeatThread.Start();
+                sendThread.Start();
 
-                    // Create new threads
-                    CreateThreads();
-
-                    // Start the threads
-                    heartbeatThread.Start();
-                    sendThread.Start();
-
-                    // Send the identify payload
-                    SendIdentifyPayload();
-                    return true;
-                }
+                // Send the identify payload
+                SendIdentifyPayload();
+                return true;
             }
-
-            return false;
+            else
+                return false;
         }
 
+        /// <exception cref="InvalidOperationException">Thrown if this socket is not connected.</exception>
         public void Disconnect()
         {
+            if (socket.State != DiscoreWebSocketState.Open)
+                throw new InvalidOperationException("Failed to disconnect, the socket is not open.");
+
             // Cancel any async operations
             cancelTokenSource.Cancel();
 
             if (socket.State == WebSocketState.Open)
                 // Close the socket if the error wasn't directly from the socket.
-                socket.Disconnect();
+                await socket.DisconnectAsync();
 
             // Close the UDP socket if still open
             if (udpSocket != null)

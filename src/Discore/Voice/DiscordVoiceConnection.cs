@@ -299,7 +299,7 @@ namespace Discore.Voice
 
         void ConnectSocket()
         {
-            if (socket.Connect(endpoint, token))
+            if (socket.ConnectAsync(endpoint, token))
             {
                 isConnecting = false;
                 socket.SetSpeaking(isSpeaking);

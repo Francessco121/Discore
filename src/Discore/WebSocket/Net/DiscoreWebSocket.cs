@@ -5,12 +5,13 @@ using System.IO.Compression;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Net
 {
     class DiscoreWebSocket : IDisposable
     {
-        public WebSocketState State { get { return socket != null ? socket.State : WebSocketState.None; } }
+        public DiscoreWebSocketState State { get; private set; }
 
         public event EventHandler<Uri> OnConnected;
         public event EventHandler<WebSocketCloseStatus> OnDisconnected;
@@ -21,10 +22,11 @@ namespace Discore.WebSocket.Net
         const int RECEIVE_BUFFER_SIZE   = 12 * 1024; // 12kb
 
         ClientWebSocket socket;
-        CancellationTokenSource cancelTokenSource;
+        CancellationTokenSource taskCancelTokenSource;
 
-        Thread sendThread;
-        Thread receiveThread;
+        bool runTasks;
+        Task sendTask;
+        Task receiveTask;
 
         ConcurrentQueue<DiscordApiData> sendQueue;
 
@@ -36,133 +38,136 @@ namespace Discore.WebSocket.Net
         internal DiscoreWebSocket(WebSocketDataType dataType, string loggingName)
         {
             if (dataType != WebSocketDataType.Json)
-                throw new NotImplementedException("Only json packets are supported so far.");
+                throw new NotImplementedException("Only JSON packets are supported so far.");
 
             this.dataType = dataType;
-
             log = new DiscoreLogger($"WebSocket:{loggingName}");
 
-            sendQueue = new ConcurrentQueue<DiscordApiData>();
+            State = DiscoreWebSocketState.Closed;
         }
 
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="UriFormatException"></exception>
-        public bool Connect(string url)
+        /// <summary>
+        /// Attempts to connect the WebSocket to the specified url.
+        /// Invokes the OnConnected event when successful.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown if uri is not a valid WebSocket uri.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="url"/> is null.</exception>
+        /// <exception cref="UriFormatException">Thrown if <paramref name="url"/> is not a valid uri.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this WebSocket is not closed.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this WebSocket has been disposed.</exception>
+        /// <param name="cancellationToken">Token to cancel the connection attempt.</param>
+        public async Task<bool> ConnectAsync(string url, CancellationToken cancellationToken)
         {
-            if (State == WebSocketState.None || State > WebSocketState.Open)
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(socket));
+
+            if (url == null)
+                throw new ArgumentNullException(nameof(url), "Url cannot be null.");
+
+            if (State != DiscoreWebSocketState.Closed)
+                throw new InvalidOperationException("Failed to connect, the WebSocket is already connected or connecting.");
+
+            Uri uri = new Uri(url);
+
+            State = DiscoreWebSocketState.Connecting;
+            log.LogVerbose($"Connecting to {url}...");
+            
+            try
             {
                 // Create new socket (old socket's can't be reset)
                 socket = new ClientWebSocket();
                 socket.Options.Proxy = null;
                 socket.Options.KeepAliveInterval = TimeSpan.Zero;
 
-                log.LogVerbose($"Connecting to {url}...");
-                Uri uri = new Uri(url);
-
-                // Reset fields
-                cancelTokenSource = new CancellationTokenSource();
-                ClearQueue();
-
                 // Connect
-                try
-                {
-                    socket.ConnectAsync(uri, cancelTokenSource.Token).Wait();
-                }
-                catch (AggregateException aex)
-                {
-                    throw aex.InnerException;
-                }
-
-                // If connect was successful, start send/receive threads
-                if (socket.State == WebSocketState.Open)
-                {
-                    // Let existing threads end if they haven't already
-                    if (sendThread != null)
-                        sendThread.Join(1000 * 10);
-                    if (receiveThread != null)
-                        receiveThread.Join(1000 * 10);
-
-                    sendThread = new Thread(SendLoop);
-                    sendThread.Name = "DiscoreWebSocket Send Thread";
-                    sendThread.IsBackground = true;
-
-                    receiveThread = new Thread(ReceiveLoop);
-                    receiveThread.Name = "DiscoreWebSocket Receive Thread";
-                    receiveThread.IsBackground = true;
-
-                    sendThread.Start();
-                    receiveThread.Start();
-
-                    log.LogVerbose($"Connected to {url}.");
-
-                    OnConnected?.Invoke(this, uri);
-                    return true;
-                }
-                else
-                {
-                    log.LogError($"Failed to connect to {url}.");
-                    return false;
-                }
+                await socket.ConnectAsync(uri, cancellationToken);
             }
-            else
+            catch (WebSocketException) { /* Connection failed, but this is not critical. */ }
+            catch
             {
-                log.LogWarning($"Attempted to connect during invalid socket state: {socket.State}");
-                return false;
+                State = DiscoreWebSocketState.Closed;
+                throw;
             }
-        }
 
-        public bool Disconnect()
-        {
-            if (State == WebSocketState.Open)
+            // If connect was successful, start send/receive threads
+            if (socket.State == WebSocketState.Open)
             {
-                try
-                {
-                    socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None).Wait();
-                }
-                catch { }
-                finally
-                {
-                    cancelTokenSource.Cancel();
+                // Create state for tasks
+                taskCancelTokenSource = new CancellationTokenSource();
+                sendQueue = new ConcurrentQueue<DiscordApiData>();
 
-                    log.LogVerbose("Disconnected.");
-                    OnDisconnected?.Invoke(this, WebSocketCloseStatus.NormalClosure);
-                }
+                // Start new tasks for sending/receiving.
+                sendTask = new Task(SendLoop, taskCancelTokenSource.Token);
+                receiveTask = new Task(ReceiveLoop, taskCancelTokenSource.Token);
 
+                runTasks = true;
+                sendTask.Start();
+                receiveTask.Start();
+
+                // Flip state
+                State = DiscoreWebSocketState.Open;
+                log.LogVerbose($"Connected to {url}.");
+
+                // Fire event and return
+                OnConnected?.Invoke(this, uri);
                 return true;
             }
             else
             {
-                log.LogWarning($"Attempted to disconnect during invalid socket state: {State}");
+                State = DiscoreWebSocketState.Closed;
+                log.LogError($"Failed to connect to {url}.");
                 return false;
-            }
+            } 
         }
 
-        public void JoinThreads()
+        /// <exception cref="InvalidOperationException">Thrown if this WebSocket is not open.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this WebSocket has been disposed.</exception>
+        public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            sendThread?.Join();
-            receiveThread?.Join();
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(socket));
+
+            if (State != DiscoreWebSocketState.Open)
+                throw new InvalidOperationException("Failed to disconnect, the WebSocket is not open.");
+
+            // Close the socket.
+            try { await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", cancellationToken); }
+            catch (TaskCanceledException) { throw; }
+            catch { }
+
+            // Cancel send/receive tasks
+            runTasks = false;
+            taskCancelTokenSource.Cancel();
+
+            // Wait for each task to end.
+            await Task.WhenAll(sendTask, receiveTask);
+
+            // Set our state
+            State = DiscoreWebSocketState.Closed;
+
+            // Fire event and return
+            log.LogVerbose("Disconnected.");
+            OnDisconnected?.Invoke(this, WebSocketCloseStatus.NormalClosure);
         }
 
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this WebSocket has been disposed.</exception>
         public void Send(DiscordApiData data)
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(socket));
+
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
 
             sendQueue.Enqueue(data);
         }
 
-        void ClearQueue()
-        {
-            DiscordApiData temp;
-            while (sendQueue.TryDequeue(out temp)) ;
-        }
-
-        void SendLoop()
+        async void SendLoop()
         {
             try
             {
-                while (State == WebSocketState.Open)
+                while (runTasks)
                 {
                     if (sendQueue.Count > 0)
                     {
@@ -190,41 +195,43 @@ namespace Discore.WebSocket.Net
                                 else
                                     count = SEND_BUFFER_SIZE;
 
+                                WebSocketMessageType msgType = dataType == WebSocketDataType.Json 
+                                    ? WebSocketMessageType.Text 
+                                    : WebSocketMessageType.Binary;
+
+                                ArraySegment<byte> arraySeg = new ArraySegment<byte>(bytes, offset, count);
+
                                 try
                                 {
-                                    socket.SendAsync(new ArraySegment<byte>(bytes, offset, count),
-                                        (dataType == WebSocketDataType.Json 
-                                            ? WebSocketMessageType.Text 
-                                            : WebSocketMessageType.Binary), 
-                                        isLast, cancelTokenSource.Token).Wait();
+                                    await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token);
                                 }
-                                catch (AggregateException aex)
+                                catch (TaskCanceledException)
                                 {
-                                    throw aex.InnerException;
+                                    // Socket is disconnecting, end the loop.
+                                    break;
+                                }
+                                catch (WebSocketException wsex)
+                                {
+                                    if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
+                                        && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                    {
+                                        await HandleFatalException(wsex);
+                                    }
                                 }
                             }
                         }
                     }
                     else
-                        Thread.Sleep(100);
-                }
-            }
-            catch (OperationCanceledException) { } // If canceled, assume other thread is shutting down
-            catch (WebSocketException wsex)
-            {
-                if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
-                    && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
-                {
-                    HandleFatalException(wsex);
+                        await Task.Delay(100);
                 }
             }
             catch (Exception ex)
             {
-                HandleFatalException(ex);
+                await HandleFatalException(ex);
             }
         }
 
-        void ReceiveLoop()
+        async void ReceiveLoop()
         {
             try
             {
@@ -232,7 +239,7 @@ namespace Discore.WebSocket.Net
 
                 using (MemoryStream receiveMs = new MemoryStream())
                 {
-                    while (State == WebSocketState.Open)
+                    while (runTasks)
                     {
                         WebSocketReceiveResult result = null;
 
@@ -247,11 +254,21 @@ namespace Discore.WebSocket.Net
                         {
                             try
                             {
-                                result = socket.ReceiveAsync(receiveBuffer, cancelTokenSource.Token).Result;
+                                result = await socket.ReceiveAsync(receiveBuffer, taskCancelTokenSource.Token);
                             }
-                            catch (AggregateException aex)
+                            catch (TaskCanceledException)
                             {
-                                throw aex.InnerException;
+                                // Socket is disconnecting, end the loop.
+                                isClosing = true;
+                                break;
+                            }
+                            catch (WebSocketException wsex)
+                            {
+                                if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
+                                    && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                {
+                                    await HandleFatalException(wsex);
+                                }
                             }
 
                             if (result != null)
@@ -266,7 +283,7 @@ namespace Discore.WebSocket.Net
                                             result.CloseStatus ?? WebSocketCloseStatus.Empty);
                                     else
                                         // If normal, just make sure everything else stops.
-                                        cancelTokenSource.Cancel();
+                                        taskCancelTokenSource.Cancel();
                                 }
                                 else
                                     receiveMs.Write(receiveBuffer.Array, 0, result.Count);
@@ -320,55 +337,26 @@ namespace Discore.WebSocket.Net
                         // TODO: ETF deserialization
 
                         if (data != null)
-                        {
-                            try
-                            {
-                                OnMessageReceived?.Invoke(this, data);
-                            }
-                            catch (Exception ex)
-                            {
-                                log.LogError($"[OnMessageReceived] Uncaught exception: {ex}");
-                            }
-                        }
+                            OnMessageReceived?.Invoke(this, data);
                     }
-                }
-            }
-            catch (OperationCanceledException) { } // If canceled, assume other thread is shutting down
-            catch (WebSocketException wsex)
-            {
-                if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
-                    && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
-                {
-                    HandleFatalException(wsex);
                 }
             }
             catch (Exception ex)
             {
-                HandleFatalException(ex);
+                await HandleFatalException(ex);
             }
         }
 
-        void HandleFatalException(Exception ex)
+        async Task HandleFatalException(Exception ex)
         {
             // Log the error
             log.LogError(ex);
 
-            // Cancel all operations
-            cancelTokenSource.Cancel();
+            // Disconnect socket if still connected
+            if (State == DiscoreWebSocketState.Open)
+                await DisconnectAsync(CancellationToken.None);
 
-            // Try to close the socket if still open.
-            if (State == WebSocketState.Open)
-            {
-                try
-                {
-                    socket.CloseAsync(WebSocketCloseStatus.InternalServerError, "An internal error occured",
-                        CancellationToken.None).Wait();
-
-                    OnDisconnected?.Invoke(this, WebSocketCloseStatus.InternalServerError);
-                }
-                catch { }
-            }
-
+            // Fire event
             OnError?.Invoke(this, ex);
         }
 
@@ -379,8 +367,10 @@ namespace Discore.WebSocket.Net
                 isDisposed = true;
 
                 socket?.Dispose();
+                taskCancelTokenSource?.Dispose();
 
-                cancelTokenSource?.Cancel();
+                runTasks = false;
+                State = DiscoreWebSocketState.Closed;
             }
         }
     }

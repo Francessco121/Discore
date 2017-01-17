@@ -77,15 +77,15 @@ namespace Discore.WebSocket.Net
             // We won't worry about sending the resume payload here,
             // as that will be handled by the reconnect procedure,
             // when we pass true.
-            Reconnect(true);
+            ReconnectAsync(true);
         }
 
         void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
         {
             log.LogInfo("[InvalidSession] Reconnecting...");
 
-            Disconnect();
-            Reconnect();
+            DisconnectAsync();
+            ReconnectAsync();
         }
 
         void SendPayload(GatewayOPCode op, DiscordApiData data)
