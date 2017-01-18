@@ -25,6 +25,7 @@ namespace Discore.WebSocket.Net
         CancellationTokenSource taskCancelTokenSource;
 
         bool runTasks;
+        bool tasksEndingFromError;
         Task sendTask;
         Task receiveTask;
 
@@ -139,8 +140,14 @@ namespace Discore.WebSocket.Net
             runTasks = false;
             taskCancelTokenSource.Cancel();
 
-            // Wait for each task to end.
-            await Task.WhenAll(sendTask, receiveTask);
+            // Do not await tasks if we are recovering from an error,
+            // this avoids a deadlock if this is called from one of
+            // the tasks.
+            if (!tasksEndingFromError)
+            {
+                // Wait for each task to end.
+                await Task.WhenAll(sendTask, receiveTask);
+            }
 
             // Set our state
             State = DiscoreWebSocketState.Closed;
@@ -227,6 +234,12 @@ namespace Discore.WebSocket.Net
             }
             catch (Exception ex)
             {
+                // Ensure receive loop ends
+                runTasks = false;
+                taskCancelTokenSource.Cancel();
+                await receiveTask;
+
+                // Handle the exception
                 await HandleFatalException(ex);
             }
         }
@@ -343,21 +356,38 @@ namespace Discore.WebSocket.Net
             }
             catch (Exception ex)
             {
+                // Ensure send loop ends
+                runTasks = false;
+                taskCancelTokenSource.Cancel();
+                await sendTask;
+
+                // Handle the exception
                 await HandleFatalException(ex);
             }
         }
 
         async Task HandleFatalException(Exception ex)
         {
-            // Log the error
-            log.LogError(ex);
+            tasksEndingFromError = true;
 
-            // Disconnect socket if still connected
-            if (State == DiscoreWebSocketState.Open)
-                await DisconnectAsync(CancellationToken.None);
+            try
+            {
+                // Log the error
+                log.LogError(ex);
 
-            // Fire event
-            OnError?.Invoke(this, ex);
+                // Disconnect socket if still connected
+                if (State == DiscoreWebSocketState.Open)
+                    await DisconnectAsync(CancellationToken.None);
+
+                // Fire event
+                OnError?.Invoke(this, ex);
+            }
+            finally // TODO: check that async doesn't mess up this finally.
+            {
+                // At this point, it should be safe to let methods await tasks.
+                // TODO: check
+                tasksEndingFromError = false;
+            }
         }
 
         public void Dispose()
