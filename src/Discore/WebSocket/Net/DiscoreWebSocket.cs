@@ -137,12 +137,10 @@ namespace Discore.WebSocket.Net
             catch { }
 
             // Cancel send/receive tasks
-            runTasks = false;
-            taskCancelTokenSource.Cancel();
+            StopTasks();
 
-            // Do not await tasks if we are recovering from an error,
-            // this avoids a deadlock if this is called from one of
-            // the tasks.
+            // Do not await tasks if we are coming from an error,
+            // this avoids a deadlock if this is called from one of the tasks.
             if (!tasksEndingFromError)
             {
                 // Wait for each task to end.
@@ -212,35 +210,26 @@ namespace Discore.WebSocket.Net
                                 {
                                     await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token);
                                 }
-                                catch (TaskCanceledException)
-                                {
-                                    // Socket is disconnecting, end the loop.
-                                    break;
-                                }
                                 catch (WebSocketException wsex)
                                 {
                                     if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
                                         && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
                                     {
-                                        await HandleFatalException(wsex);
+                                        await HandleFatalException(wsex, sendTask);
                                     }
                                 }
                             }
                         }
                     }
                     else
-                        await Task.Delay(100);
+                        await Task.Delay(100, taskCancelTokenSource.Token);
                 }
             }
+            catch (TaskCanceledException) { /* Socket is disconnecting */ }
             catch (Exception ex)
             {
-                // Ensure receive loop ends
-                runTasks = false;
-                taskCancelTokenSource.Cancel();
-                await receiveTask;
-
                 // Handle the exception
-                await HandleFatalException(ex);
+                await HandleFatalException(ex, sendTask);
             }
         }
 
@@ -280,7 +269,7 @@ namespace Discore.WebSocket.Net
                                 if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
                                     && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
                                 {
-                                    await HandleFatalException(wsex);
+                                    await HandleFatalException(wsex, receiveTask);
                                 }
                             }
 
@@ -296,7 +285,7 @@ namespace Discore.WebSocket.Net
                                             result.CloseStatus ?? WebSocketCloseStatus.Empty);
                                     else
                                         // If normal, just make sure everything else stops.
-                                        taskCancelTokenSource.Cancel();
+                                        StopTasks();
                                 }
                                 else
                                     receiveMs.Write(receiveBuffer.Array, 0, result.Count);
@@ -329,13 +318,13 @@ namespace Discore.WebSocket.Net
 
                                 // Decompress packet
                                 using (DeflateStream deflateStream = new DeflateStream(receiveMs, CompressionMode.Decompress, true))
-                                    deflateStream.CopyTo(decompressed);
+                                    await deflateStream.CopyToAsync(decompressed, 81920, taskCancelTokenSource.Token);
 
                                 decompressed.Position = 0;
 
                                 // Read decompressed packet as string
                                 using (StreamReader reader = new StreamReader(decompressed))
-                                    str = reader.ReadToEnd();
+                                    str = await reader.ReadToEndAsync();
                             }
                         }
 
@@ -354,39 +343,52 @@ namespace Discore.WebSocket.Net
                     }
                 }
             }
+            catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                // Ensure send loop ends
-                runTasks = false;
-                taskCancelTokenSource.Cancel();
-                await sendTask;
-
                 // Handle the exception
-                await HandleFatalException(ex);
+                await HandleFatalException(ex, receiveTask);
             }
         }
 
-        async Task HandleFatalException(Exception ex)
+        void StopTasks()
         {
-            tasksEndingFromError = true;
+            runTasks = false;
+            taskCancelTokenSource.Cancel();
+        }
 
-            try
+        async Task HandleFatalException(Exception ex, Task originatingTask)
+        {
+            // Don't let two tasks enter the handler at the same time.
+            if (!tasksEndingFromError)
             {
-                // Log the error
-                log.LogError(ex);
+                tasksEndingFromError = true;
 
-                // Disconnect socket if still connected
-                if (State == DiscoreWebSocketState.Open)
-                    await DisconnectAsync(CancellationToken.None);
+                try
+                {
+                    StopTasks();
 
-                // Fire event
-                OnError?.Invoke(this, ex);
-            }
-            finally // TODO: check that async doesn't mess up this finally.
-            {
-                // At this point, it should be safe to let methods await tasks.
-                // TODO: check
-                tasksEndingFromError = false;
+                    // Ensure the other task finishes, the 'originating task'
+                    // will end after this method completes.
+                    if (originatingTask == sendTask)
+                        await receiveTask;
+                    else
+                        await sendTask;
+
+                    // Log the error
+                    log.LogError(ex);
+
+                    // Disconnect socket if still connected
+                    if (State == DiscoreWebSocketState.Open)
+                        await DisconnectAsync(CancellationToken.None);
+
+                    // Fire event
+                    OnError?.Invoke(this, ex);
+                }
+                finally
+                {
+                    tasksEndingFromError = false;
+                }
             }
         }
 

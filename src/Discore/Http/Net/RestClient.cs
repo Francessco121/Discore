@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Http.Net
@@ -71,62 +72,69 @@ namespace Discore.Http.Net
                     DiscordHttpErrorCode.None, response.StatusCode);
         }
 
-        public async Task<DiscordApiData> Send(HttpRequestMessage request, string limiterAction)
+        public async Task<DiscordApiData> Send(HttpRequestMessage request, string limiterAction, CancellationToken? cancellationToken)
         {
             await rateLimitManager.AwaitRateLimiter(limiterAction);
 
-            HttpResponseMessage response = await http.SendAsync(request);
+            HttpResponseMessage response = await http.SendAsync(request, cancellationToken ?? CancellationToken.None);
             rateLimitManager.UpdateRateLimiter(limiterAction, response);
 
             return await ParseResponse(response);
         }
 
-        public async Task<DiscordApiData> Get(string action, string limiterAction)
+        public async Task<DiscordApiData> Get(string action, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
-        public async Task<DiscordApiData> Post(string action, string limiterAction)
+        public async Task<DiscordApiData> Post(string action, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
-        public async Task<DiscordApiData> Post(string action, DiscordApiData data, string limiterAction)
+        public async Task<DiscordApiData> Post(string action, DiscordApiData data, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
             request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
-        public async Task<DiscordApiData> Put(string action, string limiterAction)
+        public async Task<DiscordApiData> Put(string action, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
-        public async Task<DiscordApiData> Put(string action, DiscordApiData data, string limiterAction)
+        public async Task<DiscordApiData> Put(string action, DiscordApiData data, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
             request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
-        public async Task<DiscordApiData> Patch(string action, DiscordApiData data, string limiterAction)
+        public async Task<DiscordApiData> Patch(string action, DiscordApiData data, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BASE_URL}/{action}");
             request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
-        public async Task<DiscordApiData> Delete(string action, string limiterAction)
+        public async Task<DiscordApiData> Delete(string action, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
-            return await Send(request, limiterAction);
+            return await Send(request, limiterAction, cancellationToken);
         }
 
         public void Dispose()

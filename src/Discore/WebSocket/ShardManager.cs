@@ -1,6 +1,8 @@
 ﻿using Discore.Http;
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -35,9 +37,9 @@ namespace Discore.WebSocket
         /// <summary>
         /// Creates a single shard to be managed.
         /// This is useful if you know your application only requires one shard, or for testing.
-        /// <para>Will shutdown existing shards.</para>
         /// </summary>
         /// <returns>Returns the created shard.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
         public Shard CreateSingleShard()
         {
             CreateShards(new int[] { 0 });
@@ -46,28 +48,26 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Creates the minimum number of shards required by the Discord application.
-        /// <para>Will shutdown existing shards.</para>
+        /// This number is specified by the Discord API.
         /// </summary>
-        public void CreateMinimumRequiredShards()
+        /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
+        public async Task CreateMinimumRequiredShards()
         {
             int numShards;
-            try
-            {
-                GatewayBotResponse response = app.HttpApi.Gateway.GetBot().Result;
-                numShards = response.Shards;
 
-                // GET /gateway/bot also specifies the gateway url, update local storage
-                // with this value if it differs so we don't need to call GET /gateway
-                // later on when connecting.
-                string gatewayUrl = response.Url;
-                DiscoreLocalStorage localStorage = DiscoreLocalStorage.Instance;
-                if (localStorage.GatewayUrl != gatewayUrl)
-                {
-                    localStorage.GatewayUrl = gatewayUrl;
-                    localStorage.SaveAsync();
-                }
+            GatewayBotResponse response = await app.HttpApi.Gateway.GetBot();
+            numShards = response.Shards;
+
+            // GET /gateway/bot also specifies the gateway url, update local storage
+            // with this value if it differs so we don't need to call GET /gateway
+            // later on when connecting.
+            string gatewayUrl = response.Url;
+            DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync();
+            if (localStorage.GatewayUrl != gatewayUrl)
+            {
+                localStorage.GatewayUrl = gatewayUrl;
+                await localStorage.SaveAsync();
             }
-            catch (AggregateException aex) { throw aex.InnerException; }
 
             // Create the minimum shards specified by the Discord API.
             CreateShards(numShards);
@@ -76,9 +76,9 @@ namespace Discore.WebSocket
         /// <summary>
         /// Creates the specified number of shards, where the shard ids range
         /// from 0 to the number specified - 1.
-        /// <para>Will shutdown existing shards.</para>
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">Thrown if the number of shards specified is less than 1.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
         public void CreateShards(int numberOfShards = 1)
         {
             if (numberOfShards < 1)
@@ -93,7 +93,6 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Creates shards for each shard id specified.
-        /// <para>Will shutdown existing shards.</para>
         /// </summary>
         /// <param name="shardIds">A collection of shard ids to be managed by this process.</param>
         /// <param name="totalShards">
@@ -106,6 +105,7 @@ namespace Discore.WebSocket
         /// Thrown if <paramref name="totalShards"/> is specified, 
         /// but it is less than the number of shard ids specified.
         /// </exception>
+        /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
         public void CreateShards(ICollection<int> shardIds, int? totalShards = null)
         {
             if (shardIds == null)
@@ -115,13 +115,12 @@ namespace Discore.WebSocket
             if (totalShards.HasValue && totalShards.Value < shardIds.Count)
                 throw new ArgumentOutOfRangeException(nameof(totalShards),
                     "Number of total shards must be greater than or equal to the number of shard ids specified.");
+            if (IsAnyShardRunning())
+                throw new InvalidOperationException("Cannot create new shards until all previous have been stopped.");
 
-            // Stop/cleanup existing shards
+            // Cleanup existing shards
             if (shards != null)
-            {
-                StopShards();
                 DisposeShards();
-            }
 
             // Set total shard count
             TotalShardCount = totalShards ?? shardIds.Count;
@@ -138,43 +137,59 @@ namespace Discore.WebSocket
             log.LogInfo($"Created {shardIds.Count} managed shard(s), out of {TotalShardCount} total.");
         }
 
+        bool IsAnyShardRunning()
+        {
+            for (int i = 0; i < shards.Length; i++)
+                if (shards[i].IsRunning)
+                    return true;
+
+            return false;
+        }
+
         /// <summary>
-        /// Attempts to start all created shards that are currently not running.
+        /// Starts all created shards that are not running, and returns a list of tasks representing each startup.
+        /// These tasks will not finish until their respected shard has successfully connected (or is cancelled).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public void StartShards()
+        public IList<Task> StartShards(CancellationToken cancellationToken)
         {
             if (shards != null)
             {
+                List<Task> startTasks = new List<Task>();
                 for (int i = 0; i < shards.Length; i++)
                 {
                     Shard shard = shards[i];
                     if (shard.IsRunning)
                         continue;
 
-                    shard.Start();
+                    startTasks.Add(shard.StartAsync(cancellationToken));
                 }
+
+                return startTasks;
             }
             else
                 throw new InvalidOperationException("No shards have been created.");
         }
 
         /// <summary>
-        /// Attempts to stop all created shards that are still running.
+        /// Stops all created shards that are running, and returns a list of tasks representing each disconnection.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public void StopShards()
+        public IList<Task> StopShards(CancellationToken cancellationToken)
         {
             if (shards != null)
             {
+                List<Task> stopTasks = new List<Task>();
                 for (int i = 0; i < shards.Length; i++)
                 {
                     Shard shard = shards[i];
                     if (!shard.IsRunning)
                         continue;
 
-                    shards[i].Stop();
+                    stopTasks.Add(shards[i].StopAsync(cancellationToken));
                 }
+
+                return stopTasks;
             }
             else
                 throw new InvalidOperationException("No shards have been created.");

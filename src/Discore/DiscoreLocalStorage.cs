@@ -44,7 +44,7 @@ namespace Discore
                 using (FileStream fs = File.Open(FILE_NAME, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (StreamReader reader = new StreamReader(fs))
                 {
-                    string json = reader.ReadToEnd();
+                    string json = await reader.ReadToEndAsync();
 
                     if (!DiscordApiData.TryParseJson(json, out data))
                     {

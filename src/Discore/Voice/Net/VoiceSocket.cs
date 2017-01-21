@@ -97,17 +97,17 @@ namespace Discore.Voice.Net
             heartbeatThread.IsBackground = true;
         }
 
-        private void Socket_OnError(object sender, Exception ex)
+        private async void Socket_OnError(object sender, Exception ex)
         {
-            HandleFatalError(ex);
+            await HandleFatalError(ex);
         }
 
-        private void UdpSocket_OnError(object sender, Exception ex)
+        private async void UdpSocket_OnError(object sender, Exception ex)
         {
             udpSocket.OnError -= UdpSocket_OnError;
             udpSocket.OnIPDiscovered -= UdpSocket_OnIPDiscovered;
 
-            HandleFatalError(ex);
+            await HandleFatalError(ex);
         }
 
         private void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
@@ -168,7 +168,8 @@ namespace Discore.Voice.Net
         }
 
         /// <exception cref="InvalidOperationException">Thrown if this socket is not connected.</exception>
-        public void Disconnect()
+        /// <exception cref="TaskCanceledException"></exception>
+        public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
             if (socket.State != DiscoreWebSocketState.Open)
                 throw new InvalidOperationException("Failed to disconnect, the socket is not open.");
@@ -176,13 +177,12 @@ namespace Discore.Voice.Net
             // Cancel any async operations
             cancelTokenSource.Cancel();
 
-            if (socket.State == WebSocketState.Open)
-                // Close the socket if the error wasn't directly from the socket.
-                await socket.DisconnectAsync();
+            // Close WebSocket
+            await socket.DisconnectAsync(cancellationToken);
 
             // Close the UDP socket if still open
             if (udpSocket != null)
-                udpSocket.Disconnect();
+                udpSocket.Shutdown();
         }
 
         public void JoinThreads()
@@ -257,26 +257,35 @@ namespace Discore.Voice.Net
             SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
         }
 
-        void HandleReadyPayload(DiscordApiData data)
+        async void HandleReadyPayload(DiscordApiData data)
         {
-            ssrc = data.GetInteger("ssrc") ?? 0;
             int port = data.GetInteger("port") ?? 0;
+            ssrc = data.GetInteger("ssrc") ?? 0;
             heartbeatInterval = data.GetInteger("heartbeat_interval") ?? 0;
 
             log.LogVerbose($"[Ready] ssrc: {ssrc}, port: {port}");
 
-            udpSocket = new VoiceUDPSocket(guildCache, endpoint, port);
-            udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
-            udpSocket.OnError += UdpSocket_OnError;
+            try
+            {
+                udpSocket = new VoiceUDPSocket(guildCache, endpoint, port);
+                udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
+                udpSocket.OnError += UdpSocket_OnError;
 
-            StartIPDiscovery();
+                await udpSocket.ConnectAsync();
+
+                await StartIPDiscovery();
+            }
+            catch
+            {
+                // TODO: what should happen here...?
+            }
         }
 
-        void StartIPDiscovery()
+        async Task StartIPDiscovery()
         {
             log.LogVerbose("[IPDiscovery] Starting ip discovery...");
 
-            udpSocket.StartIPDiscovery(ssrc);
+            await udpSocket.StartIPDiscoveryAsync(ssrc);
         }
 
         private void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
@@ -297,7 +306,7 @@ namespace Discore.Voice.Net
             readyToSendVoice = true;
         }
 
-        void SendLoop()
+        async void SendLoop()
         {
             //const int TICKS_PER_S = 1000;
             const int TICKS_PER_MS = 1;
@@ -305,7 +314,7 @@ namespace Discore.Voice.Net
             try
             {
                 // Wait for full connection
-                while ((!readyToSendVoice || socket.State != WebSocketState.Open) && !cancelTokenSource.IsCancellationRequested)
+                while ((!readyToSendVoice || socket.State != DiscoreWebSocketState.Open) && !cancelTokenSource.IsCancellationRequested)
                     Thread.Sleep(1000);
 
                 byte[] frame = new byte[encoder.FrameSize];
@@ -338,7 +347,7 @@ namespace Discore.Voice.Net
 
                 // Begin send loop
                 bool hasFrame = false;
-                while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
+                while (socket.State == DiscoreWebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                 {
                     // If we don't have a frame to send and we have a full frame buffered
                     if (!hasFrame && sendBuffer.Count > 0)
@@ -397,7 +406,7 @@ namespace Discore.Voice.Net
                             hasFrame = false;
                             // Send the frame across UDP
                             //udpSocket.Send(voicePacket, rtpPacketLength).Wait();
-                            udpSocket.Send(voicePacket, rtpPacketLength);
+                            await udpSocket.SendAsync(voicePacket, rtpPacketLength);
                         }
 
                         // Calculate the time for next frame
@@ -430,21 +439,21 @@ namespace Discore.Voice.Net
             catch (Exception ex)
             {
                 log.LogError(ex);
-                HandleFatalError(ex);
+                await HandleFatalError(ex);
             }
         }
 
-        void HeartbeatLoop()
+        async void HeartbeatLoop()
         {
             try
             {
                 // Wait for heartbeat interval
-                while (heartbeatInterval == 0 && (!readyToSendVoice || socket.State != WebSocketState.Open)
+                while (heartbeatInterval == 0 && (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open)
                      && !cancelTokenSource.IsCancellationRequested)
                     Thread.Sleep(1000);
 
                 // Heartbeat
-                while (socket.State == WebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
+                while (socket.State == DiscoreWebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
                 {
                     SendHeartbeat();
                     Thread.Sleep(heartbeatInterval);
@@ -453,13 +462,13 @@ namespace Discore.Voice.Net
             catch (Exception ex)
             {
                 log.LogError(ex);
-                HandleFatalError(ex);
+                await HandleFatalError(ex);
             }
         }
 
-        void HandleFatalError(Exception ex)
+        async Task HandleFatalError(Exception ex)
         {
-            Disconnect();
+            await DisconnectAsync(CancellationToken.None);
 
             OnError?.Invoke(this, ex);
         }
