@@ -139,9 +139,12 @@ namespace Discore.WebSocket
 
         bool IsAnyShardRunning()
         {
-            for (int i = 0; i < shards.Length; i++)
-                if (shards[i].IsRunning)
-                    return true;
+            if (shards != null)
+            {
+                for (int i = 0; i < shards.Length; i++)
+                    if (shards[i].IsRunning)
+                        return true;
+            }
 
             return false;
         }
