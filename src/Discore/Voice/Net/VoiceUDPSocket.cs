@@ -45,6 +45,7 @@ namespace Discore.Voice.Net
             log = new DiscoreLogger($"VoiceUDPSocket:{guildCache.Value.Name}");
         }
 
+        /// <exception cref="SocketException"></exception>
         public async Task ConnectAsync()
         {
             IPAddress ip = (await Dns.GetHostAddressesAsync(hostname)).FirstOrDefault();

@@ -1,7 +1,6 @@
 ﻿using Discore.WebSocket.Net;
 using System;
 using System.Collections.Generic;
-using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,10 +40,10 @@ namespace Discore.Voice.Net
         int samplesPerFrame, sampleSize, frameSize;
         ushort sequence;
 
-        Thread sendThread;
-        Thread heartbeatThread;
+        Task sendTask;
+        Task heartbeatTask;
+        CancellationTokenSource taskCancellationSource;
 
-        CancellationTokenSource cancelTokenSource;
         DiscoreLogger log;
 
         [DllImport("libsodium", EntryPoint = "crypto_secretbox_easy", CallingConvention = CallingConvention.Cdecl)]
@@ -75,26 +74,6 @@ namespace Discore.Voice.Net
 
             socket.OnMessageReceived += VoiceSocket_OnMessageReceived;
             socket.OnError += Socket_OnError;
-        }
-
-        void Reset()
-        {
-            cancelTokenSource = new CancellationTokenSource();
-
-            sequence = 0;
-
-            sendBuffer.Reset();
-        }
-
-        void CreateThreads()
-        {
-            sendThread = new Thread(SendLoop);
-            sendThread.Name = $"VoiceSocket:{guildCache.Value.Name} Send Thread";
-            sendThread.IsBackground = true;
-
-            heartbeatThread = new Thread(HeartbeatLoop);
-            heartbeatThread.Name = $"VoiceSocket:{guildCache.Value.Name} Heartbeat Thread";
-            heartbeatThread.IsBackground = true;
         }
 
         private async void Socket_OnError(object sender, Exception ex)
@@ -143,7 +122,8 @@ namespace Discore.Voice.Net
             this.endpoint = endpoint;
             this.token = token;
 
-            Reset();
+            sequence = 0;
+            sendBuffer.Reset();
 
             string uri = $"wss://{endpoint}";
             log.LogVerbose($"Connecting to voice websocket {uri}...");
@@ -152,12 +132,15 @@ namespace Discore.Voice.Net
             {
                 log.LogVerbose($"Connected to voice websocket {uri}.");
 
-                // Create new threads
-                CreateThreads();
+                taskCancellationSource = new CancellationTokenSource();
 
-                // Start the threads
-                heartbeatThread.Start();
-                sendThread.Start();
+                // Create new tasks
+                sendTask = new Task(SendLoop);
+                heartbeatTask = new Task(HeartbeatLoop);
+
+                // Start the tasks
+                sendTask.Start();
+                heartbeatTask.Start();
 
                 // Send the identify payload
                 SendIdentifyPayload();
@@ -174,8 +157,7 @@ namespace Discore.Voice.Net
             if (socket.State != DiscoreWebSocketState.Open)
                 throw new InvalidOperationException("Failed to disconnect, the socket is not open.");
 
-            // Cancel any async operations
-            cancelTokenSource.Cancel();
+            taskCancellationSource?.Cancel();
 
             // Close WebSocket
             await socket.DisconnectAsync(cancellationToken);
@@ -183,14 +165,9 @@ namespace Discore.Voice.Net
             // Close the UDP socket if still open
             if (udpSocket != null)
                 udpSocket.Shutdown();
-        }
 
-        public void JoinThreads()
-        {
-            heartbeatThread?.Join();
-            sendThread?.Join();
-
-            socket.JoinThreads();
+            // Wait for tasks
+            await Task.WhenAll(sendTask, heartbeatTask);
         }
 
         /// <exception cref="OperationCanceledException"></exception>
@@ -271,13 +248,15 @@ namespace Discore.Voice.Net
                 udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
                 udpSocket.OnError += UdpSocket_OnError;
 
+                // Connect the UDP socket
                 await udpSocket.ConnectAsync();
 
+                // Start IP discovery
                 await StartIPDiscovery();
             }
-            catch
+            catch (Exception ex)
             {
-                // TODO: what should happen here...?
+                await HandleFatalError(ex);
             }
         }
 
@@ -314,8 +293,8 @@ namespace Discore.Voice.Net
             try
             {
                 // Wait for full connection
-                while ((!readyToSendVoice || socket.State != DiscoreWebSocketState.Open) && !cancelTokenSource.IsCancellationRequested)
-                    Thread.Sleep(1000);
+                while (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open)
+                    await Task.Delay(1000, taskCancellationSource.Token);
 
                 byte[] frame = new byte[encoder.FrameSize];
                 byte[] encodedFrame = new byte[MAX_OPUS_SIZE];
@@ -347,7 +326,7 @@ namespace Discore.Voice.Net
 
                 // Begin send loop
                 bool hasFrame = false;
-                while (socket.State == DiscoreWebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
+                while (socket.State == DiscoreWebSocketState.Open)
                 {
                     // If we don't have a frame to send and we have a full frame buffered
                     if (!hasFrame && sendBuffer.Count > 0)
@@ -398,7 +377,7 @@ namespace Discore.Voice.Net
                         if (IsPaused)
                         {
                             // If we are paused, do nothing.
-                            Thread.Sleep(1);
+                            await Task.Delay(1, taskCancellationSource.Token);
                         }
                         // If we have a frame to send
                         else if (hasFrame)
@@ -432,14 +411,14 @@ namespace Discore.Voice.Net
                     else
                     {
                         // Nothing to do, so sleep for a bit to avoid burning cpu cycles
-                        Thread.Sleep(1);
+                        await Task.Delay(1, taskCancellationSource.Token);
                     }
                 }
             }
+            catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                log.LogError(ex);
-                await HandleFatalError(ex);
+                await HandleFatalError(ex, sendTask);
             }
         }
 
@@ -448,34 +427,52 @@ namespace Discore.Voice.Net
             try
             {
                 // Wait for heartbeat interval
-                while (heartbeatInterval == 0 && (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open)
-                     && !cancelTokenSource.IsCancellationRequested)
-                    Thread.Sleep(1000);
+                while (heartbeatInterval == 0 && (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open))
+                    await Task.Delay(1000, taskCancellationSource.Token);
 
                 // Heartbeat
-                while (socket.State == DiscoreWebSocketState.Open && !cancelTokenSource.IsCancellationRequested)
+                while (socket.State == DiscoreWebSocketState.Open)
                 {
                     SendHeartbeat();
-                    Thread.Sleep(heartbeatInterval);
+                    await Task.Delay(heartbeatInterval, taskCancellationSource.Token);
                 }
             }
+            catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                log.LogError(ex);
-                await HandleFatalError(ex);
+                await HandleFatalError(ex, heartbeatTask);
             }
         }
 
-        async Task HandleFatalError(Exception ex)
+        async Task HandleFatalError(Exception ex, Task originatingTask = null)
         {
-            await DisconnectAsync(CancellationToken.None);
+            // Log error
+            log.LogError(ex);
+
+            taskCancellationSource?.Cancel();
+
+            // Close WebSocket
+            if (socket.State == DiscoreWebSocketState.Open)
+                await socket.DisconnectAsync(CancellationToken.None);
+
+            // Close the UDP socket if still open
+            if (udpSocket != null)
+                udpSocket.Shutdown();
+
+            // Let all tasks that did not invoke this method end.
+            if (originatingTask == heartbeatTask)
+                await sendTask;
+            else if (originatingTask == sendTask)
+                await heartbeatTask;
+            else
+                await Task.WhenAll(sendTask, heartbeatTask);
 
             OnError?.Invoke(this, ex);
         }
 
         public void Dispose()
         {
-            cancelTokenSource?.Cancel();
+            taskCancellationSource?.Dispose();
 
             if (udpSocket != null)
             {

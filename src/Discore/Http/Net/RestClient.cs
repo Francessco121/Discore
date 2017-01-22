@@ -72,7 +72,8 @@ namespace Discore.Http.Net
                     DiscordHttpErrorCode.None, response.StatusCode);
         }
 
-        public async Task<DiscordApiData> Send(HttpRequestMessage request, string limiterAction, CancellationToken? cancellationToken)
+        public async Task<DiscordApiData> Send(HttpRequestMessage request, string limiterAction, 
+            CancellationToken? cancellationToken = null)
         {
             await rateLimitManager.AwaitRateLimiter(limiterAction);
 
