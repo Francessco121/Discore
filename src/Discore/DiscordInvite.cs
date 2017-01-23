@@ -40,18 +40,18 @@ namespace Discore
         /// <summary>
         /// Deletes this invite.
         /// </summary>
-        public async Task<DiscordInvite> Delete()
+        public Task<DiscordInvite> Delete()
         {
-            return await invitesHttp.Delete(Code);
+            return invitesHttp.Delete(Code);
         }
 
         /// <summary>
         /// Accepts this invite.
         /// Note: This does not work for bot accounts.
         /// </summary>
-        public async Task<DiscordInvite> Accept()
+        public Task<DiscordInvite> Accept()
         {
-            return await invitesHttp.Accept(Code);
+            return invitesHttp.Accept(Code);
         }
     }
 }

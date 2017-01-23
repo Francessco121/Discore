@@ -172,12 +172,12 @@ namespace Discore.Voice
                         try
                         {
                             // Wait 10s
-                            await Task.Delay(10000, connectingCancellationSource.Token);
+                            await Task.Delay(10000, connectingCancellationSource.Token).ConfigureAwait(false);
 
                             // If still not connected, timeout and disconnect.
                             if (isConnecting)
                             {
-                                await socket.DisconnectAsync(CancellationToken.None);
+                                await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                                 Invalidate();
                             }
                         }
@@ -203,7 +203,7 @@ namespace Discore.Voice
         {
             if (isValid)
             {
-                await socket.DisconnectAsync(cancellationToken);
+                await socket.DisconnectAsync(cancellationToken).ConfigureAwait(false);
 
                 Invalidate();
                 OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
@@ -278,7 +278,7 @@ namespace Discore.Voice
                 if (!IsConnected && token != null && endpoint != null)
                     // Either the token or session id can be received first,
                     // so we must check if we are ready to start in both cases.
-                    await ConnectSocket();
+                    await ConnectSocket().ConfigureAwait(false);
             }
         }
 
@@ -295,11 +295,11 @@ namespace Discore.Voice
                     // is when the voice server changes, so we need to
                     // reconnect.
                     if (IsConnected)
-                        await socket.DisconnectAsync(CancellationToken.None);
+                        await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
                     // Either the token or session id can be received first,
                     // so we must check if we are ready to start in both cases.
-                    await ConnectSocket();
+                    await ConnectSocket().ConfigureAwait(false);
                 }
             }
         }
@@ -307,14 +307,14 @@ namespace Discore.Voice
         private async void Socket_OnError(object sender, Exception e)
         {
             if (socket.IsConnected)
-                await DisconnectAsync(CancellationToken.None);
+                await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
             OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, e));
         }
 
         async Task ConnectSocket()
         {
-            if (await socket.ConnectAsync(endpoint, token))
+            if (await socket.ConnectAsync(endpoint, token).ConfigureAwait(false))
             {
                 isConnecting = false;
                 connectingCancellationSource.Cancel();

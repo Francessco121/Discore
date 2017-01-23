@@ -48,7 +48,7 @@ namespace Discore.Voice.Net
         /// <exception cref="SocketException"></exception>
         public async Task ConnectAsync()
         {
-            IPAddress ip = (await Dns.GetHostAddressesAsync(hostname)).FirstOrDefault();
+            IPAddress ip = (await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false)).FirstOrDefault();
             endpoint = new IPEndPoint(ip, port);
 
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -75,12 +75,12 @@ namespace Discore.Voice.Net
             packet[3] = (byte)(ssrc >> 0);
 
             isAwaitingIPDiscovery = true;
-            await SendAsync(packet);
+            await SendAsync(packet).ConfigureAwait(false);
         }
 
         public async Task SendAsync(byte[] data)
         {
-            await SendAsync(data, data.Length);
+            await SendAsync(data, data.Length).ConfigureAwait(false);
         }
 
         public async Task SendAsync(byte[] data, int bytes)
@@ -88,7 +88,7 @@ namespace Discore.Voice.Net
             try
             {
                 ArraySegment<byte> segment = new ArraySegment<byte>(data, 0, bytes);
-                await socket.SendToAsync(segment, SocketFlags.None, endpoint);
+                await socket.SendToAsync(segment, SocketFlags.None, endpoint).ConfigureAwait(false);
             }
             catch (SocketException ex)
             {

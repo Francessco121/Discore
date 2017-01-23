@@ -69,17 +69,17 @@ namespace Discore
         /// <summary>
         /// Modifies the settings of this role.
         /// </summary>
-        public async Task<DiscordRole> Modify(ModifyRoleParameters parameters)
+        public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
         {
-            return await guildsHttp.ModifyRole(GuildId, Id, parameters);
+            return guildsHttp.ModifyRole(GuildId, Id, parameters);
         }
 
         /// <summary>
         /// Deletes this role.
         /// </summary>
-        public async Task<DiscordRole> Delete()
+        public Task<DiscordRole> Delete()
         {
-            return await guildsHttp.DeleteRole(GuildId, Id);
+            return guildsHttp.DeleteRole(GuildId, Id);
         }
 
         public override string ToString()

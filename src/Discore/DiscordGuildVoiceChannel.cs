@@ -32,10 +32,10 @@ namespace Discore
         /// Modifies this voice channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
-        public async Task<DiscordGuildVoiceChannel> Modify(string name = null, int? position = null, 
+        public Task<DiscordGuildVoiceChannel> Modify(string name = null, int? position = null, 
             int? bitrate = null, int? userLimit = null)
         {
-            return await channelsHttp.Modify<DiscordGuildVoiceChannel>(Id, name, position, null, bitrate, userLimit);
+            return channelsHttp.Modify<DiscordGuildVoiceChannel>(Id, name, position, null, bitrate, userLimit);
         }
     }
 }

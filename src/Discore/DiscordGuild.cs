@@ -208,58 +208,58 @@ namespace Discore
         /// <summary>
         /// Gets a list of all webhooks in this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
+        public Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
         {
-            return await webhookHttp.GetGuildWebhooks(Id);
+            return webhookHttp.GetGuildWebhooks(Id);
         }
 
         /// <summary>
         /// Changes the settings of this guild.
         /// </summary>
-        public async Task<DiscordGuild> Modify(ModifyGuildParameters parameters)
+        public Task<DiscordGuild> Modify(ModifyGuildParameters parameters)
         {
-            return await guildHttp.Modify(Id, parameters);
+            return guildHttp.Modify(Id, parameters);
         }
 
         /// <summary>
         /// Deletes this guild permanently.
         /// Authenticated user must be the owner.
         /// </summary>
-        public async Task<DiscordGuild> Delete()
+        public Task<DiscordGuild> Delete()
         {
-            return await guildHttp.Delete(Id);
+            return guildHttp.Delete(Id);
         }
 
         /// <summary>
         /// Gets a list of all channels in this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordGuildChannel>> GetChannels()
+        public Task<IReadOnlyList<DiscordGuildChannel>> GetChannels()
         {
-            return await guildHttp.GetChannels(Id);
+            return guildHttp.GetChannels(Id);
         }
 
         /// <summary>
         /// Creates a text or voice channel for this guild.
         /// </summary>
-        public async Task<DiscordGuildChannel> CreateChannel(CreateGuildChannelParameters parameters)
+        public Task<DiscordGuildChannel> CreateChannel(CreateGuildChannelParameters parameters)
         {
-            return await guildHttp.CreateChannel(Id, parameters);
+            return guildHttp.CreateChannel(Id, parameters);
         }
 
         /// <summary>
         /// Changes the sorting positions of the channels in this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionParameters> positions)
+        public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionParameters> positions)
         {
-            return await guildHttp.ModifyChannelPositions(Id, positions);
+            return guildHttp.ModifyChannelPositions(Id, positions);
         }
 
         /// <summary>
         /// Gets a member of this guild by their user ID.
         /// </summary>
-        public async Task<DiscordGuildMember> GetMember(Snowflake userId)
+        public Task<DiscordGuildMember> GetMember(Snowflake userId)
         {
-            return await guildHttp.GetMember(Id, userId);
+            return guildHttp.GetMember(Id, userId);
         }
 
         /// <summary>
@@ -268,17 +268,17 @@ namespace Discore
         /// </summary>
         /// <param name="limit">Max number of members to return (1-1000).</param>
         /// <param name="after">The highest user id in the previous page.</param>
-        public async Task<IReadOnlyList<DiscordGuildMember>> GetMembers(int? limit = null, Snowflake? after = null)
+        public Task<IReadOnlyList<DiscordGuildMember>> GetMembers(int? limit = null, Snowflake? after = null)
         {
-            return await guildHttp.ListMembers(Id, limit, after);
+            return guildHttp.ListMembers(Id, limit, after);
         }
 
         /// <summary>
         /// Gets a list of all users banned from this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordUser>> GetBans()
+        public Task<IReadOnlyList<DiscordUser>> GetBans()
         {
-            return await guildHttp.GetBans(Id);
+            return guildHttp.GetBans(Id);
         }
 
         /// <summary>
@@ -286,51 +286,51 @@ namespace Discore
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> CreateBan(Snowflake userId, int? deleteMessageDays = null)
+        public Task<bool> CreateBan(Snowflake userId, int? deleteMessageDays = null)
         {
-            return await guildHttp.CreateBan(Id, userId, deleteMessageDays);
+            return guildHttp.CreateBan(Id, userId, deleteMessageDays);
         }
 
         /// <summary>
         /// Unbans the specified user from this guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> RemoveBan(Snowflake userId)
+        public Task<bool> RemoveBan(Snowflake userId)
         {
-            return await guildHttp.RemoveBan(Id, userId);
+            return guildHttp.RemoveBan(Id, userId);
         }
 
         /// <summary>
         /// Gets a list of all roles in this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordRole>> GetRoles()
+        public Task<IReadOnlyList<DiscordRole>> GetRoles()
         {
-            return await guildHttp.GetRoles(Id);
+            return guildHttp.GetRoles(Id);
         }
 
         /// <summary>
         /// Creates a new role with default settings for this guild.
         /// </summary>
-        public async Task<DiscordRole> CreateRole()
+        public Task<DiscordRole> CreateRole()
         {
-            return await guildHttp.CreateRole(Id);
+            return guildHttp.CreateRole(Id);
         }
 
         /// <summary>
         /// Changes the sorting positions of the roles in this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(IEnumerable<PositionParameters> positions)
+        public Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(IEnumerable<PositionParameters> positions)
         {
-            return await guildHttp.ModifyRolePositions(Id, positions);
+            return guildHttp.ModifyRolePositions(Id, positions);
         }
 
         /// <summary>
         /// Returns the number of members that would be kicked from a prune operation.
         /// </summary>
         /// <param name="days">The number of days to count prune for (1 or more).</param>
-        public async Task<int> GetPruneCount(int days)
+        public Task<int> GetPruneCount(int days)
         {
-            return await guildHttp.GetPruneCount(Id, days);
+            return guildHttp.GetPruneCount(Id, days);
         }
 
         /// <summary>
@@ -338,50 +338,50 @@ namespace Discore
         /// kicking every member that has been offline for the specified number of days.
         /// </summary>
         /// <param name="days">The number of days to prune (1 or more).</param>
-        public async Task<int> BeginPrune(int days)
+        public Task<int> BeginPrune(int days)
         {
-            return await guildHttp.BeginPrune(Id, days);
+            return guildHttp.BeginPrune(Id, days);
         }
 
         /// <summary>
         /// Gets a list of all voice regions available to this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions()
+        public Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions()
         {
-            return await guildHttp.GetVoiceRegions(Id);
+            return guildHttp.GetVoiceRegions(Id);
         }
 
         /// <summary>
         /// Gets a list of invites to guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
+        public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
         {
-            return await guildHttp.GetInvites(Id);
+            return guildHttp.GetInvites(Id);
         }
 
         /// <summary>
         /// Gets a list of integrations for this guild.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordIntegration>> GetIntegrations()
+        public Task<IReadOnlyList<DiscordIntegration>> GetIntegrations()
         {
-            return await guildHttp.GetIntegrations(Id);
+            return guildHttp.GetIntegrations(Id);
         }
 
         /// <summary>
         /// Attaches an integration from the current authenticated user to this guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> CreateIntegration(Snowflake integrationId, string type)
+        public Task<bool> CreateIntegration(Snowflake integrationId, string type)
         {
-            return await guildHttp.CreateIntegration(Id, integrationId, type);
+            return guildHttp.CreateIntegration(Id, integrationId, type);
         }
 
         /// <summary>
         /// Returns the embed for this guild.
         /// </summary>
-        public async Task<DiscordGuildEmbed> GetEmbed()
+        public Task<DiscordGuildEmbed> GetEmbed()
         {
-            return await guildHttp.GetEmbed(Id);
+            return guildHttp.GetEmbed(Id);
         }
 
         public override string ToString()

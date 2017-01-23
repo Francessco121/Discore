@@ -16,7 +16,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordGuild> Get(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}", "GetGuild");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}", "GetGuild").ConfigureAwait(false);
             return new DiscordGuild(App, data);
         }
 
@@ -27,7 +27,7 @@ namespace Discore.Http
         {
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}", requestData, "ModifyGuild");
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}", requestData, "ModifyGuild").ConfigureAwait(false);
             return new DiscordGuild(App, returnData);
         }
 
@@ -37,7 +37,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordGuild> Delete(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}", "DeleteGuild");
+            DiscordApiData data = await Rest.Delete($"guilds/{guildId}", "DeleteGuild").ConfigureAwait(false);
             return new DiscordGuild(App, data);
         }
 
@@ -46,7 +46,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordGuildChannel>> GetChannels(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/channels", "GetGuildChannels");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/channels", "GetGuildChannels").ConfigureAwait(false);
 
             DiscordGuildChannel[] channels = new DiscordGuildChannel[data.Values.Count];
             for (int i = 0; i < channels.Length; i++)
@@ -62,7 +62,7 @@ namespace Discore.Http
         {
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/channels", "CreateGuildChannel");
+            DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/channels", "CreateGuildChannel").ConfigureAwait(false);
             return (DiscordGuildChannel)DeserializeChannelData(returnData);
         }
 
@@ -76,7 +76,7 @@ namespace Discore.Http
             foreach (PositionParameters positionParam in positions)
                 requestData.Values.Add(positionParam.Build());
 
-            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/channels", requestData, "ModifyGuildChannelPositions");
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/channels", requestData, "ModifyGuildChannelPositions").ConfigureAwait(false);
 
             DiscordGuildChannel[] channels = new DiscordGuildChannel[returnData.Values.Count];
             for (int i = 0; i < channels.Length; i++)
@@ -90,7 +90,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordGuildMember> GetMember(Snowflake guildId, Snowflake userId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/members/{userId}", "GetGuildMember");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/members/{userId}", "GetGuildMember").ConfigureAwait(false);
             return new DiscordGuildMember(App, data, guildId);
         }
 
@@ -110,7 +110,7 @@ namespace Discore.Http
             // Could just be an issue with the documentation.
             urlParams["after"] = after?.Id.ToString() ?? null;
 
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}", "ListGuildMembers");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}", "ListGuildMembers").ConfigureAwait(false);
             DiscordGuildMember[] members = new DiscordGuildMember[data.Values.Count];
             for (int i = 0; i < members.Length; i++)
                 members[i] = new DiscordGuildMember(App, data.Values[i], guildId);
@@ -126,7 +126,7 @@ namespace Discore.Http
         {
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/members/{userId}", requestData, "ModifyGuildMember");
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/members/{userId}", requestData, "ModifyGuildMember").ConfigureAwait(false);
             return requestData.IsNull;
         }
 
@@ -136,7 +136,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> RemoveMember(Snowflake guildId, Snowflake userId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/members/{userId}", "RemoveGuildMember");
+            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/members/{userId}", "RemoveGuildMember").ConfigureAwait(false);
             return data.IsNull;
         }
 
@@ -145,7 +145,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordUser>> GetBans(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/bans", "GetGuildBans");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/bans", "GetGuildBans").ConfigureAwait(false);
 
             DiscordUser[] users = new DiscordUser[data.Values.Count];
             for (int i = 0; i < users.Length; i++)
@@ -164,7 +164,7 @@ namespace Discore.Http
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("delete-message-days", deleteMessageDays);
 
-            DiscordApiData returnData = await Rest.Put($"guilds/{guildId}/bans/{userId}", requestData, "CreateGuildBan");
+            DiscordApiData returnData = await Rest.Put($"guilds/{guildId}/bans/{userId}", requestData, "CreateGuildBan").ConfigureAwait(false);
             return returnData.IsNull;
         }
 
@@ -174,7 +174,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> RemoveBan(Snowflake guildId, Snowflake userId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/bans/{userId}", "RemoveGuildBan");
+            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/bans/{userId}", "RemoveGuildBan").ConfigureAwait(false);
             return data.IsNull;
         }
 
@@ -183,7 +183,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordRole>> GetRoles(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/roles", "GetGuildRoles");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/roles", "GetGuildRoles").ConfigureAwait(false);
 
             DiscordRole[] roles = new DiscordRole[data.Values.Count];
             for (int i = 0; i < roles.Length; i++)
@@ -197,7 +197,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordRole> CreateRole(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Post($"guilds/{guildId}/roles", "CreateGuildRole");
+            DiscordApiData data = await Rest.Post($"guilds/{guildId}/roles", "CreateGuildRole").ConfigureAwait(false);
             return new DiscordRole(App, guildId, data);
         }
 
@@ -211,7 +211,7 @@ namespace Discore.Http
             foreach (PositionParameters positionParam in positions)
                 requestData.Values.Add(positionParam.Build());
 
-            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/roles", requestData, "ModifyGuildRolePositions");
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/roles", requestData, "ModifyGuildRolePositions").ConfigureAwait(false);
 
             DiscordRole[] roles = new DiscordRole[returnData.Values.Count];
             for (int i = 0; i < roles.Length; i++)
@@ -227,7 +227,7 @@ namespace Discore.Http
         {
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData, "ModifyGuildRole");
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData, "ModifyGuildRole").ConfigureAwait(false);
             return new DiscordRole(App, guildId, returnData);
         }
 
@@ -236,7 +236,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordRole> DeleteRole(Snowflake guildId, Snowflake roleId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/roles/{roleId}", "DeleteGuildRole");
+            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/roles/{roleId}", "DeleteGuildRole").ConfigureAwait(false);
             return new DiscordRole(App, guildId, data);
         }
 
@@ -246,7 +246,7 @@ namespace Discore.Http
         /// <param name="days">The number of days to count prune for (1 or more).</param>
         public async Task<int> GetPruneCount(Snowflake guildId, int days)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/prune?days={days}", "GetGuildPruneCount");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/prune?days={days}", "GetGuildPruneCount").ConfigureAwait(false);
             return data.GetInteger("pruned").Value;
         }
 
@@ -260,7 +260,7 @@ namespace Discore.Http
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("days", days);
 
-            DiscordApiData data = await Rest.Post($"guilds/{guildId}/prune", requestData, "BeginGuildPrune");
+            DiscordApiData data = await Rest.Post($"guilds/{guildId}/prune", requestData, "BeginGuildPrune").ConfigureAwait(false);
             return data.GetInteger("pruned").Value;
         }
 
@@ -269,7 +269,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/regions", "GetGuildVoiceRegions");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/regions", "GetGuildVoiceRegions").ConfigureAwait(false);
 
             DiscordVoiceRegion[] regions = new DiscordVoiceRegion[data.Values.Count];
             for (int i = 0; i < regions.Length; i++)
@@ -283,7 +283,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/invites", "GetGuildInvites");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/invites", "GetGuildInvites").ConfigureAwait(false);
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
@@ -297,7 +297,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordIntegration>> GetIntegrations(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/integrations", "GetGuildIntegrations");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/integrations", "GetGuildIntegrations").ConfigureAwait(false);
 
             DiscordIntegration[] integrations = new DiscordIntegration[data.Values.Count];
             for (int i = 0; i < integrations.Length; i++)
@@ -316,7 +316,7 @@ namespace Discore.Http
             requestData.Set("id", integrationId);
             requestData.Set("type", type);
 
-            DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/integrations", "CreateGuildIntegration");
+            DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/integrations", "CreateGuildIntegration").ConfigureAwait(false);
             return returnData.IsNull;
         }
 
@@ -330,7 +330,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/integrations/{integrationId}", requestData, 
-                "ModifyGuildIntegration");
+                "ModifyGuildIntegration").ConfigureAwait(false);
             return returnData.IsNull;
         }
 
@@ -340,7 +340,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeleteIntegration(Snowflake guildId, Snowflake integrationId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/integrations/{integrationId}", "DeleteGuildIntegration");
+            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/integrations/{integrationId}", "DeleteGuildIntegration").ConfigureAwait(false);
             return data.IsNull;
         }
 
@@ -350,7 +350,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> SyncIntegration(Snowflake guildId, Snowflake integrationId)
         {
-            DiscordApiData data = await Rest.Post($"guilds/{guildId}/integrations/{integrationId}/sync", "SyncGuildIntegration");
+            DiscordApiData data = await Rest.Post($"guilds/{guildId}/integrations/{integrationId}/sync", "SyncGuildIntegration").ConfigureAwait(false);
             return data.IsNull;
         }
 
@@ -359,7 +359,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordGuildEmbed> GetEmbed(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Get($"guilds/{guildId}/embed", "GetGuildEmbed");
+            DiscordApiData data = await Rest.Get($"guilds/{guildId}/embed", "GetGuildEmbed").ConfigureAwait(false);
             return new DiscordGuildEmbed(App, guildId, data);
         }
 
@@ -370,7 +370,7 @@ namespace Discore.Http
         {
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/embed", requestData, "GetGuildEmbed");
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/embed", requestData, "GetGuildEmbed").ConfigureAwait(false);
             return new DiscordGuildEmbed(App, guildId, returnData);
         }
     }

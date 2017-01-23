@@ -61,9 +61,9 @@ namespace Discore
         /// <summary>
         /// Modifies the settings of this webhook.
         /// </summary>
-        public async Task<DiscordWebhook> Modify(string name = null, DiscordAvatarData avatar = null)
+        public Task<DiscordWebhook> Modify(string name = null, DiscordAvatarData avatar = null)
         {
-            return await webhookHttp.Modify(Id, name, avatar);
+            return webhookHttp.Modify(Id, name, avatar);
         }
 
         /// <summary>
@@ -71,58 +71,58 @@ namespace Discore
         /// Current authenticated user might be the owner.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Delete()
+        public Task<bool> Delete()
         {
-            return await webhookHttp.Delete(Id);
+            return webhookHttp.Delete(Id);
         }
 
         /// <summary>
         /// Deletes this webhook permanently.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeleteWithToken(string token)
+        public Task<bool> DeleteWithToken(string token)
         {
-            return await webhookHttp.DeleteWithToken(Id, token);
+            return webhookHttp.DeleteWithToken(Id, token);
         }
 
         /// <summary>
         /// Executes this webhook with a message as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Execute(string token, string content, 
+        public Task<bool> Execute(string token, string content, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, content, username, avatarUrl, tts);
+            return webhookHttp.Execute(Id, token, content, username, avatarUrl, tts);
         }
 
         /// <summary>
         /// Executes this webhook with a file as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Execute(string token, byte[] file, 
+        public Task<bool> Execute(string token, byte[] file, 
             string filename = "unknown.jpg", string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, file, filename, username, avatarUrl, tts);
+            return webhookHttp.Execute(Id, token, file, filename, username, avatarUrl, tts);
         }
 
         /// <summary>
         /// Executes this webhook with a file as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Execute(string token, FileInfo fileInfo, 
+        public Task<bool> Execute(string token, FileInfo fileInfo, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, fileInfo, username, avatarUrl, tts);
+            return webhookHttp.Execute(Id, token, fileInfo, username, avatarUrl, tts);
         }
 
         /// <summary>
         /// Executes this webhook with embeds as the contents.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
+        public Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
-            return await webhookHttp.Execute(Id, token, embedBuilders, username, avatarUrl, tts);
+            return webhookHttp.Execute(Id, token, embedBuilders, username, avatarUrl, tts);
         }
     }
 }

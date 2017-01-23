@@ -50,9 +50,9 @@ namespace Discore
         /// If successful, changes will be immediately reflected for this instance.
         /// </summary>
         /// <returns>Returns whether the operation was successful</returns>
-        public async Task<bool> Edit(DiscordPermission allow, DiscordPermission deny)
+        public Task<bool> Edit(DiscordPermission allow, DiscordPermission deny)
         {
-            return await channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
+            return channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
         }
 
         /// <summary>
@@ -60,9 +60,9 @@ namespace Discore
         /// If successful, changes will be immediately reflected for the channel this overwrite was in.
         /// </summary>
         /// <returns>Returns whether the operation was successful</returns>
-        public async Task<bool> Delete()
+        public Task<bool> Delete()
         {
-            return await channelsHttp.DeletePermission(ChannelId, Id);
+            return channelsHttp.DeletePermission(ChannelId, Id);
         }
 
         public override string ToString()

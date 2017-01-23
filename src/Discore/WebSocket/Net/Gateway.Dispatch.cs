@@ -768,12 +768,12 @@ namespace Discore.WebSocket.Net
                                     if (memberCache.VoiceState.ChannelId != null)
                                     {
                                         // Notify the connection of the new state
-                                        await connection.OnVoiceStateUpdated(memberCache.VoiceState);
+                                        await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
                                     }
                                     else
                                     {
                                         // The user has left the channel, so disconnect.
-                                        await connection.DisconnectAsync(CancellationToken.None);
+                                        await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                                     }
                                 }
                                 catch (Exception ex)
@@ -803,7 +803,7 @@ namespace Discore.WebSocket.Net
                     try
                     {
                         // Notify the connection of the server update
-                        await connection.OnVoiceServerUpdated(token, endpoint);
+                        await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {

@@ -31,9 +31,9 @@ namespace Discore
         /// <summary>
         /// Gets a list of all webhooks for this channel.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
+        public Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
         {
-            return await webhookHttp.GetChannelWebhooks(Id);
+            return webhookHttp.GetChannelWebhooks(Id);
         }
 
         /// <summary>
@@ -44,7 +44,8 @@ namespace Discore
             Snowflake lastId = lastMessageId;
             while (true)
             {
-                IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, DiscordMessageGetStrategy.After);
+                IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, DiscordMessageGetStrategy.After)
+                    .ConfigureAwait(false);
 
                 lastId = messages.Count == 0 ? default(Snowflake) : messages[0].Id;
 
@@ -60,9 +61,9 @@ namespace Discore
         /// Modifies this text channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
-        public async Task<DiscordGuildTextChannel> Modify(string name = null, int? position = null, string topic = null)
+        public Task<DiscordGuildTextChannel> Modify(string name = null, int? position = null, string topic = null)
         {
-            return await channelHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
+            return channelHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
         }
 
         /// <summary>
@@ -81,14 +82,14 @@ namespace Discore
                 await SplitSendMessage(content,
                     async message =>
                     {
-                        DiscordMessage msg = await channelHttp.CreateMessage(Id, message, tts);
+                        DiscordMessage msg = await channelHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
 
                         if (firstOrOnlyMessage == null)
                             firstOrOnlyMessage = msg;
-                    });
+                    }).ConfigureAwait(false);
             }
             else
-                firstOrOnlyMessage = await channelHttp.CreateMessage(Id, content, tts);
+                firstOrOnlyMessage = await channelHttp.CreateMessage(Id, content, tts).ConfigureAwait(false);
 
             return firstOrOnlyMessage;
         }
@@ -114,15 +115,15 @@ namespace Discore
                     {
                         if (firstOrOnlyMessage == null)
                         {
-                            DiscordMessage msg = await channelHttp.UploadFile(Id, fileAttachment, fileName, content, tts);
+                            DiscordMessage msg = await channelHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
                             firstOrOnlyMessage = msg;
                         }
                         else
-                            await channelHttp.CreateMessage(Id, message, tts);
-                    });
+                            await channelHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
+                    }).ConfigureAwait(false);
             }
             else
-                firstOrOnlyMessage = await channelHttp.UploadFile(Id, fileAttachment, fileName, content, tts);
+                firstOrOnlyMessage = await channelHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
 
             return firstOrOnlyMessage;
         }
@@ -142,7 +143,7 @@ namespace Discore
                     subMessage = content.Substring(i, maxChars);
 
                 if (!string.IsNullOrWhiteSpace(subMessage))
-                    await createMessageCallback(subMessage);
+                    await createMessageCallback(subMessage).ConfigureAwait(false);
 
                 i += subMessage.Length;
             }
@@ -153,9 +154,9 @@ namespace Discore
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages)
+        public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages)
         {
-            return await channelHttp.BulkDeleteMessages(Id, messages);
+            return channelHttp.BulkDeleteMessages(Id, messages);
         }
 
         /// <summary>
@@ -163,34 +164,34 @@ namespace Discore
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
+        public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
         {
-            return await channelHttp.BulkDeleteMessages(Id, messageIds);
+            return channelHttp.BulkDeleteMessages(Id, messageIds);
         }
 
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> TriggerTypingIndicator()
+        public Task<bool> TriggerTypingIndicator()
         {
-            return await channelHttp.TriggerTypingIndicator(Id);
+            return channelHttp.TriggerTypingIndicator(Id);
         }
 
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages()
+        public Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages()
         {
-            return await channelHttp.GetPinnedMessages(Id);
+            return channelHttp.GetPinnedMessages(Id);
         }
 
         /// <summary>
         /// Gets a message in this channel.
         /// </summary>
-        public async Task<DiscordMessage> GetMessage(Snowflake messageId)
+        public Task<DiscordMessage> GetMessage(Snowflake messageId)
         {
-            return await channelHttp.GetMessage(Id, messageId);
+            return channelHttp.GetMessage(Id, messageId);
         }
 
         /// <summary>
@@ -199,10 +200,10 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
-        public async Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null,
+        public Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
-            return await channelHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
+            return channelHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
         }
     }
 }

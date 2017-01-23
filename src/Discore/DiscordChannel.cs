@@ -26,9 +26,9 @@ namespace Discore
         /// Deletes/closes this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<DiscordChannel> Delete()
+        public Task<DiscordChannel> Delete()
         {
-            return await channelsHttp.Delete(Id);
+            return channelsHttp.Delete(Id);
         }
     }
 }

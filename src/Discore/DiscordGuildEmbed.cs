@@ -33,9 +33,9 @@ namespace Discore
         /// <summary>
         /// Modifies the properties of this guild embed.
         /// </summary>
-        public async Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
+        public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
         {
-            return await guildsHttp.ModifyEmbed(GuildId, parameters);
+            return guildsHttp.ModifyEmbed(GuildId, parameters);
         }
     }
 }

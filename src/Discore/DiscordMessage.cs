@@ -212,18 +212,18 @@ namespace Discore
         /// Adds a reaction to this message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> AddReaction(DiscordReactionEmoji emoji)
+        public Task<bool> AddReaction(DiscordReactionEmoji emoji)
         {
-            return await channelsHttp.CreateReaction(ChannelId, Id, emoji);
+            return channelsHttp.CreateReaction(ChannelId, Id, emoji);
         }
 
         /// <summary>
         /// Removes a reaction from this message added from the current authenticated user.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
+        public Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
-            return await channelsHttp.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
+            return channelsHttp.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
         }
 
         /// <summary>
@@ -232,43 +232,43 @@ namespace Discore
         /// <param name="user">The user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
+        public Task<bool> RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
-            return await channelsHttp.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
+            return channelsHttp.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
         }
 
         /// <summary>
         /// Gets all users who reacted with the specified emoji to this message.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
+        public Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
-            return await channelsHttp.GetReactions(ChannelId, Id, reactionEmoji);
+            return channelsHttp.GetReactions(ChannelId, Id, reactionEmoji);
         }
 
         /// <summary>
         /// Deletes all reactions to this message.
         /// </summary>
-        public async Task DeleteAllReactions()
+        public Task DeleteAllReactions()
         {
-            await channelsHttp.DeleteAllReactions(ChannelId, Id);
+            return channelsHttp.DeleteAllReactions(ChannelId, Id);
         }
 
         /// <summary>
         /// Pins this message to the channel it was sent in.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Pin()
+        public Task<bool> Pin()
         {
-            return await channelsHttp.AddPinnedMessage(ChannelId, Id);
+            return channelsHttp.AddPinnedMessage(ChannelId, Id);
         }
 
         /// <summary>
         /// Unpins this message from the channel it was sent in.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Unpin()
+        public Task<bool> Unpin()
         {
-            return await channelsHttp.DeletePinnedMessage(ChannelId, Id);
+            return channelsHttp.DeletePinnedMessage(ChannelId, Id);
         }
 
         /// <summary>
@@ -277,17 +277,17 @@ namespace Discore
         /// </summary>
         /// <param name="newContent">The new contents.</param>
         /// <returns>Returns the editted message.</returns>
-        public async Task<DiscordMessage> Edit(string newContent)
+        public Task<DiscordMessage> Edit(string newContent)
         {
-            return await channelsHttp.EditMessage(ChannelId, Id, newContent);
+            return channelsHttp.EditMessage(ChannelId, Id, newContent);
         }
 
         /// <summary>
         /// Deletes this message.
         /// </summary>
-        public async Task<bool> Delete()
+        public Task<bool> Delete()
         {
-            return await channelsHttp.DeleteMessage(ChannelId, Id);
+            return channelsHttp.DeleteMessage(ChannelId, Id);
         }
     }
 }

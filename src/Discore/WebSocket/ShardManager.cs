@@ -55,18 +55,18 @@ namespace Discore.WebSocket
         {
             int numShards;
 
-            GatewayBotResponse response = await app.HttpApi.Gateway.GetBot();
+            GatewayBotResponse response = await app.HttpApi.Gateway.GetBot().ConfigureAwait(false);
             numShards = response.Shards;
 
             // GET /gateway/bot also specifies the gateway url, update local storage
             // with this value if it differs so we don't need to call GET /gateway
             // later on when connecting.
             string gatewayUrl = response.Url;
-            DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync();
+            DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
             if (localStorage.GatewayUrl != gatewayUrl)
             {
                 localStorage.GatewayUrl = gatewayUrl;
-                await localStorage.SaveAsync();
+                await localStorage.SaveAsync().ConfigureAwait(false);
             }
 
             // Create the minimum shards specified by the Discord API.

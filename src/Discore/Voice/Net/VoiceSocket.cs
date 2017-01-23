@@ -78,7 +78,7 @@ namespace Discore.Voice.Net
 
         private async void Socket_OnError(object sender, Exception ex)
         {
-            await HandleFatalError(ex);
+            await HandleFatalError(ex).ConfigureAwait(false);
         }
 
         private async void UdpSocket_OnError(object sender, Exception ex)
@@ -86,7 +86,7 @@ namespace Discore.Voice.Net
             udpSocket.OnError -= UdpSocket_OnError;
             udpSocket.OnIPDiscovered -= UdpSocket_OnIPDiscovered;
 
-            await HandleFatalError(ex);
+            await HandleFatalError(ex).ConfigureAwait(false);
         }
 
         private void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
@@ -128,7 +128,7 @@ namespace Discore.Voice.Net
             string uri = $"wss://{endpoint}";
             log.LogVerbose($"Connecting to voice websocket {uri}...");
 
-            if (await socket.ConnectAsync(uri, CancellationToken.None))
+            if (await socket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false))
             {
                 log.LogVerbose($"Connected to voice websocket {uri}.");
 
@@ -160,14 +160,14 @@ namespace Discore.Voice.Net
             taskCancellationSource?.Cancel();
 
             // Close WebSocket
-            await socket.DisconnectAsync(cancellationToken);
+            await socket.DisconnectAsync(cancellationToken).ConfigureAwait(false);
 
             // Close the UDP socket if still open
             if (udpSocket != null)
                 udpSocket.Shutdown();
 
             // Wait for tasks
-            await Task.WhenAll(sendTask, heartbeatTask);
+            await Task.WhenAll(sendTask, heartbeatTask).ConfigureAwait(false);
         }
 
         /// <exception cref="OperationCanceledException"></exception>
@@ -249,14 +249,14 @@ namespace Discore.Voice.Net
                 udpSocket.OnError += UdpSocket_OnError;
 
                 // Connect the UDP socket
-                await udpSocket.ConnectAsync();
+                await udpSocket.ConnectAsync().ConfigureAwait(false);
 
                 // Start IP discovery
-                await StartIPDiscovery();
+                await StartIPDiscovery().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                await HandleFatalError(ex);
+                await HandleFatalError(ex).ConfigureAwait(false);
             }
         }
 
@@ -264,7 +264,7 @@ namespace Discore.Voice.Net
         {
             log.LogVerbose("[IPDiscovery] Starting ip discovery...");
 
-            await udpSocket.StartIPDiscoveryAsync(ssrc);
+            await udpSocket.StartIPDiscoveryAsync(ssrc).ConfigureAwait(false);
         }
 
         private void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
@@ -453,7 +453,7 @@ namespace Discore.Voice.Net
 
             // Close WebSocket
             if (socket.State == DiscoreWebSocketState.Open)
-                await socket.DisconnectAsync(CancellationToken.None);
+                await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
             // Close the UDP socket if still open
             if (udpSocket != null)
@@ -461,11 +461,11 @@ namespace Discore.Voice.Net
 
             // Let all tasks that did not invoke this method end.
             if (originatingTask == heartbeatTask)
-                await sendTask;
+                await sendTask.ConfigureAwait(false);
             else if (originatingTask == sendTask)
-                await heartbeatTask;
+                await heartbeatTask.ConfigureAwait(false);
             else
-                await Task.WhenAll(sendTask, heartbeatTask);
+                await Task.WhenAll(sendTask, heartbeatTask).ConfigureAwait(false);
 
             OnError?.Invoke(this, ex);
         }

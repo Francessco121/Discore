@@ -81,7 +81,7 @@ namespace Discore.WebSocket.Net
                 socket.Options.KeepAliveInterval = TimeSpan.Zero;
 
                 // Connect
-                await socket.ConnectAsync(uri, cancellationToken);
+                await socket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
             }
             catch (WebSocketException) { /* Connection failed, but this is not critical. */ }
             catch
@@ -132,7 +132,7 @@ namespace Discore.WebSocket.Net
                 throw new InvalidOperationException("Failed to disconnect, the WebSocket is not open.");
 
             // Close the socket.
-            try { await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", cancellationToken); }
+            try { await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", cancellationToken).ConfigureAwait(false); }
             catch (TaskCanceledException) { throw; }
             catch { }
 
@@ -144,7 +144,7 @@ namespace Discore.WebSocket.Net
             if (!tasksEndingFromError)
             {
                 // Wait for each task to end.
-                await Task.WhenAll(sendTask, receiveTask);
+                await Task.WhenAll(sendTask, receiveTask).ConfigureAwait(false);
             }
 
             // Set our state
@@ -371,16 +371,16 @@ namespace Discore.WebSocket.Net
                     // Ensure the other task finishes, the 'originating task'
                     // will end after this method completes.
                     if (originatingTask == sendTask)
-                        await receiveTask;
+                        await receiveTask.ConfigureAwait(false);
                     else
-                        await sendTask;
+                        await sendTask.ConfigureAwait(false);
 
                     // Log the error
                     log.LogError(ex);
 
                     // Disconnect socket if still connected
                     if (State == DiscoreWebSocketState.Open)
-                        await DisconnectAsync(CancellationToken.None);
+                        await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
                     // Fire event
                     OnError?.Invoke(this, ex);

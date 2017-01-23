@@ -31,7 +31,7 @@ namespace Discore
             if (instance == null)
             {
                 instance = new DiscoreLocalStorage();
-                await instance.OpenAsync();
+                await instance.OpenAsync().ConfigureAwait(false);
             }
 
             return instance;
@@ -44,24 +44,24 @@ namespace Discore
                 using (FileStream fs = File.Open(FILE_NAME, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (StreamReader reader = new StreamReader(fs))
                 {
-                    string json = await reader.ReadToEndAsync();
+                    string json = await reader.ReadToEndAsync().ConfigureAwait(false);
 
                     if (!DiscordApiData.TryParseJson(json, out data))
                     {
                         log.LogWarning($"{FILE_NAME} contained invalid JSON, overwriting with a new file.");
-                        await CreateNewFileAsync();
+                        await CreateNewFileAsync().ConfigureAwait(false);
                     }
                 }
             }
             else
-                await CreateNewFileAsync();
+                await CreateNewFileAsync().ConfigureAwait(false);
         }
 
         async Task CreateNewFileAsync()
         {
             // Save empty JSON for now.
             data = new DiscordApiData();
-            await SaveAsync();
+            await SaveAsync().ConfigureAwait(false);
         }
 
         public async Task SaveAsync()
@@ -70,7 +70,7 @@ namespace Discore
             using (StreamWriter writer = new StreamWriter(fs))
             {
                 string json = data.SerializeToJson();
-                await writer.WriteAsync(json);
+                await writer.WriteAsync(json).ConfigureAwait(false);
             }
         }
     }
