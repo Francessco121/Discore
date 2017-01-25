@@ -156,6 +156,18 @@ namespace Discore.Voice
         /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
         /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
         /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
+        [Obsolete("Please use the asynchronous counterpart ConnectAsync(bool, bool) instead.")]
+        public void Connect(bool startMute = false, bool startDeaf = false)
+        {
+            ConnectAsync().Wait();
+        }
+
+        /// <summary>
+        /// Initiates this voice connection.
+        /// </summary>
+        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
+        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
+        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
         public Task ConnectAsync(bool startMute = false, bool startDeaf = false)
         {
             if (isValid)
@@ -192,6 +204,17 @@ namespace Discore.Voice
             }
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Closes this voice connection.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
+        [Obsolete("Please use the asynchronous counterpart DisconnectAsync(CancellationToken) instead.")]
+        public bool Disconnect()
+        {
+            return DisconnectAsync(CancellationToken.None).Result;
         }
 
         /// <summary>
