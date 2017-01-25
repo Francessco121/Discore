@@ -46,7 +46,7 @@ namespace Discore
             {
                 IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, DiscordMessageGetStrategy.After);
 
-                lastId = messages.Count == 0 ? default(Snowflake) : messages[0].Id;
+                lastId = messages.Count == 0 ? lastId : messages[0].Id;
 
                 if (messages.Count < 100)
                     break;
