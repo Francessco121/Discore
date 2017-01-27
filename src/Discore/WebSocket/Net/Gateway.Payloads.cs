@@ -119,6 +119,8 @@ namespace Discore.WebSocket.Net
             props.Set("$referrer", "");
             props.Set("$referring_domain", "");
 
+            log.LogVerbose("[Identify] Sending payload...");
+
             SendPayload(GatewayOPCode.Identify, data);
         }
 
@@ -133,6 +135,8 @@ namespace Discore.WebSocket.Net
             data.Set("token", app.Authenticator.GetToken());
             data.Set("session_id", sessionId);
             data.Set("seq", sequence);
+
+            log.LogVerbose("[Resume] Sending payload...");
 
             SendPayload(GatewayOPCode.Resume, data);
         }

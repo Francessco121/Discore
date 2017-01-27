@@ -294,7 +294,7 @@ namespace Discore.Voice.Net
             {
                 // Wait for full connection
                 while (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open)
-                    await Task.Delay(1000, taskCancellationSource.Token);
+                    await Task.Delay(1000, taskCancellationSource.Token).ConfigureAwait(false);
 
                 byte[] frame = new byte[encoder.FrameSize];
                 byte[] encodedFrame = new byte[MAX_OPUS_SIZE];
@@ -377,7 +377,7 @@ namespace Discore.Voice.Net
                         if (IsPaused)
                         {
                             // If we are paused, do nothing.
-                            await Task.Delay(1, taskCancellationSource.Token);
+                            await Task.Delay(1, taskCancellationSource.Token).ConfigureAwait(false);
                         }
                         // If we have a frame to send
                         else if (hasFrame)
@@ -385,7 +385,7 @@ namespace Discore.Voice.Net
                             hasFrame = false;
                             // Send the frame across UDP
                             //udpSocket.Send(voicePacket, rtpPacketLength).Wait();
-                            await udpSocket.SendAsync(voicePacket, rtpPacketLength);
+                            await udpSocket.SendAsync(voicePacket, rtpPacketLength).ConfigureAwait(false);
                         }
 
                         // Calculate the time for next frame
@@ -411,14 +411,14 @@ namespace Discore.Voice.Net
                     else
                     {
                         // Nothing to do, so sleep for a bit to avoid burning cpu cycles
-                        await Task.Delay(1, taskCancellationSource.Token);
+                        await Task.Delay(1, taskCancellationSource.Token).ConfigureAwait(false);
                     }
                 }
             }
             catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                await HandleFatalError(ex, sendTask);
+                await HandleFatalError(ex, sendTask).ConfigureAwait(false);
             }
         }
 
@@ -428,19 +428,19 @@ namespace Discore.Voice.Net
             {
                 // Wait for heartbeat interval
                 while (heartbeatInterval == 0 && (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open))
-                    await Task.Delay(1000, taskCancellationSource.Token);
+                    await Task.Delay(1000, taskCancellationSource.Token).ConfigureAwait(false);
 
                 // Heartbeat
                 while (socket.State == DiscoreWebSocketState.Open)
                 {
                     SendHeartbeat();
-                    await Task.Delay(heartbeatInterval, taskCancellationSource.Token);
+                    await Task.Delay(heartbeatInterval, taskCancellationSource.Token).ConfigureAwait(false);
                 }
             }
             catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                await HandleFatalError(ex, heartbeatTask);
+                await HandleFatalError(ex, heartbeatTask).ConfigureAwait(false);
             }
         }
 

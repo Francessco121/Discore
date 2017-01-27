@@ -208,28 +208,28 @@ namespace Discore.WebSocket.Net
 
                                 try
                                 {
-                                    await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token);
+                                    await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token).ConfigureAwait(false);
                                 }
                                 catch (WebSocketException wsex)
                                 {
                                     if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
                                         && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
                                     {
-                                        await HandleFatalException(wsex, sendTask);
+                                        await HandleFatalException(wsex, sendTask).ConfigureAwait(false);
                                     }
                                 }
                             }
                         }
                     }
                     else
-                        await Task.Delay(100, taskCancelTokenSource.Token);
+                        await Task.Delay(100, taskCancelTokenSource.Token).ConfigureAwait(false);
                 }
             }
             catch (TaskCanceledException) { /* Socket is disconnecting */ }
             catch (Exception ex)
             {
                 // Handle the exception
-                await HandleFatalException(ex, sendTask);
+                await HandleFatalException(ex, sendTask).ConfigureAwait(false);
             }
         }
 
@@ -256,7 +256,7 @@ namespace Discore.WebSocket.Net
                         {
                             try
                             {
-                                result = await socket.ReceiveAsync(receiveBuffer, taskCancelTokenSource.Token);
+                                result = await socket.ReceiveAsync(receiveBuffer, taskCancelTokenSource.Token).ConfigureAwait(false);
                             }
                             catch (TaskCanceledException)
                             {
@@ -269,7 +269,7 @@ namespace Discore.WebSocket.Net
                                 if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
                                     && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
                                 {
-                                    await HandleFatalException(wsex, receiveTask);
+                                    await HandleFatalException(wsex, receiveTask).ConfigureAwait(false);
                                 }
                             }
 
@@ -318,13 +318,13 @@ namespace Discore.WebSocket.Net
 
                                 // Decompress packet
                                 using (DeflateStream deflateStream = new DeflateStream(receiveMs, CompressionMode.Decompress, true))
-                                    await deflateStream.CopyToAsync(decompressed, 81920, taskCancelTokenSource.Token);
+                                    await deflateStream.CopyToAsync(decompressed, 81920, taskCancelTokenSource.Token).ConfigureAwait(false);
 
                                 decompressed.Position = 0;
 
                                 // Read decompressed packet as string
                                 using (StreamReader reader = new StreamReader(decompressed))
-                                    str = await reader.ReadToEndAsync();
+                                    str = await reader.ReadToEndAsync().ConfigureAwait(false);
                             }
                         }
 
@@ -347,7 +347,7 @@ namespace Discore.WebSocket.Net
             catch (Exception ex)
             {
                 // Handle the exception
-                await HandleFatalException(ex, receiveTask);
+                await HandleFatalException(ex, receiveTask).ConfigureAwait(false);
             }
         }
 

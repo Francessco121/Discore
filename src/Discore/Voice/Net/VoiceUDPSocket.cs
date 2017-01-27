@@ -114,7 +114,7 @@ namespace Discore.Voice.Net
 
                     try
                     {
-                        int read = await socket.ReceiveAsync(bufferTarget, SocketFlags.None);
+                        int read = await socket.ReceiveAsync(bufferTarget, SocketFlags.None).ConfigureAwait(false);
                         if (read == 70 && isAwaitingIPDiscovery)
                             HandleIPDiscoveryPacket(buffer);
                     }

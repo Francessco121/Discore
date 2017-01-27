@@ -87,7 +87,7 @@ namespace Discore
                 await SplitSendMessage(content,
                     async message =>
                     {
-                        DiscordMessage msg = await channelsHttp.CreateMessage(Id, message, tts);
+                        DiscordMessage msg = await channelsHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
 
                         if (firstOrOnlyMessage == null)
                             firstOrOnlyMessage = msg;
@@ -120,7 +120,8 @@ namespace Discore
                     {
                         if (firstOrOnlyMessage == null)
                         {
-                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, fileName, message, tts);
+                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, fileName, message, tts)
+                                .ConfigureAwait(false);
                             firstOrOnlyMessage = msg;
                         }
                         else
