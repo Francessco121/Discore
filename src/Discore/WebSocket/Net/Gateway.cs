@@ -287,6 +287,14 @@ namespace Discore.WebSocket.Net
             Tuple<bool> state = (Tuple<bool>)_state;
             bool gatewayResume = state.Item1;
 
+            log.LogVerbose($"[ReconnectLoop] Begin - gatewayResume: {gatewayResume}");
+
+            // Disable socket error handling until we have reconnected.
+            // This avoids the socket performing its own disconnection
+            // procedure from an error, which may occur while we reconnect,
+            // especially if this reconnection originated from a timeout.
+            socket.IgnoreSocketErrors = true;
+
             // Make sure we disconnect first
             if (socket.State == DiscoreWebSocketState.Open)
                 await socket.DisconnectAsync(reconnectCancelTokenSource.Token).ConfigureAwait(false);
@@ -312,6 +320,9 @@ namespace Discore.WebSocket.Net
                     log.LogError($"[ReconnectLoop] {ex}");
                 }
             }
+
+            // Restore socket errors regardless of cancellation or success.
+            socket.IgnoreSocketErrors = false;
 
             if (!reconnectCancelTokenSource.IsCancellationRequested)
             {

@@ -172,7 +172,7 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Starts all created shards that are not running, and returns a list of tasks representing each startup.
-        /// These tasks will not finish until their respected shard has successfully connected (or is cancelled).
+        /// These tasks will not finish until their respected shard has successfully connected (or is canceled).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
         public IList<Task> StartShardsAsync(CancellationToken cancellationToken)

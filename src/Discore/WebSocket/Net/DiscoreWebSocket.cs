@@ -18,6 +18,12 @@ namespace Discore.WebSocket.Net
         public event EventHandler<DiscordApiData> OnMessageReceived;
         public event EventHandler<Exception> OnError;
 
+        /// <summary>
+        /// When true, the procedure of handling socket errors that eventually
+        /// calls OnError will not run.
+        /// </summary>
+        public bool IgnoreSocketErrors { get; set; } // Disables the HandleFatalException method.
+
         const int SEND_BUFFER_SIZE      = 4 * 1024;  // 4kb (max gateway payload size)
         const int RECEIVE_BUFFER_SIZE   = 12 * 1024; // 12kb
 
@@ -71,7 +77,7 @@ namespace Discore.WebSocket.Net
             Uri uri = new Uri(url);
 
             State = DiscoreWebSocketState.Connecting;
-            log.LogVerbose($"Connecting to {url}...");
+            log.LogVerbose($"[ConnectAsync] Connecting to {url}...");
             
             try
             {
@@ -107,7 +113,7 @@ namespace Discore.WebSocket.Net
 
                 // Flip state
                 State = DiscoreWebSocketState.Open;
-                log.LogVerbose($"Connected to {url}.");
+                log.LogVerbose($"[ConnectAsync] Connected to {url}.");
 
                 // Fire event and return
                 OnConnected?.Invoke(this, uri);
@@ -116,7 +122,7 @@ namespace Discore.WebSocket.Net
             else
             {
                 State = DiscoreWebSocketState.Closed;
-                log.LogError($"Failed to connect to {url}.");
+                log.LogError($"[ConnectAsync] Failed to connect to {url}.");
                 return false;
             } 
         }
@@ -131,6 +137,8 @@ namespace Discore.WebSocket.Net
             if (State != DiscoreWebSocketState.Open)
                 throw new InvalidOperationException("Failed to disconnect, the WebSocket is not open.");
 
+            log.LogVerbose("[DisconnectAsync] Disconnecting...");
+
             // Close the socket.
             try { await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", cancellationToken).ConfigureAwait(false); }
             catch (TaskCanceledException) { throw; }
@@ -143,6 +151,8 @@ namespace Discore.WebSocket.Net
             // this avoids a deadlock if this is called from one of the tasks.
             if (!tasksEndingFromError)
             {
+                log.LogVerbose("[DisconnectAsync] Awaiting sendTask and receiveTask...");
+
                 // Wait for each task to end.
                 await Task.WhenAll(sendTask, receiveTask).ConfigureAwait(false);
             }
@@ -151,7 +161,7 @@ namespace Discore.WebSocket.Net
             State = DiscoreWebSocketState.Closed;
 
             // Fire event and return
-            log.LogVerbose("Disconnected.");
+            log.LogVerbose("[DisconnectAsync] Disconnected.");
             OnDisconnected?.Invoke(this, WebSocketCloseStatus.NormalClosure);
         }
 
@@ -359,8 +369,9 @@ namespace Discore.WebSocket.Net
 
         async Task HandleFatalException(Exception ex, Task originatingTask)
         {
+            // Ensure we are allowed to process these errors.
             // Don't let two tasks enter the handler at the same time.
-            if (!tasksEndingFromError)
+            if (!IgnoreSocketErrors && !tasksEndingFromError)
             {
                 tasksEndingFromError = true;
 
@@ -371,9 +382,15 @@ namespace Discore.WebSocket.Net
                     // Ensure the other task finishes, the 'originating task'
                     // will end after this method completes.
                     if (originatingTask == sendTask)
+                    {
+                        log.LogVerbose("[HandleFatalException] Awaiting receiveTask...");
                         await receiveTask.ConfigureAwait(false);
+                    }
                     else
+                    {
+                        log.LogVerbose("[HandleFatalException] Awaiting sendTask...");
                         await sendTask.ConfigureAwait(false);
+                    }
 
                     // Log the error
                     log.LogError(ex);

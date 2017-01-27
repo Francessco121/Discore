@@ -99,7 +99,7 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Starts this shard. 
-        /// The returned task only finishes once the gateway successfully connects (or is cancelled), 
+        /// The returned task only finishes once the gateway successfully connects (or is canceled), 
         /// and will continue to retry until then.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
