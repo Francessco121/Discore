@@ -11,7 +11,7 @@ namespace Discore
     /// <summary>
     /// A value representing the type of value a DiscordApiData object represents.
     /// </summary>
-    public enum DiscordApiDataType
+    enum DiscordApiDataType
     {
         /// <summary>
         /// The DiscordApiData represents a single value.
@@ -28,9 +28,9 @@ namespace Discore
     }
 
     /// <summary>
-    /// A piece of data in the discord api.
+    /// A piece of data in the Discord API.
     /// </summary>
-    public class DiscordApiData
+    class DiscordApiData
     {
         /// <summary>
         /// The type of data this DiscordApiData represents.

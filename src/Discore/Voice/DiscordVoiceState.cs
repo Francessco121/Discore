@@ -68,7 +68,7 @@
         /// Serializes this voice state into a <see cref="DiscordApiData"/> object.
         /// </summary>
         /// <returns>Returns a new <see cref="DiscordApiData"/> object with the properties of this voice state.</returns>
-        public DiscordApiData Serialize()
+        internal DiscordApiData Serialize()
         {
             DiscordApiData data = new DiscordApiData();
             //data.Set("guild_id", Guild != null ? new Snowflake?(Guild.Id) : null);
