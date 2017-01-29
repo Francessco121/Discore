@@ -595,7 +595,7 @@ namespace Discore.WebSocket.Net
         {
             DiscordMessage message = new DiscordMessage(cache, app, data);
 
-            OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message, data));
+            OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }
 
         void HandleMessageDeleteEvent(DiscordApiData data)

@@ -135,13 +135,11 @@ namespace Discore.WebSocket
     public class MessageUpdateEventArgs : DiscordGatewayEventArgs
     {
         public DiscordMessage PartialMessage { get; }
-        public DiscordApiData UpdateData { get; }
 
-        public MessageUpdateEventArgs(Shard shard, DiscordMessage message, DiscordApiData updateData)
+        public MessageUpdateEventArgs(Shard shard, DiscordMessage message)
             : base(shard)
         {
             PartialMessage = message;
-            UpdateData = updateData;
         }
     }
 

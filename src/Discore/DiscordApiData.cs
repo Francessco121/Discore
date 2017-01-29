@@ -11,7 +11,7 @@ namespace Discore
     /// <summary>
     /// A value representing the type of value a DiscordApiData object represents.
     /// </summary>
-    public enum DiscordApiDataType
+    enum DiscordApiDataType
     {
         /// <summary>
         /// The DiscordApiData represents a single value.
@@ -28,9 +28,9 @@ namespace Discore
     }
 
     /// <summary>
-    /// A piece of data in the discord api.
+    /// A piece of data in the Discord API.
     /// </summary>
-    public class DiscordApiData
+    class DiscordApiData
     {
         /// <summary>
         /// The type of data this DiscordApiData represents.
@@ -752,6 +752,25 @@ namespace Discore
             return data != null ? data.values : null;
         }
         #endregion
+
+        /// <summary>
+        /// Updates this data with the specified data, overwriting any conflicts with the new data.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data or the given data is not a container.</exception>
+        public void OverwriteUpdate(DiscordApiData data)
+        {
+            AssertContainer();
+            data.AssertContainer();
+
+            foreach (KeyValuePair<string, DiscordApiData> pair in data.Entries)
+                this.data[pair.Key] = pair.Value;
+        }
+
+        public DiscordApiData Clone()
+        {
+            // TODO: probably a better way to clone data...?
+            return ParseJson(SerializeToJson());
+        }
 
         /// <summary>
         /// Creates a new value-type <see cref="DiscordApiData"/>.
