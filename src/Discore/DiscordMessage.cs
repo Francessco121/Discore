@@ -98,6 +98,9 @@ namespace Discore
         IReadOnlyList<DiscordUser> mentions;
         Snowflake[] mentionIds;
 
+        DiscordApiData originalData;
+        bool isWebSocket;
+
         internal DiscordMessage(DiscoreCache cache, IDiscordApplication app, DiscordApiData data)
             : this(app, data, true)
         {
@@ -112,6 +115,8 @@ namespace Discore
             : base(data)
         {
             this.app = app;
+            this.isWebSocket = isWebSocket;
+            originalData = data;
             channelsHttp = app.HttpApi.Channels;
 
             Content         = data.GetString("content");
@@ -206,6 +211,23 @@ namespace Discore
 
                 Reactions = reactions;
             }
+        }
+
+        /// <summary>
+        /// Updates a message with a newer partial version of the same message. This is primarily used
+        /// for obtaining the full message from a message update event, which only supplies the changes
+        /// rather than the full message.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown if the ID's of each message do not match.</exception>
+        public static DiscordMessage Update(DiscordMessage message, DiscordMessage withPartial)
+        {
+            if (message.Id != withPartial.Id)
+                throw new ArgumentException("Cannot update one message with another. The message ID's must match.");
+
+            DiscordApiData updatedData = message.originalData.Clone();
+            updatedData.OverwriteUpdate(withPartial.originalData);
+
+            return new DiscordMessage(message.app, updatedData, message.isWebSocket);
         }
 
         /// <summary>

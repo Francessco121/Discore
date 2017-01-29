@@ -754,6 +754,25 @@ namespace Discore
         #endregion
 
         /// <summary>
+        /// Updates this data with the specified data, overwriting any conflicts with the new data.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this data or the given data is not a container.</exception>
+        public void OverwriteUpdate(DiscordApiData data)
+        {
+            AssertContainer();
+            data.AssertContainer();
+
+            foreach (KeyValuePair<string, DiscordApiData> pair in data.Entries)
+                this.data[pair.Key] = pair.Value;
+        }
+
+        public DiscordApiData Clone()
+        {
+            // TODO: probably a better way to clone data...?
+            return ParseJson(SerializeToJson());
+        }
+
+        /// <summary>
         /// Creates a new value-type <see cref="DiscordApiData"/>.
         /// </summary>
         public static DiscordApiData CreateValue()
