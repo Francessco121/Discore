@@ -592,6 +592,24 @@ namespace Discore.WebSocket.Net
 
         void HandleMessageUpdateEvent(DiscordApiData data)
         {
+            // Get author
+            DiscordApiData authorData = data.Get("author");
+            if (authorData != null)
+            {
+                bool isWebhook = !string.IsNullOrWhiteSpace(data.GetString("webhook_id"));
+
+                cache.Users.Set(new DiscordUser(authorData, isWebhook));
+            }
+
+            // Get mentioned users
+            IList<DiscordApiData> mentionsArray = data.GetArray("mentions");
+            if (mentionsArray != null)
+            {
+                for (int i = 0; i < mentionsArray.Count; i++)
+                    cache.Users.Set(new DiscordUser(mentionsArray[i]));
+            }
+
+            // Create message
             DiscordMessage message = new DiscordMessage(cache, app, data);
 
             OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));

@@ -227,7 +227,7 @@ namespace Discore
             DiscordApiData updatedData = message.originalData.Clone();
             updatedData.OverwriteUpdate(withPartial.originalData);
 
-            return new DiscordMessage(message.app, updatedData, message.isWebSocket);
+            return new DiscordMessage(message.cache, message.app, updatedData);
         }
 
         /// <summary>
