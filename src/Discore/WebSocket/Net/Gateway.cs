@@ -109,7 +109,7 @@ namespace Discore.WebSocket.Net
             log.LogVerbose($"[ConnectAsync] gatewayUrl: {gatewayUrl}");
 
             // Check with the connection rate limiter.
-            connectionRateLimiter.Invoke();
+            await connectionRateLimiter.Invoke().ConfigureAwait(false);
 
             // Attempt to connect to the WebSocket API.
             bool connectedToSocket;
@@ -128,9 +128,9 @@ namespace Discore.WebSocket.Net
             {
                 // Send resume or identify payload
                 if (gatewayResume)
-                    SendResumePayload();
+                    await SendResumePayload().ConfigureAwait(false);
                 else
-                    SendIdentifyPayload();
+                    await SendIdentifyPayload().ConfigureAwait(false);
 
                 log.LogVerbose("[ConnectAsync] Awaiting hello...");
 
@@ -226,7 +226,7 @@ namespace Discore.WebSocket.Net
 
                     try
                     {
-                        SendHeartbeatPayload();
+                        await SendHeartbeatPayload().ConfigureAwait(false);
 
                         await Task.Delay(heartbeatInterval, taskCancelTokenSource.Token).ConfigureAwait(false);
                     }

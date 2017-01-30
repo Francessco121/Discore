@@ -25,9 +25,7 @@
     "System.Net.WebSockets": "4.3.0",
     "System.Net.WebSockets.Client": "4.3.0",
     "System.Runtime": "4.3.0",
-    "System.Threading": "4.3.0",
-    "System.Threading.Thread": "4.3.0",
-    "System.Threading.ThreadPool": "4.3.0"
+    "System.Threading": "4.3.0"
   },
 
   "frameworks": {
