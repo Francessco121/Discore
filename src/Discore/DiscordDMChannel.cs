@@ -157,20 +157,22 @@ namespace Discore
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages)
+        public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
         {
-            return await channelsHttp.BulkDeleteMessages(Id, messages);
+            return channelsHttp.BulkDeleteMessages(Id, messages, filterTooOldMessages);
         }
 
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds)
+        public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
         {
-            return await channelsHttp.BulkDeleteMessages(Id, messageIds);
+            return channelsHttp.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
         }
 
         /// <summary>

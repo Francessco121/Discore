@@ -234,28 +234,46 @@ namespace Discore.Http
         /// Deletes a group of messages all at once from a text channel.
         /// This is much faster than calling DeleteMessage for each message.
         /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages)
+        public Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages,
+            bool filterTooOldMessages = true)
         {
             List<Snowflake> msgIds = new List<Snowflake>();
             foreach (DiscordMessage msg in messages)
                 msgIds.Add(msg.Id);
 
-            return await BulkDeleteMessages(channelId, msgIds);
+            return BulkDeleteMessages(channelId, msgIds, filterTooOldMessages);
         }
 
         /// <summary>
         /// Deletes a group of messages all at once from a text channel.
         /// This is much faster than calling DeleteMessage for each message.
         /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds)
+        public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds, 
+            bool filterTooOldMessages = true)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             DiscordApiData messages = requestData.Set("messages", new DiscordApiData(DiscordApiDataType.Array));
 
+            ulong minimumAllowedSnowflake = 0;
+            if (filterTooOldMessages)
+            {
+                // See https://github.com/hammerandchisel/discord-api-docs/issues/208
+
+                ulong secondsSinceUnixEpoch = (ulong)DateTimeOffset.Now.ToUnixTimeSeconds();
+                minimumAllowedSnowflake = (secondsSinceUnixEpoch - 14 * 24 * 60 * 60) * 1000 - 1420070400000L << 22;
+            }
+
             foreach (Snowflake messageId in messageIds)
+            {
+                if (!filterTooOldMessages && messageId.Id < minimumAllowedSnowflake)
+                    continue;
+
                 messages.Values.Add(new DiscordApiData(messageId));
+            }
 
             DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages/bulk-delete", requestData, "BulkDeleteMessages");
             return returnData.IsNull;

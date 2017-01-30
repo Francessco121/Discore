@@ -36,14 +36,16 @@ namespace Discore
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages);
+        Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true);
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds);
+        Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true);
 
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.

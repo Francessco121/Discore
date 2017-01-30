@@ -62,6 +62,7 @@
         /// </summary>
         ProvidedTooFewOrTooManyMessagesToDelete,
         MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019,
+        AMessageProvidedWasTooOldToBulkDelete = 50034,
         ReactionBlocked = 90001
     }
 }
