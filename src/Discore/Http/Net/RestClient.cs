@@ -8,21 +8,28 @@ using System.Threading.Tasks;
 
 namespace Discore.Http.Net
 {
-    class RestClient : IDisposable
+    class RestClient
     {
         public const string BASE_URL = "https://discordapp.com/api";
 
-        HttpClient http;
+        IDiscordAuthenticator authenticator;
         RestClientRateLimitManager rateLimitManager;
 
         public RestClient(IDiscordAuthenticator authenticator)
         {
+            this.authenticator = authenticator;
             rateLimitManager = new RestClientRateLimitManager();
+        }
 
-            http = new HttpClient();
+        HttpClient CreateHttpClient()
+        {
+            HttpClient http = new HttpClient();
+            http.DefaultRequestHeaders.Add("Accept", "*/*");
+            http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
             http.DefaultRequestHeaders.Add("User-Agent", "DiscordBot (discore, 2.0)");
             http.DefaultRequestHeaders.Add("Authorization", $"{authenticator.GetTokenHttpType()} {authenticator.GetToken()}");
-            http.Timeout = TimeSpan.FromMinutes(3);
+
+            return http;
         }
 
         async Task<DiscordApiData> ParseResponse(HttpResponseMessage response)
@@ -80,26 +87,12 @@ namespace Discore.Http.Net
 
             DateTime beforeTask = DateTime.Now;
 
-            Task<HttpResponseMessage> sendTask = http.SendAsync(request, cancellationToken ?? CancellationToken.None);
-
             HttpResponseMessage response;
-            try
-            {
-                response = await sendTask.ConfigureAwait(false);
-            }
-            catch (TaskCanceledException ex)
-            {
-                DateTime afterTask = DateTime.Now;
 
-                DiscoreLogger.Default.LogError($"[RestClient] SendAsync TaskCanceledException: ");
-                DiscoreLogger.Default.LogError($"[RestClient] Started At: {beforeTask}");
-                DiscoreLogger.Default.LogError($"[RestClient] Ended At: {afterTask}");
-                DiscoreLogger.Default.LogError($"[RestClient] HTTP Client Timeout: {http.Timeout}");
-                DiscoreLogger.Default.LogError($"[RestClient] ex.CancellationToken.IsCancellationRequested: {ex.CancellationToken.IsCancellationRequested}");
-                DiscoreLogger.Default.LogError($"[RestClient] sendTask.IsCanceled: {sendTask.IsCanceled}");
-                DiscoreLogger.Default.LogError($"[RestClient] sendTask.IsFaulted: {sendTask.IsFaulted}");
-                DiscoreLogger.Default.LogError($"[RestClient] sendTask.Status: {sendTask.Status}");
-                throw;
+            using (HttpClient http = CreateHttpClient())
+            {
+                Task<HttpResponseMessage> sendTask = http.SendAsync(request, cancellationToken ?? CancellationToken.None);
+                response = await sendTask.ConfigureAwait(false);
             }
 
             rateLimitManager.UpdateRateLimiter(limiterAction, response);
@@ -160,11 +153,6 @@ namespace Discore.Http.Net
         {
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
             return Send(request, limiterAction, cancellationToken);
-        }
-
-        public void Dispose()
-        {
-            http.Dispose();
         }
     }
 }
