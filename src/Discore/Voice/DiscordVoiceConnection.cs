@@ -3,6 +3,7 @@ using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.Voice
 {
@@ -125,6 +126,8 @@ namespace Discore.Voice
         bool isValid;
         bool isConnecting;
 
+        CancellationTokenSource connectingCancellationSource;
+
         bool isSpeaking;
 
         internal DiscordVoiceConnection(Shard shard, Gateway gateway, DiscoreGuildCache guildCache, DiscoreMemberCache memberCache,
@@ -153,7 +156,19 @@ namespace Discore.Voice
         /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
         /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
         /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
+        [Obsolete("Please use the asynchronous counterpart ConnectAsync(bool, bool) instead.")]
         public void Connect(bool startMute = false, bool startDeaf = false)
+        {
+            ConnectAsync().Wait();
+        }
+
+        /// <summary>
+        /// Initiates this voice connection.
+        /// </summary>
+        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
+        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
+        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
+        public Task ConnectAsync(bool startMute = false, bool startDeaf = false)
         {
             if (isValid)
             {
@@ -162,33 +177,57 @@ namespace Discore.Voice
                     isConnecting = true;
                     gateway.SendVoiceStateUpdatePayload(intialVoiceChannel.GuildId, intialVoiceChannel.Id, startMute, startDeaf);
 
-                    ThreadPool.QueueUserWorkItem(_ =>
-                    {
-                        // Wait 10s
-                        Thread.Sleep(10000);
+                    connectingCancellationSource = new CancellationTokenSource();
 
-                        // If still not connected, timeout and disconnect.
-                        if (isConnecting)
+                    Task timeoutTask = new Task(async () =>
+                    {
+                        try
                         {
-                            socket.Disconnect();
-                            Invalidate();
+                            // Wait 10s
+                            await Task.Delay(10000, connectingCancellationSource.Token).ConfigureAwait(false);
+
+                            // If still not connected, timeout and disconnect.
+                            if (isConnecting)
+                            {
+                                await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                                Invalidate();
+                            }
                         }
+                        catch (TaskCanceledException) { }
                     });
+
+                    timeoutTask.Start();
+                    return timeoutTask;
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// Closes this voice connection.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
+        [Obsolete("Please use the asynchronous counterpart DisconnectAsync(CancellationToken) instead.")]
         public bool Disconnect()
+        {
+            return DisconnectAsync(CancellationToken.None).Result;
+        }
+
+        /// <summary>
+        /// Closes this voice connection.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
+        public async Task<bool> DisconnectAsync(CancellationToken cancellationToken)
         {
             if (isValid)
             {
-                socket.Disconnect();
+                await socket.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+
                 Invalidate();
                 OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
                 return true;
@@ -253,7 +292,7 @@ namespace Discore.Voice
             }
         }
 
-        internal void OnVoiceStateUpdated(DiscordVoiceState voiceState)
+        internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
         {
             if (isValid)
             {
@@ -262,11 +301,11 @@ namespace Discore.Voice
                 if (!IsConnected && token != null && endpoint != null)
                     // Either the token or session id can be received first,
                     // so we must check if we are ready to start in both cases.
-                    ConnectSocket();
+                    await ConnectSocket().ConfigureAwait(false);
             }
         }
 
-        internal void OnVoiceServerUpdated(string token, string endpoint)
+        internal async Task OnVoiceServerUpdated(string token, string endpoint)
         {
             if (isValid)
             {
@@ -279,29 +318,30 @@ namespace Discore.Voice
                     // is when the voice server changes, so we need to
                     // reconnect.
                     if (IsConnected)
-                    {
-                        socket.Disconnect();
-                        socket.JoinThreads();
-                    }
+                        await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
 
                     // Either the token or session id can be received first,
                     // so we must check if we are ready to start in both cases.
-                    ConnectSocket();
+                    await ConnectSocket().ConfigureAwait(false);
                 }
             }
         }
 
-        private void Socket_OnError(object sender, Exception e)
+        private async void Socket_OnError(object sender, Exception e)
         {
-            Disconnect();
+            if (socket.IsConnected)
+                await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+
             OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, e));
         }
 
-        void ConnectSocket()
+        async Task ConnectSocket()
         {
-            if (socket.Connect(endpoint, token))
+            if (await socket.ConnectAsync(endpoint, token).ConfigureAwait(false))
             {
                 isConnecting = false;
+                connectingCancellationSource.Cancel();
+
                 socket.SetSpeaking(isSpeaking);
                 OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
             }
@@ -318,6 +358,7 @@ namespace Discore.Voice
             {
                 isValid = false;
                 isConnecting = false;
+                connectingCancellationSource?.Cancel();
 
                 log.LogVerbose("[Invalidate] Disconnecting...");
 
@@ -337,6 +378,8 @@ namespace Discore.Voice
             if (!isDisposed)
             {
                 isDisposed = true;
+
+                connectingCancellationSource?.Dispose();
 
                 Invalidate();
 

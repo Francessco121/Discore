@@ -91,12 +91,12 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public async Task<bool> Modify(ModifyIntegrationParameters parameters)
+        public Task<bool> Modify(ModifyIntegrationParameters parameters)
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return await guildsHttp.ModifyIntegration(GuildId.Value, Id, parameters);
+            return guildsHttp.ModifyIntegration(GuildId.Value, Id, parameters);
         }
 
         /// <summary>
@@ -105,12 +105,12 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public async Task<bool> Delete()
+        public Task<bool> Delete()
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return await guildsHttp.DeleteIntegration(GuildId.Value, Id);
+            return guildsHttp.DeleteIntegration(GuildId.Value, Id);
         }
 
         /// <summary>
@@ -119,12 +119,12 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public async Task<bool> Sync()
+        public Task<bool> Sync()
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return await guildsHttp.SyncIntegration(GuildId.Value, Id);
+            return guildsHttp.SyncIntegration(GuildId.Value, Id);
         }
 
         public override string ToString()

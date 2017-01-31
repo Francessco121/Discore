@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Net
 {
@@ -20,12 +21,25 @@ namespace Discore.WebSocket.Net
             payloadHandlers[GatewayOPCode.Reconnect] = HandleReconnectPayload;
         }
 
+        [Obsolete]
         public void UpdateStatus(string game = null, int? idleSince = null)
         {
-            SendStatusUpdate(game, idleSince);
+            UpdateStatusAsync(game, idleSince).Wait();
         }
 
+        public Task UpdateStatusAsync(string game = null, int? idleSince = null)
+        {
+            return SendStatusUpdate(game, idleSince);
+        }
+
+        [Obsolete]
         public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
+            string query = "", int limit = 0)
+        {
+            RequestGuildMembersAsync(callback, guildId, query, limit).Wait();
+        }
+
+        public Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0)
         {
             // Create GUILD_MEMBERS_CHUNK event handler
@@ -43,7 +57,7 @@ namespace Discore.WebSocket.Net
             OnGuildMembersChunk += eventHandler;
 
             // Send gateway request
-            SendRequestGuildMembersPayload(guildId, query, limit);
+            return SendRequestGuildMembersPayload(guildId, query, limit);
         }
 
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
@@ -77,28 +91,27 @@ namespace Discore.WebSocket.Net
             // We won't worry about sending the resume payload here,
             // as that will be handled by the reconnect procedure,
             // when we pass true.
-            Reconnect(true);
+            BeginReconnect(true);
         }
 
         void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
         {
             log.LogInfo("[InvalidSession] Reconnecting...");
 
-            Disconnect();
-            Reconnect();
+            BeginReconnect();
         }
 
-        void SendPayload(GatewayOPCode op, DiscordApiData data)
+        async Task SendPayload(GatewayOPCode op, DiscordApiData data)
         {
             DiscordApiData payload = new DiscordApiData(DiscordApiDataType.Container);
             payload.Set("op", (int)op);
             payload.Set("d", data);
 
-            outboundEventRateLimiter.Invoke(); // Check with the outbound event rate limiter
+            await outboundEventRateLimiter.Invoke().ConfigureAwait(false); // Check with the outbound event rate limiter
             socket.Send(payload); // Send payload
         }
 
-        void SendIdentifyPayload()
+        Task SendIdentifyPayload()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("token", app.Authenticator.GetToken());
@@ -120,25 +133,29 @@ namespace Discore.WebSocket.Net
             props.Set("$referrer", "");
             props.Set("$referring_domain", "");
 
-            SendPayload(GatewayOPCode.Identify, data);
+            log.LogVerbose("[Identify] Sending payload...");
+
+            return SendPayload(GatewayOPCode.Identify, data);
         }
 
-        void SendHeartbeatPayload()
+        Task SendHeartbeatPayload()
         {
-            SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
+            return SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
         }
 
-        void SendResumePayload()
+        Task SendResumePayload()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("token", app.Authenticator.GetToken());
             data.Set("session_id", sessionId);
             data.Set("seq", sequence);
 
-            SendPayload(GatewayOPCode.Resume, data);
+            log.LogVerbose("[Resume] Sending payload...");
+
+            return SendPayload(GatewayOPCode.Resume, data);
         }
 
-        void SendStatusUpdate(string game = null, int ? idleSince = null)
+        async Task SendStatusUpdate(string game = null, int ? idleSince = null)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("idle_since", idleSince);
@@ -151,21 +168,21 @@ namespace Discore.WebSocket.Net
                 gameData.Set("name", game);
             }
 
-            gameStatusUpdateRateLimiter.Invoke(); // Check with the game status update limiter
-            SendPayload(GatewayOPCode.StatusUpdate, data); // Send status update
+            await gameStatusUpdateRateLimiter.Invoke().ConfigureAwait(false); // Check with the game status update limiter
+            await SendPayload(GatewayOPCode.StatusUpdate, data).ConfigureAwait(false); // Send status update
         }
 
-        void SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
+        Task SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("guild_id", guildId);
             data.Set("query", query);
             data.Set("limit", limit);
 
-            SendPayload(GatewayOPCode.RequestGuildMembers, data);
+            return SendPayload(GatewayOPCode.RequestGuildMembers, data);
         }
 
-        internal void SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
+        internal Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("guild_id", guildId);
@@ -173,7 +190,7 @@ namespace Discore.WebSocket.Net
             data.Set("self_mute", isMute);
             data.Set("self_deaf", isDeaf);
 
-            SendPayload(GatewayOPCode.VoiceStateUpdate, data);
+            return SendPayload(GatewayOPCode.VoiceStateUpdate, data);
         }
     }
 }

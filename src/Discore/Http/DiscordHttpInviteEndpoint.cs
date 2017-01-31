@@ -14,7 +14,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordInvite> Get(string inviteCode)
         {
-            DiscordApiData data = await Rest.Get($"invites/{inviteCode}", "GetInvite");
+            DiscordApiData data = await Rest.Get($"invites/{inviteCode}", "GetInvite").ConfigureAwait(false);
             return new DiscordInvite(App, data);
         }
 
@@ -23,7 +23,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordInvite> Delete(string inviteCode)
         {
-            DiscordApiData data = await Rest.Delete($"invites/{inviteCode}", "DeleteInvite");
+            DiscordApiData data = await Rest.Delete($"invites/{inviteCode}", "DeleteInvite").ConfigureAwait(false);
             return new DiscordInvite(App, data);
         }
 
@@ -33,7 +33,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordInvite> Accept(string inviteCode)
         {
-            DiscordApiData data = await Rest.Post($"invites/{inviteCode}", "AcceptInvite");
+            DiscordApiData data = await Rest.Post($"invites/{inviteCode}", "AcceptInvite").ConfigureAwait(false);
             return new DiscordInvite(App, data);
         }
     }

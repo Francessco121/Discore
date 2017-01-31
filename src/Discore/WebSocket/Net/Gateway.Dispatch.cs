@@ -1,6 +1,7 @@
 ﻿using Discore.Voice;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Discore.WebSocket.Net
 {
@@ -757,7 +758,7 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        void HandleVoiceStateUpdateEvent(DiscordApiData data)
+        async void HandleVoiceStateUpdateEvent(DiscordApiData data)
         {
             Snowflake? guildId = data.GetSnowflake("guild_id");
             if (guildId.HasValue) // Only guild voice channels are supported so far.
@@ -780,15 +781,24 @@ namespace Discore.WebSocket.Net
                             DiscordVoiceConnection connection;
                             if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                             {
-                                if (memberCache.VoiceState.ChannelId != null)
+                                try
                                 {
-                                    // Notify the connection of the new state
-                                    connection.OnVoiceStateUpdated(memberCache.VoiceState);
+                                    if (memberCache.VoiceState.ChannelId != null)
+                                    {
+                                        // Notify the connection of the new state
+                                        await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
+                                    }
+                                    else
+                                    {
+                                        // The user has left the channel, so disconnect.
+                                        await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                                    }
                                 }
-                                else
+                                catch (Exception ex)
                                 {
-                                    // The user has left the channel, so disconnect.
-                                    connection.Disconnect();
+                                    // Nothing we can really do here...
+                                    // The voice connection this update is for will timeout, so we'll just log it.
+                                    log.LogError($"[VoiceStateUpdate] {ex}");
                                 }
                             }
                         }
@@ -797,7 +807,7 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        void HandleVoiceServerUpdateEvent(DiscordApiData data)
+        async void HandleVoiceServerUpdateEvent(DiscordApiData data)
         {
             Snowflake? guildId = data.GetSnowflake("guild_id");
             if (guildId.HasValue) // Only guild voice channels are supported so far.
@@ -808,8 +818,16 @@ namespace Discore.WebSocket.Net
                 DiscordVoiceConnection connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
-                    // Notify the connection of the server update
-                    connection.OnVoiceServerUpdated(token, endpoint);
+                    try
+                    {
+                        // Notify the connection of the server update
+                        await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Nothing we can really do here...
+                        log.LogError($"[VoiceServerUpdate] {ex}");
+                    }
                 }
             }
         }

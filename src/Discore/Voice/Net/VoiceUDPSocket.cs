@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.Voice.Net
 {
@@ -29,37 +30,43 @@ namespace Discore.Voice.Net
         DiscoreLogger log;
 
         Socket socket;
+        string hostname;
+        int port;
         IPEndPoint endpoint;
         bool isAwaitingIPDiscovery;
 
-        Thread receiveThread;
+        Task receiveTask;
 
         public VoiceUDPSocket(DiscoreGuildCache guildCache, string hostname, int port)
         {
+            this.hostname = hostname;
+            this.port = port;
+
             log = new DiscoreLogger($"VoiceUDPSocket:{guildCache.Value.Name}");
+        }
 
-            IPAddress ip = Dns.GetHostAddressesAsync(hostname).Result.FirstOrDefault();
+        /// <exception cref="SocketException"></exception>
+        public async Task ConnectAsync()
+        {
+            IPAddress ip = (await Dns.GetHostAddressesAsync(hostname).ConfigureAwait(false)).FirstOrDefault();
             endpoint = new IPEndPoint(ip, port);
-
-            receiveThread = new Thread(ReceiveLoop);
-            receiveThread.Name = "VoiceUDPSocket Receive Thread";
-            receiveThread.IsBackground = true;
 
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.SendTimeout = 1000 * 10;
             socket.ReceiveTimeout = 1000 * 10;
             socket.Connect(endpoint);
 
-            receiveThread.Start();
+            receiveTask = new Task(ReceiveLoop);
+            receiveTask.Start();
         }
 
-        public void Disconnect()
+        public void Shutdown()
         {
             try { socket.Shutdown(SocketShutdown.Both); }
             catch { }
         }
 
-        public void StartIPDiscovery(int ssrc)
+        public async Task StartIPDiscoveryAsync(int ssrc)
         {
             byte[] packet = new byte[70];
             packet[0] = (byte)(ssrc >> 24);
@@ -68,19 +75,20 @@ namespace Discore.Voice.Net
             packet[3] = (byte)(ssrc >> 0);
 
             isAwaitingIPDiscovery = true;
-            Send(packet);
+            await SendAsync(packet).ConfigureAwait(false);
         }
 
-        public void Send(byte[] data)
+        public async Task SendAsync(byte[] data)
         {
-            Send(data, data.Length);
+            await SendAsync(data, data.Length).ConfigureAwait(false);
         }
 
-        public void Send(byte[] data, int bytes)
+        public async Task SendAsync(byte[] data, int bytes)
         {
             try
             {
-                socket.SendTo(data, bytes, SocketFlags.None, endpoint);
+                ArraySegment<byte> segment = new ArraySegment<byte>(data, 0, bytes);
+                await socket.SendToAsync(segment, SocketFlags.None, endpoint).ConfigureAwait(false);
             }
             catch (SocketException ex)
             {
@@ -94,18 +102,19 @@ namespace Discore.Voice.Net
             }
         }
 
-        void ReceiveLoop()
+        async void ReceiveLoop()
         {
             try
             {
                 byte[] buffer = new byte[socket.ReceiveBufferSize];
+                ArraySegment<byte> bufferTarget = new ArraySegment<byte>(buffer);
 
                 while (socket != null && socket.Connected)
                 {
 
                     try
                     {
-                        int read = socket.Receive(buffer);
+                        int read = await socket.ReceiveAsync(bufferTarget, SocketFlags.None).ConfigureAwait(false);
                         if (read == 70 && isAwaitingIPDiscovery)
                             HandleIPDiscoveryPacket(buffer);
                     }
@@ -158,10 +167,7 @@ namespace Discore.Voice.Net
 
         void HandleFatalError(Exception ex)
         {
-            // Shutdown the socket
-            try { socket.Shutdown(SocketShutdown.Both); }
-            catch { }
-
+            Shutdown();
             OnError?.Invoke(this, ex);
         }
 

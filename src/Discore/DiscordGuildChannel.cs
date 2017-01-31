@@ -61,9 +61,9 @@ namespace Discore
         /// <summary>
         /// Gets a list of all invites for this channel.
         /// </summary>
-        public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
+        public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
         {
-            return await channelsHttp.GetInvites(Id);
+            return channelsHttp.GetInvites(Id);
         }
 
         /// <summary>
@@ -73,10 +73,10 @@ namespace Discore
         /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
         /// <param name="temporary">Whether this invite only grants temporary membership.</param>
         /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
-        public async Task<DiscordInvite> CreateInvite(TimeSpan? maxAge = null, int? maxUses = null, 
+        public Task<DiscordInvite> CreateInvite(TimeSpan? maxAge = null, int? maxUses = null, 
             bool? temporary = null, bool? unique = null)
         {
-            return await channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
+            return channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
         }
 
         /// <summary>
@@ -86,9 +86,9 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
+        public Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
-            return await EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
+            return EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
         }
 
         /// <summary>
@@ -98,47 +98,47 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
+        public Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
-            return await EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
+            return EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
         }
 
-        async Task<bool> EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
+        Task<bool> EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
             DiscordOverwriteType type)
         {
-            return await channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
+            return channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
         }
 
         /// <summary>
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeletePermission(DiscordGuildMember member)
+        public Task<bool> DeletePermission(DiscordGuildMember member)
         {
-            return await DeletePermission(member.Id);
+            return DeletePermission(member.Id);
         }
 
         /// <summary>
         /// Deletes a permission overwrite for a role.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeletePermission(DiscordRole role)
+        public Task<bool> DeletePermission(DiscordRole role)
         {
-            return await DeletePermission(role.Id);
+            return DeletePermission(role.Id);
         }
 
         /// <summary>
         /// Deletes a permission overwrite.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> DeletePermission(DiscordOverwrite overwrite)
+        public Task<bool> DeletePermission(DiscordOverwrite overwrite)
         {
-            return await DeletePermission(overwrite.Id);
+            return DeletePermission(overwrite.Id);
         }
 
-        async Task<bool> DeletePermission(Snowflake overwriteId)
+        Task<bool> DeletePermission(Snowflake overwriteId)
         {
-            return await channelsHttp.DeletePermission(Id, overwriteId);
+            return channelsHttp.DeletePermission(Id, overwriteId);
         }
 
         public override string ToString()

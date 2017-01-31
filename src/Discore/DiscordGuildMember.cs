@@ -108,18 +108,18 @@ namespace Discore
         /// Modifies the attributes of this member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Modify(ModifyGuildMemberParameters parameters)
+        public Task<bool> Modify(ModifyGuildMemberParameters parameters)
         {
-            return await guildsHttp.ModifyMember(GuildId, Id, parameters);
+            return guildsHttp.ModifyMember(GuildId, Id, parameters);
         }
 
         /// <summary>
         /// Removes this user from the guild they are a member of.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Kick()
+        public Task<bool> Kick()
         {
-            return await guildsHttp.RemoveMember(GuildId, Id);
+            return guildsHttp.RemoveMember(GuildId, Id);
         }
 
         /// <summary>
@@ -127,9 +127,9 @@ namespace Discore
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <returns>Returns whether the operation was successful.</returns>
-        public async Task<bool> Ban(int? deleteMessageDays = null)
+        public Task<bool> Ban(int? deleteMessageDays = null)
         {
-            return await guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
+            return guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
         }
 
         public override string ToString()

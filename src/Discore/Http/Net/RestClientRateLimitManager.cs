@@ -113,7 +113,7 @@ namespace Discore.Http.Net
                     {
                         waiting = true;
                         int waitTime = (resetTime - epochSeconds) * 1000;
-                        await Task.Delay(waitTime);
+                        await Task.Delay(waitTime).ConfigureAwait(false);
                         waiting = false;
                     }
                 }
@@ -131,7 +131,7 @@ namespace Discore.Http.Net
         {
             RateLimiter limiter;
             if (rateLimiters.TryGetValue(action, out limiter))
-                await limiter.Wait();
+                await limiter.Wait().ConfigureAwait(false);
         }
 
         public void UpdateRateLimiter(string action, HttpResponseMessage response)

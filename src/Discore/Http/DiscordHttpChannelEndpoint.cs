@@ -17,9 +17,9 @@ namespace Discore.Http
         /// <summary>
         /// Gets a DM or guild channel by ID.
         /// </summary>
-        public async Task<DiscordChannel> Get(Snowflake channelId)
+        public Task<DiscordChannel> Get(Snowflake channelId)
         {
-            return await Get<DiscordChannel>(channelId);
+            return Get<DiscordChannel>(channelId);
         }
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace Discore.Http
         public async Task<T> Get<T>(Snowflake channelId) 
             where T : DiscordChannel
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}", "GetChannel");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}", "GetChannel").ConfigureAwait(false);
             return (T)DeserializeChannelData(data);
         }
 
@@ -39,10 +39,10 @@ namespace Discore.Http
         /// <param name="name">The name of the channel (or null to leave unchanged).</param>
         /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
         /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
-        public async Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
+        public Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
             string name = null, int? position = null, string topic = null)
         {
-            return await Modify<DiscordGuildTextChannel>(channelId, name, position, topic);
+            return Modify<DiscordGuildTextChannel>(channelId, name, position, topic);
         }
 
         /// <summary>
@@ -53,10 +53,10 @@ namespace Discore.Http
         /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
-        public async Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
+        public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
             string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
         {
-            return await Modify<DiscordGuildVoiceChannel>(channelId, name, position, null, bitrate, userLimit);
+            return Modify<DiscordGuildVoiceChannel>(channelId, name, position, null, bitrate, userLimit);
         }
 
         /// <summary>
@@ -81,16 +81,16 @@ namespace Discore.Http
             requestData.Set("bitrate", bitrate);
             requestData.Set("user_limit", userLimit);
 
-            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, "ModifyChannel");
+            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, "ModifyChannel").ConfigureAwait(false);
             return (T)DeserializeChannelData(returnData);            
         }
 
         /// <summary>
         /// Deletes a guild channel, or closes a DM.
         /// </summary>
-        public async Task<DiscordChannel> Delete(Snowflake channelId)
+        public Task<DiscordChannel> Delete(Snowflake channelId)
         {
-            return await Delete<DiscordChannel>(channelId);
+            return Delete<DiscordChannel>(channelId);
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Discore.Http
         public async Task<T> Delete<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await Rest.Delete($"channels/{channelId}", "DeleteChannel");
+            DiscordApiData data = await Rest.Delete($"channels/{channelId}", "DeleteChannel").ConfigureAwait(false);
             return (T)DeserializeChannelData(data);
         }
         #endregion
@@ -117,7 +117,7 @@ namespace Discore.Http
             data.Set("deny", (int)deny);
             data.Set("type", type.ToString().ToLower());
 
-            return (await Rest.Put($"channels/{channelId}/permissions/{overwriteId}", data, "EditChannelPermissions")).IsNull;
+            return (await Rest.Put($"channels/{channelId}/permissions/{overwriteId}", data, "EditChannelPermissions").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -126,7 +126,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeletePermission(Snowflake channelId, Snowflake overwriteId)
         {
-            return (await Rest.Delete($"channels/{channelId}/permissions/{overwriteId}", "DeleteChannelPermission")).IsNull;
+            return (await Rest.Delete($"channels/{channelId}/permissions/{overwriteId}", "DeleteChannelPermission").ConfigureAwait(false)).IsNull;
         }
         #endregion
 
@@ -141,7 +141,7 @@ namespace Discore.Http
             string strat = getStrategy.ToString().ToLower();
             string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
 
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages?{strat}={baseMessageId}{limitStr}", "GetChannelMessages");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages?{strat}={baseMessageId}{limitStr}", "GetChannelMessages").ConfigureAwait(false);
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
@@ -155,7 +155,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<DiscordMessage> GetMessage(Snowflake channelId, Snowflake messageId)
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}", "GetChannelMessage");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}", "GetChannelMessage").ConfigureAwait(false);
             return new DiscordMessage(App, data);
         }
 
@@ -169,7 +169,7 @@ namespace Discore.Http
             requestData.Set("tts", tts);
             requestData.Set("nonce", nonce);
 
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData, "CreateMessage");
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData, "CreateMessage").ConfigureAwait(false);
             return new DiscordMessage(App, returnData);
         }
 
@@ -182,8 +182,8 @@ namespace Discore.Http
             using (FileStream fs = fileInfo.OpenRead())
             using (MemoryStream ms = new MemoryStream())
             {
-                await fs.CopyToAsync(ms);
-                return await UploadFile(channelId, ms.ToArray(), fileInfo.Name, message, tts, nonce);
+                await fs.CopyToAsync(ms).ConfigureAwait(false);
+                return await UploadFile(channelId, ms.ToArray(), fileInfo.Name, message, tts, nonce).ConfigureAwait(false);
             }
         }
 
@@ -204,7 +204,7 @@ namespace Discore.Http
             if (tts.HasValue) request.Properties.Add("tts", tts.Value);
             if (nonce.HasValue) request.Properties.Add("nonce", nonce.Value);
 
-            DiscordApiData returnData = await Rest.Send(request, "UploadFile");
+            DiscordApiData returnData = await Rest.Send(request, "UploadFile").ConfigureAwait(false);
             return new DiscordMessage(App, returnData);
         }
 
@@ -216,7 +216,7 @@ namespace Discore.Http
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("content", content);
 
-            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}/messages/{messageId}", requestData, "EditMessage");
+            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}/messages/{messageId}", requestData, "EditMessage").ConfigureAwait(false);
             return new DiscordMessage(App, returnData);
         }
 
@@ -226,7 +226,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeleteMessage(Snowflake channelId, Snowflake messageId)
         {
-            DiscordApiData data = await Rest.Delete($"channels/{channelId}/messages/{messageId}", "DeleteMessage");
+            DiscordApiData data = await Rest.Delete($"channels/{channelId}/messages/{messageId}", "DeleteMessage").ConfigureAwait(false);
             return data.IsNull;
         }
 
@@ -275,7 +275,7 @@ namespace Discore.Http
                 messages.Values.Add(new DiscordApiData(messageId));
             }
 
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages/bulk-delete", requestData, "BulkDeleteMessages");
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages/bulk-delete", requestData, "BulkDeleteMessages").ConfigureAwait(false);
             return returnData.IsNull;
         }
 
@@ -284,7 +284,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/pins", "GetPinnedChannelMessages");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/pins", "GetPinnedChannelMessages").ConfigureAwait(false);
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
@@ -298,7 +298,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<bool> AddPinnedMessage(Snowflake channelId, Snowflake messageId)
         {
-            return (await Rest.Put($"channels/{channelId}/pins/{messageId}", "AddPinnedChannelMessage")).IsNull;
+            return (await Rest.Put($"channels/{channelId}/pins/{messageId}", "AddPinnedChannelMessage").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -306,7 +306,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<bool> DeletePinnedMessage(Snowflake channelId, Snowflake messageId)
         {
-            return (await Rest.Delete($"channels/{channelId}/pins/{messageId}", "DeletePinnedChannelMessage")).IsNull;
+            return (await Rest.Delete($"channels/{channelId}/pins/{messageId}", "DeletePinnedChannelMessage").ConfigureAwait(false)).IsNull;
         }
         #endregion
 
@@ -317,7 +317,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
-            return (await Rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "CreateReaction")).IsNull;
+            return (await Rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "CreateReaction").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeleteOwnReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
-            return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "DeleteOwnReaction")).IsNull;
+            return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "DeleteOwnReaction").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -335,7 +335,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> DeleteUserReaction(Snowflake channelId, Snowflake messageId, Snowflake userId, DiscordReactionEmoji emoji)
         {
-            return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}", "DeleteUserReaction")).IsNull;
+            return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}", "DeleteUserReaction").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordUser>> GetReactions(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}", "GetReactions");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}", "GetReactions").ConfigureAwait(false);
 
             DiscordUser[] users = new DiscordUser[data.Values.Count];
             for (int i = 0; i < users.Length; i++)
@@ -357,7 +357,7 @@ namespace Discore.Http
         /// </summary>
         public async Task DeleteAllReactions(Snowflake channelId, Snowflake messageId)
         {
-            await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions", "DeleteAllReactions");
+            await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions", "DeleteAllReactions").ConfigureAwait(false);
         }
         #endregion
 
@@ -367,7 +367,7 @@ namespace Discore.Http
         /// </summary>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites(Snowflake channelId)
         {
-            DiscordApiData data = await Rest.Get($"channels/{channelId}/invites", "GetChannelInvites");
+            DiscordApiData data = await Rest.Get($"channels/{channelId}/invites", "GetChannelInvites").ConfigureAwait(false);
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
@@ -396,7 +396,7 @@ namespace Discore.Http
             if (temporary.HasValue) requestData.Set("temporary", temporary.Value);
             if (unique.HasValue) requestData.Set("unique", unique.Value);
 
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/invites", requestData, "CreateChannelInvite");
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/invites", requestData, "CreateChannelInvite").ConfigureAwait(false);
             return new DiscordInvite(App, returnData);
         }
         #endregion
@@ -407,7 +407,7 @@ namespace Discore.Http
         /// <returns>Returns whether the operation was successful.</returns>
         public async Task<bool> TriggerTypingIndicator(Snowflake channelId)
         {
-            return (await Rest.Post($"channels/{channelId}/typing", "TriggerTypingIndicator")).IsNull;
+            return (await Rest.Post($"channels/{channelId}/typing", "TriggerTypingIndicator").ConfigureAwait(false)).IsNull;
         }
     }
 }

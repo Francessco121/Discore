@@ -1,7 +1,7 @@
 ﻿using Discore.WebSocket.Net;
 using System;
-using System.Net.WebSockets;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
@@ -60,6 +60,7 @@ namespace Discore.WebSocket
 
         Gateway gateway;
         bool isRunning;
+        bool isDisposed;
         DiscoreLogger log;
 
         internal Shard(DiscordWebSocketApplication app, int shardId)
@@ -100,36 +101,57 @@ namespace Discore.WebSocket
         /// Starts this shard.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
+        [Obsolete("Please use the asynchronous counterpart StartAsync(CancellationToken) instead.")]
         public void Start()
         {
+            StartAsync(CancellationToken.None).Wait();
+        }
+
+        /// <summary>
+        /// Starts this shard. 
+        /// The returned task only finishes once the gateway successfully connects (or is canceled), 
+        /// and will continue to retry until then.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
+        /// <exception cref="TaskCanceledException"></exception>
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(gateway), "Shard has been disposed.");
+
             if (!isRunning)
             {
                 isRunning = true;
 
                 CleanUp();
 
-                ThreadPool.QueueUserWorkItem(_ =>
+                // Keep trying to make the initial connection until successful, or the shard is stopped.
+                while (isRunning)
                 {
-                    // Keep trying to make the initial connection until successful, or the shard is stopped.
-                    while (isRunning)
+                    try
                     {
-                        try
+                        // If already connected or another connection is in progress then stop.
+                        if (gateway.SocketState == DiscoreWebSocketState.Open 
+                            || gateway.SocketState == DiscoreWebSocketState.Connecting)
+                            break;
+
+                        // Try to connect
+                        if (await gateway.ConnectAsync(cancellationToken).ConfigureAwait(false))
                         {
-                            if (gateway.SocketState == WebSocketState.Open || gateway.SocketState == WebSocketState.Connecting || gateway.Connect())
-                            {
-                                log.LogVerbose("Successfully connected to gateway.");
-                                OnConnected?.Invoke(this, new ShardEventArgs(this));
-                                break;
-                            }
-                            else
-                                log.LogInfo("Failed to connect to gateway, trying again...");
+                            log.LogVerbose("Successfully connected to gateway.");
+                            OnConnected?.Invoke(this, new ShardEventArgs(this));
+                            break;
                         }
-                        catch (Exception ex)
-                        {
-                            log.LogInfo($"Failed to connect to gateway, trying again... Exception: {ex}");
-                        }
+                        else
+                            log.LogInfo("Failed to connect to gateway, trying again...");
                     }
-                });
+                    catch (Exception ex)
+                    {
+                        log.LogInfo($"Failed to connect to gateway, trying again... Exception: {ex}");
+                    }
+                }
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been started!");
@@ -139,16 +161,30 @@ namespace Discore.WebSocket
         /// Stop this shard.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this shard is not running.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
+        [Obsolete("Please use the asynchronous counterpart StopAsync(CancellationToken) instead.")]
         public void Stop()
         {
+            StopAsync(CancellationToken.None).Wait();
+        }
+
+        /// <summary>
+        /// Stop this shard.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this shard is not running.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
+        /// <exception cref="TaskCanceledException"></exception>
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            if (isDisposed)
+                throw new ObjectDisposedException(nameof(gateway), "Shard has been disposed.");
+
             if (isRunning)
             {
                 isRunning = false;
 
                 CleanUp();
-                // We aren't concerned with the return status of the gateway disconnection,
-                // as it should only "fail" if the gateway was already disconnected.
-                gateway.Disconnect();
+                await gateway.DisconnectAsync(cancellationToken).ConfigureAwait(false);
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
@@ -162,7 +198,12 @@ namespace Discore.WebSocket
 
         public void Dispose()
         {
-            gateway.Dispose();
+            if (!isDisposed)
+            {
+                isDisposed = true;
+
+                gateway.Dispose();
+            }
         }
     }
 }
