@@ -106,8 +106,6 @@ namespace Discore.Http
         {
             UrlParametersBuilder urlParams = new UrlParametersBuilder();
             urlParams["limit"] = limit?.ToString() ?? null;
-            // TODO: This needs testing, they specify after as "a user id" but as the type integer instead of string.
-            // Could just be an issue with the documentation.
             urlParams["after"] = after?.Id.ToString() ?? null;
 
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}", "ListGuildMembers");
