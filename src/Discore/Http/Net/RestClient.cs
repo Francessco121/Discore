@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,10 +16,19 @@ namespace Discore.Http.Net
         IDiscordAuthenticator authenticator;
         RestClientRateLimitManager rateLimitManager;
 
+        static readonly string discoreVersion;
+
         public RestClient(IDiscordAuthenticator authenticator)
         {
             this.authenticator = authenticator;
             rateLimitManager = new RestClientRateLimitManager();
+        }
+
+        static RestClient()
+        {
+            Version version = Assembly.Load(new AssemblyName("Discore")).GetName().Version;
+            // Don't include revision since Discore uses the Major.Minor.Patch semantic.
+            discoreVersion = $"{version.Major}.{version.Minor}.{version.Build}";
         }
 
         HttpClient CreateHttpClient()
@@ -26,7 +36,7 @@ namespace Discore.Http.Net
             HttpClient http = new HttpClient();
             http.DefaultRequestHeaders.Add("Accept", "*/*");
             http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
-            http.DefaultRequestHeaders.Add("User-Agent", "DiscordBot (discore, 2.0)");
+            http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot (Discore, {discoreVersion})");
             http.DefaultRequestHeaders.Add("Authorization", $"{authenticator.GetTokenHttpType()} {authenticator.GetToken()}");
 
             return http;
