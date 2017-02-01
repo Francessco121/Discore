@@ -38,7 +38,6 @@ namespace Discore.Http
             RestClient rest = new RestClient(app.Authenticator);
 
             Gateway = new DiscordHttpGatewayEndpoint(app, rest);
-
             Users = new DiscordHttpUserEndpoint(app, rest);
             Channels = new DiscordHttpChannelEndpoint(app, rest);
             Webhooks = new DiscordHttpWebhookEndpoint(app, rest);

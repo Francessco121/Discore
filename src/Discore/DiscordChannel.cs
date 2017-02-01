@@ -26,6 +26,7 @@ namespace Discore
         /// Deletes/closes this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> Delete()
         {
             return channelsHttp.Delete(Id);

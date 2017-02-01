@@ -219,6 +219,7 @@ namespace Discore
         /// rather than the full message.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the ID's of each message do not match.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public static DiscordMessage Update(DiscordMessage message, DiscordMessage withPartial)
         {
             if (message.Id != withPartial.Id)
@@ -234,6 +235,7 @@ namespace Discore
         /// Adds a reaction to this message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> AddReaction(DiscordReactionEmoji emoji)
         {
             return channelsHttp.CreateReaction(ChannelId, Id, emoji);
@@ -243,6 +245,7 @@ namespace Discore
         /// Removes a reaction from this message added from the current authenticated user.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
             return channelsHttp.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
@@ -254,6 +257,7 @@ namespace Discore
         /// <param name="user">The user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
             return channelsHttp.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
@@ -262,6 +266,7 @@ namespace Discore
         /// <summary>
         /// Gets all users who reacted with the specified emoji to this message.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
             return channelsHttp.GetReactions(ChannelId, Id, reactionEmoji);
@@ -270,6 +275,7 @@ namespace Discore
         /// <summary>
         /// Deletes all reactions to this message.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteAllReactions()
         {
             return channelsHttp.DeleteAllReactions(ChannelId, Id);
@@ -279,6 +285,7 @@ namespace Discore
         /// Pins this message to the channel it was sent in.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Pin()
         {
             return channelsHttp.AddPinnedMessage(ChannelId, Id);
@@ -288,6 +295,7 @@ namespace Discore
         /// Unpins this message from the channel it was sent in.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Unpin()
         {
             return channelsHttp.DeletePinnedMessage(ChannelId, Id);
@@ -299,6 +307,7 @@ namespace Discore
         /// </summary>
         /// <param name="newContent">The new contents.</param>
         /// <returns>Returns the editted message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Edit(string newContent)
         {
             return channelsHttp.EditMessage(ChannelId, Id, newContent);
@@ -307,6 +316,7 @@ namespace Discore
         /// <summary>
         /// Deletes this message.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Delete()
         {
             return channelsHttp.DeleteMessage(ChannelId, Id);

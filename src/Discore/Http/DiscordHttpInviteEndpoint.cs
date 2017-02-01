@@ -12,6 +12,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets an invite by its code.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> Get(string inviteCode)
         {
             DiscordApiData data = await Rest.Get($"invites/{inviteCode}", "GetInvite").ConfigureAwait(false);
@@ -21,6 +22,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes an invite to a channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> Delete(string inviteCode)
         {
             DiscordApiData data = await Rest.Delete($"invites/{inviteCode}", "DeleteInvite").ConfigureAwait(false);
@@ -31,6 +33,7 @@ namespace Discore.Http
         /// Accepts an invite to a channel.
         /// Note: This does not work for bot accounts.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> Accept(string inviteCode)
         {
             DiscordApiData data = await Rest.Post($"invites/{inviteCode}", "AcceptInvite").ConfigureAwait(false);

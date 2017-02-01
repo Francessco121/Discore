@@ -14,6 +14,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of available voice regions.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions()
         {
             DiscordApiData data = await Rest.Get("/voice/regions", "ListVoiceRegions").ConfigureAwait(false);

@@ -14,6 +14,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a guild by ID.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> Get(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}", "GetGuild").ConfigureAwait(false);
@@ -23,6 +24,7 @@ namespace Discore.Http
         /// <summary>
         /// Changes the settings of a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> Modify(Snowflake guildId, ModifyGuildParameters parameters)
         {
             DiscordApiData requestData = parameters.Build();
@@ -35,6 +37,7 @@ namespace Discore.Http
         /// Deletes a guild permanently.
         /// Authenticated user must be the owner.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> Delete(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}", "DeleteGuild").ConfigureAwait(false);
@@ -44,6 +47,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all channels in a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> GetChannels(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/channels", "GetGuildChannels").ConfigureAwait(false);
@@ -58,6 +62,7 @@ namespace Discore.Http
         /// <summary>
         /// Creates a new text or voice channel for a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildChannel> CreateChannel(Snowflake guildId, CreateGuildChannelParameters parameters)
         {
             DiscordApiData requestData = parameters.Build();
@@ -69,6 +74,7 @@ namespace Discore.Http
         /// <summary>
         /// Changes the settings of a channel in a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(Snowflake guildId, 
             IEnumerable<PositionParameters> positions)
         {
@@ -88,6 +94,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a member in a guild by their user ID.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildMember> GetMember(Snowflake guildId, Snowflake userId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/members/{userId}", "GetGuildMember").ConfigureAwait(false);
@@ -101,6 +108,7 @@ namespace Discore.Http
         /// <param name="guildId">The id of the guild.</param>
         /// <param name="limit">Max number of members to return (1-1000).</param>
         /// <param name="after">The highest user id in the previous page.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildMember>> ListMembers(Snowflake guildId, 
             int? limit = null, Snowflake? after = null)
         {
@@ -120,6 +128,7 @@ namespace Discore.Http
         /// Modifies the attributes of a guild member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> ModifyMember(Snowflake guildId, Snowflake userId, ModifyGuildMemberParameters parameters)
         {
             DiscordApiData requestData = parameters.Build();
@@ -132,6 +141,7 @@ namespace Discore.Http
         /// Removes a member from a guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> RemoveMember(Snowflake guildId, Snowflake userId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}/members/{userId}", "RemoveGuildMember").ConfigureAwait(false);
@@ -141,6 +151,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all users that are banned from the specified guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordUser>> GetBans(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/bans", "GetGuildBans").ConfigureAwait(false);
@@ -157,6 +168,7 @@ namespace Discore.Http
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> CreateBan(Snowflake guildId, Snowflake userId, int? deleteMessageDays = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -170,6 +182,7 @@ namespace Discore.Http
         /// Removes a user ban from the specified guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> RemoveBan(Snowflake guildId, Snowflake userId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}/bans/{userId}", "RemoveGuildBan").ConfigureAwait(false);
@@ -179,6 +192,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all roles in a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordRole>> GetRoles(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/roles", "GetGuildRoles").ConfigureAwait(false);
@@ -193,6 +207,7 @@ namespace Discore.Http
         /// <summary>
         /// Creates a new role with default settings for a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordRole> CreateRole(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Post($"guilds/{guildId}/roles", "CreateGuildRole").ConfigureAwait(false);
@@ -202,6 +217,7 @@ namespace Discore.Http
         /// <summary>
         /// Modifies the sorting positions of roles in a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(Snowflake guildId, 
             IEnumerable<PositionParameters> positions)
         {
@@ -221,6 +237,7 @@ namespace Discore.Http
         /// <summary>
         /// Modifies the settings of a guild role.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordRole> ModifyRole(Snowflake guildId, Snowflake roleId, ModifyRoleParameters parameters)
         {
             DiscordApiData requestData = parameters.Build();
@@ -232,6 +249,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a role from a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordRole> DeleteRole(Snowflake guildId, Snowflake roleId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}/roles/{roleId}", "DeleteGuildRole").ConfigureAwait(false);
@@ -242,6 +260,7 @@ namespace Discore.Http
         /// Returns the number of members that would be kicked from a guild prune operation.
         /// </summary>
         /// <param name="days">The number of days to count prune for (1 or more).</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> GetPruneCount(Snowflake guildId, int days)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/prune?days={days}", "GetGuildPruneCount").ConfigureAwait(false);
@@ -253,6 +272,7 @@ namespace Discore.Http
         /// kicking every member that has been offline for the specified number of days.
         /// </summary>
         /// <param name="days">The number of days to prune (1 or more).</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> BeginPrune(Snowflake guildId, int days)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -265,6 +285,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all voice regions available to the specified guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/regions", "GetGuildVoiceRegions").ConfigureAwait(false);
@@ -279,6 +300,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of invites for the specified guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/invites", "GetGuildInvites").ConfigureAwait(false);
@@ -293,6 +315,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of integrations for the specified guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordIntegration>> GetIntegrations(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/integrations", "GetGuildIntegrations").ConfigureAwait(false);
@@ -308,6 +331,7 @@ namespace Discore.Http
         /// Attaches an integration from the current authenticated user to the specified guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> CreateIntegration(Snowflake guildId, Snowflake integrationId, string type)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -322,6 +346,7 @@ namespace Discore.Http
         /// Changes the attributes of a guild integration.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> ModifyIntegration(Snowflake guildId, Snowflake integrationId, 
             ModifyIntegrationParameters parameters)
         {
@@ -336,6 +361,7 @@ namespace Discore.Http
         /// Deletes an attached integration from the specified channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteIntegration(Snowflake guildId, Snowflake integrationId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}/integrations/{integrationId}", "DeleteGuildIntegration").ConfigureAwait(false);
@@ -346,6 +372,7 @@ namespace Discore.Http
         /// Synchronizes a guild integration.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> SyncIntegration(Snowflake guildId, Snowflake integrationId)
         {
             DiscordApiData data = await Rest.Post($"guilds/{guildId}/integrations/{integrationId}/sync", "SyncGuildIntegration").ConfigureAwait(false);
@@ -355,6 +382,7 @@ namespace Discore.Http
         /// <summary>
         /// Returns the embed for the specified guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildEmbed> GetEmbed(Snowflake guildId)
         {
             DiscordApiData data = await Rest.Get($"guilds/{guildId}/embed", "GetGuildEmbed").ConfigureAwait(false);
@@ -364,6 +392,7 @@ namespace Discore.Http
         /// <summary>
         /// Modifies the properties of the embed for the specified guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildEmbed> ModifyEmbed(Snowflake guildId, ModifyGuildEmbedParameters parameters)
         {
             DiscordApiData requestData = parameters.Build();

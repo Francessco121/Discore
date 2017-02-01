@@ -61,6 +61,7 @@ namespace Discore
         /// <summary>
         /// Gets a list of all invites for this channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
         {
             return channelsHttp.GetInvites(Id);
@@ -73,6 +74,7 @@ namespace Discore
         /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
         /// <param name="temporary">Whether this invite only grants temporary membership.</param>
         /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> CreateInvite(TimeSpan? maxAge = null, int? maxUses = null, 
             bool? temporary = null, bool? unique = null)
         {
@@ -86,6 +88,7 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
             return EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
@@ -98,6 +101,7 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
             return EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
@@ -113,6 +117,7 @@ namespace Discore
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(DiscordGuildMember member)
         {
             return DeletePermission(member.Id);
@@ -122,6 +127,7 @@ namespace Discore
         /// Deletes a permission overwrite for a role.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(DiscordRole role)
         {
             return DeletePermission(role.Id);
@@ -131,6 +137,7 @@ namespace Discore
         /// Deletes a permission overwrite.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(DiscordOverwrite overwrite)
         {
             return DeletePermission(overwrite.Id);

@@ -25,6 +25,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets the minimum number of required shards for the current authenticated Discord application.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> GetBotRequiredShards()
         {
             GatewayBotResponse response = await GetBot().ConfigureAwait(false);

@@ -17,6 +17,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a DM or guild channel by ID.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> Get(Snowflake channelId)
         {
             return Get<DiscordChannel>(channelId);
@@ -25,6 +26,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a DM or guild channel by ID.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<T> Get<T>(Snowflake channelId) 
             where T : DiscordChannel
         {
@@ -39,6 +41,7 @@ namespace Discore.Http
         /// <param name="name">The name of the channel (or null to leave unchanged).</param>
         /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
         /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
             string name = null, int? position = null, string topic = null)
         {
@@ -53,6 +56,7 @@ namespace Discore.Http
         /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
             string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
         {
@@ -68,6 +72,7 @@ namespace Discore.Http
         /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<T> Modify<T>(Snowflake channelId,
             string name = null, int? position = null, 
             string topic = null,
@@ -88,6 +93,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a guild channel, or closes a DM.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> Delete(Snowflake channelId)
         {
             return Delete<DiscordChannel>(channelId);
@@ -96,6 +102,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a guild channel, or closes a DM.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<T> Delete<T>(Snowflake channelId)
             where T : DiscordChannel
         {
@@ -109,6 +116,7 @@ namespace Discore.Http
         /// Edits a guild channel permission overwrite for a user or role.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> EditPermissions(Snowflake channelId, Snowflake overwriteId,
             DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
         {
@@ -124,6 +132,7 @@ namespace Discore.Http
         /// Deletes a guild channel permission overwrite for a user or role.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeletePermission(Snowflake channelId, Snowflake overwriteId)
         {
             return (await Rest.Delete($"channels/{channelId}/permissions/{overwriteId}", "DeleteChannelPermission").ConfigureAwait(false)).IsNull;
@@ -134,6 +143,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets messages from a text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake channelId,
             Snowflake? baseMessageId = null, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
@@ -153,6 +163,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a single message by ID from a channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> GetMessage(Snowflake channelId, Snowflake messageId)
         {
             DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}", "GetChannelMessage").ConfigureAwait(false);
@@ -162,6 +173,7 @@ namespace Discore.Http
         /// <summary>
         /// Posts a message to a text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, Snowflake? nonce = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -176,6 +188,7 @@ namespace Discore.Http
         /// <summary>
         /// Uploads a file to a text channel with an optional message.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> UploadFile(Snowflake channelId, FileInfo fileInfo, 
             string message = null, bool tts = false, Snowflake? nonce = null)
         {
@@ -190,6 +203,7 @@ namespace Discore.Http
         /// <summary>
         /// Uploads a file to a text channel with an optional message.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
             string message = null, bool? tts = null, Snowflake? nonce = null)
         {
@@ -211,6 +225,7 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -224,6 +239,7 @@ namespace Discore.Http
         /// Deletes a message from a text channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteMessage(Snowflake channelId, Snowflake messageId)
         {
             DiscordApiData data = await Rest.Delete($"channels/{channelId}/messages/{messageId}", "DeleteMessage").ConfigureAwait(false);
@@ -236,6 +252,7 @@ namespace Discore.Http
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages,
             bool filterTooOldMessages = true)
         {
@@ -252,6 +269,7 @@ namespace Discore.Http
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds, 
             bool filterTooOldMessages = true)
         {
@@ -282,6 +300,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all pinned messages in a text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
         {
             DiscordApiData data = await Rest.Get($"channels/{channelId}/pins", "GetPinnedChannelMessages").ConfigureAwait(false);
@@ -296,6 +315,7 @@ namespace Discore.Http
         /// <summary>
         /// Pins a message in a text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> AddPinnedMessage(Snowflake channelId, Snowflake messageId)
         {
             return (await Rest.Put($"channels/{channelId}/pins/{messageId}", "AddPinnedChannelMessage").ConfigureAwait(false)).IsNull;
@@ -304,6 +324,7 @@ namespace Discore.Http
         /// <summary>
         /// Unpins a message from a text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeletePinnedMessage(Snowflake channelId, Snowflake messageId)
         {
             return (await Rest.Delete($"channels/{channelId}/pins/{messageId}", "DeletePinnedChannelMessage").ConfigureAwait(false)).IsNull;
@@ -315,6 +336,7 @@ namespace Discore.Http
         /// Adds a reaction to a message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
             return (await Rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "CreateReaction").ConfigureAwait(false)).IsNull;
@@ -324,6 +346,7 @@ namespace Discore.Http
         /// Deletes a reaction the currently authenticated user has made for a message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteOwnReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
             return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", "DeleteOwnReaction").ConfigureAwait(false)).IsNull;
@@ -333,6 +356,7 @@ namespace Discore.Http
         /// Deletes a reaction posted by any user.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteUserReaction(Snowflake channelId, Snowflake messageId, Snowflake userId, DiscordReactionEmoji emoji)
         {
             return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}", "DeleteUserReaction").ConfigureAwait(false)).IsNull;
@@ -341,6 +365,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all users who reacted to the specified message with the specified emoji.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordUser>> GetReactions(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
             DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}", "GetReactions").ConfigureAwait(false);
@@ -355,6 +380,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes all reactions on a message.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteAllReactions(Snowflake channelId, Snowflake messageId)
         {
             await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions", "DeleteAllReactions").ConfigureAwait(false);
@@ -365,6 +391,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all invites for the specified guild channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites(Snowflake channelId)
         {
             DiscordApiData data = await Rest.Get($"channels/{channelId}/invites", "GetChannelInvites").ConfigureAwait(false);
@@ -387,6 +414,7 @@ namespace Discore.Http
         /// If true, don't try to reuse a similar invite 
         /// (useful for creating many unique one time use invites).
         /// </param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> CreateInvite(Snowflake channelId,
             TimeSpan? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
         {
@@ -405,6 +433,7 @@ namespace Discore.Http
         /// Causes the current authenticated user to appear as typing in this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> TriggerTypingIndicator(Snowflake channelId)
         {
             return (await Rest.Post($"channels/{channelId}/typing", "TriggerTypingIndicator").ConfigureAwait(false)).IsNull;

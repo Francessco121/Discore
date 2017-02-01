@@ -33,6 +33,7 @@ namespace Discore
         /// <summary>
         /// Modifies the properties of this guild embed.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
         {
             return guildsHttp.ModifyEmbed(GuildId, parameters);

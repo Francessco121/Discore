@@ -40,6 +40,7 @@ namespace Discore
         /// <summary>
         /// Deletes this invite.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> Delete()
         {
             return invitesHttp.Delete(Code);
@@ -49,6 +50,7 @@ namespace Discore
         /// Accepts this invite.
         /// Note: This does not work for bot accounts.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> Accept()
         {
             return invitesHttp.Accept(Code);

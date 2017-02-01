@@ -53,6 +53,7 @@ namespace Discore
         /// <summary>
         /// Gets the id of the last message sent in this channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException">Thrown if failed to retrieve channel messages.</exception>
         public async Task<Snowflake> GetLastMessageId()
         {
             Snowflake lastId = lastMessageId;
@@ -78,6 +79,7 @@ namespace Discore
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
         {
             DiscordMessage firstOrOnlyMessage = null;
@@ -108,6 +110,7 @@ namespace Discore
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
@@ -161,6 +164,7 @@ namespace Discore
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
         {
             return channelsHttp.BulkDeleteMessages(Id, messages, filterTooOldMessages);
@@ -172,6 +176,7 @@ namespace Discore
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
         {
             return channelsHttp.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
@@ -181,6 +186,7 @@ namespace Discore
         /// Causes the current authenticated user to appear as typing in this channel.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> TriggerTypingIndicator()
         {
             return channelsHttp.TriggerTypingIndicator(Id);
@@ -189,6 +195,7 @@ namespace Discore
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages()
         {
             return channelsHttp.GetPinnedMessages(Id);
@@ -197,6 +204,7 @@ namespace Discore
         /// <summary>
         /// Gets a message in this channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> GetMessage(Snowflake messageId)
         {
             return channelsHttp.GetMessage(Id, messageId);
@@ -208,6 +216,7 @@ namespace Discore
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null, 
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {

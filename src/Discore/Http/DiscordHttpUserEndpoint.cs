@@ -12,6 +12,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets the user of the current authenticated account for this application.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetCurrentUser()
         {
             DiscordApiData data = await Rest.Get("users/@me", "GetCurrentUser").ConfigureAwait(false);
@@ -21,6 +22,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a user by their ID.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> Get(Snowflake id)
         {
             DiscordApiData data = await Rest.Get($"users/{id}", "GetUser").ConfigureAwait(false);
@@ -31,6 +33,7 @@ namespace Discore.Http
         /// Modifies the current authenticated user.
         /// Parameters left null will leave the properties unchanged.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -44,6 +47,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of user guilds the current authenticated user is in.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUserGuild[]> GetCurrentUserGuilds()
         {
             DiscordApiData data = await Rest.Get($"users/@me/guilds", "GetCurrentUserGuilds").ConfigureAwait(false);
@@ -59,6 +63,7 @@ namespace Discore.Http
         /// Removes the current authenticated user from the specified guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> LeaveGuild(Snowflake guildId)
         {
             return (await Rest.Delete($"users/@me/guilds/{guildId}", "LeaveGuild").ConfigureAwait(false)).IsNull;
@@ -68,6 +73,7 @@ namespace Discore.Http
         /// Gets a list of currently opened DM channels for the current authenticated user.
         /// <para>Note: This will always return an empty list for bot accounts.</para>
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordDMChannel[]> GetCurrentUserDMs()
         {
             DiscordApiData data = await Rest.Get("users/@me/channels", "GetCurrentUserDMs").ConfigureAwait(false);
@@ -82,6 +88,7 @@ namespace Discore.Http
         /// <summary>
         /// Opens a DM channel with the specified user.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordDMChannel> CreateDM(Snowflake recipientId)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -94,6 +101,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of connections for the current authenticated user.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordConnection[]> GetCurrentUserConnections()
         {
             DiscordApiData data = await Rest.Get("users/@me/connections", "GetCurrentUserConnections").ConfigureAwait(false);

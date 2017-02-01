@@ -108,6 +108,7 @@ namespace Discore
         /// Modifies the attributes of this member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Modify(ModifyGuildMemberParameters parameters)
         {
             return guildsHttp.ModifyMember(GuildId, Id, parameters);
@@ -117,6 +118,7 @@ namespace Discore
         /// Removes this user from the guild they are a member of.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Kick()
         {
             return guildsHttp.RemoveMember(GuildId, Id);
@@ -127,6 +129,7 @@ namespace Discore
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Ban(int? deleteMessageDays = null)
         {
             return guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);

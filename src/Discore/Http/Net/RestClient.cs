@@ -42,6 +42,7 @@ namespace Discore.Http.Net
             return http;
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         async Task<DiscordApiData> ParseResponse(HttpResponseMessage response)
         {
             // Read response payload as string
@@ -90,6 +91,7 @@ namespace Discore.Http.Net
                     DiscordHttpErrorCode.None, response.StatusCode);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordApiData> Send(HttpRequestMessage request, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -110,6 +112,7 @@ namespace Discore.Http.Net
             return await ParseResponse(response).ConfigureAwait(false);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Get(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -117,6 +120,7 @@ namespace Discore.Http.Net
             return Send(request, limiterAction, cancellationToken);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Post(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -124,6 +128,7 @@ namespace Discore.Http.Net
             return Send(request, limiterAction, cancellationToken);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Post(string action, DiscordApiData data, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -133,6 +138,7 @@ namespace Discore.Http.Net
             return Send(request, limiterAction, cancellationToken);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Put(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -140,6 +146,7 @@ namespace Discore.Http.Net
             return Send(request, limiterAction, cancellationToken);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Put(string action, DiscordApiData data, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -149,6 +156,7 @@ namespace Discore.Http.Net
             return Send(request, limiterAction, cancellationToken);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Patch(string action, DiscordApiData data, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
@@ -158,6 +166,7 @@ namespace Discore.Http.Net
             return Send(request, limiterAction, cancellationToken);
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Delete(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {

@@ -1,6 +1,4 @@
 ﻿using Discore.Http;
-using Discore.Voice;
-using Discore.WebSocket;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -32,6 +30,7 @@ namespace Discore
         /// Modifies this voice channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildVoiceChannel> Modify(string name = null, int? position = null, 
             int? bitrate = null, int? userLimit = null)
         {

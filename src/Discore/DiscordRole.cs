@@ -69,6 +69,7 @@ namespace Discore
         /// <summary>
         /// Modifies the settings of this role.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
         {
             return guildsHttp.ModifyRole(GuildId, Id, parameters);
@@ -77,6 +78,7 @@ namespace Discore
         /// <summary>
         /// Deletes this role.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> Delete()
         {
             return guildsHttp.DeleteRole(GuildId, Id);

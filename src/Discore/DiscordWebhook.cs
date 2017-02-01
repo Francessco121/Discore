@@ -61,6 +61,7 @@ namespace Discore
         /// <summary>
         /// Modifies the settings of this webhook.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> Modify(string name = null, DiscordAvatarData avatar = null)
         {
             return webhookHttp.Modify(Id, name, avatar);
@@ -71,6 +72,7 @@ namespace Discore
         /// Current authenticated user might be the owner.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Delete()
         {
             return webhookHttp.Delete(Id);
@@ -80,6 +82,7 @@ namespace Discore
         /// Deletes this webhook permanently.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeleteWithToken(string token)
         {
             return webhookHttp.DeleteWithToken(Id, token);
@@ -89,6 +92,7 @@ namespace Discore
         /// Executes this webhook with a message as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Execute(string token, string content, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -99,6 +103,7 @@ namespace Discore
         /// Executes this webhook with a file as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Execute(string token, byte[] file, 
             string filename = "unknown.jpg", string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -109,6 +114,7 @@ namespace Discore
         /// Executes this webhook with a file as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Execute(string token, FileInfo fileInfo, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -119,6 +125,7 @@ namespace Discore
         /// Executes this webhook with embeds as the contents.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
             string username = null, string avatarUrl = null, bool tts = false)
         {

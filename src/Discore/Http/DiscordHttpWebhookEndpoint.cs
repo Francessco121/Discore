@@ -18,6 +18,7 @@ namespace Discore.Http
         /// Creates a webhook.
         /// </summary>
         /// <param name="channelId">The id of the channel the webhook will post to.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> Create(string name, DiscordAvatarData avatar, Snowflake channelId)
         {
             DiscordApiData apiData = DiscordApiData.CreateContainer();
@@ -32,6 +33,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a webhook via its ID.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> Get(Snowflake webhookId)
         {
             DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}", "GetWebhook").ConfigureAwait(false);
@@ -43,6 +45,7 @@ namespace Discore.Http
         /// Gets a webhook via its ID.
         /// <para>This call does not require authentication and returns no user in the webhook object.</para>
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> GetWithToken(Snowflake webhookId, string token)
         {
             DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}/{token}", "GetWebhook").ConfigureAwait(false);
@@ -53,6 +56,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of webhooks active for the specified guild text channel.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake channelId)
         {
             DiscordApiData apiData = await Rest.Get($"channels/{channelId}/webhooks", "GetChannelWebhooks").ConfigureAwait(false);
@@ -68,6 +72,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all webhooks in a guild.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake guildId)
         {
             DiscordApiData apiData = await Rest.Get($"guilds/{guildId}/webhooks", "GetGuildWebhooks").ConfigureAwait(false);
@@ -83,6 +88,7 @@ namespace Discore.Http
         /// <summary>
         /// Modifies an exsting webhook.
         /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> Modify(Snowflake webhookId, string name = null, DiscordAvatarData avatar = null)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
@@ -98,6 +104,7 @@ namespace Discore.Http
         /// Deletes a webhook permanently. The currently authenticated user must be the owner.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Delete(Snowflake webhookId)
         {
             return (await Rest.Delete($"webhooks/{webhookId}", "DeleteWebhook").ConfigureAwait(false)).IsNull;
@@ -107,6 +114,7 @@ namespace Discore.Http
         /// Deletes a webhook permanently.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteWithToken(Snowflake webhookId, string token)
         {
             return (await Rest.Delete($"webhooks/{webhookId}/{token}", "DeleteWebhook").ConfigureAwait(false)).IsNull;
@@ -116,6 +124,7 @@ namespace Discore.Http
         /// Executes a webhook with a message as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             string content, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -137,6 +146,7 @@ namespace Discore.Http
         /// Executes a webhook with a file as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             byte[] file, string filename = "unknown.jpg",
             string username = null, string avatarUrl = null, bool tts = false)
@@ -165,6 +175,7 @@ namespace Discore.Http
         /// Executes a webhook with a file as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             FileInfo file, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -181,6 +192,7 @@ namespace Discore.Http
         /// Executes a webhook with a embed as contents.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             DiscordEmbedBuilder embed, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -194,6 +206,7 @@ namespace Discore.Http
         /// Executes a webhook with embeds as the contents.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Execute(Snowflake webhookId, string token,
             IEnumerable<DiscordEmbedBuilder> embedBuilders, string username = null,
             string avatarUrl = null, bool tts = false)
