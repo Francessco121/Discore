@@ -25,7 +25,8 @@ namespace Discore.Http
             apiData.Set("name", name);
             apiData.Set("avatar", avatar);
 
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/webhooks", apiData, "CreateWebhook").ConfigureAwait(false);
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/webhooks", apiData, 
+                "channels/channel/webhooks").ConfigureAwait(false);
 
             return new DiscordWebhook(App, returnData);
         }
@@ -36,7 +37,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> Get(Snowflake webhookId)
         {
-            DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}", "GetWebhook").ConfigureAwait(false);
+            DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}", 
+                "webhooks/webhook").ConfigureAwait(false);
 
             return new DiscordWebhook(App, apiData);
         }
@@ -48,7 +50,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> GetWithToken(Snowflake webhookId, string token)
         {
-            DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}/{token}", "GetWebhook").ConfigureAwait(false);
+            DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}/{token}", 
+                "webhooks/webhook/token").ConfigureAwait(false);
 
             return new DiscordWebhook(App, apiData);
         }
@@ -59,7 +62,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake channelId)
         {
-            DiscordApiData apiData = await Rest.Get($"channels/{channelId}/webhooks", "GetChannelWebhooks").ConfigureAwait(false);
+            DiscordApiData apiData = await Rest.Get($"channels/{channelId}/webhooks", 
+                "channels/channel/webhooks").ConfigureAwait(false);
 
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
@@ -75,7 +79,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake guildId)
         {
-            DiscordApiData apiData = await Rest.Get($"guilds/{guildId}/webhooks", "GetGuildWebhooks").ConfigureAwait(false);
+            DiscordApiData apiData = await Rest.Get($"guilds/{guildId}/webhooks", 
+                "guilds/guild/webhooks").ConfigureAwait(false);
 
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
@@ -95,7 +100,8 @@ namespace Discore.Http
             if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
             if (avatar != null) postData.Set("avatar", avatar);
 
-            DiscordApiData apiData = await Rest.Patch($"webhooks/{webhookId}", postData, "ModifyWebhook").ConfigureAwait(false);
+            DiscordApiData apiData = await Rest.Patch($"webhooks/{webhookId}", postData, 
+                "webhooks/webhook").ConfigureAwait(false);
 
             return new DiscordWebhook(App, apiData);
         }
@@ -107,7 +113,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> Delete(Snowflake webhookId)
         {
-            return (await Rest.Delete($"webhooks/{webhookId}", "DeleteWebhook").ConfigureAwait(false)).IsNull;
+            return (await Rest.Delete($"webhooks/{webhookId}",
+                "webhooks/webhook").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -117,7 +124,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteWithToken(Snowflake webhookId, string token)
         {
-            return (await Rest.Delete($"webhooks/{webhookId}/{token}", "DeleteWebhook").ConfigureAwait(false)).IsNull;
+            return (await Rest.Delete($"webhooks/{webhookId}/{token}",
+                "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -139,7 +147,8 @@ namespace Discore.Http
             postData.Set("tts", tts);
             postData.Set("content", content);
 
-            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, "ExecuteWebhook").ConfigureAwait(false)).IsNull;
+            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData,
+                "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -151,24 +160,28 @@ namespace Discore.Http
             byte[] file, string filename = "unknown.jpg",
             string username = null, string avatarUrl = null, bool tts = false)
         {
-            DiscordApiData postData = DiscordApiData.CreateContainer();
+            return (await Rest.Send(() =>
+            {
+                DiscordApiData postData = DiscordApiData.CreateContainer();
 
-            postData.Set("username", username);
-            postData.Set("avatar_url", avatarUrl);
-            postData.Set("tts", tts);
+                postData.Set("username", username);
+                postData.Set("avatar_url", avatarUrl);
+                postData.Set("tts", tts);
 
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{RestClient.BASE_URL}/webhooks/{webhookId}/{token}");
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, 
+                    $"{RestClient.BASE_URL}/webhooks/{webhookId}/{token}");
 
-            MultipartFormDataContent form = new MultipartFormDataContent();
+                MultipartFormDataContent form = new MultipartFormDataContent();
 
-            ByteArrayContent content = new ByteArrayContent(file);
+                ByteArrayContent content = new ByteArrayContent(file);
 
-            form.Add(content, "file", filename);
-            form.Add(new StringContent(postData.SerializeToJson(), Encoding.UTF8, "application/json"));
+                form.Add(content, "file", filename);
+                form.Add(new StringContent(postData.SerializeToJson(), Encoding.UTF8, "application/json"));
 
-            request.Content = form;
+                request.Content = form;
 
-            return (await Rest.Send(request, "ExecuteWebhook").ConfigureAwait(false)).IsNull;
+                return request;
+            }, "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -227,7 +240,8 @@ namespace Discore.Http
 
             postData.Set("embeds", embedData);
 
-            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, "ExecuteWebhook").ConfigureAwait(false)).IsNull;
+            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, 
+                "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
         }
     }
 }

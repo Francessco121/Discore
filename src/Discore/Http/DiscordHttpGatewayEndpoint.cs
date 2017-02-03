@@ -34,13 +34,15 @@ namespace Discore.Http
 
         internal async Task<string> Get(CancellationToken cancellationToken)
         {
-            DiscordApiData data = await Rest.Get("gateway", "GetGateway", cancellationToken).ConfigureAwait(false);
+            DiscordApiData data = await Rest.Get("gateway", 
+                "gateway", cancellationToken).ConfigureAwait(false);
             return data.GetString("url");
         }
 
         internal async Task<GatewayBotResponse> GetBot()
         {
-            DiscordApiData data = await Rest.Get("gateway/bot", "GetGatewayBot").ConfigureAwait(false);
+            DiscordApiData data = await Rest.Get("gateway/bot", 
+                "gateway/bot").ConfigureAwait(false);
             return new GatewayBotResponse(data);
         }
     }

@@ -33,9 +33,21 @@ namespace Discore.Http
         /// </summary>
         public DiscordHttpGatewayEndpoint Gateway { get; }
 
+        /// <summary>
+        /// Gets or sets whether to resend requests that get rate-limited.
+        /// This is true by default.
+        /// </summary>
+        public bool RetryWhenRateLimited
+        {
+            get { return rest.RetryOnRateLimit; }
+            set { rest.RetryOnRateLimit = value; }
+        }
+
+        RestClient rest;
+
         internal DiscordHttpApi(IDiscordApplication app)
         {
-            RestClient rest = new RestClient(app.Authenticator);
+            rest = new RestClient(app.Authenticator);
 
             Gateway = new DiscordHttpGatewayEndpoint(app, rest);
             Users = new DiscordHttpUserEndpoint(app, rest);

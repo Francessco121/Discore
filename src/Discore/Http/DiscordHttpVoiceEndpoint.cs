@@ -17,7 +17,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions()
         {
-            DiscordApiData data = await Rest.Get("/voice/regions", "ListVoiceRegions").ConfigureAwait(false);
+            DiscordApiData data = await Rest.Get("voice/regions", "voice/regions").ConfigureAwait(false);
 
             DiscordVoiceRegion[] regions = new DiscordVoiceRegion[data.Values.Count];
             for (int i = 0; i < regions.Length; i++)

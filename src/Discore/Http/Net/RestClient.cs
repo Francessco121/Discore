@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -13,15 +15,23 @@ namespace Discore.Http.Net
     {
         public const string BASE_URL = "https://discordapp.com/api";
 
-        IDiscordAuthenticator authenticator;
-        RestClientRateLimitManager rateLimitManager;
+        public bool RetryOnRateLimit { get; set; } = true;
 
         static readonly string discoreVersion;
+
+        IDiscordAuthenticator authenticator;
+        DiscoreLogger log;
+        Dictionary<string, RateLimitRoute> rateLimitRoutes;
+        AsyncManualResetEvent globalRateLimitResetEvent;
 
         public RestClient(IDiscordAuthenticator authenticator)
         {
             this.authenticator = authenticator;
-            rateLimitManager = new RestClientRateLimitManager();
+
+            log = new DiscoreLogger("RestClient");
+
+            rateLimitRoutes = new Dictionary<string, RateLimitRoute>();
+            globalRateLimitResetEvent = new AsyncManualResetEvent(true);
         }
 
         static RestClient()
@@ -91,23 +101,70 @@ namespace Discore.Http.Net
                     DiscordHttpErrorCode.None, response.StatusCode);
         }
 
+        Task WaitRateLimit(string limiterAction)
+        {
+            RateLimitRoute route;
+            if (rateLimitRoutes.TryGetValue(limiterAction, out route))
+                return route.Wait();
+
+            // Do nothing if no section has been created.
+            return Task.CompletedTask;
+        }
+
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordApiData> Send(HttpRequestMessage request, string limiterAction, 
+        public async Task<DiscordApiData> Send(Func<HttpRequestMessage> requestCreate, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            await rateLimitManager.AwaitRateLimiter(limiterAction).ConfigureAwait(false);
-
-            DateTime beforeTask = DateTime.Now;
-
             HttpResponseMessage response;
 
-            using (HttpClient http = CreateHttpClient())
+            do
             {
-                Task<HttpResponseMessage> sendTask = http.SendAsync(request, cancellationToken ?? CancellationToken.None);
-                response = await sendTask.ConfigureAwait(false);
-            }
+                await globalRateLimitResetEvent.WaitAsync().ConfigureAwait(false);
+                await WaitRateLimit(limiterAction).ConfigureAwait(false);
 
-            rateLimitManager.UpdateRateLimiter(limiterAction, response);
+                using (HttpClient http = CreateHttpClient())
+                {
+                    response = await http.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
+                        .ConfigureAwait(false);
+                }
+
+                if (response.Headers.Contains("X-RateLimit-Limit"))
+                {
+                    // Create or get limit section if this endpoint uses rate limits.
+                    RateLimitRoute route;
+                    if (!rateLimitRoutes.TryGetValue(limiterAction, out route))
+                        rateLimitRoutes.Add(limiterAction, route = new RateLimitRoute(globalRateLimitResetEvent));
+
+                    await route.Update(response.Headers).ConfigureAwait(false);
+
+                    // Tell the section it exceeded rate limits if the status is TooManyRequests.
+                    if ((int)response.StatusCode == 429)
+                        route.ExceededRateLimit(response.Headers);
+                }
+
+                if (response.Headers.Contains("X-RateLimit-Global"))
+                {
+                    log.LogWarning($"[{limiterAction}] Hit global rate limit.");
+
+                    // For global ratelimiting, block all limiters.
+                    globalRateLimitResetEvent.Reset();
+
+                    IEnumerable<string> retryAfterValues;
+                    if (response.Headers.TryGetValues("Retry-After", out retryAfterValues))
+                    {
+                        string retryAfterStr = retryAfterValues.FirstOrDefault();
+
+                        int retryAfter;
+                        if (!string.IsNullOrWhiteSpace(retryAfterStr) && int.TryParse(retryAfterStr, out retryAfter))
+                        {
+                            await Task.Delay(retryAfter).ConfigureAwait(false);
+                        }
+                    }
+
+                    globalRateLimitResetEvent.Set();
+                }
+            }
+            while ((int)response.StatusCode == 429 && RetryOnRateLimit);
 
             return await ParseResponse(response).ConfigureAwait(false);
         }
@@ -116,62 +173,79 @@ namespace Discore.Http.Net
         public Task<DiscordApiData> Get(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
-            return Send(request, limiterAction, cancellationToken);
+            return Send(() =>
+            {
+                return new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
+            }, limiterAction, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Post(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
-            return Send(request, limiterAction, cancellationToken);
+            return Send(() =>
+            {
+                return new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
+            }, limiterAction, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Post(string action, DiscordApiData data, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
-            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+            return Send(() =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
+                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
-            return Send(request, limiterAction, cancellationToken);
+                return request;
+            }, limiterAction, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Put(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-            return Send(request, limiterAction, cancellationToken);
+            return Send(() =>
+            {
+                return new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
+            }, limiterAction, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Put(string action, DiscordApiData data, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+            return Send(() =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
+                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
-            return Send(request, limiterAction, cancellationToken);
+                return request;
+            }, limiterAction, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Patch(string action, DiscordApiData data, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BASE_URL}/{action}");
-            request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+            return Send(() =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BASE_URL}/{action}");
+                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
-            return Send(request, limiterAction, cancellationToken);
+                return request;
+            }, limiterAction, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordApiData> Delete(string action, string limiterAction, 
             CancellationToken? cancellationToken = null)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
-            return Send(request, limiterAction, cancellationToken);
+            return Send(() =>
+            {
+                return new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
+            }, limiterAction, cancellationToken);
         }
     }
 }

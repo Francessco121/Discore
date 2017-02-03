@@ -15,7 +15,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> Get(string inviteCode)
         {
-            DiscordApiData data = await Rest.Get($"invites/{inviteCode}", "GetInvite").ConfigureAwait(false);
+            DiscordApiData data = await Rest.Get($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
             return new DiscordInvite(App, data);
         }
 
@@ -25,7 +25,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> Delete(string inviteCode)
         {
-            DiscordApiData data = await Rest.Delete($"invites/{inviteCode}", "DeleteInvite").ConfigureAwait(false);
+            DiscordApiData data = await Rest.Delete($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
             return new DiscordInvite(App, data);
         }
 
@@ -36,7 +36,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordInvite> Accept(string inviteCode)
         {
-            DiscordApiData data = await Rest.Post($"invites/{inviteCode}", "AcceptInvite").ConfigureAwait(false);
+            DiscordApiData data = await Rest.Post($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
             return new DiscordInvite(App, data);
         }
     }
