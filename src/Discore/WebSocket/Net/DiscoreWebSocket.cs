@@ -104,12 +104,9 @@ namespace Discore.WebSocket.Net
                 sendQueue = new ConcurrentQueue<DiscordApiData>();
 
                 // Start new tasks for sending/receiving.
-                sendTask = new Task(SendLoop, taskCancelTokenSource.Token);
-                receiveTask = new Task(ReceiveLoop, taskCancelTokenSource.Token);
-
                 runTasks = true;
-                sendTask.Start();
-                receiveTask.Start();
+                sendTask = SendLoop();
+                receiveTask = ReceiveLoop();
 
                 // Flip state
                 State = DiscoreWebSocketState.Open;
@@ -178,7 +175,7 @@ namespace Discore.WebSocket.Net
             sendQueue.Enqueue(data);
         }
 
-        async void SendLoop()
+        async Task SendLoop()
         {
             try
             {
@@ -243,7 +240,7 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        async void ReceiveLoop()
+        async Task ReceiveLoop()
         {
             try
             {

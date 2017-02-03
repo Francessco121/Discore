@@ -56,8 +56,7 @@ namespace Discore.Voice.Net
             socket.ReceiveTimeout = 1000 * 10;
             socket.Connect(endpoint);
 
-            receiveTask = new Task(ReceiveLoop);
-            receiveTask.Start();
+            receiveTask = ReceiveLoop();
         }
 
         public void Shutdown()
@@ -102,7 +101,7 @@ namespace Discore.Voice.Net
             }
         }
 
-        async void ReceiveLoop()
+        async Task ReceiveLoop()
         {
             try
             {

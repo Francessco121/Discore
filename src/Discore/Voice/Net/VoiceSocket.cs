@@ -89,7 +89,7 @@ namespace Discore.Voice.Net
             await HandleFatalError(ex).ConfigureAwait(false);
         }
 
-        private void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
+        private async void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
         {
             VoiceSocketOPCode op = (VoiceSocketOPCode)e.GetInteger("op");
             DiscordApiData d = e.Get("d");
@@ -97,7 +97,7 @@ namespace Discore.Voice.Net
             switch (op)
             {
                 case VoiceSocketOPCode.Ready:
-                    HandleReadyPayload(d);
+                    await HandleReadyPayload(d);
                     break;
                 case VoiceSocketOPCode.SessionDescription:
                     HandleSessionDescriptionPayload(d);
@@ -134,13 +134,9 @@ namespace Discore.Voice.Net
 
                 taskCancellationSource = new CancellationTokenSource();
 
-                // Create new tasks
-                sendTask = new Task(SendLoop);
-                heartbeatTask = new Task(HeartbeatLoop);
-
-                // Start the tasks
-                sendTask.Start();
-                heartbeatTask.Start();
+                // Start new tasks
+                sendTask = SendLoop();
+                heartbeatTask = HeartbeatLoop();
 
                 // Send the identify payload
                 SendIdentifyPayload();
@@ -234,7 +230,7 @@ namespace Discore.Voice.Net
             SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
         }
 
-        async void HandleReadyPayload(DiscordApiData data)
+        async Task HandleReadyPayload(DiscordApiData data)
         {
             int port = data.GetInteger("port") ?? 0;
             ssrc = data.GetInteger("ssrc") ?? 0;
@@ -285,7 +281,7 @@ namespace Discore.Voice.Net
             readyToSendVoice = true;
         }
 
-        async void SendLoop()
+        async Task SendLoop()
         {
             //const int TICKS_PER_S = 1000;
             const int TICKS_PER_MS = 1;
@@ -422,7 +418,7 @@ namespace Discore.Voice.Net
             }
         }
 
-        async void HeartbeatLoop()
+        async Task HeartbeatLoop()
         {
             try
             {

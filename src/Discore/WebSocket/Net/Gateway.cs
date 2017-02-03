@@ -145,8 +145,7 @@ namespace Discore.WebSocket.Net
                     taskCancelTokenSource = new CancellationTokenSource();
 
                     // Handshake was successful, begin the heartbeat loop
-                    heartbeatTask = new Task(HeartbeatLoop, taskCancelTokenSource.Token);
-                    heartbeatTask.Start();
+                    heartbeatTask = HeartbeatLoop();
 
                     log.LogVerbose("[ConnectAsync] Connection successful.");
                     return true;
@@ -206,7 +205,7 @@ namespace Discore.WebSocket.Net
             shard.User = null;
         }
 
-        async void HeartbeatLoop()
+        async Task HeartbeatLoop()
         {
             bool timedOut = false;
 
@@ -268,8 +267,7 @@ namespace Discore.WebSocket.Net
 
                 isReconnecting = true;
 
-                reconnectTask = new Task(ReconnectLoop, new Tuple<bool>(gatewayResume));
-                reconnectTask.Start();
+                reconnectTask = ReconnectLoop(gatewayResume);
             }
         }
 
@@ -282,11 +280,8 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        async void ReconnectLoop(object _state)
+        async Task ReconnectLoop(bool gatewayResume)
         {
-            Tuple<bool> state = (Tuple<bool>)_state;
-            bool gatewayResume = state.Item1;
-
             log.LogVerbose($"[ReconnectLoop] Begin - gatewayResume: {gatewayResume}");
 
             // Disable socket error handling until we have reconnected.

@@ -179,31 +179,30 @@ namespace Discore.Voice
 
                     connectingCancellationSource = new CancellationTokenSource();
 
-                    Task timeoutTask = new Task(async () =>
-                    {
-                        try
-                        {
-                            // Wait 10s
-                            await Task.Delay(10000, connectingCancellationSource.Token).ConfigureAwait(false);
-
-                            // If still not connected, timeout and disconnect.
-                            if (isConnecting)
-                            {
-                                await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-                                Invalidate();
-                            }
-                        }
-                        catch (TaskCanceledException) { }
-                    });
-
-                    timeoutTask.Start();
-                    return timeoutTask;
+                    return ConnectionTimeout();
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
             }
 
             return Task.CompletedTask;
+        }
+
+        async Task ConnectionTimeout()
+        {
+            try
+            {
+                // Wait 10s
+                await Task.Delay(10000, connectingCancellationSource.Token).ConfigureAwait(false);
+
+                // If still not connected, timeout and disconnect.
+                if (isConnecting)
+                {
+                    await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                    Invalidate();
+                }
+            }
+            catch (TaskCanceledException) { }
         }
 
         /// <summary>
