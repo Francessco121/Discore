@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Net
 {
     class GatewayRateLimiter
     {
+        public int ResetTimeMs { get { return resetTimeMs; } }
+
         readonly int resetTimeMs;
         readonly int maxInvokes;
 

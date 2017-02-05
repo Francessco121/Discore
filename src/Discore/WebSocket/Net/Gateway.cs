@@ -35,6 +35,8 @@ namespace Discore.WebSocket.Net
 
         bool isDisposed;
 
+        bool wasRateLimited;
+
         bool isReconnecting;
         Task reconnectTask;
         CancellationTokenSource reconnectCancelTokenSource;
@@ -107,6 +109,13 @@ namespace Discore.WebSocket.Net
             string gatewayUrl = await GetGatewayUrlAsync(cancellationToken).ConfigureAwait(false);
 
             log.LogVerbose($"[ConnectAsync] gatewayUrl: {gatewayUrl}");
+
+            // If was rate limited from last disconnect, wait extra time.
+            if (wasRateLimited)
+            {
+                wasRateLimited = false;
+                await Task.Delay(connectionRateLimiter.ResetTimeMs).ConfigureAwait(false);
+            }
 
             // Check with the connection rate limiter.
             await connectionRateLimiter.Invoke().ConfigureAwait(false);
@@ -355,6 +364,12 @@ namespace Discore.WebSocket.Net
                         // This really should never happen, but will require a full-reconnect.
                         log.LogWarning("Sent gateway payload before we identified!");
                         BeginReconnect();
+                        break;
+                    case GatewayDisconnectCode.RateLimited:
+                        // Doesn't require a full-reconnection, but we need to wait a bit.
+                        log.LogWarning("Gateway is being rate limited!");
+                        wasRateLimited = true;
+                        BeginReconnect(true);
                         break;
                     default:
                         // Safe to just resume
