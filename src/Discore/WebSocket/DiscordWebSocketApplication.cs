@@ -21,7 +21,9 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordHttpApi HttpApi { get; }
 
-        public DiscordWebSocketApplication(IDiscordAuthenticator authenticator)
+        /// <param name="authenticator">The method of authentication used by the application.</param>
+        /// <param name="httpApiSettings">The initial settings for the HTTP API. Uses the default settings if left null.</param>
+        public DiscordWebSocketApplication(IDiscordAuthenticator authenticator, InitialHttpApiSettings httpApiSettings = null)
         {
             if (!authenticator.CanAuthenticateWebSocket)
                 throw new ArgumentException("Authentication must support websockets.", "authenticator");
@@ -29,12 +31,13 @@ namespace Discore.WebSocket
             Authenticator = authenticator;
 
             ShardManager = new ShardManager(this);
-            HttpApi = new DiscordHttpApi(this);
+            HttpApi = new DiscordHttpApi(this, httpApiSettings ?? new InitialHttpApiSettings());
         }
 
         public void Dispose()
         {
             ShardManager.Dispose();
+            HttpApi.Dispose();
         }
     }
 }

@@ -8,6 +8,8 @@
     {
         None = 0,
 
+        TooManyRequests = 429,
+
         UnknownAccount = 10001,
         UnknownApplication,
         UnknownChannel,

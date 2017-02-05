@@ -1,8 +1,9 @@
 ﻿using Discore.Http.Net;
+using System;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpApi
+    public sealed class DiscordHttpApi : IDisposable
     {
         /// <summary>
         /// Gets the implementation of the /users section of the HTTP API.
@@ -35,7 +36,6 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets or sets whether to resend requests that get rate-limited.
-        /// This is true by default.
         /// </summary>
         public bool RetryWhenRateLimited
         {
@@ -45,9 +45,9 @@ namespace Discore.Http
 
         RestClient rest;
 
-        internal DiscordHttpApi(IDiscordApplication app)
+        internal DiscordHttpApi(IDiscordApplication app, InitialHttpApiSettings settings)
         {
-            rest = new RestClient(app.Authenticator);
+            rest = new RestClient(app.Authenticator, settings);
 
             Gateway = new DiscordHttpGatewayEndpoint(app, rest);
             Users = new DiscordHttpUserEndpoint(app, rest);
@@ -56,6 +56,11 @@ namespace Discore.Http
             Voice = new DiscordHttpVoiceEndpoint(app, rest);
             Guilds = new DiscordHttpGuildEndpoint(app, rest);
             Invites = new DiscordHttpInviteEndpoint(app, rest);
+        }
+
+        public void Dispose()
+        {
+            rest.Dispose();
         }
     }
 }

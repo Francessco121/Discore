@@ -1,9 +1,11 @@
-﻿namespace Discore.Http
+﻿using System;
+
+namespace Discore.Http
 {
     /// <summary>
     /// A Discord application which only works with the Discord http/restful api.
     /// </summary>
-    public class DiscordHttpApplication : IDiscordApplication
+    public class DiscordHttpApplication : IDiscordApplication, IDisposable
     {
         /// <summary>
         /// Gets the authenticator used for this application.
@@ -14,10 +16,17 @@
         /// </summary>
         public DiscordHttpApi HttpApi { get; }
 
-        public DiscordHttpApplication(IDiscordAuthenticator authenticator)
+        /// <param name="authenticator">The method of authentication used by the application.</param>
+        /// <param name="httpApiSettings">The initial settings for the HTTP API. Uses the default settings if left null.</param>
+        public DiscordHttpApplication(IDiscordAuthenticator authenticator, InitialHttpApiSettings httpApiSettings = null)
         {
             Authenticator = authenticator;
-            HttpApi = new DiscordHttpApi(this);
+            HttpApi = new DiscordHttpApi(this, httpApiSettings ?? new InitialHttpApiSettings());
+        }
+
+        public void Dispose()
+        {
+            HttpApi.Dispose();
         }
     }
 }

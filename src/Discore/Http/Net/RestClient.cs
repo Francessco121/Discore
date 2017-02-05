@@ -1,7 +1,6 @@
 ﻿using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -11,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http.Net
 {
-    class RestClient
+    class RestClient : IDisposable
     {
         public const string BASE_URL = "https://discordapp.com/api";
 
@@ -21,16 +20,21 @@ namespace Discore.Http.Net
 
         IDiscordAuthenticator authenticator;
         DiscoreLogger log;
-        Dictionary<string, RateLimitRoute> rateLimitRoutes;
+
+        RateLimitHandlingMethod rateLimitMethod;
+        Dictionary<string, RateLimitHandler> rateLimitedRoutes;
         AsyncManualResetEvent globalRateLimitResetEvent;
 
-        public RestClient(IDiscordAuthenticator authenticator)
+        public RestClient(IDiscordAuthenticator authenticator, InitialHttpApiSettings settings)
         {
             this.authenticator = authenticator;
 
+            RetryOnRateLimit = settings.RetryWhenRateLimited;
+            rateLimitMethod = settings.RateLimitHandlingMethod;
+
             log = new DiscoreLogger("RestClient");
 
-            rateLimitRoutes = new Dictionary<string, RateLimitRoute>();
+            rateLimitedRoutes = new Dictionary<string, RateLimitHandler>();
             globalRateLimitResetEvent = new AsyncManualResetEvent(true);
         }
 
@@ -53,7 +57,7 @@ namespace Discore.Http.Net
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        async Task<DiscordApiData> ParseResponse(HttpResponseMessage response)
+        async Task<DiscordApiData> ParseResponse(HttpResponseMessage response, RateLimitHeaders rateLimitHeaders)
         {
             // Read response payload as string
             string json;
@@ -92,7 +96,11 @@ namespace Discore.Http.Net
                         long code = data.GetInt64("code") ?? 0;
                         string message = data.GetString("message");
 
-                        throw new DiscordHttpApiException(message, (DiscordHttpErrorCode)code, response.StatusCode);
+                        if ((int)response.StatusCode == 429 && rateLimitHeaders != null)
+                            throw new DiscordHttpRateLimitException(rateLimitHeaders, 
+                                message, DiscordHttpErrorCode.TooManyRequests, response.StatusCode);
+                        else
+                            throw new DiscordHttpApiException(message, (DiscordHttpErrorCode)code, response.StatusCode);
                     }
                 }
             }
@@ -103,9 +111,9 @@ namespace Discore.Http.Net
 
         Task WaitRateLimit(string limiterAction)
         {
-            RateLimitRoute route;
-            if (rateLimitRoutes.TryGetValue(limiterAction, out route))
-                return route.Wait();
+            RateLimitHandler routeHandler;
+            if (rateLimitedRoutes.TryGetValue(limiterAction, out routeHandler))
+                return routeHandler.Wait();
 
             // Do nothing if no section has been created.
             return Task.CompletedTask;
@@ -116,57 +124,77 @@ namespace Discore.Http.Net
             CancellationToken? cancellationToken = null)
         {
             HttpResponseMessage response;
+            RateLimitHeaders rateLimitHeaders;
 
             do
             {
+                // Wait for global rate limit
                 await globalRateLimitResetEvent.WaitAsync().ConfigureAwait(false);
+                // Wait for route specific rate limit
                 await WaitRateLimit(limiterAction).ConfigureAwait(false);
 
+                // Set to null to make sure the loop doesn't exit with headers from a previous response.
+                rateLimitHeaders = null;
+
+                // Send request
                 using (HttpClient http = CreateHttpClient())
                 {
                     response = await http.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
                         .ConfigureAwait(false);
                 }
 
-                if (response.Headers.Contains("X-RateLimit-Limit"))
+                // Check rate limit values in response if they exist.
+                rateLimitHeaders = RateLimitHeaders.ParseOrNull(response.Headers);
+                if (rateLimitHeaders != null)
                 {
-                    // Create or get limit section if this endpoint uses rate limits.
-                    RateLimitRoute route;
-                    if (!rateLimitRoutes.TryGetValue(limiterAction, out route))
-                        rateLimitRoutes.Add(limiterAction, route = new RateLimitRoute(globalRateLimitResetEvent));
-
-                    await route.Update(response.Headers).ConfigureAwait(false);
-
-                    // Tell the section it exceeded rate limits if the status is TooManyRequests.
-                    if ((int)response.StatusCode == 429)
-                        route.ExceededRateLimit(response.Headers);
-                }
-
-                if (response.Headers.Contains("X-RateLimit-Global"))
-                {
-                    log.LogWarning($"[{limiterAction}] Hit global rate limit.");
-
-                    // For global ratelimiting, block all limiters.
-                    globalRateLimitResetEvent.Reset();
-
-                    IEnumerable<string> retryAfterValues;
-                    if (response.Headers.TryGetValues("Retry-After", out retryAfterValues))
+                    if (rateLimitHeaders.IsGlobal)
                     {
-                        string retryAfterStr = retryAfterValues.FirstOrDefault();
+                        int retryAfter = rateLimitHeaders.RetryAfter.Value;
 
-                        int retryAfter;
-                        if (!string.IsNullOrWhiteSpace(retryAfterStr) && int.TryParse(retryAfterStr, out retryAfter))
+                        log.LogWarning($"[{limiterAction}] Hit global rate limit! Blocking all HTTP requests for {retryAfter}ms.");
+
+                        // For global ratelimiting, block all routes.
+                        globalRateLimitResetEvent.Reset();
+
+                        await Task.Delay(retryAfter).ConfigureAwait(false);
+
+                        globalRateLimitResetEvent.Set();
+                    }
+                    else
+                    {
+                        // Create or get a rate limit handler for this route.
+                        RateLimitHandler routeHandler;
+                        if (!rateLimitedRoutes.TryGetValue(limiterAction, out routeHandler))
+                            rateLimitedRoutes.Add(limiterAction, routeHandler = CreateRateLimitHandler());
+
+                        // Update handler
+                        await routeHandler.UpdateValues(rateLimitHeaders).ConfigureAwait(false);
+
+                        // Tell the handler it exceeded rate limits if the status is TooManyRequests.
+                        if ((int)response.StatusCode == 429)
                         {
-                            await Task.Delay(retryAfter).ConfigureAwait(false);
+                            routeHandler.ExceededRateLimit(rateLimitHeaders);
                         }
                     }
-
-                    globalRateLimitResetEvent.Set();
                 }
             }
+            // Retry only if the response was 429 and we are allowed to retry.
             while ((int)response.StatusCode == 429 && RetryOnRateLimit);
 
-            return await ParseResponse(response).ConfigureAwait(false);
+            return await ParseResponse(response, rateLimitHeaders).ConfigureAwait(false);
+        }
+
+        RateLimitHandler CreateRateLimitHandler()
+        {
+            switch (rateLimitMethod)
+            {
+                case RateLimitHandlingMethod.Minimal:
+                    return new MinimalRateLimitHandler();
+                case RateLimitHandlingMethod.Throttle:
+                    return new ThrottleRateLimitHandler();
+                default:
+                    throw new NotImplementedException($"Rate limit handling method: {rateLimitMethod} is not implemented!");
+            }
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -246,6 +274,12 @@ namespace Discore.Http.Net
             {
                 return new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
             }, limiterAction, cancellationToken);
+        }
+
+        public void Dispose()
+        {
+            foreach (RateLimitHandler handler in rateLimitedRoutes.Values)
+                handler.Dispose();
         }
     }
 }
