@@ -13,6 +13,11 @@
         /// <summary>
         /// The shard failed to authenticate with the Discord gateway websocket API.
         /// </summary>
-        AuthenticationFailed
+        AuthenticationFailed,
+        /// <summary>
+        /// Occurs if only one shard is used, and that shard would have handled too many guilds.
+        /// More than one shard is required if this happens.
+        /// </summary>
+        ShardingRequired
     }
 }

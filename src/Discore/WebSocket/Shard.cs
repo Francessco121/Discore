@@ -91,6 +91,8 @@ namespace Discore.WebSocket
                 reason = ShardFailureReason.ShardInvalid;
             else if (e == GatewayDisconnectCode.AuthenticationFailed)
                 reason = ShardFailureReason.AuthenticationFailed;
+            else if (e == GatewayDisconnectCode.ShardingRequired)
+                reason = ShardFailureReason.ShardingRequired;
 
             isRunning = false;
             CleanUp();

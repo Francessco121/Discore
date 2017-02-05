@@ -339,6 +339,7 @@ namespace Discore.WebSocket.Net
                 {
                     case GatewayDisconnectCode.InvalidShard:
                     case GatewayDisconnectCode.AuthenticationFailed:
+                    case GatewayDisconnectCode.ShardingRequired:
                         // Not safe to reconnect
                         log.LogError($"[{code} ({(int)code})] Unsafe to continue, NOT reconnecting gateway.");
                         OnFatalDisconnection?.Invoke(this, code);

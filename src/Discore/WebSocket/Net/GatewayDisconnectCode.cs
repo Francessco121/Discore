@@ -11,6 +11,7 @@
         InvalidSeq = 4007,
         RateLimited,
         SessionTimeout,
-        InvalidShard
+        InvalidShard,
+        ShardingRequired
     }
 }
