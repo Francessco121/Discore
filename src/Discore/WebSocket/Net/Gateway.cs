@@ -201,6 +201,7 @@ namespace Discore.WebSocket.Net
         {
             sequence = 0;
             heartbeatInterval = 0;
+            sessionId = null;
 
             shard.User = null;
         }
@@ -241,7 +242,7 @@ namespace Discore.WebSocket.Net
 
                 // Start reconnecting
                 log.LogInfo("[HeartbeatLoop] Reconnecting from heartbeat exception...");
-                BeginReconnect();
+                BeginReconnect(true);
             }
 
             // If we have timed out and the socket was not disconnected, attempt to reconnect.
@@ -250,7 +251,7 @@ namespace Discore.WebSocket.Net
                 log.LogInfo("[HeartbeatLoop] Connection timed out, reconnecting...");
 
                 // Start reconnecting
-                BeginReconnect();
+                BeginReconnect(true);
 
                 // Let this task end, as it will be overwritten once reconnection completes.
             }
@@ -344,15 +345,26 @@ namespace Discore.WebSocket.Net
                         log.LogError($"[{code} ({(int)code})] Unsafe to continue, NOT reconnecting gateway.");
                         OnFatalDisconnection?.Invoke(this, code);
                         break;
-                    default:
-                        // Safe to reconnect
+                    case GatewayDisconnectCode.InvalidSeq:
+                    case GatewayDisconnectCode.SessionTimeout:
+                    case GatewayDisconnectCode.UnknownError:
+                        // Safe to reconnect, but needs a full reconnect.
                         BeginReconnect();
+                        break;
+                    case GatewayDisconnectCode.NotAuthenticated:
+                        // This really should never happen, but will require a full-reconnect.
+                        log.LogWarning("Sent gateway payload before we identified!");
+                        BeginReconnect();
+                        break;
+                    default:
+                        // Safe to just resume
+                        BeginReconnect(true);
                         break;
                 }
             }
             else
-                // Socket errors are fatal, so attempt to reconnect.
-                BeginReconnect();
+                // Just a socket error, so attempt to resume.
+                BeginReconnect(true);
         }
 
         private void Socket_OnMessageReceived(object sender, DiscordApiData e)
