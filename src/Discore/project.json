@@ -25,8 +25,7 @@
     "System.Net.NameResolution": "4.3.0",
     "System.Net.WebSockets": "4.3.0",
     "System.Net.WebSockets.Client": "4.3.0",
-    "System.Runtime": "4.3.0",
-    "System.Threading": "4.3.0"
+    "System.Runtime": "4.3.0"
   },
 
   "frameworks": {
