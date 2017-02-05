@@ -32,12 +32,19 @@ using Discore;
 using Discore.WebSocket;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DiscorePingPong
 {
     public class Program
     {
         public static void Main(string[] args)
+        {
+            Program program = new Program();
+            program.Run().Wait();
+        }
+		
+        public async Task Run()
         {
             // Create authenticator using a bot user token.
             DiscordBotUserToken token = new DiscordBotUserToken("<bot user token goes here>");
@@ -47,14 +54,14 @@ namespace DiscorePingPong
 
             // Create and start a single shard.
             Shard shard = app.ShardManager.CreateSingleShard();
-            shard.Start();
+            await shard.StartAsync(CancellationToken.None);
 
             // Subscribe to the message creation event.
             shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
 
             // Wait for the shard to end before closing the program.
             while (shard.IsRunning)
-                Thread.Sleep(100);
+                await Task.Delay(1000);
         }
 
         private static async void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
