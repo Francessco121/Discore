@@ -18,5 +18,13 @@
         /// <para>Note: This cannot be changed after.</para>
         /// </summary>
         public RateLimitHandlingMethod RateLimitHandlingMethod { get; set; } = RateLimitHandlingMethod.Throttle;
+
+        /// <summary>
+        /// Gets or sets whether a single HTTP client should be used for all API requests.
+        /// In rare cases using a single client causes requests to hang until they timeout (believed to be a .NET Core bug).
+        /// This is true by default.
+        /// <para>Note: This cannot be changed after.</para>
+        /// </summary>
+        public bool UseSingleHttpClient { get; set; } = true;
     }
 }
