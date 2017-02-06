@@ -5,17 +5,17 @@ namespace Discore.WebSocket.Net
 {
     class GatewayRateLimiter
     {
-        public int ResetTimeMs { get { return resetTimeMs; } }
+        public int ResetTimeSeconds { get { return resetTime.Seconds; } }
 
-        readonly int resetTimeMs;
+        readonly TimeSpan resetTime;
         readonly int maxInvokes;
 
-        int resetAtMs;
+        DateTime resetAt;
         int invokesLeft;
 
-        public GatewayRateLimiter(int resetTimeMs, int maxInvokes)
+        public GatewayRateLimiter(int resetTimeSeconds, int maxInvokes)
         {
-            this.resetTimeMs = resetTimeMs;
+            this.resetTime = TimeSpan.FromSeconds(resetTimeSeconds);
             this.maxInvokes = maxInvokes;
 
             Reset();
@@ -23,7 +23,7 @@ namespace Discore.WebSocket.Net
 
         void Reset()
         {
-            resetAtMs = Environment.TickCount + resetTimeMs;
+            resetAt = DateTime.Now + resetTime;
             invokesLeft = maxInvokes;
         }
 
@@ -37,11 +37,12 @@ namespace Discore.WebSocket.Net
                 invokesLeft--;
             else
             {
-                while (!TimeHelper.HasTickCountHit(resetAtMs))
-                    // Wait 100ms at a time until the rate limiter has reset.
-                    await Task.Delay(100).ConfigureAwait(false);
+                int waitTimeMs = (int)Math.Ceiling((resetAt - DateTime.Now).TotalMilliseconds);
+                if (waitTimeMs > 0)
+                    await Task.Delay(waitTimeMs).ConfigureAwait(false);
 
                 Reset();
+                invokesLeft--;
             }
         }
     }

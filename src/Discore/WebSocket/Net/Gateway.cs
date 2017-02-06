@@ -64,9 +64,9 @@ namespace Discore.WebSocket.Net
             helloPayloadEvent = new AsyncManualResetEvent();
 
             // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
-            connectionRateLimiter = new GatewayRateLimiter(5 * 1000, 1); // One connection attempt per 5 seconds
-            outboundEventRateLimiter = new GatewayRateLimiter(60 * 1000, 120); // 120 outbound events every 60 seconds
-            gameStatusUpdateRateLimiter = new GatewayRateLimiter(60 * 1000, 5); // 5 status updates per minute
+            connectionRateLimiter = new GatewayRateLimiter(5, 1); // One connection attempt per 5 seconds
+            outboundEventRateLimiter = new GatewayRateLimiter(60, 120); // 120 outbound events every 60 seconds
+            gameStatusUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute
 
             InitializePayloadHandlers();
             InitializeDispatchHandlers();
@@ -119,7 +119,7 @@ namespace Discore.WebSocket.Net
             if (wasRateLimited)
             {
                 wasRateLimited = false;
-                await Task.Delay(connectionRateLimiter.ResetTimeMs).ConfigureAwait(false);
+                await Task.Delay(connectionRateLimiter.ResetTimeSeconds * 1000).ConfigureAwait(false);
             }
 
             // Check with the connection rate limiter.
