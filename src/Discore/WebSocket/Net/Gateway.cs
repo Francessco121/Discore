@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -47,6 +48,8 @@ namespace Discore.WebSocket.Net
         GatewayRateLimiter outboundEventRateLimiter;
         GatewayRateLimiter gameStatusUpdateRateLimiter;
 
+        AsyncManualResetEvent helloPayloadEvent;
+
         internal Gateway(DiscordWebSocketApplication app, Shard shard)
         {
             this.app = app;
@@ -57,6 +60,8 @@ namespace Discore.WebSocket.Net
             string logName = $"Gateway#{shard.Id}";
                
             log = new DiscoreLogger(logName);
+
+            helloPayloadEvent = new AsyncManualResetEvent();
 
             // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
             connectionRateLimiter = new GatewayRateLimiter(5 * 1000, 1); // One connection attempt per 5 seconds
@@ -120,6 +125,9 @@ namespace Discore.WebSocket.Net
             // Check with the connection rate limiter.
             await connectionRateLimiter.Invoke().ConfigureAwait(false);
 
+            // Reset the hello event so we know when the connection was successful.
+            helloPayloadEvent.Reset();
+
             // Attempt to connect to the WebSocket API.
             bool connectedToSocket;
 
@@ -135,26 +143,29 @@ namespace Discore.WebSocket.Net
 
             if (connectedToSocket)
             {
-                // Send resume or identify payload
-                if (gatewayResume)
-                    await SendResumePayload().ConfigureAwait(false);
-                else
-                    await SendIdentifyPayload().ConfigureAwait(false);
-
                 log.LogVerbose("[ConnectAsync] Awaiting hello...");
 
                 // Give Discord 10s to send Hello payload
-                int timeoutAt = Environment.TickCount + (10 * 1000); 
+                const int helloTimeout = 10 * 1000;
+                Task helloWaitTask = await Task.WhenAny(helloPayloadEvent.WaitAsync(cancellationToken), Task.Delay(helloTimeout, cancellationToken))
+                    .ConfigureAwait(false);
 
-                while (heartbeatInterval <= 0 && !TimeHelper.HasTickCountHit(timeoutAt))
-                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+                if (helloWaitTask.IsCanceled)
+                    throw new TaskCanceledException(helloWaitTask);
 
+                // Check if the payload was recieved or if we timed out.
                 if (heartbeatInterval > 0)
                 {
                     taskCancelTokenSource = new CancellationTokenSource();
 
                     // Handshake was successful, begin the heartbeat loop
                     heartbeatTask = HeartbeatLoop();
+
+                    // Send resume or identify payload
+                    if (gatewayResume)
+                        await SendResumePayload().ConfigureAwait(false);
+                    else
+                        await SendIdentifyPayload().ConfigureAwait(false);
 
                     log.LogVerbose("[ConnectAsync] Connection successful.");
                     return true;
