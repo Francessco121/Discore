@@ -380,6 +380,14 @@ namespace Discore.WebSocket.Net
 
                             // TODO: ETF deserialization
 
+                            // This avoids a very bad infinite loop:
+                            // If the machine happens to lose connection, we will never actually
+                            // receive a proper close message. Instead it will continuously read
+                            // nothing from the socket.
+                            if ((!runTasks || socket.State == WebSocketState.CloseSent) &&
+                                (data == null || data.Type != DiscordApiDataType.Container))
+                                break;
+
                             if (data != null)
                             {
                                 try
