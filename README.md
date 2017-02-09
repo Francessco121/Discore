@@ -21,7 +21,7 @@ Requirements:
 - [.NET Core 1.1 SDK](https://www.microsoft.com/net/download/core#/current)
 
 OR
-- [Visual Studio 2017 RC](https://www.microsoft.com/net/core#windowsvs2017) with the ".NET Core and Docker (Preview)" workload
+- [Visual Studio 2017 RC](https://www.microsoft.com/net/core#windowsvs2017) with the ".NET Core and Docker" workload
 
 ## Wiki
 For more information on how to use Discore, see our [documentation right here on GitHub](https://github.com/BundledSticksInkorperated/Discore/wiki).
