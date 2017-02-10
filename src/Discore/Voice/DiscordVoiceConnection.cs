@@ -94,9 +94,22 @@ namespace Discore.Voice
         /// </summary>
         public bool IsValid { get { return isValid; } }
         /// <summary>
-        /// Gets the speaking state of this connection.
+        /// Gets or sets the speaking state of this connection.
         /// </summary>
-        public bool IsSpeaking { get { return isSpeaking; } }
+        public bool IsSpeaking
+        {
+            get { return isSpeaking; }
+            set
+            {
+                if (isValid && value != isSpeaking)
+                {
+                    isSpeaking = value;
+
+                    if (IsConnected)
+                        socket.SetSpeaking(value);
+                }
+            }
+        }
         /// <summary>
         /// Gets the number of unsent voice data bytes.
         /// </summary>
@@ -269,6 +282,7 @@ namespace Discore.Voice
         /// <summary>
         /// Sets the speaking state of this connection.
         /// </summary>
+        [Obsolete("Please set IsSpeaking instead.")]
         public void SetSpeaking(bool speaking)
         {
             if (isValid)
