@@ -74,6 +74,7 @@ namespace Discore
 
         /// <summary>
         /// Sends a message to this channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <param name="content">The message text content.</param>
         /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
@@ -103,6 +104,7 @@ namespace Discore
 
         /// <summary>
         /// Sends a message with a file attachment to this channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <param name="fileAttachment">The file data to attach.</param>
         /// <param name="fileName">The name of the file.</param>
