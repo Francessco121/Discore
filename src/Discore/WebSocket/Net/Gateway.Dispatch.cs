@@ -714,7 +714,7 @@ namespace Discore.WebSocket.Net
                 DiscordChannel channel = cache.Channels.Get(channelId);
                 if (channel != null)
                 {
-                    long timestamp = data.GetInt64("timestamp").Value;
+                    int timestamp = data.GetInteger("timestamp").Value;
 
                     OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, user, channel, timestamp));
                 }

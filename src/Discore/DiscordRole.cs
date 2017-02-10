@@ -79,7 +79,7 @@ namespace Discore
         /// Deletes this role.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordRole> Delete()
+        public Task<bool> Delete()
         {
             return guildsHttp.DeleteRole(GuildId, Id);
         }
