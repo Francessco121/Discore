@@ -72,9 +72,10 @@ namespace Discore
         public int MFALevel { get; }
 
         /// <summary>
-        /// Gets the number of members in this guild.
+        /// Gets the number of members in this guild (if information is available).
         /// </summary>
-        public int MemberCount { get; }
+        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
+        public int? MemberCount { get; }
 
         /// <summary>
         /// Gets the date-time that the current authenticated user joined this guild (if information is available).
@@ -149,12 +150,12 @@ namespace Discore
             VerificationLevel           = data.GetInteger("verification_level").Value;
             MFALevel                    = data.GetInteger("mfa_level").Value;
             DefaultMessageNotifications = data.GetInteger("default_message_notifications") ?? 0;
-            MemberCount                 = data.GetInteger("member_count").Value;
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
 
             // Only available in GUILD_CREATE
+            MemberCount                 = data.GetInteger("member_count");
             JoinedAt                    = data.GetDateTime("joined_at");
             IsLarge                     = data.GetBoolean("large");
 
