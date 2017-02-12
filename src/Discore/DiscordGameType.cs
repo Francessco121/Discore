@@ -1,14 +1,27 @@
-﻿namespace Discore
+﻿using System;
+
+namespace Discore
 {
     public enum DiscordGameType
     {
         /// <summary>
+        /// Example display: "Playing Overwatch".
+        /// </summary>
+        Game,
+        /// <summary>
+        /// Example display: "Streaming Overwatch".
+        /// </summary>
+        Streaming,
+
+        /// <summary>
         /// Normal application.
         /// </summary>
-        Default,
+        [Obsolete("Use DiscordGameType.Game instead.")]
+        Default = Game,
         /// <summary>
         /// Twitch.tv game.
         /// </summary>
-        Twitch
+        [Obsolete("Use DiscordGameType.Streaming instead.")]
+        Twitch = Streaming
     }
 }
