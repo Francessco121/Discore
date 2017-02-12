@@ -38,9 +38,12 @@ namespace Discore.WebSocket
     {
         public DiscordUser User { get; }
         public DiscordChannel Channel { get; }
-        public long Timestamp { get; }
+        /// <summary>
+        /// Unix time in seconds when the typing started.
+        /// </summary>
+        public int Timestamp { get; }
 
-        public TypingStartEventArgs(Shard shard, DiscordUser user, DiscordChannel channel, long timestamp)
+        public TypingStartEventArgs(Shard shard, DiscordUser user, DiscordChannel channel, int timestamp)
             : base(shard)
         {
             User = user;

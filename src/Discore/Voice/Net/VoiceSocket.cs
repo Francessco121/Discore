@@ -1,6 +1,7 @@
 ﻿using Discore.WebSocket.Net;
 using System;
 using System.Collections.Generic;
+using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -449,7 +450,8 @@ namespace Discore.Voice.Net
 
             // Close WebSocket
             if (socket.State == DiscoreWebSocketState.Open)
-                await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                await socket.DisconnectAsync(CancellationToken.None, WebSocketCloseStatus.InternalServerError)
+                    .ConfigureAwait(false);
 
             // Close the UDP socket if still open
             if (udpSocket != null)

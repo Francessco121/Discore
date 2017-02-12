@@ -76,6 +76,8 @@ namespace Discore.WebSocket.Net
         {
             heartbeatInterval = data.GetInteger("heartbeat_interval") ?? heartbeatInterval;
             log.LogVerbose($"[Hello] heartbeat_interval: {heartbeatInterval}ms");
+
+            helloPayloadEvent.Set();
         }
 
         void HandleHeartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
@@ -91,14 +93,14 @@ namespace Discore.WebSocket.Net
             // We won't worry about sending the resume payload here,
             // as that will be handled by the reconnect procedure,
             // when we pass true.
-            BeginReconnect(true);
+            BeginResume();
         }
 
         void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
         {
             log.LogInfo("[InvalidSession] Reconnecting...");
 
-            BeginReconnect();
+            BeginNewSession();
         }
 
         async Task SendPayload(GatewayOPCode op, DiscordApiData data)

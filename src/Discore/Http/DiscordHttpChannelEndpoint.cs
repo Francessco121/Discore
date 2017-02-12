@@ -177,6 +177,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Posts a message to a text channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, Snowflake? nonce = null)
@@ -193,6 +194,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Uploads a file to a text channel with an optional message.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> UploadFile(Snowflake channelId, FileInfo fileInfo, 
@@ -208,6 +210,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Uploads a file to a text channel with an optional message.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",

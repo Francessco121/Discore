@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,15 +39,22 @@ namespace Discore.WebSocket.Net
 
         bool wasRateLimited;
 
+        /// <summary>
+        /// Will be true while ConnectAsync is running.
+        /// </summary>
+        bool isConnecting;
+
         bool isReconnecting;
         Task reconnectTask;
         CancellationTokenSource reconnectCancelTokenSource;
 
         DiscoreCache cache;
 
-        GatewayRateLimiter connectionRateLimiter;
+        GatewayRateLimiter identityRateLimiter;
         GatewayRateLimiter outboundEventRateLimiter;
         GatewayRateLimiter gameStatusUpdateRateLimiter;
+
+        AsyncManualResetEvent helloPayloadEvent;
 
         internal Gateway(DiscordWebSocketApplication app, Shard shard)
         {
@@ -58,10 +67,12 @@ namespace Discore.WebSocket.Net
                
             log = new DiscoreLogger(logName);
 
+            helloPayloadEvent = new AsyncManualResetEvent();
+
             // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
-            connectionRateLimiter = new GatewayRateLimiter(5 * 1000, 1); // One connection attempt per 5 seconds
-            outboundEventRateLimiter = new GatewayRateLimiter(60 * 1000, 120); // 120 outbound events every 60 seconds
-            gameStatusUpdateRateLimiter = new GatewayRateLimiter(60 * 1000, 5); // 5 status updates per minute
+            identityRateLimiter = new GatewayRateLimiter(5, 1); // One identity packet per 5 seconds
+            outboundEventRateLimiter = new GatewayRateLimiter(60, 120); // 120 outbound events every 60 seconds
+            gameStatusUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute
 
             InitializePayloadHandlers();
             InitializeDispatchHandlers();
@@ -99,86 +110,108 @@ namespace Discore.WebSocket.Net
             if (socket.State != DiscoreWebSocketState.Closed)
                 throw new InvalidOperationException("Failed to connect, the Gateway is already connected or connecting.");
 
-            log.LogVerbose($"[ConnectAsync] Attempting to connect - gatewayResume: {gatewayResume}");
-
-            // Reset gateway state only if not resuming
-            if (!gatewayResume)
-                Reset();
-
-            // Get the gateway url
-            string gatewayUrl = await GetGatewayUrlAsync(cancellationToken).ConfigureAwait(false);
-
-            log.LogVerbose($"[ConnectAsync] gatewayUrl: {gatewayUrl}");
-
-            // If was rate limited from last disconnect, wait extra time.
-            if (wasRateLimited)
-            {
-                wasRateLimited = false;
-                await Task.Delay(connectionRateLimiter.ResetTimeMs).ConfigureAwait(false);
-            }
-
-            // Check with the connection rate limiter.
-            await connectionRateLimiter.Invoke().ConfigureAwait(false);
-
-            // Attempt to connect to the WebSocket API.
-            bool connectedToSocket;
+            isConnecting = true;
 
             try
             {
-                connectedToSocket = await socket.ConnectAsync($"{gatewayUrl}/?encoding=json&v={GATEWAY_VERSION}", cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            catch
-            {
-                connectedToSocket = false;
-            }
+                log.LogVerbose($"[ConnectAsync] Attempting to connect - gatewayResume: {gatewayResume}");
 
-            if (connectedToSocket)
-            {
-                // Send resume or identify payload
-                if (gatewayResume)
-                    await SendResumePayload().ConfigureAwait(false);
+                // Reset gateway state only if not resuming
+                if (!gatewayResume)
+                    Reset();
+
+                // Get the gateway url
+                string gatewayUrl = await GetGatewayUrlAsync(cancellationToken).ConfigureAwait(false);
+
+                log.LogVerbose($"[ConnectAsync] gatewayUrl: {gatewayUrl}");
+
+                // If was rate limited from last disconnect, wait extra time.
+                if (wasRateLimited)
+                {
+                    wasRateLimited = false;
+                    await Task.Delay(identityRateLimiter.ResetTimeSeconds * 1000).ConfigureAwait(false);
+                }
+
+                if (!gatewayResume)
+                {
+                    // Check with the identity rate limiter.
+                    await identityRateLimiter.Invoke().ConfigureAwait(false);
+                }
+
+                // Reset the hello event so we know when the connection was successful.
+                helloPayloadEvent.Reset();
+
+                // Attempt to connect to the WebSocket API.
+                bool connectedToSocket;
+
+                try
+                {
+                    connectedToSocket = await socket.ConnectAsync($"{gatewayUrl}/?encoding=json&v={GATEWAY_VERSION}", cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch
+                {
+                    connectedToSocket = false;
+                }
+
+                if (connectedToSocket)
+                {
+                    log.LogVerbose("[ConnectAsync] Awaiting hello...");
+
+                    // Give Discord 10s to send Hello payload
+                    const int helloTimeout = 10 * 1000;
+                    Task helloWaitTask = await Task.WhenAny(helloPayloadEvent.WaitAsync(cancellationToken), Task.Delay(helloTimeout, cancellationToken))
+                        .ConfigureAwait(false);
+
+                    if (helloWaitTask.IsCanceled)
+                        throw new TaskCanceledException(helloWaitTask);
+
+                    // Check if the payload was recieved or if we timed out.
+                    if (heartbeatInterval > 0)
+                    {
+                        taskCancelTokenSource = new CancellationTokenSource();
+
+                        // Handshake was successful, begin the heartbeat loop
+                        heartbeatTask = HeartbeatLoop();
+
+                        // Send resume or identify payload
+                        if (gatewayResume)
+                            await SendResumePayload().ConfigureAwait(false);
+                        else
+                            await SendIdentifyPayload().ConfigureAwait(false);
+
+                        log.LogVerbose("[ConnectAsync] Connection successful.");
+                        return true;
+                    }
+                    else if (socket.State == DiscoreWebSocketState.Open)
+                    {
+                        log.LogError("[ConnectAsync] Timed out waiting for hello.");
+
+                        // We timed out, but the socket is still connected.
+                        await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                    }
+                }
                 else
-                    await SendIdentifyPayload().ConfigureAwait(false);
-
-                log.LogVerbose("[ConnectAsync] Awaiting hello...");
-
-                // Give Discord 10s to send Hello payload
-                int timeoutAt = Environment.TickCount + (10 * 1000); 
-
-                while (heartbeatInterval <= 0 && !TimeHelper.HasTickCountHit(timeoutAt))
-                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-
-                if (heartbeatInterval > 0)
                 {
-                    taskCancelTokenSource = new CancellationTokenSource();
+                    // Since we failed to connect, try and find the new gateway url.
+                    string newGatewayUrl = await GetGatewayUrlAsync(cancellationToken, true).ConfigureAwait(false);
+                    if (gatewayUrl != newGatewayUrl)
+                    {
+                        // If the endpoint did change, overwrite it in storage.
+                        DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
+                        localStorage.GatewayUrl = newGatewayUrl;
 
-                    // Handshake was successful, begin the heartbeat loop
-                    heartbeatTask = HeartbeatLoop();
-
-                    log.LogVerbose("[ConnectAsync] Connection successful.");
-                    return true;
+                        await localStorage.SaveAsync().ConfigureAwait(false);
+                    }
                 }
-                else if (socket.State == DiscoreWebSocketState.Open)
-                    // We timed out, but the socket is still connected.
-                    await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+
+                log.LogError("[ConnectAsync] Failed to connect.");
+                return false;
             }
-            else
+            finally
             {
-                // Since we failed to connect, try and find the new gateway url.
-                string newGatewayUrl = await GetGatewayUrlAsync(cancellationToken, true).ConfigureAwait(false);
-                if (gatewayUrl != newGatewayUrl)
-                {
-                    // If the endpoint did change, overwrite it in storage.
-                    DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
-                    localStorage.GatewayUrl = newGatewayUrl;
-
-                    await localStorage.SaveAsync().ConfigureAwait(false);
-                }
+                isConnecting = false;
             }
-
-            log.LogError("[ConnectAsync] Failed to connect.");
-            return false;
         }
 
         /// <exception cref="ObjectDisposedException">Thrown if this gateway connection has been disposed.</exception>
@@ -191,13 +224,15 @@ namespace Discore.WebSocket.Net
             log.LogVerbose("[DisconnectAsync] Disconnecting...");
 
             // Cancel reconnection
-            await CancelReconnect().ConfigureAwait(false);
+            await CancelReconnectLoop().ConfigureAwait(false);
 
             // Disconnect the socket
             if (socket.State == DiscoreWebSocketState.Open)
                 await socket.DisconnectAsync(cancellationToken).ConfigureAwait(false);
 
             log.LogVerbose("[DisconnectAsync] Socket disconnected...");
+
+            taskCancelTokenSource.Cancel();
 
             // Wait for heartbeat loop to finish
             if (heartbeatTask != null)
@@ -219,69 +254,71 @@ namespace Discore.WebSocket.Net
         {
             bool timedOut = false;
 
-            try
-            {
-                // Set timeout
-                heartbeatTimeoutAt = Environment.TickCount + (heartbeatInterval * HEARTBEAT_TIMEOUT_MISSED_PACKETS);
+            // Set timeout
+            heartbeatTimeoutAt = Environment.TickCount + (heartbeatInterval * HEARTBEAT_TIMEOUT_MISSED_PACKETS);
 
-                // Run heartbeat loop until socket is ended or timed out
-                while (socket.State == DiscoreWebSocketState.Open)
+            // Run heartbeat loop until socket is ended or timed out
+            while (socket.State == DiscoreWebSocketState.Open)
+            {
+                if (TimeHelper.HasTickCountHit(heartbeatTimeoutAt))
                 {
-                    if (TimeHelper.HasTickCountHit(heartbeatTimeoutAt))
-                    {
-                        timedOut = true;
-                        break;
-                    }
-
-                    try
-                    {
-                        await SendHeartbeatPayload().ConfigureAwait(false);
-
-                        await Task.Delay(heartbeatInterval, taskCancelTokenSource.Token).ConfigureAwait(false);
-                    }
-                    // Two valid exceptions are a cancellation and a dispose before full-disconnect.
-                    catch (TaskCanceledException) { }
-                    catch (ObjectDisposedException) { }
+                    timedOut = true;
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
-                // Should never happen, but just incase.
-                log.LogError($"[HeartbeatLoop] {ex}");
 
-                // Start reconnecting
-                log.LogInfo("[HeartbeatLoop] Reconnecting from heartbeat exception...");
-                BeginReconnect(true);
+                try
+                {
+                    await SendHeartbeatPayload().ConfigureAwait(false);
+
+                    await Task.Delay(heartbeatInterval, taskCancelTokenSource.Token).ConfigureAwait(false);
+                }
+                // Two valid exceptions are a cancellation and a dispose before full-disconnect.
+                catch (TaskCanceledException) { break; }
+                catch (ObjectDisposedException) { break; }
+                catch (Exception ex)
+                {
+                    // Should never happen and is not considered fatal, but log it just in case.
+                    log.LogError($"[HeartbeatLoop] {ex}");
+                }
             }
 
             // If we have timed out and the socket was not disconnected, attempt to reconnect.
             if (timedOut && socket.State == DiscoreWebSocketState.Open && !isReconnecting && !isDisposed)
             {
-                log.LogInfo("[HeartbeatLoop] Connection timed out, reconnecting...");
+                log.LogInfo("[HeartbeatLoop] Connection timed out.");
 
-                // Start reconnecting
-                BeginReconnect(true);
+                // Start resuming...
+                BeginResume();
 
                 // Let this task end, as it will be overwritten once reconnection completes.
             }
         }
 
-        /// <param name="gatewayResume">Whether to perform a full-reconnect or just a resume.</param>
-        void BeginReconnect(bool gatewayResume = false)
+        void BeginNewSession(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure)
         {
-            // Since a reconnect can be started from multiple threads,
-            // ensure that we do not enter this loop simultaneously.
-            if (!isReconnecting)
+            if (!isReconnecting && !isConnecting)
             {
+                isReconnecting = true;
                 reconnectCancelTokenSource = new CancellationTokenSource();
 
-                isReconnecting = true;
-
-                reconnectTask = ReconnectLoop(gatewayResume);
+                reconnectTask = ReconnectLoop(false, closeStatus);
             }
         }
 
-        async Task CancelReconnect()
+        // Defaults to an empty close status because a 1000 normal closure code would
+        // end up starting a new session on Discord's end.
+        void BeginResume(WebSocketCloseStatus closeStatus = WebSocketCloseStatus.InternalServerError)
+        {
+            if (!isReconnecting && !isConnecting)
+            {
+                isReconnecting = true;
+                reconnectCancelTokenSource = new CancellationTokenSource();
+
+                reconnectTask = ReconnectLoop(true, closeStatus);
+            }
+        }
+
+        async Task CancelReconnectLoop()
         {
             if (isReconnecting)
             {
@@ -290,9 +327,12 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        async Task ReconnectLoop(bool gatewayResume)
+        async Task ReconnectLoop(bool gatewayResume, WebSocketCloseStatus closeStatus)
         {
-            log.LogVerbose($"[ReconnectLoop] Begin - gatewayResume: {gatewayResume}");
+            if (gatewayResume)
+                log.LogVerbose("ReconnectLoop] Beginning resume...");
+            else
+                log.LogVerbose("ReconnectLoop] Beginning new session...");
 
             // Disable socket error handling until we have reconnected.
             // This avoids the socket performing its own disconnection
@@ -302,7 +342,8 @@ namespace Discore.WebSocket.Net
 
             // Make sure we disconnect first
             if (socket.State == DiscoreWebSocketState.Open)
-                await socket.DisconnectAsync(reconnectCancelTokenSource.Token).ConfigureAwait(false);
+                await socket.DisconnectAsync(reconnectCancelTokenSource.Token, closeStatus)
+                    .ConfigureAwait(false);
 
             log.LogVerbose("[ReconnectLoop] Socket disconnected...");
 
@@ -357,29 +398,29 @@ namespace Discore.WebSocket.Net
                     case GatewayDisconnectCode.InvalidSeq:
                     case GatewayDisconnectCode.SessionTimeout:
                     case GatewayDisconnectCode.UnknownError:
-                        // Safe to reconnect, but needs a full reconnect.
-                        BeginReconnect();
+                        // Safe to reconnect, but needs a new session.
+                        BeginNewSession();
                         break;
                     case GatewayDisconnectCode.NotAuthenticated:
-                        // This really should never happen, but will require a full-reconnect.
+                        // This really should never happen, but will require a new session.
                         log.LogWarning("Sent gateway payload before we identified!");
-                        BeginReconnect();
+                        BeginNewSession();
                         break;
                     case GatewayDisconnectCode.RateLimited:
-                        // Doesn't require a full-reconnection, but we need to wait a bit.
+                        // Doesn't require a new session, but we need to wait a bit.
                         log.LogWarning("Gateway is being rate limited!");
                         wasRateLimited = true;
-                        BeginReconnect(true);
+                        BeginResume();
                         break;
                     default:
                         // Safe to just resume
-                        BeginReconnect(true);
+                        BeginResume();
                         break;
                 }
             }
             else
-                // Just a socket error, so attempt to resume.
-                BeginReconnect(true);
+                // Just an error on our end, go ahead and resume.
+                BeginResume(WebSocketCloseStatus.InternalServerError);
         }
 
         private void Socket_OnMessageReceived(object sender, DiscordApiData e)

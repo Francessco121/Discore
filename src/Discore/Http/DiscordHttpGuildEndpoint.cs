@@ -267,11 +267,11 @@ namespace Discore.Http
         /// Deletes a role from a guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordRole> DeleteRole(Snowflake guildId, Snowflake roleId)
+        public async Task<bool> DeleteRole(Snowflake guildId, Snowflake roleId)
         {
             DiscordApiData data = await Rest.Delete($"guilds/{guildId}/roles/{roleId}", 
                 "guilds/guild/roles/role").ConfigureAwait(false);
-            return new DiscordRole(App, guildId, data);
+            return data.IsNull;
         }
 
         /// <summary>

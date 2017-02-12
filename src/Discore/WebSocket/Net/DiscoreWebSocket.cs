@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.IO.Compression;
@@ -89,7 +90,11 @@ namespace Discore.WebSocket.Net
                 // Connect
                 await socket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
             }
-            catch (WebSocketException) { /* Connection failed, but this is not critical. */ }
+            catch (WebSocketException wex)
+            {
+                // Connection failed, but this is not critical.
+                log.LogError($"[ConnectAsync] Failed to connect socket: {wex}");
+            }
             catch
             {
                 State = DiscoreWebSocketState.Closed;
@@ -126,7 +131,8 @@ namespace Discore.WebSocket.Net
 
         /// <exception cref="InvalidOperationException">Thrown if this WebSocket is not open.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this WebSocket has been disposed.</exception>
-        public async Task DisconnectAsync(CancellationToken cancellationToken)
+        public async Task DisconnectAsync(CancellationToken cancellationToken,
+            WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure)
         {
             if (isDisposed)
                 throw new ObjectDisposedException(nameof(socket));
@@ -134,14 +140,18 @@ namespace Discore.WebSocket.Net
             if (State != DiscoreWebSocketState.Open)
                 throw new InvalidOperationException("Failed to disconnect, the WebSocket is not open.");
 
-            log.LogVerbose("[DisconnectAsync] Disconnecting...");
+            log.LogVerbose($"[DisconnectAsync] Disconnecting with code '{closeStatus} ({(int)closeStatus})'...");
 
             // Close the socket.
-            try { await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", cancellationToken).ConfigureAwait(false); }
+            try
+            {
+                await socket.CloseOutputAsync(closeStatus, "Disconnecting...", cancellationToken)
+                    .ConfigureAwait(false);
+            }
             catch (TaskCanceledException) { throw; }
             catch { }
 
-            // Cancel send/receive tasks
+            // Stop send/receive tasks
             StopTasks();
 
             // Do not await tasks if we are coming from an error,
@@ -153,6 +163,9 @@ namespace Discore.WebSocket.Net
                 // Wait for each task to end.
                 await Task.WhenAll(sendTask, receiveTask).ConfigureAwait(false);
             }
+
+            // Cancel any remaining procedures
+            taskCancelTokenSource.Cancel();
 
             // Set our state
             State = DiscoreWebSocketState.Closed;
@@ -187,42 +200,53 @@ namespace Discore.WebSocket.Net
                         if (sendQueue.TryDequeue(out data))
                         {
                             byte[] bytes = null;
-                            if (dataType == WebSocketDataType.Json)
-                                bytes = Encoding.UTF8.GetBytes(data.SerializeToJson());
+
+                            try
+                            {
+                                if (dataType == WebSocketDataType.Json)
+                                    bytes = Encoding.UTF8.GetBytes(data.SerializeToJson());
+                            }
+                            catch (JsonWriterException jex)
+                            {
+                                log.LogError($"[SendLoop] Failed to serialize data as JSON: {jex}");
+                            }
 
                             // TODO: ETF serialization
 
-                            // Send the payload
-                            int byteCount = bytes.Length;
-                            int frameCount = (int)Math.Ceiling((double)byteCount / SEND_BUFFER_SIZE);
-
-                            int offset = 0;
-                            for (int i = 0; i < frameCount; i++, offset += SEND_BUFFER_SIZE)
+                            if (bytes != null)
                             {
-                                bool isLast = i == (frameCount - 1);
+                                // Send the payload
+                                int byteCount = bytes.Length;
+                                int frameCount = (int)Math.Ceiling((double)byteCount / SEND_BUFFER_SIZE);
 
-                                int count;
-                                if (isLast)
-                                    count = byteCount - (i * SEND_BUFFER_SIZE);
-                                else
-                                    count = SEND_BUFFER_SIZE;
-
-                                WebSocketMessageType msgType = dataType == WebSocketDataType.Json 
-                                    ? WebSocketMessageType.Text 
-                                    : WebSocketMessageType.Binary;
-
-                                ArraySegment<byte> arraySeg = new ArraySegment<byte>(bytes, offset, count);
-
-                                try
+                                int offset = 0;
+                                for (int i = 0; i < frameCount; i++, offset += SEND_BUFFER_SIZE)
                                 {
-                                    await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token).ConfigureAwait(false);
-                                }
-                                catch (WebSocketException wsex)
-                                {
-                                    if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
-                                        && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                    bool isLast = i == (frameCount - 1);
+
+                                    int count;
+                                    if (isLast)
+                                        count = byteCount - (i * SEND_BUFFER_SIZE);
+                                    else
+                                        count = SEND_BUFFER_SIZE;
+
+                                    WebSocketMessageType msgType = dataType == WebSocketDataType.Json
+                                        ? WebSocketMessageType.Text
+                                        : WebSocketMessageType.Binary;
+
+                                    ArraySegment<byte> arraySeg = new ArraySegment<byte>(bytes, offset, count);
+
+                                    try
                                     {
-                                        await HandleFatalException(wsex, sendTask).ConfigureAwait(false);
+                                        await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token).ConfigureAwait(false);
+                                    }
+                                    catch (WebSocketException wsex)
+                                    {
+                                        if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
+                                            && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                        {
+                                            await HandleFatalException(wsex, sendTask).ConfigureAwait(false);
+                                        }
                                     }
                                 }
                             }
@@ -248,7 +272,7 @@ namespace Discore.WebSocket.Net
 
                 using (MemoryStream receiveMs = new MemoryStream())
                 {
-                    while (runTasks)
+                    while (runTasks || socket.State == WebSocketState.CloseSent)
                     {
                         WebSocketReceiveResult result = null;
 
@@ -284,15 +308,17 @@ namespace Discore.WebSocket.Net
                             {
                                 if (result.MessageType == WebSocketMessageType.Close)
                                 {
-                                    isClosing = true;
-
                                     // If the close status was not normal, treat it as an error
                                     if (result.CloseStatus != WebSocketCloseStatus.NormalClosure)
-                                        throw new DiscoreWebSocketException(result.CloseStatusDescription, 
+                                        throw new DiscoreWebSocketException(result.CloseStatusDescription,
                                             result.CloseStatus ?? WebSocketCloseStatus.Empty);
                                     else
+                                    {
+                                        isClosing = true;
+
                                         // If normal, just make sure everything else stops.
                                         StopTasks();
+                                    }
                                 }
                                 else
                                     receiveMs.Write(receiveBuffer.Array, 0, result.Count);
@@ -304,49 +330,80 @@ namespace Discore.WebSocket.Net
                             break;
 
                         // Parse message
-                        string str;
-                        if (result.MessageType == WebSocketMessageType.Text)
+                        string str = null;
+                        try
                         {
-                            ArraySegment<byte> packet;
-                            if (!receiveMs.TryGetBuffer(out packet))
-                                // This should never ever ever get called, 
-                                // but just incase since .GetBuffer() isn't available in dotnet core.
-                                packet = new ArraySegment<byte>(receiveMs.ToArray());
-
-                            str = Encoding.UTF8.GetString(packet.Array, 0, packet.Count);
-                        }
-                        else
-                        {
-                            // Decompress binary
-                            using (MemoryStream decompressed = new MemoryStream())
+                            if (result.MessageType == WebSocketMessageType.Text)
                             {
-                                // Skip first two bytes
-                                receiveMs.Seek(2, SeekOrigin.Begin);
+                                ArraySegment<byte> packet;
+                                if (!receiveMs.TryGetBuffer(out packet))
+                                    // This should never ever ever get called, 
+                                    // but just in case since .GetBuffer() isn't available in dotnet core.
+                                    packet = new ArraySegment<byte>(receiveMs.ToArray());
 
-                                // Decompress packet
-                                using (DeflateStream deflateStream = new DeflateStream(receiveMs, CompressionMode.Decompress, true))
-                                    await deflateStream.CopyToAsync(decompressed, 81920, taskCancelTokenSource.Token).ConfigureAwait(false);
+                                str = Encoding.UTF8.GetString(packet.Array, 0, packet.Count);
+                            }
+                            else
+                            {
+                                // Decompress binary
+                                using (MemoryStream decompressed = new MemoryStream())
+                                {
+                                    // Skip first two bytes
+                                    receiveMs.Seek(2, SeekOrigin.Begin);
 
-                                decompressed.Position = 0;
+                                    // Decompress packet
+                                    using (DeflateStream deflateStream = new DeflateStream(receiveMs, CompressionMode.Decompress, true))
+                                        await deflateStream.CopyToAsync(decompressed, 81920, taskCancelTokenSource.Token).ConfigureAwait(false);
 
-                                // Read decompressed packet as string
-                                using (StreamReader reader = new StreamReader(decompressed))
-                                    str = await reader.ReadToEndAsync().ConfigureAwait(false);
+                                    decompressed.Position = 0;
+
+                                    // Read decompressed packet as string
+                                    using (StreamReader reader = new StreamReader(decompressed))
+                                        str = await reader.ReadToEndAsync().ConfigureAwait(false);
+                                }
                             }
                         }
-
-                        // Parse string and invoke OnMessageReceived
-                        DiscordApiData data = null;
-                        if (dataType == WebSocketDataType.Json)
+                        catch (Exception ex)
                         {
-                            if (!DiscordApiData.TryParseJson(str, out data))
-                                log.LogError($"Failed to parse json: {str}");
+                            // Nothing we can really do here, but we don't want this exception
+                            // to cause a reconnect, since it's not technically fatal.
+
+                            log.LogError($"[ReceiveLoop] Failed parse message from packet: {ex}");
                         }
 
-                        // TODO: ETF deserialization
+                        if (str != null)
+                        {
+                            // Parse string and invoke OnMessageReceived
+                            DiscordApiData data = null;
+                            if (dataType == WebSocketDataType.Json)
+                            {
+                                if (!DiscordApiData.TryParseJson(str, out data))
+                                    log.LogError($"[ReceiveLoop] Failed to parse json: {str}");
+                            }
 
-                        if (data != null)
-                            OnMessageReceived?.Invoke(this, data);
+                            // TODO: ETF deserialization
+
+                            // This avoids a very bad infinite loop:
+                            // If the machine happens to lose connection, we will never actually
+                            // receive a proper close message. Instead it will continuously read
+                            // nothing from the socket.
+                            if ((!runTasks || socket.State == WebSocketState.CloseSent) &&
+                                (data == null || data.Type != DiscordApiDataType.Container))
+                                break;
+
+                            if (data != null)
+                            {
+                                try
+                                {
+                                    OnMessageReceived?.Invoke(this, data);
+                                }
+                                catch (Exception ex)
+                                {
+                                    // Do not let event exceptions cause a reconnection.
+                                    log.LogError($"[ReceiveLoop] Unhandled exception from OnMessageReceived: {ex}");
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -361,7 +418,6 @@ namespace Discore.WebSocket.Net
         void StopTasks()
         {
             runTasks = false;
-            taskCancelTokenSource.Cancel();
         }
 
         async Task HandleFatalException(Exception ex, Task originatingTask)
@@ -394,7 +450,8 @@ namespace Discore.WebSocket.Net
 
                     // Disconnect socket if still connected
                     if (State == DiscoreWebSocketState.Open)
-                        await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                        await DisconnectAsync(CancellationToken.None, WebSocketCloseStatus.InternalServerError)
+                            .ConfigureAwait(false);
 
                     // Fire event
                     OnError?.Invoke(this, ex);

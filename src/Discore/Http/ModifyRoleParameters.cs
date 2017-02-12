@@ -14,10 +14,6 @@
         /// </summary>
         public DiscordPermission? Permissions { get; set; }
         /// <summary>
-        /// The sorting position of the role.
-        /// </summary>
-        public int? Position { get; set; }
-        /// <summary>
         /// The UI color of the role.
         /// </summary>
         public DiscordColor? Color { get; set; }
@@ -35,7 +31,6 @@
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("name", Name);
             data.Set("permissions", (long?)Permissions);
-            data.Set("position", Position);
             data.Set("color", Color?.ToHexadecimal());
             data.Set("hoist", IsHoisted);
             data.Set("mentionable", IsMentionable);

@@ -34,7 +34,7 @@ namespace Discore.Http
             IsGlobal = rateLimitHeaders.IsGlobal;
             Limit = rateLimitHeaders.Limit;
             Reset = rateLimitHeaders.Reset;
-            RetryAfter = rateLimitHeaders.RetryAfter.GetValueOrDefault(); // Should always be set, but just incase.
+            RetryAfter = rateLimitHeaders.RetryAfter.GetValueOrDefault(); // Should always be set, but just in case.
         }
     }
 }

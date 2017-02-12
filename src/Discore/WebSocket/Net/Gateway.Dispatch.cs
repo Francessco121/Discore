@@ -9,7 +9,9 @@ namespace Discore.WebSocket.Net
     {
         delegate void DispatchCallback(DiscordApiData data);
 
-        #region Events       
+        public event EventHandler OnReadyEvent;
+
+        #region Public Events       
         public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;        
         public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;        
         public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;        
@@ -95,6 +97,8 @@ namespace Discore.WebSocket.Net
             int? protocolVersion = data.GetInteger("v");
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
+
+            OnReadyEvent?.Invoke(this, EventArgs.Empty);
 
             // Get the authenticated user
             DiscordApiData userData = data.Get("user");
@@ -714,7 +718,7 @@ namespace Discore.WebSocket.Net
                 DiscordChannel channel = cache.Channels.Get(channelId);
                 if (channel != null)
                 {
-                    long timestamp = data.GetInt64("timestamp").Value;
+                    int timestamp = data.GetInteger("timestamp").Value;
 
                     OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, user, channel, timestamp));
                 }
