@@ -140,7 +140,7 @@ namespace Discore.WebSocket.Net
             if (State != DiscoreWebSocketState.Open)
                 throw new InvalidOperationException("Failed to disconnect, the WebSocket is not open.");
 
-            log.LogVerbose("[DisconnectAsync] Disconnecting...");
+            log.LogVerbose($"[DisconnectAsync] Disconnecting with code '{closeStatus} ({(int)closeStatus})'...");
 
             // Close the socket.
             try
