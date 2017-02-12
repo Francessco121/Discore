@@ -131,7 +131,8 @@ namespace Discore.WebSocket.Net
 
         /// <exception cref="InvalidOperationException">Thrown if this WebSocket is not open.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this WebSocket has been disposed.</exception>
-        public async Task DisconnectAsync(CancellationToken cancellationToken)
+        public async Task DisconnectAsync(CancellationToken cancellationToken,
+            WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure)
         {
             if (isDisposed)
                 throw new ObjectDisposedException(nameof(socket));
@@ -144,7 +145,7 @@ namespace Discore.WebSocket.Net
             // Close the socket.
             try
             {
-                await socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", cancellationToken)
+                await socket.CloseOutputAsync(closeStatus, "Disconnecting...", cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (TaskCanceledException) { throw; }
@@ -307,15 +308,17 @@ namespace Discore.WebSocket.Net
                             {
                                 if (result.MessageType == WebSocketMessageType.Close)
                                 {
-                                    isClosing = true;
-
                                     // If the close status was not normal, treat it as an error
                                     if (result.CloseStatus != WebSocketCloseStatus.NormalClosure)
-                                        throw new DiscoreWebSocketException(result.CloseStatusDescription, 
+                                        throw new DiscoreWebSocketException(result.CloseStatusDescription,
                                             result.CloseStatus ?? WebSocketCloseStatus.Empty);
                                     else
+                                    {
+                                        isClosing = true;
+
                                         // If normal, just make sure everything else stops.
                                         StopTasks();
+                                    }
                                 }
                                 else
                                     receiveMs.Write(receiveBuffer.Array, 0, result.Count);
@@ -447,7 +450,8 @@ namespace Discore.WebSocket.Net
 
                     // Disconnect socket if still connected
                     if (State == DiscoreWebSocketState.Open)
-                        await DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                        await DisconnectAsync(CancellationToken.None, WebSocketCloseStatus.InternalServerError)
+                            .ConfigureAwait(false);
 
                     // Fire event
                     OnError?.Invoke(this, ex);
