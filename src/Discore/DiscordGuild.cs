@@ -122,6 +122,15 @@ namespace Discore
             : this(app, data, true)
         {
             this.guildCache = guildCache;
+
+            DiscordGuild existing = guildCache.Value;
+            if (existing != null)
+            {
+                // Default to previous data if we didn't deserialize it in the new one.
+                JoinedAt = JoinedAt ?? existing.JoinedAt;
+                IsLarge = IsLarge ?? existing.IsLarge;
+                MemberCount = MemberCount ?? existing.MemberCount;
+            }
         }
 
         internal DiscordGuild(IDiscordApplication app, DiscordApiData data)
