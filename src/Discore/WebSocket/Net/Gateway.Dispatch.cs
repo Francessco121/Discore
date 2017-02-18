@@ -120,6 +120,13 @@ namespace Discore.WebSocket.Net
                 cache.Guilds.Set(guildCache);
             }
 
+            // Get DM channels
+            foreach (DiscordApiData dmChannelData in data.GetArray("private_channels"))
+            {
+                DiscordDMChannel dm = new DiscordDMChannel(cache, app, dmChannelData);
+                cache.SetDMChannel(dm);
+            }
+
             LogServerTrace("Ready", data);
         }
 
