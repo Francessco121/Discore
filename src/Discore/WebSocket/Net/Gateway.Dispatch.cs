@@ -215,12 +215,6 @@ namespace Discore.WebSocket.Net
             Snowflake guildId = data.GetSnowflake("id").Value;
 
             DiscoreGuildCache guildCache = cache.Guilds.Get(guildId);
-            if (guildCache != null)
-            {
-                guildCache = new DiscoreGuildCache(cache);
-                cache.Guilds.Set(guildCache);
-            }
-
             guildCache.Value = new DiscordGuild(app, guildCache, data);
 
             IList<DiscordApiData> rolesArray = data.GetArray("roles");

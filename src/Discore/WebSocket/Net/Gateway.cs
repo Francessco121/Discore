@@ -365,6 +365,9 @@ namespace Discore.WebSocket.Net
                 {
                     log.LogError($"[ReconnectLoop] {ex}");
                 }
+
+                log.LogVerbose("[ReconnectLoop] Waiting 5s before retrying...");
+                await Task.Delay(5000);
             }
 
             // Restore socket errors regardless of cancellation or success.
