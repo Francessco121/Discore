@@ -1,6 +1,8 @@
 ﻿using Nito.AsyncEx;
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -436,6 +438,29 @@ namespace Discore.WebSocket.Net
                 callback(e, data);
             else
                 log.LogWarning($"Missing handler for payload: {op}({(int)op})");
+        }
+
+        /// <summary>
+        /// Logs the _trace field in the given event data if present.
+        /// Used by payload and dispatch event handlers.
+        /// </summary>
+        void LogServerTrace(string prefix, DiscordApiData data)
+        {
+            IList<DiscordApiData> traceArray = data.GetArray("_trace");
+            if (traceArray != null)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 0; i < traceArray.Count; i++)
+                {
+                    if (i > 0)
+                        sb.Append(", ");
+
+                    sb.Append(traceArray[i].ToString());
+                }
+
+                log.LogVerbose($"[{prefix}] trace = {sb}");
+            }
         }
 
         public void Dispose()

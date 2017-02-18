@@ -94,7 +94,7 @@ namespace Discore.WebSocket.Net
         void HandleReadyEvent(DiscordApiData data)
         {
             // Check gateway protocol
-            int? protocolVersion = data.GetInteger("v");
+            int protocolVersion = data.GetInteger("v").Value;
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
 
@@ -106,10 +106,10 @@ namespace Discore.WebSocket.Net
             // Store authenticated user in cache for immediate use
             shard.User = cache.Users.Set(new DiscordUser(userData));
 
+            log.LogVerbose($"[Ready] user = {shard.User}");
+
             // Get session id
             sessionId = data.GetString("session_id");
-
-            log.LogVerbose($"[Ready] session_id = {sessionId}, user = {shard.User}");
 
             // Get unavailable guilds
             foreach (DiscordApiData unavailableGuildData in data.GetArray("guilds"))
@@ -119,11 +119,15 @@ namespace Discore.WebSocket.Net
 
                 cache.Guilds.Set(guildCache);
             }
+
+            LogServerTrace("Ready", data);
         }
 
         void HandleResumedEvent(DiscordApiData data)
         {
             log.LogInfo("[Resumed] Successfully resumed.");
+
+            LogServerTrace("Resumed", data);
         }
 
         #region Guild

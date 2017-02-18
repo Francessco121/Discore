@@ -77,6 +77,8 @@ namespace Discore.WebSocket.Net
             heartbeatInterval = data.GetInteger("heartbeat_interval") ?? heartbeatInterval;
             log.LogVerbose($"[Hello] heartbeat_interval: {heartbeatInterval}ms");
 
+            LogServerTrace("Hello", data);
+
             helloPayloadEvent.Set();
         }
 
