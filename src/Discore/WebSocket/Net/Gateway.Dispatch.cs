@@ -367,8 +367,7 @@ namespace Discore.WebSocket.Net
                 DiscordApiData userData = data.Get("user");
                 DiscordUser user = cache.Users.Set(new DiscordUser(userData));
 
-                Snowflake userId = userData.GetSnowflake("id").Value;
-                DiscordGuildMember member = guildCache.Members.Remove(userId)?.Value;
+                DiscordGuildMember member = guildCache.Members.Remove(user.Id)?.Value;
 
                 if (member != null)
                     OnGuildMemberRemoved?.Invoke(this, new GuildMemberEventArgs(shard, guildCache.Value, member));
@@ -417,7 +416,18 @@ namespace Discore.WebSocket.Net
 
                     bool memberExistedPreviously = guildCache.Members.ContainsKey(memberId);
 
-                    DiscordGuildMember member = guildCache.Members.Set(new DiscoreMemberCache(guildCache)).Value;
+                    DiscoreMemberCache memberCache;
+                    if (!guildCache.Members.TryGetValue(memberId, out memberCache))
+                    {
+                        memberCache = new DiscoreMemberCache(guildCache);
+                        memberCache.Value = new DiscordGuildMember(app, cache, memberData, guildId);
+
+                        guildCache.Members.Set(memberCache);
+                    }
+                    else
+                        memberCache.Value = new DiscordGuildMember(app, cache, memberData, guildId);
+
+                    DiscordGuildMember member = memberCache.Value;
 
                     members[i] = member;
 
