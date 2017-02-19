@@ -67,7 +67,20 @@ namespace Discore.WebSocket.Net
 
             DispatchCallback callback;
             if (dispatchHandlers.TryGetValue(eventName, out callback))
-                callback(data);
+            {
+                try
+                {
+                    callback(data);
+                }
+                catch (DiscoreCacheException cex)
+                {
+                    log.LogWarning($"[{eventName}] Did not complete because: {cex.Message}.");
+                }
+                catch (Exception ex)
+                {
+                    log.LogError($"[{eventName}] Unhandled exception: {ex}");
+                }
+            }
             else
                 log.LogWarning($"Missing handler for dispatch event: {eventName}");
         }
