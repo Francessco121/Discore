@@ -70,7 +70,7 @@ namespace Discore.WebSocket.Net
             dispatchHandlers["GUILD_BAN_ADD"] = HandleGuildBanAddEvent;
             dispatchHandlers["GUILD_BAN_REMOVE"] = HandleGuildBanRemoveEvent;
             dispatchHandlers["GUILD_EMOJIS_UPDATE"] = HandleGuildEmojisUpdateEvent;
-            dispatchHandlers["GUILD_INTERGRATIONS_UPDATE"] = HandleGuildIntegrationsUpdateEvent;
+            dispatchHandlers["GUILD_INTEGRATIONS_UPDATE"] = HandleGuildIntegrationsUpdateEvent;
             dispatchHandlers["GUILD_MEMBER_ADD"] = HandleGuildMemberAddEvent;
             dispatchHandlers["GUILD_MEMBER_REMOVE"] = HandleGuildMemberRemoveEvent;
             dispatchHandlers["GUILD_MEMBER_UPDATE"] = HandleGuildMemberUpdateEvent;
