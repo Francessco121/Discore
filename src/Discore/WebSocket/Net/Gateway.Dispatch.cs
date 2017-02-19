@@ -712,7 +712,12 @@ namespace Discore.WebSocket.Net
             DiscoreGuildCache guildCache;
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
             {
-                Snowflake memberId = data.LocateSnowflake("user.id").Value;
+                DiscordApiData userData = data.Get("user");
+                Snowflake memberId = userData.GetSnowflake("id").Value;
+                
+                DiscordUser user = cache.Users.Get(memberId);
+                user = cache.Users.Set(user.PartialUpdate(userData));
+               
                 DiscoreMemberCache memberCache = guildCache.Members.Get(memberId);
 
                 if (memberCache != null)
