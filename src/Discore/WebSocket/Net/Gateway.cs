@@ -377,7 +377,11 @@ namespace Discore.WebSocket.Net
 
             if (!reconnectCancelTokenSource.IsCancellationRequested)
             {
-                log.LogInfo("[ReconnectLoop] Reconnect successful.");
+                if (gatewayResume)
+                    log.LogInfo("[ReconnectLoop] Resume completed.");
+                else
+                    log.LogInfo("[ReconnectLoop] New session successful.");
+
                 isReconnecting = false;
 
                 if (!isDisposed)

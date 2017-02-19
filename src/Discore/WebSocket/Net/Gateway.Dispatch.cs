@@ -163,6 +163,7 @@ namespace Discore.WebSocket.Net
             for (int i = 0; i < emojisArray.Count; i++)
                 guildCache.Emojis.Set(new DiscordEmoji(emojisArray[i]));
 
+            // Guild Create specifics
             IList<DiscordApiData> membersArray = data.GetArray("members");
             for (int i = 0; i < membersArray.Count; i++)
             {
