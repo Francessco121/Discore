@@ -25,6 +25,8 @@ namespace Discore.Http.Net
         Dictionary<string, RateLimitHandler> rateLimitedRoutes;
         AsyncManualResetEvent globalRateLimitResetEvent;
 
+        HttpClient globalHttpClient;
+
         public RestClient(IDiscordAuthenticator authenticator, InitialHttpApiSettings settings)
         {
             this.authenticator = authenticator;
@@ -33,6 +35,9 @@ namespace Discore.Http.Net
             rateLimitMethod = settings.RateLimitHandlingMethod;
 
             log = new DiscoreLogger("RestClient");
+
+            if (settings.UseSingleHttpClient)
+                globalHttpClient = CreateHttpClient();
 
             rateLimitedRoutes = new Dictionary<string, RateLimitHandler>();
             globalRateLimitResetEvent = new AsyncManualResetEvent(true);
@@ -137,10 +142,18 @@ namespace Discore.Http.Net
                 rateLimitHeaders = null;
 
                 // Send request
-                using (HttpClient http = CreateHttpClient())
+                if (globalHttpClient != null)
                 {
-                    response = await http.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
+                    response = await globalHttpClient.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
                         .ConfigureAwait(false);
+                }
+                else
+                {
+                    using (HttpClient http = CreateHttpClient())
+                    {
+                        response = await http.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
+                            .ConfigureAwait(false);
+                    }
                 }
 
                 // Check rate limit values in response if they exist.
@@ -278,6 +291,8 @@ namespace Discore.Http.Net
 
         public void Dispose()
         {
+            globalHttpClient?.Dispose();
+
             foreach (RateLimitHandler handler in rateLimitedRoutes.Values)
                 handler.Dispose();
         }
