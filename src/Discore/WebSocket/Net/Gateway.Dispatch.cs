@@ -267,7 +267,8 @@ namespace Discore.WebSocket.Net
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
 
-            DiscordUser user = cache.Users.Set(new DiscordUser(data));
+            DiscordApiData userData = data.Get("user");
+            DiscordUser user = cache.Users.Set(new DiscordUser(userData));
 
             DiscoreGuildCache guildCache;
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
@@ -280,7 +281,8 @@ namespace Discore.WebSocket.Net
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
 
-            DiscordUser user = cache.Users.Set(new DiscordUser(data));
+            DiscordApiData userData = data.Get("user");
+            DiscordUser user = cache.Users.Set(new DiscordUser(userData));
 
             DiscoreGuildCache guildCache;
             if (cache.Guilds.TryGetValue(guildId, out guildCache))
