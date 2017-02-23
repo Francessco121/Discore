@@ -110,7 +110,6 @@ namespace Discore
             get { return guildCache != null ? guildCache.Emojis : emojis; }
         }
 
-        IDiscordApplication app;
         DiscordHttpGuildEndpoint guildHttp;
         DiscordHttpWebhookEndpoint webhookHttp;
 
@@ -140,8 +139,6 @@ namespace Discore
         private DiscordGuild(IDiscordApplication app, DiscordApiData data, bool isWebSocket)
             : base(data)
         {
-            this.app = app;
-
             guildHttp = app.HttpApi.Guilds;
             webhookHttp = app.HttpApi.Webhooks;
 
