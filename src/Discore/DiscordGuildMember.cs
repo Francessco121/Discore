@@ -135,6 +135,26 @@ namespace Discore
             return guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
         }
 
+        /// <summary>
+        /// Adds a role to this member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> AddRole(Snowflake roleId)
+        {
+            return guildsHttp.AddMemberRole(GuildId, Id, roleId);
+        }
+
+        /// <summary>
+        /// Removes a role from this member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> RemoveRole(Snowflake roleId)
+        {
+            return guildsHttp.RemoveMemberRole(GuildId, Id, roleId);
+        }
+
         public override string ToString()
         {
             return Nickname != null ? $"{User.Username} aka. {Nickname}" : User.Username;

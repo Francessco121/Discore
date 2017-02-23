@@ -151,6 +151,7 @@ namespace Discore.Http
         /// </summary>
         /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>
         /// <returns>Returns the new nickname (or null if the nickname was removed).</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<string> ModifyCurrentUsersNickname(Snowflake guildId, string nickname)
         {
             DiscordApiData requestData = new DiscordApiData();
@@ -159,6 +160,30 @@ namespace Discore.Http
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/members/@me/nick", requestData,
                 "guilds/guild/members/@me/nick").ConfigureAwait(false);
             return returnData.GetString("nick");
+        }
+
+        /// <summary>
+        /// Adds a role to a guild member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<bool> AddMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
+        {
+            DiscordApiData data = await Rest.Put($"guilds/{guildId}/members/{userId}/roles/{roleId}",
+                "guilds/guild/members/member/roles/role").ConfigureAwait(false);
+            return data.IsNull;
+        }
+
+        /// <summary>
+        /// Removes a role from a guild member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<bool> RemoveMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
+        {
+            DiscordApiData data = await Rest.Delete($"guilds/{guildId}/members/{userId}/roles/{roleId}",
+                "guilds/guild/members/member/roles/role").ConfigureAwait(false);
+            return data.IsNull;
         }
 
         /// <summary>
