@@ -52,6 +52,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
         
         public event EventHandler<UserEventArgs> OnUserUpdated;
+        public event EventHandler<VoiceStateEventArgs> OnVoiceStateUpdated;
         #endregion
 
         Dictionary<string, DispatchCallback> dispatchHandlers;
@@ -200,9 +201,9 @@ namespace Discore.WebSocket.Net
             IList<DiscordApiData> voiceStatesArray = data.GetArray("voice_states");
             for (int i = 0; i < voiceStatesArray.Count; i++)
             {
-                DiscordVoiceState state = new DiscordVoiceState(voiceStatesArray[i], guildId);
+                DiscordVoiceState state = new DiscordVoiceState(cache, guildCache, voiceStatesArray[i]);
                 DiscoreMemberCache memberCache;
-                if (guildCache.Members.TryGetValue(state.UserId, out memberCache))
+                if (guildCache.Members.TryGetValue(state.User.Id, out memberCache))
                     UpdateMemberVoiceState(guildCache, memberCache, state);
             }
 
@@ -825,18 +826,23 @@ namespace Discore.WebSocket.Net
             // Set new state
             memberCache.VoiceState = newState;
 
-            if (previousState != null && previousState.ChannelId.HasValue
-                && newState.ChannelId != previousState.ChannelId)
+            DiscordGuildVoiceChannel newVoiceChannel = newState.Channel;
+
+            if (previousState != null)
             {
-                // Remove user from connected members list of previous state
-                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(previousState.ChannelId.Value);
-                voiceChannelCache.ConnectedMembers.Remove(memberCache.DictionaryId);
+                DiscordGuildVoiceChannel previousVoiceChannel = previousState.Channel;
+                if (previousVoiceChannel != null && (newVoiceChannel == null || previousVoiceChannel.Id != newVoiceChannel.Id))
+                {
+                    // Remove user from connected members list of previous state
+                    DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(previousVoiceChannel.Id);
+                    voiceChannelCache.ConnectedMembers.Remove(memberCache.DictionaryId);
+                }
             }
 
-            if (newState.ChannelId.HasValue)
+            if (newVoiceChannel != null)
             {
                 // Add user to connected members list of new state
-                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(newState.ChannelId.Value);
+                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(newVoiceChannel.Id);
                 voiceChannelCache.ConnectedMembers.Set(memberCache);
             }
         }
@@ -854,7 +860,7 @@ namespace Discore.WebSocket.Net
                     DiscoreMemberCache memberCache;
                     if (guildCache.Members.TryGetValue(userId, out memberCache))
                     {
-                        DiscordVoiceState newState = new DiscordVoiceState(data, guildId.Value);
+                        DiscordVoiceState newState = new DiscordVoiceState(cache, guildCache, data);
                         UpdateMemberVoiceState(guildCache, memberCache, newState);
 
                         if (userId == shard.User.Id)
@@ -866,7 +872,7 @@ namespace Discore.WebSocket.Net
                             {
                                 try
                                 {
-                                    if (memberCache.VoiceState.ChannelId != null)
+                                    if (memberCache.VoiceState.IsInVoiceChannel)
                                     {
                                         // Notify the connection of the new state
                                         await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
@@ -885,6 +891,9 @@ namespace Discore.WebSocket.Net
                                 }
                             }
                         }
+
+                        // Call event
+                        OnVoiceStateUpdated?.Invoke(this, new VoiceStateEventArgs(shard, newState, memberCache.Value));
                     }
                     else
                         throw new DiscoreCacheException($"Member {guildId.Value} was not in the guild {guildId.Value} cache!");

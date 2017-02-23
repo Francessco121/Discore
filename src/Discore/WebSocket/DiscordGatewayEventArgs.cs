@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Voice;
+using System;
 
 namespace Discore.WebSocket
 {
@@ -185,6 +186,19 @@ namespace Discore.WebSocket
             : base(shard)
         {
             Exception = exception;
+        }
+    }
+
+    public class VoiceStateEventArgs : DiscordGatewayEventArgs
+    {
+        public DiscordVoiceState VoiceState { get; }
+        public DiscordGuildMember Member { get; }
+
+        public VoiceStateEventArgs(Shard shard, DiscordVoiceState state, DiscordGuildMember member) 
+            : base(shard)
+        {
+            VoiceState = state;
+            Member = member;
         }
     }
 }

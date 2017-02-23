@@ -137,6 +137,11 @@ namespace Discore.WebSocket
         event EventHandler<UserEventArgs> OnUserUpdated;
 
         /// <summary>
+        /// Called when someone joins/leaves/moves voice channels.
+        /// </summary>
+        event EventHandler<VoiceStateEventArgs> OnVoiceStateUpdated;
+
+        /// <summary>
         /// Updates the status of the bot user.
         /// <para>
         /// Note: If this method is called more than 5 times per minute, 

@@ -76,9 +76,14 @@ namespace Discore.Voice
             // so return the initial voice channel while we are still connecting.
             get
             {
-                return voiceState != null && voiceState.ChannelId.HasValue 
-                    ? guildCache.VoiceChannels.Get(voiceState.ChannelId.Value).Value 
-                    : intialVoiceChannel;
+                if (voiceState != null)
+                {
+                    DiscordGuildVoiceChannel voiceChannel = voiceState.Channel;
+                    if (voiceChannel != null)
+                        return voiceChannel;
+                }
+
+                return initialVoiceChannel;
             }
         }
         /// <summary>
@@ -131,7 +136,7 @@ namespace Discore.Voice
         VoiceSocket socket;
         DiscordVoiceState voiceState;
         DiscoreLogger log;
-        DiscordGuildVoiceChannel intialVoiceChannel;
+        DiscordGuildVoiceChannel initialVoiceChannel;
 
         string token;
         string endpoint;
@@ -152,7 +157,7 @@ namespace Discore.Voice
             this.guildCache = guildCache;
             this.memberCache = memberCache;
 
-            this.intialVoiceChannel = intialVoiceChannel;
+            this.initialVoiceChannel = intialVoiceChannel;
 
             log = new DiscoreLogger($"VoiceConnection:{guildCache.Value.Name}");
 
@@ -188,7 +193,7 @@ namespace Discore.Voice
                 if (!isConnecting && !IsConnected)
                 {
                     isConnecting = true;
-                    gateway.SendVoiceStateUpdatePayload(intialVoiceChannel.GuildId, intialVoiceChannel.Id, startMute, startDeaf);
+                    gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, startMute, startDeaf);
 
                     connectingCancellationSource = new CancellationTokenSource();
 

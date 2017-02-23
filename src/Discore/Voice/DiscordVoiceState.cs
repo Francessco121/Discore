@@ -1,4 +1,6 @@
-﻿namespace Discore.Voice
+﻿using System;
+
+namespace Discore.Voice
 {
     /// <summary>
     /// Used to represent a user's voice connection status.
@@ -6,19 +8,64 @@
     public sealed class DiscordVoiceState
     {
         /// <summary>
-        /// Gets the id of the guild this voice state is for.
+        /// Gets the guild this voice state is for.
         /// </summary>
-        public Snowflake? GuildId { get; }
+        public DiscordGuild Guild
+        {
+            get { return guildCache.Value; }
+        }
+
         /// <summary>
-        /// Gets the id of the voice channel this user is in.
+        /// Gets the voice channel the user is in (or null if they are not in a voice channel).
         /// </summary>
-        public Snowflake? ChannelId { get; }
+        public DiscordGuildVoiceChannel Channel
+        {
+            get { return channelId.HasValue ? guildCache.VoiceChannels[channelId.Value]?.Value : null; }
+        }
+
         /// <summary>
-        /// Gets the id of the user this voice state is for.
+        /// Gets the user this voice state is for.
         /// </summary>
-        public Snowflake UserId { get; }
+        public DiscordUser User
+        {
+            get { return cache.Users[userId]; }
+        }
+
         /// <summary>
-        /// Gets the current session id of this voice state.
+        /// Returns whether the user is in a voice channel.
+        /// <para>Faster than checking if the Channel property is null as this avoids a cache hit.</para>
+        /// </summary>
+        public bool IsInVoiceChannel
+        {
+            get { return channelId.HasValue; }
+        }
+
+        /// <summary>
+        /// Gets the ID of the guild this voice state is for.
+        /// </summary>
+        [Obsolete("Please use Guild.Id instead.")]
+        public Snowflake? GuildId
+        {
+            get { return guildId; }
+        }
+        /// <summary>
+        /// Gets the ID of the voice channel this user is in.
+        /// </summary>
+        [Obsolete("Please use Channel.Id instead.")]
+        public Snowflake? ChannelId
+        {
+            get { return channelId; }
+        }
+        /// <summary>
+        /// Gets the ID of the user this voice state is for.
+        /// </summary>
+        [Obsolete("Please use User.Id instead.")]
+        public Snowflake UserId
+        {
+            get { return userId; }
+        }
+        /// <summary>
+        /// Gets the current session ID of this voice state.
         /// </summary>
         public string SessionId { get; }
         /// <summary>
@@ -42,11 +89,23 @@
         /// </summary>
         public bool IsSuppressed { get; }
 
-        internal DiscordVoiceState(DiscordApiData data, Snowflake? guildId = null)
+        DiscoreCache cache;
+        DiscoreGuildCache guildCache;
+
+        Snowflake guildId;
+        Snowflake userId;
+        Snowflake? channelId;
+
+        internal DiscordVoiceState(DiscoreCache cache, DiscoreGuildCache guildCache, DiscordApiData data)
         {
-            GuildId      = guildId ?? data.GetSnowflake("guild_id");
-            ChannelId    = data.GetSnowflake("channel_id");
-            UserId       = data.GetSnowflake("user_id").Value;
+            this.cache = cache;
+            this.guildCache = guildCache;
+
+            guildId = guildCache.DictionaryId;
+
+            channelId    = data.GetSnowflake("channel_id");
+            userId       = data.GetSnowflake("user_id").Value;
+
             SessionId    = data.GetString("session_id");
             IsServerDeaf = data.GetBoolean("deaf").Value;
             IsServerMute = data.GetBoolean("mute").Value;
