@@ -147,6 +147,21 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Modifies the current authenticated user's nickname in the specified guild.
+        /// </summary>
+        /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>
+        /// <returns>Returns the new nickname (or null if the nickname was removed).</returns>
+        public async Task<string> ModifyCurrentUsersNickname(Snowflake guildId, string nickname)
+        {
+            DiscordApiData requestData = new DiscordApiData();
+            requestData.Set("nick", nickname);
+
+            DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/members/@me/nick", requestData,
+                "guilds/guild/members/@me/nick").ConfigureAwait(false);
+            return returnData.GetString("nick");
+        }
+
+        /// <summary>
         /// Removes a member from a guild.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
