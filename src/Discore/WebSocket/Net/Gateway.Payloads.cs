@@ -122,7 +122,7 @@ namespace Discore.WebSocket.Net
                     if (callback.Synchronous != null)
                         callback.Synchronous(data);
                     else
-                        await callback.Asynchronous(data);
+                        await callback.Asynchronous(data).ConfigureAwait(false);
                 }
                 catch (DiscoreCacheException cex)
                 {

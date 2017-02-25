@@ -446,7 +446,7 @@ namespace Discore.WebSocket.Net
                     if (callback.Synchronous != null)
                         callback.Synchronous(e, data);
                     else
-                        await callback.Asynchronous(e, data);
+                        await callback.Asynchronous(e, data).ConfigureAwait(false);
                 }
                 else
                     log.LogWarning($"Missing handler for payload: {op}({(int)op})");
