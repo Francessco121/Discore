@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -7,18 +8,65 @@ namespace Discore.WebSocket.Net
 {
     partial class Gateway
     {
-        delegate void PayloadCallback(DiscordApiData payload, DiscordApiData data);
+        delegate void PayloadSynchronousCallback(DiscordApiData payload, DiscordApiData data);
+        delegate Task PayloadAsynchronousCallback(DiscordApiData payload, DiscordApiData data);
+
+        class PayloadCallback
+        {
+            public PayloadSynchronousCallback Synchronous { get; }
+            public PayloadAsynchronousCallback Asynchronous { get; }
+
+            public PayloadCallback(PayloadSynchronousCallback synchronous)
+            {
+                Synchronous = synchronous;
+            }
+
+            public PayloadCallback(PayloadAsynchronousCallback asynchronous)
+            {
+                Asynchronous = asynchronous;
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Method)]
+        class PayloadAttribute : Attribute
+        {
+            public GatewayOPCode OPCode { get; }
+
+            public PayloadAttribute(GatewayOPCode opCode)
+            {
+                OPCode = opCode;
+            }
+        }
 
         Dictionary<GatewayOPCode, PayloadCallback> payloadHandlers;
 
         void InitializePayloadHandlers()
         {
             payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
-            payloadHandlers[GatewayOPCode.Dispath] = HandleDispatchPayload;
-            payloadHandlers[GatewayOPCode.Hello] = HandleHelloPayload;
-            payloadHandlers[GatewayOPCode.HeartbeatAck] = HandleHeartbeatAckPayload;
-            payloadHandlers[GatewayOPCode.InvalidSession] = HandleInvalidSessionPayload;
-            payloadHandlers[GatewayOPCode.Reconnect] = HandleReconnectPayload;
+
+            Type taskType = typeof(Task);
+            Type payloadSynchronousType = typeof(PayloadSynchronousCallback);
+            Type payloadAsynchronousType = typeof(PayloadAsynchronousCallback);
+
+            foreach (Tuple<MethodInfo, PayloadAttribute> tuple in GetMethodsWithAttribute<PayloadAttribute>())
+            {
+                MethodInfo method = tuple.Item1;
+                PayloadAttribute attr = tuple.Item2;
+
+                PayloadCallback payloadCallback;
+                if (method.ReturnType == taskType)
+                {
+                    Delegate callback = method.CreateDelegate(payloadAsynchronousType, this);
+                    payloadCallback = new PayloadCallback((PayloadAsynchronousCallback)callback);
+                }
+                else
+                {
+                    Delegate callback = method.CreateDelegate(payloadSynchronousType, this);
+                    payloadCallback = new PayloadCallback((PayloadSynchronousCallback)callback);
+                }
+
+                payloadHandlers[attr.OPCode] = payloadCallback;
+            }
         }
 
         [Obsolete]
@@ -60,7 +108,8 @@ namespace Discore.WebSocket.Net
             return SendRequestGuildMembersPayload(guildId, query, limit);
         }
 
-        void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
+        [Payload(GatewayOPCode.Dispatch)]
+        async Task HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
         {
             sequence = payload.GetInteger("s") ?? sequence;
             string eventName = payload.GetString("t");
@@ -70,7 +119,10 @@ namespace Discore.WebSocket.Net
             {
                 try
                 {
-                    callback(data);
+                    if (callback.Synchronous != null)
+                        callback.Synchronous(data);
+                    else
+                        await callback.Asynchronous(data);
                 }
                 catch (DiscoreCacheException cex)
                 {
@@ -85,6 +137,7 @@ namespace Discore.WebSocket.Net
                 log.LogWarning($"Missing handler for dispatch event: {eventName}");
         }
 
+        [Payload(GatewayOPCode.Hello)]
         void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
         {
             heartbeatInterval = data.GetInteger("heartbeat_interval") ?? heartbeatInterval;
@@ -95,12 +148,14 @@ namespace Discore.WebSocket.Net
             helloPayloadEvent.Set();
         }
 
+        [Payload(GatewayOPCode.HeartbeatAck)]
         void HandleHeartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
         {
             // Reset heartbeat timeout
             heartbeatTimeoutAt = Environment.TickCount + (heartbeatInterval * HEARTBEAT_TIMEOUT_MISSED_PACKETS);
         }
 
+        [Payload(GatewayOPCode.Reconnect)]
         void HandleReconnectPayload(DiscordApiData payload, DiscordApiData data)
         {
             log.LogInfo("[Reconnect] Performing resume...");
@@ -111,6 +166,7 @@ namespace Discore.WebSocket.Net
             BeginResume();
         }
 
+        [Payload(GatewayOPCode.InvalidSession)]
         void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
         {
             log.LogInfo("[InvalidSession] Reconnecting...");

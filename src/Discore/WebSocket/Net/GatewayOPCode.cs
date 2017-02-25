@@ -2,7 +2,7 @@
 {
     enum GatewayOPCode
     {
-        Dispath = 0,
+        Dispatch = 0,
         Heartbeat,
         Identify,
         StatusUpdate,

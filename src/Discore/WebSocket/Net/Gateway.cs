@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -432,16 +433,29 @@ namespace Discore.WebSocket.Net
                 BeginResume(WebSocketCloseStatus.InternalServerError);
         }
 
-        private void Socket_OnMessageReceived(object sender, DiscordApiData e)
+        private async void Socket_OnMessageReceived(object sender, DiscordApiData e)
         {
-            GatewayOPCode op = (GatewayOPCode)e.GetInteger("op");
-            DiscordApiData data = e.Get("d");
+            try
+            {
+                GatewayOPCode op = (GatewayOPCode)e.GetInteger("op");
+                DiscordApiData data = e.Get("d");
 
-            PayloadCallback callback;
-            if (payloadHandlers.TryGetValue(op, out callback))
-                callback(e, data);
-            else
-                log.LogWarning($"Missing handler for payload: {op}({(int)op})");
+                PayloadCallback callback;
+                if (payloadHandlers.TryGetValue(op, out callback))
+                {
+                    if (callback.Synchronous != null)
+                        callback.Synchronous(e, data);
+                    else
+                        await callback.Asynchronous(e, data);
+                }
+                else
+                    log.LogWarning($"Missing handler for payload: {op}({(int)op})");
+            }
+            catch (Exception ex)
+            {
+                log.LogError("[OnMessageReceived] Unhandled Exception:");
+                log.LogError(ex);
+            }
         }
 
         /// <summary>
@@ -464,6 +478,22 @@ namespace Discore.WebSocket.Net
                 }
 
                 log.LogVerbose($"[{prefix}] trace = {sb}");
+            }
+        }
+
+        /// <summary>
+        /// Returns each private method with the given attribute in this class.
+        /// </summary>
+        IEnumerable<Tuple<MethodInfo, T>> GetMethodsWithAttribute<T>()
+            where T : Attribute
+        {
+            Type gatewayType = typeof(Gateway);
+
+            foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
+            {
+                T attr = method.GetCustomAttribute<T>();
+                if (attr != null)
+                    yield return new Tuple<MethodInfo, T>(method, attr);
             }
         }
 
