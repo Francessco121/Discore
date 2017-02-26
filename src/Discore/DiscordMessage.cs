@@ -305,12 +305,22 @@ namespace Discore
         /// Changes the contents of this message.
         /// Note: changes will not be reflected in this message instance.
         /// </summary>
-        /// <param name="newContent">The new contents.</param>
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Edit(string newContent)
         {
             return channelsHttp.EditMessage(ChannelId, Id, newContent);
+        }
+
+        /// <summary>
+        /// Changes the contents of this message.
+        /// Note: changes will not be reflected in this message instance.
+        /// </summary>
+        /// <returns>Returns the editted message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Edit(DiscordMessageEdit editDetails)
+        {
+            return channelsHttp.EditMessage(ChannelId, Id, editDetails);
         }
 
         /// <summary>

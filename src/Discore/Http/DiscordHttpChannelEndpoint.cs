@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -175,11 +177,13 @@ namespace Discore.Http
             return new DiscordMessage(App, data);
         }
 
+        #region Deprecated CreateMessage
         /// <summary>
         /// Posts a message to a text channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use overloads using DiscordMessageDetails when creating messages.")]
         public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, Snowflake? nonce = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
@@ -187,25 +191,58 @@ namespace Discore.Http
             requestData.Set("tts", tts);
             requestData.Set("nonce", nonce);
 
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData, 
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData,
+                "channels/channel/messages").ConfigureAwait(false);
+            return new DiscordMessage(App, returnData);
+        }
+        #endregion
+
+        /// <summary>
+        /// Posts a message to a text channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> CreateMessage(Snowflake channelId, string content)
+        {
+            return CreateMessage(channelId, new DiscordMessageDetails(content));
+        }
+
+        /// <summary>
+        /// Posts a message to a text channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, DiscordMessageDetails details)
+        {
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            requestData.Set("content", details.Content);
+            requestData.Set("tts", details.TextToSpeech);
+            requestData.Set("nonce", details.Nonce);
+
+            if (details.Embed != null)
+                requestData.Set("embed", details.Embed.Build());
+
+            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData,
                 "channels/channel/messages").ConfigureAwait(false);
             return new DiscordMessage(App, returnData);
         }
 
+        #region Deprecated UploadFile
         /// <summary>
         /// Uploads a file to a text channel with an optional message.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> UploadFile(Snowflake channelId, FileInfo fileInfo, 
+        [Obsolete("Please use overloads using DiscordMessageDetails when uploading files.")]
+        public Task<DiscordMessage> UploadFile(Snowflake channelId, FileInfo fileInfo,
             string message = null, bool tts = false, Snowflake? nonce = null)
         {
-            using (FileStream fs = fileInfo.OpenRead())
-            using (MemoryStream ms = new MemoryStream())
-            {
-                await fs.CopyToAsync(ms).ConfigureAwait(false);
-                return await UploadFile(channelId, ms.ToArray(), fileInfo.Name, message, tts, nonce).ConfigureAwait(false);
-            }
+            DiscordMessageDetails details = new DiscordMessageDetails();
+            details.Content = message;
+            details.TextToSpeech = tts;
+            details.Nonce = nonce;
+
+            return UploadFile(channelId, new StreamContent(fileInfo.OpenRead()), fileInfo.Name, details);
         }
 
         /// <summary>
@@ -213,21 +250,65 @@ namespace Discore.Http
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
+        [Obsolete("Please use overloads using DiscordMessageDetails when uploading files.")]
+        public Task<DiscordMessage> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
             string message = null, bool? tts = null, Snowflake? nonce = null)
+        {
+            DiscordMessageDetails details = new DiscordMessageDetails();
+            details.Content = message;
+            details.TextToSpeech = tts.GetValueOrDefault();
+            details.Nonce = nonce;
+
+            return UploadFile(channelId, new ByteArrayContent(file), filename, details);
+        }
+        #endregion
+
+        /// <summary>
+        /// Uploads a file to a text channel with an optional message.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> UploadFile(Snowflake channelId, Stream fileData, string fileName, 
+            DiscordMessageDetails details = null)
+        {
+            return UploadFile(channelId, new StreamContent(fileData), fileName, details);
+        }
+
+        /// <summary>
+        /// Uploads a file to a text channel with an optional message.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> UploadFile(Snowflake channelId, ArraySegment<byte> fileData, string fileName,
+            DiscordMessageDetails details = null)
+        {
+            return UploadFile(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, details);
+        }
+
+        async Task<DiscordMessage> UploadFile(Snowflake channelId, HttpContent fileContent, string fileName, DiscordMessageDetails details)
         {
             DiscordApiData returnData = await Rest.Send(() =>
             {
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
-                $"{RestClient.BASE_URL}/channels/{channelId}/messages");
+                    $"{RestClient.BASE_URL}/channels/{channelId}/messages");
 
                 MultipartFormDataContent data = new MultipartFormDataContent();
-                data.Add(new ByteArrayContent(file), "file", filename);
-                request.Content = data;
+                data.Add(fileContent, "file", fileName);
 
-                if (message != null) request.Properties.Add("content", message);
-                if (tts.HasValue) request.Properties.Add("tts", tts.Value);
-                if (nonce.HasValue) request.Properties.Add("nonce", nonce.Value);
+                if (details != null)
+                {
+                    DiscordApiData payloadJson = new DiscordApiData();
+                    payloadJson.Set("content", details.Content);
+                    payloadJson.Set("tts", details.TextToSpeech);
+                    payloadJson.Set("nonce", details.Nonce);
+
+                    if (details.Embed != null)
+                        payloadJson.Set("embed", details.Embed.Build());
+
+                    data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
+                }
+
+                request.Content = data;
 
                 return request;
             }, "channels/channel/messages").ConfigureAwait(false);
@@ -243,7 +324,24 @@ namespace Discore.Http
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("content", content);
 
-            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}/messages/{messageId}", requestData, 
+            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
+                "channels/channel/messages/message").ConfigureAwait(false);
+            return new DiscordMessage(App, returnData);
+        }
+
+        /// <summary>
+        /// Edits an existing message in a text channel.
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, DiscordMessageEdit editDetails)
+        {
+            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
+            requestData.Set("content", editDetails.Content);
+
+            if (editDetails.Embed != null)
+                requestData.Set("embed", editDetails.Embed.Build());
+
+            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
                 "channels/channel/messages/message").ConfigureAwait(false);
             return new DiscordMessage(App, returnData);
         }

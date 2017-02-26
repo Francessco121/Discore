@@ -1,6 +1,7 @@
 ﻿using Discore.Http;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -13,7 +14,7 @@ namespace Discore
         public string Topic { get; }
 
         IDiscordApplication app;
-        DiscordHttpChannelEndpoint channelHttp;
+        DiscordHttpChannelEndpoint channelsHttp;
         DiscordHttpWebhookEndpoint webhookHttp;
         Snowflake lastMessageId;
 
@@ -21,7 +22,7 @@ namespace Discore
             : base(app, data, DiscordGuildChannelType.Text, guildId)
         {
             this.app = app;
-            channelHttp = app.HttpApi.Channels;
+            channelsHttp = app.HttpApi.Channels;
             webhookHttp = app.HttpApi.Webhooks;
 
             Topic = data.GetString("topic");
@@ -66,9 +67,10 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildTextChannel> Modify(string name = null, int? position = null, string topic = null)
         {
-            return channelHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
+            return channelsHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
         }
 
+        #region Deprecated SendMessage
         /// <summary>
         /// Sends a message to this channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
@@ -78,6 +80,7 @@ namespace Discore
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use CreateMessage instead.")]
         public async Task<DiscordMessage> SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
         {
             DiscordMessage firstOrOnlyMessage = null;
@@ -87,14 +90,14 @@ namespace Discore
                 await SplitSendMessage(content,
                     async message =>
                     {
-                        DiscordMessage msg = await channelHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
+                        DiscordMessage msg = await channelsHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
 
                         if (firstOrOnlyMessage == null)
                             firstOrOnlyMessage = msg;
                     }).ConfigureAwait(false);
             }
             else
-                firstOrOnlyMessage = await channelHttp.CreateMessage(Id, content, tts).ConfigureAwait(false);
+                firstOrOnlyMessage = await channelsHttp.CreateMessage(Id, content, tts).ConfigureAwait(false);
 
             return firstOrOnlyMessage;
         }
@@ -110,6 +113,7 @@ namespace Discore
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use UploadFile instead.")]
         public async Task<DiscordMessage> SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
@@ -122,15 +126,15 @@ namespace Discore
                     {
                         if (firstOrOnlyMessage == null)
                         {
-                            DiscordMessage msg = await channelHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
+                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
                             firstOrOnlyMessage = msg;
                         }
                         else
-                            await channelHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
+                            await channelsHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
                     }).ConfigureAwait(false);
             }
             else
-                firstOrOnlyMessage = await channelHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
+                firstOrOnlyMessage = await channelsHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
 
             return firstOrOnlyMessage;
         }
@@ -155,29 +159,79 @@ namespace Discore
                 i += subMessage.Length;
             }
         }
+        #endregion
 
         /// <summary>
-        /// Deletes a list of messages in one API call.
-        /// Much quicker than calling Delete() on each message instance.
+        /// Creates a message in this channel.
         /// </summary>
-        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
+        /// <param name="content">The message text content.</param>
+        /// <returns>Returns the created message.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
+        public Task<DiscordMessage> CreateMessage(string content)
         {
-            return channelHttp.BulkDeleteMessages(Id, messages, filterTooOldMessages);
+            return channelsHttp.CreateMessage(Id, content);
+        }
+
+        /// <summary>
+        /// Creates a message in this channel.
+        /// </summary>
+        /// <param name="details">The details of the message to create.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> CreateMessage(DiscordMessageDetails details)
+        {
+            return channelsHttp.CreateMessage(Id, details);
+        }
+
+        /// <summary>
+        /// Uploads a file with an optional message to this channel.
+        /// </summary>
+        /// <param name="fileData">A stream of the file contents.</param>
+        /// <param name="fileName">The name of the file to use when uploading.</param>
+        /// <param name="details">Optional extra details of the message to create.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null)
+        {
+            return channelsHttp.UploadFile(Id, fileData, fileName, details);
+        }
+        /// <summary>
+        /// Uploads a file with an optional message to this channel.
+        /// </summary>
+        /// <param name="fileData">The file contents.</param>
+        /// <param name="fileName">The name of the file to use when uploading.</param>
+        /// <param name="details">Optional extra details of the message to create.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> UploadFile(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
+        {
+            return channelsHttp.UploadFile(Id, fileData, fileName, details);
         }
 
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
-        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
+        /// (messages that are too old cause an API error).</param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
+        {
+            return channelsHttp.BulkDeleteMessages(Id, messages, filterTooOldMessages);
+        }
+
+        /// <summary>
+        /// Deletes a list of messages in one API call.
+        /// Much quicker than calling Delete() on each message instance.
+        /// </summary>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
+        /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
         {
-            return channelHttp.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
+            return channelsHttp.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
         }
 
         /// <summary>
@@ -187,7 +241,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> TriggerTypingIndicator()
         {
-            return channelHttp.TriggerTypingIndicator(Id);
+            return channelsHttp.TriggerTypingIndicator(Id);
         }
 
         /// <summary>
@@ -196,7 +250,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages()
         {
-            return channelHttp.GetPinnedMessages(Id);
+            return channelsHttp.GetPinnedMessages(Id);
         }
 
         /// <summary>
@@ -205,7 +259,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> GetMessage(Snowflake messageId)
         {
-            return channelHttp.GetMessage(Id, messageId);
+            return channelsHttp.GetMessage(Id, messageId);
         }
 
         /// <summary>
@@ -218,7 +272,7 @@ namespace Discore
         public Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
-            return channelHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
+            return channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
         }
     }
 }
