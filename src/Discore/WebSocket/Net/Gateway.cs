@@ -80,7 +80,7 @@ namespace Discore.WebSocket.Net
             InitializePayloadHandlers();
             InitializeDispatchHandlers();
             
-            socket = new DiscoreWebSocket(WebSocketDataType.Json, logName);
+            socket = new DiscoreWebSocket(DiscordWebSocketDataType.Json, logName);
             socket.OnError += Socket_OnError;
             socket.OnMessageReceived += Socket_OnMessageReceived;
         }
@@ -453,7 +453,7 @@ namespace Discore.WebSocket.Net
             }
             catch (Exception ex)
             {
-                log.LogError("[OnMessageReceived] Unhandled Exception:");
+                log.LogError("[Socket_OnMessageReceived] Unhandled Exception:");
                 log.LogError(ex);
             }
         }

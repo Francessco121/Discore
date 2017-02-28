@@ -63,7 +63,7 @@ namespace Discore.Voice.Net
 
             log = new DiscoreLogger($"VoiceSocket:{guildCache.Value.Name}");
 
-            socket = new DiscoreWebSocket(WebSocketDataType.Json, log.Prefix);
+            socket = new DiscoreWebSocket(DiscordWebSocketDataType.Json, log.Prefix);
 
             encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
 

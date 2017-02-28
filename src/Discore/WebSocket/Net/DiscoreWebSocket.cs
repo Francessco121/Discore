@@ -39,13 +39,13 @@ namespace Discore.WebSocket.Net
         ConcurrentQueue<DiscordApiData> sendQueue;
 
         DiscoreLogger log;
-        WebSocketDataType dataType;
+        DiscordWebSocketDataType dataType;
 
         bool isDisposed;
 
-        internal DiscoreWebSocket(WebSocketDataType dataType, string loggingName)
+        internal DiscoreWebSocket(DiscordWebSocketDataType dataType, string loggingName)
         {
-            if (dataType != WebSocketDataType.Json)
+            if (dataType != DiscordWebSocketDataType.Json)
                 throw new NotImplementedException("Only JSON packets are supported so far.");
 
             this.dataType = dataType;
@@ -203,7 +203,7 @@ namespace Discore.WebSocket.Net
 
                             try
                             {
-                                if (dataType == WebSocketDataType.Json)
+                                if (dataType == DiscordWebSocketDataType.Json)
                                     bytes = Encoding.UTF8.GetBytes(data.SerializeToJson());
                             }
                             catch (JsonWriterException jex)
@@ -230,7 +230,7 @@ namespace Discore.WebSocket.Net
                                     else
                                         count = SEND_BUFFER_SIZE;
 
-                                    WebSocketMessageType msgType = dataType == WebSocketDataType.Json
+                                    WebSocketMessageType msgType = dataType == DiscordWebSocketDataType.Json
                                         ? WebSocketMessageType.Text
                                         : WebSocketMessageType.Binary;
 
@@ -238,6 +238,8 @@ namespace Discore.WebSocket.Net
 
                                     try
                                     {
+                                        // Can throw operation cancelled exception or websocket error of 'ConnectionClosedPrematurely'
+
                                         await socket.SendAsync(arraySeg, msgType, isLast, taskCancelTokenSource.Token).ConfigureAwait(false);
                                     }
                                     catch (WebSocketException wsex)
@@ -269,6 +271,7 @@ namespace Discore.WebSocket.Net
             try
             {
                 ArraySegment<byte> receiveBuffer = new ArraySegment<byte>(new byte[RECEIVE_BUFFER_SIZE]);
+
 
                 using (MemoryStream receiveMs = new MemoryStream())
                 {
@@ -375,7 +378,7 @@ namespace Discore.WebSocket.Net
                         {
                             // Parse string and invoke OnMessageReceived
                             DiscordApiData data = null;
-                            if (dataType == WebSocketDataType.Json)
+                            if (dataType == DiscordWebSocketDataType.Json)
                             {
                                 if (!DiscordApiData.TryParseJson(str, out data))
                                     log.LogError($"[ReceiveLoop] Failed to parse json: {str}");
