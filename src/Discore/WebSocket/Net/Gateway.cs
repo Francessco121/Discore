@@ -392,8 +392,7 @@ namespace Discore.WebSocket.Net
 
         private void Socket_OnError(object sender, Exception e)
         {
-            DiscoreWebSocketException dex = e as DiscoreWebSocketException;
-            if (dex != null)
+            if (e is DiscoreWebSocketException dex)
             {
                 GatewayDisconnectCode code = (GatewayDisconnectCode)dex.ErrorCode;
                 switch (code)

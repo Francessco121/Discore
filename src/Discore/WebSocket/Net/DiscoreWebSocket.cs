@@ -43,7 +43,9 @@ namespace Discore.WebSocket.Net
 
         bool isDisposed;
 
-        internal DiscoreWebSocket(DiscordWebSocketDataType dataType, string loggingName)
+        volatile int taskId;
+
+        internal DiscoreWebSocket(WebSocketDataType dataType, string loggingName)
         {
             if (dataType != DiscordWebSocketDataType.Json)
                 throw new NotImplementedException("Only JSON packets are supported so far.");
@@ -109,9 +111,10 @@ namespace Discore.WebSocket.Net
                 sendQueue = new ConcurrentQueue<DiscordApiData>();
 
                 // Start new tasks for sending/receiving.
+                Interlocked.Increment(ref taskId);
                 runTasks = true;
-                sendTask = SendLoop();
-                receiveTask = ReceiveLoop();
+                sendTask = Task.Run(async () => await SendLoop());
+                receiveTask = Task.Run(async () => await ReceiveLoop());
 
                 // Flip state
                 State = DiscoreWebSocketState.Open;
@@ -156,13 +159,13 @@ namespace Discore.WebSocket.Net
 
             // Do not await tasks if we are coming from an error,
             // this avoids a deadlock if this is called from one of the tasks.
-            if (!tasksEndingFromError)
-            {
-                log.LogVerbose("[DisconnectAsync] Awaiting sendTask and receiveTask...");
+            //if (!tasksEndingFromError)
+            //{
+            //    log.LogVerbose("[DisconnectAsync] Awaiting sendTask and receiveTask...");
 
-                // Wait for each task to end.
-                await Task.WhenAll(sendTask, receiveTask).ConfigureAwait(false);
-            }
+            //    // Wait for each task to end.
+            //    await Task.WhenAll(sendTask, receiveTask).ConfigureAwait(false);
+            //}
 
             // Cancel any remaining procedures
             taskCancelTokenSource.Cancel();
@@ -190,9 +193,11 @@ namespace Discore.WebSocket.Net
 
         async Task SendLoop()
         {
+            int id = taskId;
+
             try
             {
-                while (runTasks)
+                while (runTasks && id == taskId)
                 {
                     if (sendQueue.Count > 0)
                     {
@@ -244,10 +249,13 @@ namespace Discore.WebSocket.Net
                                     }
                                     catch (WebSocketException wsex)
                                     {
-                                        if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
-                                            && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                        if (id == taskId)
                                         {
-                                            await HandleFatalException(wsex, sendTask).ConfigureAwait(false);
+                                            if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
+                                                && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                            {
+                                                await HandleFatalException(wsex, sendTask).ConfigureAwait(false);
+                                            }
                                         }
                                     }
                                 }
@@ -261,13 +269,18 @@ namespace Discore.WebSocket.Net
             catch (TaskCanceledException) { /* Socket is disconnecting */ }
             catch (Exception ex)
             {
-                // Handle the exception
-                await HandleFatalException(ex, sendTask).ConfigureAwait(false);
+                if (id == taskId)
+                {
+                    // Handle the exception
+                    await HandleFatalException(ex, sendTask).ConfigureAwait(false);
+                }
             }
         }
 
         async Task ReceiveLoop()
         {
+            int id = taskId;
+
             try
             {
                 ArraySegment<byte> receiveBuffer = new ArraySegment<byte>(new byte[RECEIVE_BUFFER_SIZE]);
@@ -275,7 +288,7 @@ namespace Discore.WebSocket.Net
 
                 using (MemoryStream receiveMs = new MemoryStream())
                 {
-                    while (runTasks || socket.State == WebSocketState.CloseSent)
+                    while (runTasks && id == taskId)
                     {
                         WebSocketReceiveResult result = null;
 
@@ -300,14 +313,17 @@ namespace Discore.WebSocket.Net
                             }
                             catch (WebSocketException wsex)
                             {
-                                if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
-                                    && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                if (id == taskId)
                                 {
-                                    await HandleFatalException(wsex, receiveTask).ConfigureAwait(false);
+                                    if (wsex.WebSocketErrorCode != WebSocketError.Success           // Not success
+                                        && wsex.WebSocketErrorCode != WebSocketError.InvalidState)  // Not cancel/abort
+                                    {
+                                        await HandleFatalException(wsex, receiveTask).ConfigureAwait(false);
+                                    }
                                 }
                             }
 
-                            if (result != null)
+                            if (result != null && taskId == id)
                             {
                                 if (result.MessageType == WebSocketMessageType.Close)
                                 {
@@ -327,9 +343,9 @@ namespace Discore.WebSocket.Net
                                     receiveMs.Write(receiveBuffer.Array, 0, result.Count);
                             }
 
-                        } while (result == null || !result.EndOfMessage);
+                        } while ((result == null || !result.EndOfMessage) && taskId == id);
 
-                        if (isClosing)
+                        if (isClosing || taskId != id)
                             break;
 
                         // Parse message
@@ -413,8 +429,11 @@ namespace Discore.WebSocket.Net
             catch (TaskCanceledException) { }
             catch (Exception ex)
             {
-                // Handle the exception
-                await HandleFatalException(ex, receiveTask).ConfigureAwait(false);
+                if (taskId == id)
+                {
+                    // Handle the exception
+                    await HandleFatalException(ex, receiveTask).ConfigureAwait(false);
+                }
             }
         }
 
