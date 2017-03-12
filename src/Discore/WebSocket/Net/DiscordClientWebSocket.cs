@@ -25,6 +25,14 @@ namespace Discore.WebSocket.Net
 
     abstract class DiscordClientWebSocket : IDisposable
     {
+        /// <summary>
+        /// Custom error (not specified by Discord or WebSocket spec) to use when the client needs to disconnect
+        /// due to an error on our end.
+        /// </summary>
+        protected const WebSocketCloseStatus INTERNAL_CLIENT_ERROR = (WebSocketCloseStatus)4100;
+
+        protected WebSocketState State { get { return socket.State; } }
+
         const int SEND_BUFFER_SIZE = 4 * 1024;  // 4kb (Discord's max payload size)
         const int RECEIVE_BUFFER_SIZE = 12 * 1024; // 12kb
 
@@ -37,11 +45,9 @@ namespace Discore.WebSocket.Net
 
         DiscoreLogger log;
 
-        protected DiscordClientWebSocket(DiscoreLogger log)
+        protected DiscordClientWebSocket(string loggingName)
         {
-            this.log = log;
-
-            sendLock = new AsyncLock();
+            log = new DiscoreLogger($"BaseWebSocket:{loggingName}");
 
             socket = new ClientWebSocket();
             // Disable "keep alive" packets, Discord's WebSocket servers do not handle
@@ -54,17 +60,15 @@ namespace Discore.WebSocket.Net
         /// </summary>
         protected abstract void OnPayloadReceived(DiscordApiData payload);
         /// <summary>
-        /// Called when a close message has been received. The socket will be closed automatically after this call.
+        /// Called when a close message has been received. 
+        /// The socket will be gracefully closed automatically after this call.
         /// </summary>
-        protected abstract void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription);
+        protected abstract void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription); // Successful close
         /// <summary>
-        /// Called when a WebSocket error occurs when receiving a message. The socket will be in the CloseSent state.
+        /// Called when either the socket closes or the receive task ends unexpectedly.
+        /// The socket may or may not be open when this is called.
         /// </summary>
-        protected abstract void OnError(WebSocketError error, string message, int nativeErrorCode);
-        /// <summary>
-        /// Called when the receive task ends from an unexpected exception. The socket may still be connected.
-        /// </summary>
-        protected abstract void OnUnexpectedError(Exception ex);
+        protected abstract void OnClosedPrematurely(); // Unsuccessful close
 
         /// <param name="cancellationToken">Token that when cancelled will abort the entire socket.</param>
         /// <exception cref="ArgumentException">Thrown if <paramref name="uri"/> does not start with ws:// or wss://.</exception>
@@ -95,14 +99,19 @@ namespace Discore.WebSocket.Net
             // Connection successful (exception would be thrown otherwise)
             abortCancellationSource = new CancellationTokenSource();
 
+            sendLock = new AsyncLock();
+
             // Start receive task
             receiveTask = ReceiveLoop();
 
             log.LogVerbose("Successfully connected.");
         }
 
+        /// <summary>
+        /// This task will deadlock (for 5s then abort the socket) if called from the same thread as the receive loop!
+        /// </summary>
         /// <param name="cancellationToken">Token that when cancelled will abort the entire socket.</param>
-        /// <exception cref="TaskCanceledException"></exception>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <exception cref="WebSocketException">Thrown if the socket is not in a valid state to be closed.</exception>
         public virtual Task DisconnectAsync(WebSocketCloseStatus closeStatus, string statusDescription,
             CancellationToken cancellationToken)
@@ -163,7 +172,7 @@ namespace Discore.WebSocket.Net
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>
-        public async Task SendAsync(DiscordApiData data)
+        protected async Task SendAsync(DiscordApiData data)
         {
             if (data == null)
                 throw new ArgumentNullException(nameof(data));
@@ -175,7 +184,7 @@ namespace Discore.WebSocket.Net
 
             // Wait for any existing send operations,
             // ClientWebSocket only supports one send operation at a time.
-            using (await sendLock.LockAsync())
+            using (await sendLock.LockAsync().ConfigureAwait(false))
             {
                 // Now that we have acquired the lock, check if the socket is still open.
                 // If not, just ignore this message so we can effectively cancel any pending sends after close.
@@ -183,7 +192,7 @@ namespace Discore.WebSocket.Net
                 {
                     try
                     {
-                        await SendData(bytes);
+                        await SendData(bytes).ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -220,8 +229,8 @@ namespace Discore.WebSocket.Net
                     //   WebSocketException (if stream closed)
                     //   ObjectDisposedException (if disposed)
                     //   InvalidOperationException (if not connected)
-                    await socket.SendAsync(arraySeg, WebSocketMessageType.Text,
-                        isLast, abortCancellationSource.Token).ConfigureAwait(false);
+                    await socket.SendAsync(arraySeg, WebSocketMessageType.Text, isLast, abortCancellationSource.Token)
+                        .ConfigureAwait(false);
                 }
                 catch (ObjectDisposedException)
                 {
@@ -276,7 +285,13 @@ namespace Discore.WebSocket.Net
                                 // Only two errors here should be InvalidState (if socket is aborted),
                                 // or ConnectionClosedPrematurely (with an inner exception detailing what happened).
 
-                                OnError(wsex.WebSocketErrorCode, wsex.Message, wsex.ErrorCode);
+                                if (wsex.WebSocketErrorCode == WebSocketError.InvalidState)
+                                    log.LogVerbose($"[ReceiveLoop] Socket was aborted while receiving message.");
+                                else
+                                    log.LogError($"[ReceiveLoop] Socket encountered error while receiving: {wsex}");
+
+                                // Notify inherting object
+                                OnClosedPrematurely();
                                 break;
                             }
 
@@ -284,6 +299,9 @@ namespace Discore.WebSocket.Net
                             {
                                 // Server is disconnecting us
                                 isClosing = true;
+
+                                log.LogVerbose($"[ReceiveLoop] Received close: {result.CloseStatusDescription} " +
+                                    $"{result.CloseStatus}({(int)result.CloseStatus})");
 
                                 // Notify inheriting object
                                 OnCloseReceived(result.CloseStatus.Value, result.CloseStatusDescription);
@@ -304,7 +322,8 @@ namespace Discore.WebSocket.Net
                                 // Complete the closing handshake
                                 // TODO: Check that a 'Normal closure' here won't ALWAYS force us to create a new gateway session,
                                 // it is only documented that this happens when we INITIATE the closing handshake.
-                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token);
+                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
+                                    .ConfigureAwait(false);
 
                                 log.LogVerbose("[ReceiveLoop] Completed close handshake.");
                             }
@@ -322,7 +341,7 @@ namespace Discore.WebSocket.Net
 
                             try
                             {
-                                message = await ParseMessage(result.MessageType, ms);
+                                message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
                             }
                             catch (Exception ex)
                             {
@@ -332,8 +351,10 @@ namespace Discore.WebSocket.Net
                             if (message != null)
                             {
                                 if (DiscordApiData.TryParseJson(message, out DiscordApiData data))
+                                {
                                     // Notify inheriting object that a payload has been received.
                                     OnPayloadReceived(data);
+                                }
                                 else
                                     log.LogError($"[ReceiveLoop] Failed to parse JSON: \"{message}\"");
                             }
@@ -343,7 +364,7 @@ namespace Discore.WebSocket.Net
                 catch (Exception ex)
                 {
                     log.LogError($"[ReceiveLoop] Uncaught exception: {ex}");
-                    OnUnexpectedError(ex);
+                    OnClosedPrematurely();
                 }
             }
         }
