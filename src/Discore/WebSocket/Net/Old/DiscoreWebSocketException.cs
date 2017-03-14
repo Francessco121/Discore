@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net.WebSockets;
 
-namespace Discore.WebSocket.Net
+namespace Discore.WebSocket.Net.Old
 {
     class DiscoreWebSocketException : DiscoreException
     {

@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
-namespace Discore.WebSocket.Net
+namespace Discore.WebSocket.Net.Old
 {
     partial class Gateway
     {

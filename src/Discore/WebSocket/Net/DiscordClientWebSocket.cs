@@ -29,7 +29,7 @@ namespace Discore.WebSocket.Net
         /// Custom error (not specified by Discord or WebSocket spec) to use when the client needs to disconnect
         /// due to an error on our end.
         /// </summary>
-        protected const WebSocketCloseStatus INTERNAL_CLIENT_ERROR = (WebSocketCloseStatus)4100;
+        public const WebSocketCloseStatus INTERNAL_CLIENT_ERROR = (WebSocketCloseStatus)4100; // TODO: check for side-effects of usage
 
         protected WebSocketState State { get { return socket.State; } }
 
@@ -44,6 +44,8 @@ namespace Discore.WebSocket.Net
         AsyncLock sendLock;
 
         DiscoreLogger log;
+
+        bool isDisposed;
 
         protected DiscordClientWebSocket(string loggingName)
         {
@@ -61,7 +63,7 @@ namespace Discore.WebSocket.Net
         protected abstract void OnPayloadReceived(DiscordApiData payload);
         /// <summary>
         /// Called when a close message has been received. 
-        /// The socket will be gracefully closed automatically after this call.
+        /// The socket will be gracefully closed automatically before this call.
         /// </summary>
         protected abstract void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription); // Successful close
         /// <summary>
@@ -77,7 +79,7 @@ namespace Discore.WebSocket.Net
         /// Thrown if the socket attempts to start after a first time. A WebSocket instance
         /// can only be used for one connection attempt.
         /// </exception>
-        /// <exception cref="TaskCanceledException"></exception>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <exception cref="ObjectDisposedException">Thrown if this socket has already been disposed.</exception>
         /// <exception cref="WebSocketException">Thrown if the socket fails to connect.</exception>
         public virtual async Task ConnectAsync(Uri uri, CancellationToken cancellationToken)
@@ -92,7 +94,7 @@ namespace Discore.WebSocket.Net
             // Shouldn't ever happen, but just in case
             if (socket.State != WebSocketState.Open)
             {
-                log.LogError($"Socket.ConnectAsync succeeded but the state is {socket.State}!");
+                log.LogWarning($"Socket.ConnectAsync succeeded but the state is {socket.State}!");
                 throw new WebSocketException(WebSocketError.Faulted, "Failed to connect. No other information is available.");
             }
 
@@ -288,10 +290,13 @@ namespace Discore.WebSocket.Net
                                 if (wsex.WebSocketErrorCode == WebSocketError.InvalidState)
                                     log.LogVerbose($"[ReceiveLoop] Socket was aborted while receiving message.");
                                 else
+                                {
                                     log.LogError($"[ReceiveLoop] Socket encountered error while receiving: {wsex}");
 
-                                // Notify inherting object
-                                OnClosedPrematurely();
+                                    // Notify inherting object
+                                    OnClosedPrematurely();
+                                }
+
                                 break;
                             }
 
@@ -303,6 +308,23 @@ namespace Discore.WebSocket.Net
                                 log.LogVerbose($"[ReceiveLoop] Received close: {result.CloseStatusDescription} " +
                                     $"{result.CloseStatus}({(int)result.CloseStatus})");
 
+                                try
+                                {
+                                    log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
+
+                                    // Complete the closing handshake
+                                    // TODO: Check that a 'Normal closure' here won't ALWAYS force us to create a new gateway session,
+                                    // it is only documented that this happens when we INITIATE the closing handshake.
+                                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
+                                        .ConfigureAwait(false);
+
+                                    log.LogVerbose("[ReceiveLoop] Completed close handshake.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.LogError($"[ReceiveLoop] Failed to complete closing handshake: {ex}");
+                                }
+
                                 // Notify inheriting object
                                 OnCloseReceived(result.CloseStatus.Value, result.CloseStatusDescription);
                                 break;
@@ -313,51 +335,30 @@ namespace Discore.WebSocket.Net
                         }
                         while (socket.State == WebSocketState.Open && !result.EndOfMessage);
 
-                        if (isClosing)
-                        {
-                            try
-                            {
-                                log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
-
-                                // Complete the closing handshake
-                                // TODO: Check that a 'Normal closure' here won't ALWAYS force us to create a new gateway session,
-                                // it is only documented that this happens when we INITIATE the closing handshake.
-                                await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
-                                    .ConfigureAwait(false);
-
-                                log.LogVerbose("[ReceiveLoop] Completed close handshake.");
-                            }
-                            catch (Exception ex)
-                            {
-                                log.LogError($"[ReceiveLoop] Failed to complete closing handshake: {ex}");
-                            }
-
+                        if (isClosing || socket.State == WebSocketState.Aborted)
                             break;
-                        }
-                        else
+
+                        // Parse the message
+                        string message = null;
+
+                        try
                         {
-                            // Parse the message
-                            string message = null;
+                            message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.LogError($"[ReceiveLoop] Failed to parse message: {ex}");
+                        }
 
-                            try
+                        if (message != null)
+                        {
+                            if (DiscordApiData.TryParseJson(message, out DiscordApiData data))
                             {
-                                message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
+                                // Notify inheriting object that a payload has been received.
+                                OnPayloadReceived(data);
                             }
-                            catch (Exception ex)
-                            {
-                                log.LogError($"[ReceiveLoop] Failed to parse message: {ex}");
-                            }
-
-                            if (message != null)
-                            {
-                                if (DiscordApiData.TryParseJson(message, out DiscordApiData data))
-                                {
-                                    // Notify inheriting object that a payload has been received.
-                                    OnPayloadReceived(data);
-                                }
-                                else
-                                    log.LogError($"[ReceiveLoop] Failed to parse JSON: \"{message}\"");
-                            }
+                            else
+                                log.LogError($"[ReceiveLoop] Failed to parse JSON: \"{message}\"");
                         }
                     }
                 }
@@ -423,8 +424,13 @@ namespace Discore.WebSocket.Net
 
         public virtual void Dispose()
         {
-            abortCancellationSource?.Dispose();
-            socket.Dispose();
+            if (!isDisposed)
+            {
+                isDisposed = true;
+
+                abortCancellationSource?.Dispose();
+                socket.Dispose();
+            }
         }
     }
 }

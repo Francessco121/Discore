@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Discore.WebSocket.Net
+namespace Discore.WebSocket.Net.Old
 {
     class DiscoreWebSocket : IDisposable
     {
@@ -45,7 +45,7 @@ namespace Discore.WebSocket.Net
 
         volatile int taskId;
 
-        internal DiscoreWebSocket(WebSocketDataType dataType, string loggingName)
+        internal DiscoreWebSocket(DiscordWebSocketDataType dataType, string loggingName)
         {
             if (dataType != DiscordWebSocketDataType.Json)
                 throw new NotImplementedException("Only JSON packets are supported so far.");

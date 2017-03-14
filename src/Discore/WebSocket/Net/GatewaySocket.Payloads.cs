@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Net
@@ -27,7 +28,7 @@ namespace Discore.WebSocket.Net
         {
             payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
 
-            Type gatewayType = typeof(Gateway);
+            Type gatewayType = typeof(GatewaySocket);
             Type payloadType = typeof(PayloadCallback);
 
             foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
@@ -42,25 +43,38 @@ namespace Discore.WebSocket.Net
         [Payload(GatewayOPCode.Dispatch)]
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
         {
-            int sequence = payload.GetInteger("s").Value;
+            sequence = payload.GetInteger("s").Value;
             string eventName = payload.GetString("t");
 
-            OnDispatch?.Invoke(this, new DispatchEventArgs(sequence, eventName, data));
+            OnDispatch?.Invoke(this, new DispatchEventArgs(eventName, data));
         }
 
         [Payload(GatewayOPCode.Hello)]
         void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
         {
-            // Set heartbeat interval
-            heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
-            log.LogVerbose($"[Hello] heartbeat_interval: {heartbeatInterval}ms");
+            if (!receivedHello)
+            {
+                receivedHello = true;
+
+                // Set heartbeat interval
+                heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
+                log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
+
+                // Begin heartbeat loop
+                heartbeatCancellationSource = new CancellationTokenSource();
+                heartbeatTask = HeartbeatLoop();
+
+                // Notify so the IDENTIFY or RESUME payloads are sent
+                OnHello?.Invoke(this, EventArgs.Empty);
+            }
+            else
+                log.LogWarning("Received more than one HELLO payload.");
         }
 
         [Payload(GatewayOPCode.HeartbeatAck)]
         void HandleheartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
         {
-            // Reset heartbeat timeout
-            heartbeatTimeoutAt = Environment.TickCount + heartbeatInterval;
+            receivedHeartbeatAck = true;
         }
 
         [Payload(GatewayOPCode.Reconnect)]
@@ -93,6 +107,11 @@ namespace Discore.WebSocket.Net
             await SendAsync(payload).ConfigureAwait(false);
         }
 
+        Task SendHeartbeatPayload()
+        {
+            return SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
+        }
+
         public Task SendIdentifyPayload(string token, int largeThreshold, int shardId, int totalShards)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -118,11 +137,6 @@ namespace Discore.WebSocket.Net
             log.LogVerbose("[Identify] Sending payload...");
 
             return SendPayload(GatewayOPCode.Identify, data);
-        }
-
-        public Task SendHeartbeatPayload(int sequence)
-        {
-            return SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
         }
 
         public Task SendResumePayload(string token, string sessionId, int sequence)

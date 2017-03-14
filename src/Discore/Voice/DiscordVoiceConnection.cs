@@ -186,24 +186,22 @@ namespace Discore.Voice
         /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
         /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
         /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
-        public Task ConnectAsync(bool startMute = false, bool startDeaf = false)
+        public async Task ConnectAsync(bool startMute = false, bool startDeaf = false)
         {
             if (isValid)
             {
                 if (!isConnecting && !IsConnected)
                 {
                     isConnecting = true;
-                    gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, startMute, startDeaf);
+                    await gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, startMute, startDeaf);
 
                     connectingCancellationSource = new CancellationTokenSource();
 
-                    return ConnectionTimeout();
+                    await ConnectionTimeout();
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
             }
-
-            return Task.CompletedTask;
         }
 
         async Task ConnectionTimeout()

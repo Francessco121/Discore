@@ -2,11 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Discore.WebSocket.Net
+namespace Discore.WebSocket.Net.Old
 {
     partial class Gateway
     {
@@ -43,26 +42,26 @@ namespace Discore.WebSocket.Net
         public event EventHandler OnReadyEvent;
 
         #region Public Events       
-        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;
-        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;
+        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;        
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;        
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;        
+        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;        
         public event EventHandler<GuildChannelEventArgs> OnGuildChannelRemoved;
 
-
+        
         public event EventHandler<GuildEventArgs> OnGuildCreated;
         public event EventHandler<GuildEventArgs> OnGuildUpdated;
         public event EventHandler<GuildEventArgs> OnGuildRemoved;
-
+        
         public event EventHandler<GuildEventArgs> OnGuildUnavailable;
 
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
         public event EventHandler<GuildUserEventArgs> OnGuildBanRemoved;
-
+        
         public event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
-
+        
         public event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
-
+        
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
@@ -71,17 +70,17 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
-
+        
         public event EventHandler<MessageEventArgs> OnMessageCreated;
         public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
         public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
-
+        
         public event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
-
+        
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
-
+        
         public event EventHandler<UserEventArgs> OnUserUpdated;
         public event EventHandler<VoiceStateEventArgs> OnVoiceStateUpdated;
         #endregion
@@ -93,48 +92,27 @@ namespace Discore.WebSocket.Net
             dispatchHandlers = new Dictionary<string, DispatchCallback>();
 
             Type taskType = typeof(Task);
-            Type gatewayType = typeof(Gateway);
             Type dispatchSynchronousType = typeof(DispatchSynchronousCallback);
             Type dispatchAsynchronousType = typeof(DispatchAsynchronousCallback);
 
-            foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
+            foreach (Tuple<MethodInfo, DispatchEventAttribute> tuple in GetMethodsWithAttribute<DispatchEventAttribute>())
             {
-                DispatchEventAttribute attr = method.GetCustomAttribute<DispatchEventAttribute>();
-                if (attr != null)
-                {
-                    DispatchCallback dispatchCallback;
-                    if (method.ReturnType == taskType)
-                    {
-                        Delegate callback = method.CreateDelegate(dispatchAsynchronousType, this);
-                        dispatchCallback = new DispatchCallback((DispatchAsynchronousCallback)callback);
-                    }
-                    else
-                    {
-                        Delegate callback = method.CreateDelegate(dispatchSynchronousType, this);
-                        dispatchCallback = new DispatchCallback((DispatchSynchronousCallback)callback);
-                    }
+                MethodInfo method = tuple.Item1;
+                DispatchEventAttribute attr = tuple.Item2;
 
-                    dispatchHandlers[attr.EventName] = dispatchCallback;
+                DispatchCallback dispatchCallback;
+                if (method.ReturnType == taskType)
+                {
+                    Delegate callback = method.CreateDelegate(dispatchAsynchronousType, this);
+                    dispatchCallback = new DispatchCallback((DispatchAsynchronousCallback)callback);
                 }
-            }
-        }
-
-        void LogServerTrace(string prefix, DiscordApiData data)
-        {
-            IList<DiscordApiData> traceArray = data.GetArray("_trace");
-            if (traceArray != null)
-            {
-                StringBuilder sb = new StringBuilder();
-
-                for (int i = 0; i < traceArray.Count; i++)
+                else
                 {
-                    if (i > 0)
-                        sb.Append(", ");
-
-                    sb.Append(traceArray[i].ToString());
+                    Delegate callback = method.CreateDelegate(dispatchSynchronousType, this);
+                    dispatchCallback = new DispatchCallback((DispatchSynchronousCallback)callback);
                 }
 
-                log.LogVerbose($"[{prefix}] trace = {sb}");
+                dispatchHandlers[attr.EventName] = dispatchCallback;
             }
         }
 
@@ -836,10 +814,10 @@ namespace Discore.WebSocket.Net
             {
                 DiscordApiData userData = data.Get("user");
                 Snowflake memberId = userData.GetSnowflake("id").Value;
-
+                
                 DiscordUser user = cache.Users.Get(memberId);
                 user = cache.Users.Set(user.PartialUpdate(userData));
-
+               
                 DiscoreMemberCache memberCache;
                 if (guildCache.Members.TryGetValue(memberId, out memberCache))
                 {

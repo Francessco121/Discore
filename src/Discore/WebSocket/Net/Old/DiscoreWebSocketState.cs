@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket.Net
+﻿namespace Discore.WebSocket.Net.Old
 {
     enum DiscoreWebSocketState
     {

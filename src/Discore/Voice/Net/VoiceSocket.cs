@@ -1,4 +1,5 @@
 ﻿using Discore.WebSocket.Net;
+using Discore.WebSocket.Net.Old;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
