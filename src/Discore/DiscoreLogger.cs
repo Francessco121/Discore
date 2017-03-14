@@ -95,6 +95,7 @@ namespace Discore
                 msg = $"[{Prefix}] {msg}";
 
             try { OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now))); }
+            // Log methods need to be guaranteed to never throw exceptions.
             catch { }
         }
 

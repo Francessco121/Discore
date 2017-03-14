@@ -172,6 +172,7 @@ namespace Discore.WebSocket.Net
         }
 
         /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>
         protected async Task SendAsync(DiscordApiData data)
@@ -196,6 +197,21 @@ namespace Discore.WebSocket.Net
                     {
                         await SendData(bytes).ConfigureAwait(false);
                     }
+                    catch (InvalidOperationException iex)
+                    {
+                        throw new DiscordWebSocketException("The WebSocket connection was closed while sending data.", 
+                            DiscordWebSocketError.ConnectionClosed, iex);
+                    }
+                    catch (WebSocketException wsex)
+                    {
+                        if (wsex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+                            throw new DiscordWebSocketException("The WebSocket connection was closed while sending data.", 
+                                DiscordWebSocketError.ConnectionClosed, wsex);
+                        else
+                            // Should never happen
+                            throw new DiscordWebSocketException("An unexpected WebSocket error occured while sending data.", 
+                                DiscordWebSocketError.Unexpected, wsex);
+                    }
                     catch (Exception ex)
                     {
                         // We do not want any other exceptions bubbling up,
@@ -206,6 +222,7 @@ namespace Discore.WebSocket.Net
             }
         }
 
+        /// <exception cref="WebSocketException"></exception>
         async Task SendData(byte[] data)
         {
             int byteCount = data.Length;
@@ -247,12 +264,12 @@ namespace Discore.WebSocket.Net
                 catch (WebSocketException wsex)
                 {
                     // Only error here should be 'ConnectionClosedPrematurely',
-                    // in this case we should just stop the send loop.
+                    // in this case we should let it bubble up.
 
                     if (wsex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely)
                         log.LogError($"[SendData] Unexpected error: {wsex}");
 
-                    break;
+                    throw;
                 }
             }
         }
@@ -354,8 +371,34 @@ namespace Discore.WebSocket.Net
                         {
                             if (DiscordApiData.TryParseJson(message, out DiscordApiData data))
                             {
-                                // Notify inheriting object that a payload has been received.
-                                OnPayloadReceived(data);
+                                try
+                                {
+                                    // Notify inheriting object that a payload has been received.
+                                    OnPayloadReceived(data);
+                                }
+                                // Payload handlers can send other payloads which can result in two
+                                // valid exceptions that we do not want to bubble up.
+                                catch (InvalidOperationException)
+                                {
+                                    // Socket was closed between receiving a payload and handling it
+                                    break;
+                                }
+                                catch (DiscordWebSocketException dwex)
+                                {
+                                    if (dwex.Error == DiscordWebSocketError.ConnectionClosed)
+                                        // Socket was closed while a payload handler was sending another payload
+                                        break;
+                                    else
+                                    {
+                                        // Unexpected error occured, we should only let it bubble up if the socket
+                                        // is not open after the exception.
+                                        if (socket.State == WebSocketState.Open)
+                                            log.LogError($"[ReceiveLoop] Unexpected error from OnPayloadReceived: {dwex}");
+                                        else
+                                            // Don't log since that will be handled below
+                                            throw;
+                                    }
+                                }
                             }
                             else
                                 log.LogError($"[ReceiveLoop] Failed to parse JSON: \"{message}\"");

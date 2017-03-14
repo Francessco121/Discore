@@ -164,7 +164,7 @@ namespace Discore.Voice
             isValid = true;
             isSpeaking = true;
 
-            socket = new VoiceSocket(guildCache, memberCache);
+            socket = new VoiceSocket($"VoiceSocket:{guildCache.Value.Name}", guildCache, memberCache);
             socket.OnError += Socket_OnError;
         }
 

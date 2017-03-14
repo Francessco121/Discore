@@ -150,6 +150,8 @@ namespace Discore.WebSocket
         /// </summary>
         /// <param name="game">Either null, or an object with one key "name", representing the name of the game being played.</param>
         /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
+        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
         [Obsolete("Please use the asynchronous counterpart UpdateStatusAsync(string, int?) instead.")]
         void UpdateStatus(string game = null, int? idleSince = null);
 
@@ -162,6 +164,8 @@ namespace Discore.WebSocket
         /// </summary>
         /// <param name="game">Either null, or an object with one key "name", representing the name of the game being played.</param>
         /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
+        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
         Task UpdateStatusAsync(string game = null, int? idleSince = null);
 
         /// <summary>
@@ -176,6 +180,8 @@ namespace Discore.WebSocket
         /// <param name="guildId">The if of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
+        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
         [Obsolete("Please use the asynchronous counterpart RequestGuildMembersAsync() instead.")]
         void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0);
@@ -192,6 +198,8 @@ namespace Discore.WebSocket
         /// <param name="guildId">The if of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
+        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
         Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0);
     }

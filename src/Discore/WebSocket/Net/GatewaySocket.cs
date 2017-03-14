@@ -156,14 +156,36 @@ namespace Discore.WebSocket.Net
                 {
                     receivedHeartbeatAck = false;
 
-                    // Send heartbeat
-                    await SendHeartbeatPayload().ConfigureAwait(false);
+                    try
+                    {
+                        // Send heartbeat
+                        await SendHeartbeatPayload().ConfigureAwait(false);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Socket was closed between the loop check and sending the heartbeat
+                        break;
+                    }
+                    catch (DiscordWebSocketException dwex)
+                    {
+                        // Expected to be the socket closing while sending a heartbeat
+                        if (dwex.Error != DiscordWebSocketError.ConnectionClosed)
+                            // Unexpected errors may not be the socket closing/aborting, so just log and loop around.
+                            log.LogError($"[HeartbeatLoop] Unexpected error occured while sending a heartbeat: {dwex}");
+                        else
+                            break;
+                    }
 
                     try
                     {
                         // Wait heartbeat interval
                         await Task.Delay(heartbeatInterval, heartbeatCancellationSource.Token)
                             .ConfigureAwait(false);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // GatewaySocket was disposed between sending a heartbeat payload and beginning to wait
+                        break;
                     }
                     catch (OperationCanceledException)
                     {

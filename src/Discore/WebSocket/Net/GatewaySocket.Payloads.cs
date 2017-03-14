@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -95,6 +96,9 @@ namespace Discore.WebSocket.Net
         #endregion
 
         #region Sending
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
+        /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>
         async Task SendPayload(GatewayOPCode op, DiscordApiData data)
         {
             DiscordApiData payload = new DiscordApiData(DiscordApiDataType.Container);
@@ -107,11 +111,15 @@ namespace Discore.WebSocket.Net
             await SendAsync(payload).ConfigureAwait(false);
         }
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         Task SendHeartbeatPayload()
         {
             return SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
         }
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendIdentifyPayload(string token, int largeThreshold, int shardId, int totalShards)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -139,6 +147,8 @@ namespace Discore.WebSocket.Net
             return SendPayload(GatewayOPCode.Identify, data);
         }
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendResumePayload(string token, string sessionId, int sequence)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -151,6 +161,8 @@ namespace Discore.WebSocket.Net
             return SendPayload(GatewayOPCode.Resume, data);
         }
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public async Task SendStatusUpdate(string game = null, int? idleSince = null)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -170,6 +182,8 @@ namespace Discore.WebSocket.Net
             await SendPayload(GatewayOPCode.StatusUpdate, data).ConfigureAwait(false);
         }
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -180,6 +194,8 @@ namespace Discore.WebSocket.Net
             return SendPayload(GatewayOPCode.RequestGuildMembers, data);
         }
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);

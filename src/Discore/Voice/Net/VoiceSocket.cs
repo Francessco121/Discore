@@ -1,5 +1,4 @@
 ﻿using Discore.WebSocket.Net;
-using Discore.WebSocket.Net.Old;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
@@ -9,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Discore.Voice.Net
 {
-    class VoiceSocket : IDisposable
+    class VoiceSocket : DiscordClientWebSocket, IDisposable
     {
         public DiscordGuildMember Member { get { return memberCache.Value; } }
-        public bool IsConnected { get { return socket.State == DiscoreWebSocketState.Open; } }
+        public bool IsConnected { get { return State == WebSocketState.Open; } }
 
         public bool IsPaused { get; set; }
 
@@ -20,7 +19,6 @@ namespace Discore.Voice.Net
 
         public event EventHandler<Exception> OnError;
 
-        DiscoreWebSocket socket;
         DiscoreGuildCache guildCache;
         DiscoreMemberCache memberCache;
         string endpoint;
@@ -57,14 +55,13 @@ namespace Discore.Voice.Net
                 return SecretBoxEasy(outPtr + outputOffset, input, inputLength, nonce, secret);
         }
 
-        public VoiceSocket(DiscoreGuildCache guildCache, DiscoreMemberCache memberCache)
+        public VoiceSocket(string loggingName, DiscoreGuildCache guildCache, DiscoreMemberCache memberCache)
+            : base(loggingName)
         {
             this.guildCache = guildCache;
             this.memberCache = memberCache;
 
-            log = new DiscoreLogger($"VoiceSocket:{guildCache.Value.Name}");
-
-            socket = new DiscoreWebSocket(DiscordWebSocketDataType.Json, log.Prefix);
+            log = new DiscoreLogger(loggingName);
 
             encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
 
@@ -78,23 +75,20 @@ namespace Discore.Voice.Net
             socket.OnError += Socket_OnError;
         }
 
-        private async void Socket_OnError(object sender, Exception ex)
+        protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
         {
-            await HandleFatalError(ex).ConfigureAwait(false);
+            throw new NotImplementedException();
         }
 
-        private async void UdpSocket_OnError(object sender, Exception ex)
+        protected override void OnClosedPrematurely()
         {
-            udpSocket.OnError -= UdpSocket_OnError;
-            udpSocket.OnIPDiscovered -= UdpSocket_OnIPDiscovered;
-
-            await HandleFatalError(ex).ConfigureAwait(false);
+            throw new NotImplementedException();
         }
 
-        private async void VoiceSocket_OnMessageReceived(object sender, DiscordApiData e)
+        protected override void OnPayloadReceived(DiscordApiData payload)
         {
-            VoiceSocketOPCode op = (VoiceSocketOPCode)e.GetInteger("op");
-            DiscordApiData d = e.Get("d");
+            VoiceSocketOPCode op = (VoiceSocketOPCode)payload.GetInteger("op");
+            DiscordApiData d = payload.Get("d");
 
             switch (op)
             {
@@ -112,6 +106,19 @@ namespace Discore.Voice.Net
                     log.LogWarning($"Unhandled op code '{op}'");
                     break;
             }
+        }
+
+        private async void Socket_OnError(object sender, Exception ex)
+        {
+            await HandleFatalError(ex).ConfigureAwait(false);
+        }
+
+        private async void UdpSocket_OnError(object sender, Exception ex)
+        {
+            udpSocket.OnError -= UdpSocket_OnError;
+            udpSocket.OnIPDiscovered -= UdpSocket_OnIPDiscovered;
+
+            await HandleFatalError(ex).ConfigureAwait(false);
         }
 
         /// <exception cref="InvalidOperationException">Thrown if this socket is already connected or connecting.</exception>
@@ -141,7 +148,7 @@ namespace Discore.Voice.Net
                 heartbeatTask = HeartbeatLoop();
 
                 // Send the identify payload
-                SendIdentifyPayload();
+                await SendIdentifyPayload();
                 return true;
             }
             else
@@ -184,25 +191,25 @@ namespace Discore.Voice.Net
             sendBuffer.Reset();
         }
 
-        void SendPayload(VoiceSocketOPCode op, DiscordApiData data)
+        Task SendPayload(VoiceSocketOPCode op, DiscordApiData data)
         {
             DiscordApiData payload = new DiscordApiData();
             payload.Set("op", (int)op);
             payload.Set("d", data);
 
-            socket.Send(payload);
+            return SendAsync(payload);
         }
 
-        public void SetSpeaking(bool speaking)
+        public Task SetSpeaking(bool speaking)
         {
             DiscordApiData data = new DiscordApiData();
             data.Set("speaking", speaking);
             data.Set("delay", 0);
 
-            SendPayload(VoiceSocketOPCode.Speaking, data);
+            return SendPayload(VoiceSocketOPCode.Speaking, data);
         }
 
-        void SendIdentifyPayload()
+        Task SendIdentifyPayload()
         {
             DiscordApiData data = new DiscordApiData();
             data.Set("server_id", guildCache.Value.Id);
@@ -211,15 +218,15 @@ namespace Discore.Voice.Net
             data.Set("token", token);
 
             log.LogVerbose($"[Identify] Sending identify with server_id: {guildCache.Value.Id}");
-            SendPayload(VoiceSocketOPCode.Identify, data);
+            return SendPayload(VoiceSocketOPCode.Identify, data);
         }
 
-        void SendHeartbeat()
+        Task SendHeartbeat()
         {
-            SendPayload(VoiceSocketOPCode.Heartbeat, null);
+            return SendPayload(VoiceSocketOPCode.Heartbeat, null);
         }
 
-        void SendSelectProtocol(string ip, int port)
+        Task SendSelectProtocol(string ip, int port)
         {
             DiscordApiData selectProtocol = new DiscordApiData();
             selectProtocol.Set("protocol", "udp");
@@ -229,7 +236,7 @@ namespace Discore.Voice.Net
             data.Set("mode", "xsalsa20_poly1305");
 
             log.LogVerbose($"[SelectProtocol] Sending select protocol to {ip}:{port}.");
-            SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
+            return SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
         }
 
         async Task HandleReadyPayload(DiscordApiData data)
@@ -431,7 +438,7 @@ namespace Discore.Voice.Net
                 // Heartbeat
                 while (socket.State == DiscoreWebSocketState.Open)
                 {
-                    SendHeartbeat();
+                    await SendHeartbeat();
                     await Task.Delay(heartbeatInterval, taskCancellationSource.Token).ConfigureAwait(false);
                 }
             }
@@ -469,7 +476,7 @@ namespace Discore.Voice.Net
             OnError?.Invoke(this, ex);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             taskCancellationSource?.Dispose();
 
@@ -480,6 +487,7 @@ namespace Discore.Voice.Net
             }
 
             socket.Dispose();
+            base.Dispose(); // TODO
         }
     }
 }

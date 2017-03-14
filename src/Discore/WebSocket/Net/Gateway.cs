@@ -76,25 +76,47 @@ namespace Discore.WebSocket.Net
             InitializeDispatchHandlers();
         }
 
-        #region Public API
+        #region Deprecated Public API
         [Obsolete]
         public void UpdateStatus(string game = null, int? idleSince = default(int?))
             => UpdateStatusAsync(game, idleSince).Wait();
-
-        public Task UpdateStatusAsync(string game = null, int? idleSince = default(int?))
-        {
-            // TODO: what if the socket is not connected?
-            return socket.SendStatusUpdate(game, idleSince);
-        }
 
         [Obsolete]
         public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0)
             => RequestGuildMembersAsync(callback, guildId, query, limit).Wait();
+        #endregion
 
+        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
+        public Task UpdateStatusAsync(string game = null, int? idleSince = default(int?))
+        {
+            if (state != GatewayState.Connected)
+                throw new InvalidOperationException("The gateway is not currently connected!");
+
+            try
+            {
+                return socket.SendStatusUpdate(game, idleSince);
+            }
+            catch (InvalidOperationException ioex)
+            {
+                // InvalidOperation is thrown if the socket is not connected before the call is
+                // made, however since the user of the Gateway doesn't need to worry about the
+                // socket not always being connected, transform the exception so that they only
+                // need to handle one exception.
+                throw new DiscordWebSocketException("The WebSocket connection is closed.", 
+                    DiscordWebSocketError.ConnectionClosed, ioex);
+            }
+        }
+
+        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
         public Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId, 
             string query = "", int limit = 0)
         {
+            if (state != GatewayState.Connected)
+                throw new InvalidOperationException("The gateway is not currently connected!");
+
             // Create GUILD_MEMBERS_CHUNK event handler
             EventHandler<DiscordGuildMember[]> eventHandler = null;
             eventHandler = (sender, members) =>
@@ -109,11 +131,28 @@ namespace Discore.WebSocket.Net
             // Hook in event handler
             OnGuildMembersChunk += eventHandler;
 
-            // Send gateway request
-            // TODO: what if the socket is not connected?
-            return socket.SendRequestGuildMembersPayload(guildId, query, limit);
+            try
+            {
+                // Send gateway request
+                return socket.SendRequestGuildMembersPayload(guildId, query, limit);
+            }
+            catch (InvalidOperationException ioex)
+            {
+                OnGuildMembersChunk -= eventHandler;
+
+                // InvalidOperation is thrown if the socket is not connected before the call is
+                // made, however since the user of the Gateway doesn't need to worry about the
+                // socket not always being connected, transform the exception so that they only
+                // need to handle one exception.
+                throw new DiscordWebSocketException("The WebSocket connection is closed.",
+                    DiscordWebSocketError.ConnectionClosed, ioex);
+            }
+            catch
+            {
+                OnGuildMembersChunk -= eventHandler;
+                throw;
+            }
         }
-        #endregion
 
         internal Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
