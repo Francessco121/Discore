@@ -1,4 +1,5 @@
 ﻿using Discore.Http;
+using Nito.AsyncEx;
 using System;
 using System.Collections.Generic;
 using System.Net.WebSockets;
@@ -51,6 +52,8 @@ namespace Discore.WebSocket.Net
         /// </summary>
         CancellationTokenSource connectTaskCancellationSource;
 
+        AsyncManualResetEvent gatewayReadyEvent;
+
         DiscoreLogger log;
 
         int lastSequence;
@@ -67,6 +70,8 @@ namespace Discore.WebSocket.Net
 
             log = new DiscoreLogger($"Gateway#{shard.Id}");
             state = GatewayState.Disconnected;
+
+            gatewayReadyEvent = new AsyncManualResetEvent();
 
             // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
             connectionRateLimiter = new GatewayRateLimiter(5, 1); // 1 connection attempt per 5 seconds
@@ -87,25 +92,51 @@ namespace Discore.WebSocket.Net
             => RequestGuildMembersAsync(callback, guildId, query, limit).Wait();
         #endregion
 
-        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        public Task UpdateStatusAsync(string game = null, int? idleSince = default(int?))
+        /// <remarks>
+        /// This method will retry updating the status if the underlying socket is closed while updating,
+        /// and also wait until the gateway connection is fully ready before trying.
+        /// </remarks>
+        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
+        /// </exception>
+        public async Task UpdateStatusAsync(string game = null, int? idleSince = null, CancellationToken? cancellationToken = null)
         {
+            if (isDisposed)
+                throw new ObjectDisposedException(GetType().FullName);
             if (state != GatewayState.Connected)
                 throw new InvalidOperationException("The gateway is not currently connected!");
 
-            try
+            CancellationToken ct = cancellationToken ?? CancellationToken.None;
+
+            while (!ct.IsCancellationRequested)
             {
-                return socket.SendStatusUpdate(game, idleSince);
-            }
-            catch (InvalidOperationException ioex)
-            {
-                // InvalidOperation is thrown if the socket is not connected before the call is
-                // made, however since the user of the Gateway doesn't need to worry about the
-                // socket not always being connected, transform the exception so that they only
-                // need to handle one exception.
-                throw new DiscordWebSocketException("The WebSocket connection is closed.", 
-                    DiscordWebSocketError.ConnectionClosed, ioex);
+                if (state != GatewayState.Connected)
+                    // Cancel if the gateway connection is closed from the outside.
+                    throw new OperationCanceledException("The gateway connection was closed.");
+
+                // Wait until the gateway connection is ready
+                await gatewayReadyEvent.WaitAsync(ct).ConfigureAwait(false);
+
+                try
+                {
+                    // Try to send the status update
+                    await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
+                }
+                catch (InvalidOperationException)
+                {
+                    // The socket was closed between waiting for the socket to open
+                    // and sending the payload. Shouldn't ever happen, give the socket
+                    // some time to flip back to disconnected.
+                    await Task.Delay(500, ct).ConfigureAwait(false);
+                }
+                catch (DiscordWebSocketException)
+                {
+                    // Payload failed to send because the socket blew up,
+                    // just retry after giving the socket some time to flip to
+                    // a disconencted state.
+                    await Task.Delay(500, ct).ConfigureAwait(false);
+                }
             }
         }
 
@@ -209,6 +240,8 @@ namespace Discore.WebSocket.Net
             log.LogVerbose("Disconnecting...");
             state = GatewayState.Disconnected;
 
+            gatewayReadyEvent.Reset();
+
             if (connectTask != null)
             {
                 // Cancel any automatic reconnection
@@ -278,6 +311,8 @@ namespace Discore.WebSocket.Net
             isConnectionResuming = resume;
 
             log.LogVerbose($"[ConnectLoop] resume = {resume}");
+
+            gatewayReadyEvent.Reset();
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -441,6 +476,8 @@ namespace Discore.WebSocket.Net
             log.LogVerbose("Fatal disconnection occured, setting state to Disconnected.");
             state = GatewayState.Disconnected;
 
+            gatewayReadyEvent.Reset();
+
             OnFatalDisconnection?.Invoke(this, e);
         }
 
@@ -451,6 +488,8 @@ namespace Discore.WebSocket.Net
 
             if (connectTask == null || connectTask.IsCompleted)
             {
+                gatewayReadyEvent.Reset();
+
                 log.LogVerbose("Beginning automatic reconnection...");
                 connectTaskCancellationSource = new CancellationTokenSource();
                 connectTask = ConnectLoop(!requiresNewSession, connectTaskCancellationSource.Token);
@@ -492,6 +531,7 @@ namespace Discore.WebSocket.Net
             if (!isDisposed)
             {
                 isDisposed = true;
+                state = GatewayState.Disconnected;
 
                 socket?.Dispose();
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket
@@ -166,7 +167,7 @@ namespace Discore.WebSocket
         /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
         /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        Task UpdateStatusAsync(string game = null, int? idleSince = null);
+        Task UpdateStatusAsync(string game = null, int? idleSince = null, CancellationToken? cancellationToken = null);
 
         /// <summary>
         /// Requests guild members from the Discord API, this can be used to retrieve

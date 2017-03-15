@@ -146,6 +146,9 @@ namespace Discore.WebSocket.Net
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
 
+            // Signal that the connection is ready
+            gatewayReadyEvent.Set();
+
             OnReadyEvent?.Invoke(this, EventArgs.Empty);
 
             // Get the authenticated user

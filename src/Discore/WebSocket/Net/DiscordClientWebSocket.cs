@@ -197,32 +197,52 @@ namespace Discore.WebSocket.Net
                     {
                         await SendData(bytes).ConfigureAwait(false);
                     }
-                    catch (InvalidOperationException iex)
+                    catch (InvalidOperationException iex) // also catches ObjectDisposedException
                     {
                         throw new DiscordWebSocketException("The WebSocket connection was closed while sending data.", 
                             DiscordWebSocketError.ConnectionClosed, iex);
                     }
+                    catch (OperationCanceledException ocex)
+                    {
+                        throw new DiscordWebSocketException("The WebSocket connection was aborted while sending data.",
+                                DiscordWebSocketError.ConnectionClosed, ocex);
+                    }
                     catch (WebSocketException wsex)
                     {
                         if (wsex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
-                            throw new DiscordWebSocketException("The WebSocket connection was closed while sending data.", 
+                            throw new DiscordWebSocketException("The WebSocket connection was closed while sending data.",
                                 DiscordWebSocketError.ConnectionClosed, wsex);
                         else
+                        {
+                            // The only known WebSocketException is ConnectionClosedPrematurely, so
+                            // log any others to be handled later.
+                            log.LogError($"[SendAsync] Unexpected WebSocketException error: {wsex}");
+
                             // Should never happen
-                            throw new DiscordWebSocketException("An unexpected WebSocket error occured while sending data.", 
+                            throw new DiscordWebSocketException("An unexpected WebSocket error occured while sending data.",
                                 DiscordWebSocketError.Unexpected, wsex);
+                        }
                     }
                     catch (Exception ex)
                     {
-                        // We do not want any other exceptions bubbling up,
-                        // the SendData method should handle ALL exceptions.
-                        log.LogError($"[SendAsync] Unexpected error while sending: {ex}");
+                        // We are not expecting any other exceptions, but since the exceptions thrown from
+                        // System.Net.WebSockets.ClientWebSocket.SendAsync is not documented, log any
+                        // unknown exceptions so we can handle them later.
+                        log.LogError($"[SendAsync] Unhandled exception: {ex}");
+
+                        // Should never happen, but we should consolidate everything into DiscordWebSocketException
+                        // so handling exceptions we do not know about is at least consistent.
+                        throw new DiscordWebSocketException("An unexpected error occured while sending data.",
+                            DiscordWebSocketError.Unexpected, ex);
                     }
                 }
             }
         }
 
-        /// <exception cref="WebSocketException"></exception>
+        /// <exception cref="InvalidOperationException">Thrown if socket is not connected.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the socket is disposed before or while sending.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if the socket is aborted while sending.</exception>
+        /// <exception cref="WebSocketException">Thrown if the underlying socket stream is closed.</exception>
         async Task SendData(byte[] data)
         {
             int byteCount = data.Length;
@@ -241,36 +261,13 @@ namespace Discore.WebSocket.Net
 
                 ArraySegment<byte> arraySeg = new ArraySegment<byte>(data, offset, count);
 
-                try
-                {
-                    // Can only throw:
-                    //   OperationCanceledException (if aborted)
-                    //   WebSocketException (if stream closed)
-                    //   ObjectDisposedException (if disposed)
-                    //   InvalidOperationException (if not connected)
-                    await socket.SendAsync(arraySeg, WebSocketMessageType.Text, isLast, abortCancellationSource.Token)
-                        .ConfigureAwait(false);
-                }
-                catch (ObjectDisposedException)
-                {
-                    log.LogVerbose($"[SendData] Socket was disposed while sending.");
-                    break;
-                }
-                catch (OperationCanceledException)
-                {
-                    log.LogVerbose($"[SendData] Socket was aborted while sending.");
-                    break;
-                }
-                catch (WebSocketException wsex)
-                {
-                    // Only error here should be 'ConnectionClosedPrematurely',
-                    // in this case we should let it bubble up.
-
-                    if (wsex.WebSocketErrorCode != WebSocketError.ConnectionClosedPrematurely)
-                        log.LogError($"[SendData] Unexpected error: {wsex}");
-
-                    throw;
-                }
+                // Can only throw:
+                //   OperationCanceledException (if aborted)
+                //   WebSocketException (if stream closed)
+                //   ObjectDisposedException (if disposed)
+                //   InvalidOperationException (if not connected)
+                await socket.SendAsync(arraySeg, WebSocketMessageType.Text, isLast, abortCancellationSource.Token)
+                    .ConfigureAwait(false);
             }
         }
 
