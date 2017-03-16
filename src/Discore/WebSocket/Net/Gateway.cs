@@ -96,6 +96,7 @@ namespace Discore.WebSocket.Net
         /// This method will retry updating the status if the underlying socket is closed while updating,
         /// and also wait until the gateway connection is fully ready before trying.
         /// </remarks>
+        /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException">
         /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
@@ -109,6 +110,25 @@ namespace Discore.WebSocket.Net
 
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
+            await RepeatTrySendPayload(ct, async () =>
+            {
+                // Try to send the status update
+                await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
+            });
+        }
+
+        /// <summary>
+        /// Continuously retries to call the specified callback (which should only be a payload send).
+        /// <para>
+        /// Retries if the callback throws a InvalidOperationException or DiscordWebSocketException.
+        /// Also waits for the gateway connection to be ready before calling the callback.
+        /// </para>
+        /// </summary>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
+        /// </exception>
+        async Task RepeatTrySendPayload(CancellationToken ct, Func<Task> callback)
+        {
             while (!ct.IsCancellationRequested)
             {
                 if (state != GatewayState.Connected)
@@ -120,8 +140,11 @@ namespace Discore.WebSocket.Net
 
                 try
                 {
-                    // Try to send the status update
-                    await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
+                    // Try the callback
+                    await callback().ConfigureAwait(false);
+
+                    // Call succeeded
+                    break;
                 }
                 catch (InvalidOperationException)
                 {
@@ -185,11 +208,14 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        internal Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
+        /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
+        internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
-            // TODO: this should error when the socket isnt actually connected,
-            // as well as voice connections need to be killed when the socket disconnects.
-            return socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf);
+            await RepeatTrySendPayload(CancellationToken.None, async () =>
+            {
+                // Try to send the status update
+                await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
+            });
         }
 
         /// <exception cref="InvalidOperationException"></exception>

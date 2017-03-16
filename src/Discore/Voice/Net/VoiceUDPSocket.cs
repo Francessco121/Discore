@@ -106,12 +106,25 @@ namespace Discore.Voice.Net
         }
 
         /// <summary>
-        /// Initializes the UDP send loop.
+        /// Sets the SSRC the UDP socket will use.
         /// </summary>
-        public void Start(int ssrc, byte[] secretKey)
+        public void SetSsrc(int ssrc)
         {
             this.ssrc = ssrc;
+        }
+
+        /// <summary>
+        /// Initializes the UDP send loop.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void Start(byte[] secretKey)
+        {
+            if (sendTask != null && !sendTask.IsCompleted)
+                throw new InvalidOperationException("The UDP socket send loop is already running!");
+
             this.secretKey = secretKey;
+
+            sendTask = SendLoop();
         }
 
         /// <summary>
@@ -216,7 +229,7 @@ namespace Discore.Voice.Net
         }
 
         /// <exception cref="SocketException">Thrown if the socket encounters an error while sending data.</exception>
-        public Task StartIPDiscoveryAsync(int ssrc)
+        public Task StartIPDiscoveryAsync()
         {
             byte[] packet = new byte[70];
             packet[0] = (byte)(ssrc >> 24);

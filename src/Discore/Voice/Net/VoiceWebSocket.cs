@@ -12,15 +12,19 @@ namespace Discore.Voice.Net
         /// <summary>
         /// Called when the socket receives the READY payload.
         /// </summary>
-        public EventHandler<VoiceReadyEventArgs> OnReady;
+        public event EventHandler<VoiceReadyEventArgs> OnReady;
         /// <summary>
         /// Called when the socket receives the SESSION_DESCRIPTION payload.
         /// </summary>
-        public EventHandler<VoiceSessionDescriptionEventArgs> OnSessionDescription;
+        public event EventHandler<VoiceSessionDescriptionEventArgs> OnSessionDescription;
         /// <summary>
-        /// Called when the socket is closed either gracefully or from an error.
+        /// Called when the socket is closed unexpectedly (meaing our side did not initiate it).
         /// </summary>
-        public EventHandler OnClosed;
+        public event EventHandler OnUnexpectedClose;
+        /// <summary>
+        /// Called when the socket is still connected but the heartbeat loop timed out.
+        /// </summary>
+        public event EventHandler OnTimedOut;
 
         Task heartbeatTask;
         CancellationTokenSource heartbeatCancellationSource;
@@ -30,6 +34,7 @@ namespace Discore.Voice.Net
         bool isDisposed;
 
         int heartbeatInterval;
+        bool receivedHeartbeatAck;
 
         public VoiceWebSocket(string loggingName) 
             : base(loggingName)
@@ -57,12 +62,12 @@ namespace Discore.Voice.Net
             // TODO: may need to do some extra work depending on the close status,
             // but none are documented...
 
-            OnClosed?.Invoke(this, EventArgs.Empty);
+            OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void OnClosedPrematurely()
         {
-            OnClosed?.Invoke(this, EventArgs.Empty);
+            OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
         }
 
         protected override void OnPayloadReceived(DiscordApiData payload)
@@ -79,10 +84,22 @@ namespace Discore.Voice.Net
 
         async Task HeartbeatLoop()
         {
+            receivedHeartbeatAck = true;
+
             while (State == WebSocketState.Open && !heartbeatCancellationSource.IsCancellationRequested)
             {
+                if (!receivedHeartbeatAck)
+                {
+                    log.LogVerbose("[HeartbeatLoop] Connection timed out.");
+
+                    OnTimedOut?.Invoke(this, EventArgs.Empty);
+                    break;
+                }
+
                 try
                 {
+                    receivedHeartbeatAck = false;
+
                     // Send heartbeat
                     await SendHeartbeatPayload().ConfigureAwait(false);
                 }

@@ -78,6 +78,18 @@ namespace Discore.Voice.Net
             OnSessionDescription?.Invoke(this, new VoiceSessionDescriptionEventArgs(key, mode));
         }
 
+        [Payload(VoiceOPCode.Heartbeat)]
+        void HandleHeartbeatAck(DiscordApiData payload, DiscordApiData data)
+        {
+            receivedHeartbeatAck = true;
+        }
+
+        [Payload(VoiceOPCode.Speaking)]
+        void HandleSpeaking(DiscordApiData payload, DiscordApiData data)
+        {
+            // TODO
+        }
+
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>

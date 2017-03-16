@@ -332,7 +332,7 @@ namespace Discore.WebSocket.Net
                                 isClosing = true;
 
                                 log.LogVerbose($"[ReceiveLoop] Received close: {result.CloseStatusDescription} " +
-                                    $"{result.CloseStatus}({(int)result.CloseStatus})");
+                                    $"{result.CloseStatus} ({(int)result.CloseStatus})");
 
                                 try
                                 {
