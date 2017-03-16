@@ -31,6 +31,18 @@ namespace Discore.WebSocket.Net
         /// </summary>
         public const WebSocketCloseStatus INTERNAL_CLIENT_ERROR = (WebSocketCloseStatus)4100; // TODO: check for side-effects of usage
 
+        /// <summary>
+        /// Gets whether the socket is currently connected.
+        /// </summary>
+        public virtual bool IsConnected => State == WebSocketState.Open;
+
+        /// <summary>
+        /// Gets whether the socket is in a state that can be disconnected.
+        /// </summary>
+        public virtual bool CanBeDisconnected => State == WebSocketState.Open
+            || State == WebSocketState.CloseSent
+            || State == WebSocketState.CloseReceived;
+
         protected WebSocketState State { get { return socket.State; } }
 
         const int SEND_BUFFER_SIZE = 4 * 1024;  // 4kb (Discord's max payload size)

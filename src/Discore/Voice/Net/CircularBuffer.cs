@@ -36,7 +36,7 @@ namespace Discore.Voice.Net
 
             lock (lockObject)
             {
-                var bytesWritten = 0;
+                int bytesWritten = 0;
                 if (count > buffer.Length - byteCount)
                 {
                     count = buffer.Length - byteCount;

@@ -2,6 +2,7 @@
 using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,11 +62,11 @@ namespace Discore.Voice
         /// <summary>
         /// Gets the guild this voice connection is in.
         /// </summary>
-        public DiscordGuild Guild { get { return guildCache.Value; } }
+        public DiscordGuild Guild => guildCache.Value;
         /// <summary>
         /// Gets the member this connection is communicating through.
         /// </summary>
-        public DiscordGuildMember Member { get { return memberCache.Value; } }
+        public DiscordGuildMember Member => memberCache.Value;
 
         /// <summary>
         /// Gets the current voice channel this connection is in.
@@ -93,39 +94,26 @@ namespace Discore.Voice
         /// <summary>
         /// Gets whether this connection is currently performing its handshake.
         /// </summary>
-        public bool IsConnecting { get { return isConnecting; } }
+        public bool IsConnecting => isConnecting;
         /// <summary>
         /// Gets whether this connection is available to use.
         /// </summary>
-        public bool IsValid { get { return isValid; } }
+        public bool IsValid => isValid;
         /// <summary>
         /// Gets or sets the speaking state of this connection.
         /// </summary>
-        public bool IsSpeaking
-        {
-            get { return isSpeaking; }
-            set
-            {
-                if (isValid && value != isSpeaking)
-                {
-                    isSpeaking = value;
-
-                    if (IsConnected)
-                        socket.SetSpeaking(value);
-                }
-            }
-        }
+        public bool IsSpeaking => isSpeaking;
         /// <summary>
         /// Gets the number of unsent voice data bytes.
         /// </summary>
-        public int BytesToSend { get { return socket.BytesToSend; } }
+        public int BytesToSend => udpSocket.BytesToSend;
         /// <summary>
         /// Gets or sets whether the sending of voice data is paused.
         /// </summary>
         public bool IsPaused
         {
-            get { return socket.IsPaused; }
-            set { socket.IsPaused = value; }
+            get => udpSocket.IsPaused;
+            set => udpSocket.IsPaused = value;
         }
 
         DiscoreGuildCache guildCache;
@@ -133,7 +121,9 @@ namespace Discore.Voice
 
         Gateway gateway;
 
-        VoiceSocket socket;
+        VoiceWebSocket webSocket;
+        VoiceUdpSocket udpSocket;
+
         DiscordVoiceState voiceState;
         DiscoreLogger log;
         DiscordGuildVoiceChannel initialVoiceChannel;
@@ -163,6 +153,9 @@ namespace Discore.Voice
 
             isValid = true;
             isSpeaking = true;
+
+            webSocket = new VoiceWebSocket($"VoiceWebSocket:{guildCache.Value.Name}");
+            udpSocket = new VoiceUdpSocket($"VoiceUDPSocket:{guildCache.Value.Name}");
 
             socket = new VoiceSocket($"VoiceSocket:{guildCache.Value.Name}", guildCache, memberCache);
             socket.OnError += Socket_OnError;
@@ -214,11 +207,16 @@ namespace Discore.Voice
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
                 {
-                    await socket.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                    await CloseSockets(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake",
+                        CancellationToken.None).ConfigureAwait(false);
+
                     Invalidate();
                 }
             }
-            catch (TaskCanceledException) { }
+            catch (OperationCanceledException)
+            {
+                // connectingCancellationSource was cancelled.
+            }
         }
 
         /// <summary>
@@ -241,7 +239,8 @@ namespace Discore.Voice
         {
             if (isValid)
             {
-                await socket.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+                await CloseSockets(WebSocketCloseStatus.NormalClosure, "Closing normally...", cancellationToken)
+                    .ConfigureAwait(false);
 
                 Invalidate();
                 OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
@@ -258,7 +257,7 @@ namespace Discore.Voice
         /// </summary>
         public bool CanSendVoiceData(int size)
         {
-            return isValid && IsConnected && socket.CanSendData(size);
+            return isValid && IsConnected && udpSocket.CanSendData(size);
         }
 
         /// <summary>
@@ -278,23 +277,35 @@ namespace Discore.Voice
         {
             if (isValid)
             {
-                socket.SendPCMData(buffer, offset, count);
+                udpSocket.SendData(buffer, offset, count);
             }
         }
 
         /// <summary>
         /// Sets the speaking state of this connection.
         /// </summary>
-        [Obsolete("Please set IsSpeaking instead.")]
+        [Obsolete("Please use the asynchronous counterpart SetSpeakingAsync(bool) instead.")]
         public void SetSpeaking(bool speaking)
+        {
+            SetSpeakingAsync(speaking).Wait();
+        }
+
+        /// <summary>
+        /// Sets the speaking state of this connection.
+        /// </summary>
+        /// <exception cref="DiscordWebSocketException">Thrown if the state fails to set because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
+        public Task SetSpeakingAsync(bool speaking)
         {
             if (isValid)
             {
                 isSpeaking = speaking;
 
                 if (IsConnected)
-                    socket.SetSpeaking(speaking);
+                    return webSocket.SendSpeakingPayload(speaking);
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -304,8 +315,18 @@ namespace Discore.Voice
         {
             if (isValid)
             {
-                socket.ClearVoiceBuffer();
+                udpSocket.ClearVoiceBuffer();
             }
+        }
+
+        async Task CloseSockets(WebSocketCloseStatus webSocketCloseStatus, string webSocketCloseDescription,
+            CancellationToken cancellationToken)
+        {
+            if (webSocket.CanBeDisconnected)
+                await webSocket.DisconnectAsync(webSocketCloseStatus, webSocketCloseDescription, cancellationToken)
+                    .ConfigureAwait(false);
+
+            udpSocket.Shutdown();
         }
 
         internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
@@ -358,7 +379,7 @@ namespace Discore.Voice
                 isConnecting = false;
                 connectingCancellationSource.Cancel();
 
-                socket.SetSpeaking(isSpeaking);
+                await SetSpeakingAsync(isSpeaking);
                 OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
             }
             else
@@ -399,7 +420,8 @@ namespace Discore.Voice
 
                 Invalidate();
 
-                socket.Dispose();
+                webSocket.Dispose();
+                udpSocket.Dispose();
             }
         }
     }

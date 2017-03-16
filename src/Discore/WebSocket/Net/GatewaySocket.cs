@@ -7,17 +7,6 @@ namespace Discore.WebSocket.Net
 {
     partial class GatewaySocket : DiscordClientWebSocket
     {
-        /// <summary>
-        /// Gets whether the socket is currently connected.
-        /// </summary>
-        public bool IsConnected => State == WebSocketState.Open;
-        /// <summary>
-        /// Gets whether the socket is in a state that can be disconnected.
-        /// </summary>
-        public bool CanBeDisconnected => State == WebSocketState.Open 
-            || State == WebSocketState.CloseSent 
-            || State == WebSocketState.CloseReceived;
-
         public int Sequence => sequence;
 
         /// <summary>

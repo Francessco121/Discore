@@ -10,7 +10,6 @@ namespace Discore.Voice.Net
 {
     class VoiceSocket : DiscordClientWebSocket, IDisposable
     {
-        public DiscordGuildMember Member { get { return memberCache.Value; } }
         public bool IsConnected { get { return State == WebSocketState.Open; } }
 
         public bool IsPaused { get; set; }
@@ -24,7 +23,7 @@ namespace Discore.Voice.Net
         string endpoint;
         string token;
         int heartbeatInterval;
-        VoiceUDPSocket udpSocket;
+        VoiceUDPSocketOld udpSocket;
         int ssrc;
         byte[] key;
         bool readyToSendVoice;
@@ -73,44 +72,6 @@ namespace Discore.Voice.Net
 
             socket.OnMessageReceived += VoiceSocket_OnMessageReceived;
             socket.OnError += Socket_OnError;
-        }
-
-        protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnClosedPrematurely()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnPayloadReceived(DiscordApiData payload)
-        {
-            VoiceSocketOPCode op = (VoiceSocketOPCode)payload.GetInteger("op");
-            DiscordApiData d = payload.Get("d");
-
-            switch (op)
-            {
-                case VoiceSocketOPCode.Ready:
-                    await HandleReadyPayload(d);
-                    break;
-                case VoiceSocketOPCode.SessionDescription:
-                    HandleSessionDescriptionPayload(d);
-                    break;
-                case VoiceSocketOPCode.Speaking:
-                    break;
-                case VoiceSocketOPCode.Heartbeat:
-                    break;
-                default:
-                    log.LogWarning($"Unhandled op code '{op}'");
-                    break;
-            }
-        }
-
-        private async void Socket_OnError(object sender, Exception ex)
-        {
-            await HandleFatalError(ex).ConfigureAwait(false);
         }
 
         private async void UdpSocket_OnError(object sender, Exception ex)
@@ -191,80 +152,6 @@ namespace Discore.Voice.Net
             sendBuffer.Reset();
         }
 
-        Task SendPayload(VoiceSocketOPCode op, DiscordApiData data)
-        {
-            DiscordApiData payload = new DiscordApiData();
-            payload.Set("op", (int)op);
-            payload.Set("d", data);
-
-            return SendAsync(payload);
-        }
-
-        public Task SetSpeaking(bool speaking)
-        {
-            DiscordApiData data = new DiscordApiData();
-            data.Set("speaking", speaking);
-            data.Set("delay", 0);
-
-            return SendPayload(VoiceSocketOPCode.Speaking, data);
-        }
-
-        Task SendIdentifyPayload()
-        {
-            DiscordApiData data = new DiscordApiData();
-            data.Set("server_id", guildCache.Value.Id);
-            data.Set("user_id", memberCache.Value.User.Id);
-            data.Set("session_id", memberCache.VoiceState.SessionId);
-            data.Set("token", token);
-
-            log.LogVerbose($"[Identify] Sending identify with server_id: {guildCache.Value.Id}");
-            return SendPayload(VoiceSocketOPCode.Identify, data);
-        }
-
-        Task SendHeartbeat()
-        {
-            return SendPayload(VoiceSocketOPCode.Heartbeat, null);
-        }
-
-        Task SendSelectProtocol(string ip, int port)
-        {
-            DiscordApiData selectProtocol = new DiscordApiData();
-            selectProtocol.Set("protocol", "udp");
-            DiscordApiData data = selectProtocol.Set("data", DiscordApiData.CreateContainer());
-            data.Set("address", ip);
-            data.Set("port", port);
-            data.Set("mode", "xsalsa20_poly1305");
-
-            log.LogVerbose($"[SelectProtocol] Sending select protocol to {ip}:{port}.");
-            return SendPayload(VoiceSocketOPCode.SelectProtocol, selectProtocol);
-        }
-
-        async Task HandleReadyPayload(DiscordApiData data)
-        {
-            int port = data.GetInteger("port") ?? 0;
-            ssrc = data.GetInteger("ssrc") ?? 0;
-            heartbeatInterval = data.GetInteger("heartbeat_interval") ?? 0;
-
-            log.LogVerbose($"[Ready] ssrc: {ssrc}, port: {port}");
-
-            try
-            {
-                udpSocket = new VoiceUDPSocket(guildCache, endpoint, port);
-                udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
-                udpSocket.OnError += UdpSocket_OnError;
-
-                // Connect the UDP socket
-                await udpSocket.ConnectAsync().ConfigureAwait(false);
-
-                // Start IP discovery
-                await StartIPDiscovery().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                await HandleFatalError(ex).ConfigureAwait(false);
-            }
-        }
-
         async Task StartIPDiscovery()
         {
             log.LogVerbose("[IPDiscovery] Starting ip discovery...");
@@ -274,20 +161,8 @@ namespace Discore.Voice.Net
 
         private void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
         {
-            log.LogVerbose($"[IPDiscovery] IP has been discovered. Endpoint: {e.Ip}:{e.Port}");
-            SendSelectProtocol(e.Ip, e.Port);
-        }
-
-        void HandleSessionDescriptionPayload(DiscordApiData data)
-        {
-            IList<DiscordApiData> secretKey = data.GetArray("secret_key");
-            key = new byte[secretKey.Count];
-            for (int i = 0; i < secretKey.Count; i++)
-                key[i] = (byte)secretKey[i].ToInteger();
-
-            log.LogVerbose($"[SessionDescription] Protocol succesfully selected, using mode '{data.GetString("mode")}'");
-
-            readyToSendVoice = true;
+            log.LogVerbose($"[IPDiscovery] IP has been discovered. Endpoint: {e.IP}:{e.Port}");
+            SendSelectProtocol(e.IP, e.Port);
         }
 
         async Task SendLoop()
@@ -424,28 +299,6 @@ namespace Discore.Voice.Net
             catch (Exception ex)
             {
                 await HandleFatalError(ex, sendTask).ConfigureAwait(false);
-            }
-        }
-
-        async Task HeartbeatLoop()
-        {
-            try
-            {
-                // Wait for heartbeat interval
-                while (heartbeatInterval == 0 && (!readyToSendVoice || socket.State != DiscoreWebSocketState.Open))
-                    await Task.Delay(1000, taskCancellationSource.Token).ConfigureAwait(false);
-
-                // Heartbeat
-                while (socket.State == DiscoreWebSocketState.Open)
-                {
-                    await SendHeartbeat();
-                    await Task.Delay(heartbeatInterval, taskCancellationSource.Token).ConfigureAwait(false);
-                }
-            }
-            catch (TaskCanceledException) { }
-            catch (Exception ex)
-            {
-                await HandleFatalError(ex, heartbeatTask).ConfigureAwait(false);
             }
         }
 
