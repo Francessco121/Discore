@@ -238,11 +238,11 @@ namespace Discore.Voice
                 {
                     isConnecting = true;
                     await gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, 
-                        startMute, startDeaf, cancellationToken ?? CancellationToken.None);
+                        startMute, startDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
 
                     connectingCancellationSource = new CancellationTokenSource();
 
-                    await ConnectionTimeout();
+                    await ConnectionTimeout().ConfigureAwait(false);
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
@@ -425,7 +425,7 @@ namespace Discore.Voice
             try
             {
                 // Connect the UDP socket
-                await ConnectUdpSocket(e.Port);
+                await ConnectUdpSocket(e.Port).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -445,7 +445,7 @@ namespace Discore.Voice
             try
             {
                 // Start IP discovery
-                await udpSocket.StartIPDiscoveryAsync();
+                await udpSocket.StartIPDiscoveryAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -470,7 +470,7 @@ namespace Discore.Voice
             try
             {
                 // Select protocol
-                await webSocket.SendSelectProtocolPayload(e.IP, e.Port, "xsalsa20_poly1305");
+                await webSocket.SendSelectProtocolPayload(e.IP, e.Port, "xsalsa20_poly1305").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -544,7 +544,7 @@ namespace Discore.Voice
             {
                 // Send IDENTIFY payload
                 await webSocket.SendIdentifyPayload(guildCache.DictionaryId, memberCache.DictionaryId,
-                    memberCache.VoiceState.SessionId, token);
+                    memberCache.VoiceState.SessionId, token).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -566,7 +566,7 @@ namespace Discore.Voice
             try
             {
                 // Set initial speaking state
-                await SetSpeakingAsync(isSpeaking);
+                await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -628,7 +628,8 @@ namespace Discore.Voice
         {
             try
             {
-                await gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false, cancellationToken);
+                await gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false, cancellationToken)
+                    .ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {

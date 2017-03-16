@@ -114,7 +114,7 @@ namespace Discore.WebSocket.Net
             {
                 // Try to send the status update
                 await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
-            });
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace Discore.WebSocket.Net
             {
                 // Try to send the status update
                 await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
-            });
+            }).ConfigureAwait(false);
         }
 
         /// <exception cref="InvalidOperationException"></exception>
@@ -279,7 +279,7 @@ namespace Discore.WebSocket.Net
                 // Wait for the automatic reconnection to end
                 try
                 {
-                    await connectTask;
+                    await connectTask.ConfigureAwait(false);
                 }
                 catch (OperationCanceledException) { /* Expected to happen. */ }
                 catch (Exception ex)
@@ -291,7 +291,8 @@ namespace Discore.WebSocket.Net
 
             // Disconnect the socket if needed
             if (socket.CanBeDisconnected)
-                await socket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None);
+                await socket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None)
+                    .ConfigureAwait(false);
 
             log.LogInfo("Disconnected.");
         }
@@ -304,7 +305,7 @@ namespace Discore.WebSocket.Net
             {
                 try
                 {
-                    await UpdateGatewayUrlAsync();
+                    await UpdateGatewayUrlAsync().ConfigureAwait(false);
                 }
                 catch (DiscordHttpApiException httpEx)
                 {
@@ -400,7 +401,7 @@ namespace Discore.WebSocket.Net
                 if (string.IsNullOrWhiteSpace(gatewayUrl))
                 {
                     log.LogError($"[ConnectLoop] No gateway URL to connect with, trying again in 5s...");
-                    await Task.Delay(5000, cancellationToken);
+                    await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
 
                     continue;
                 }
@@ -441,7 +442,7 @@ namespace Discore.WebSocket.Net
 
                     // Wait 5s then retry
                     log.LogVerbose("[ConnectLoop] Waiting 5s before retrying...");
-                    await Task.Delay(5000, cancellationToken);
+                    await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
                 }
             }
 

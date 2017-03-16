@@ -85,7 +85,7 @@ namespace Discore.Voice.Net
             socket.SendTimeout = 1000 * 10;
             socket.ReceiveTimeout = 1000 * 10;
             
-            await socket.ConnectAsync(endPoint);
+            await socket.ConnectAsync(endPoint).ConfigureAwait(false);
 
             // At this point, the socket has successfully connected
             receiveTask = ReceiveLoop();
