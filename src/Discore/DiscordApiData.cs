@@ -768,7 +768,6 @@ namespace Discore
 
         public DiscordApiData Clone()
         {
-            // TODO: probably a better way to clone data...?
             return ParseJson(SerializeToJson());
         }
 

@@ -199,17 +199,17 @@ namespace Discore.WebSocket
         /// Stops all created shards that are running.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        [Obsolete("Please use the asynchronous counterpart StopShardsAsync(CancellationToken) instead.")]
+        [Obsolete("Please use the asynchronous counterpart StopShardsAsync() instead.")]
         public void StopShards()
         {
-            Task.WhenAll(StopShardsAsync(CancellationToken.None)).Wait();
+            Task.WhenAll(StopShardsAsync()).Wait();
         }
 
         /// <summary>
         /// Stops all created shards that are running, and returns a list of tasks representing each disconnection.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public IList<Task> StopShardsAsync(CancellationToken cancellationToken)
+        public IList<Task> StopShardsAsync()
         {
             if (shards != null)
             {
@@ -220,7 +220,7 @@ namespace Discore.WebSocket
                     if (!shard.IsRunning)
                         continue;
 
-                    stopTasks.Add(shards[i].StopAsync(cancellationToken));
+                    stopTasks.Add(shards[i].StopAsync());
                 }
 
                 return stopTasks;

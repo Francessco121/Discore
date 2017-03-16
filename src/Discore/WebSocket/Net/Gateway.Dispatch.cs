@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,26 +43,26 @@ namespace Discore.WebSocket.Net
         public event EventHandler OnReadyEvent;
 
         #region Public Events       
-        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;        
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;        
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;        
-        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;        
+        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;
+        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;
         public event EventHandler<GuildChannelEventArgs> OnGuildChannelRemoved;
 
-        
+
         public event EventHandler<GuildEventArgs> OnGuildCreated;
         public event EventHandler<GuildEventArgs> OnGuildUpdated;
         public event EventHandler<GuildEventArgs> OnGuildRemoved;
-        
+
         public event EventHandler<GuildEventArgs> OnGuildUnavailable;
 
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
         public event EventHandler<GuildUserEventArgs> OnGuildBanRemoved;
-        
+
         public event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
-        
+
         public event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
-        
+
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
@@ -70,17 +71,17 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
-        
+
         public event EventHandler<MessageEventArgs> OnMessageCreated;
         public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
         public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
-        
+
         public event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
-        
+
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
-        
+
         public event EventHandler<UserEventArgs> OnUserUpdated;
         public event EventHandler<VoiceStateEventArgs> OnVoiceStateUpdated;
         #endregion
@@ -92,27 +93,48 @@ namespace Discore.WebSocket.Net
             dispatchHandlers = new Dictionary<string, DispatchCallback>();
 
             Type taskType = typeof(Task);
+            Type gatewayType = typeof(Gateway);
             Type dispatchSynchronousType = typeof(DispatchSynchronousCallback);
             Type dispatchAsynchronousType = typeof(DispatchAsynchronousCallback);
 
-            foreach (Tuple<MethodInfo, DispatchEventAttribute> tuple in GetMethodsWithAttribute<DispatchEventAttribute>())
+            foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
             {
-                MethodInfo method = tuple.Item1;
-                DispatchEventAttribute attr = tuple.Item2;
-
-                DispatchCallback dispatchCallback;
-                if (method.ReturnType == taskType)
+                DispatchEventAttribute attr = method.GetCustomAttribute<DispatchEventAttribute>();
+                if (attr != null)
                 {
-                    Delegate callback = method.CreateDelegate(dispatchAsynchronousType, this);
-                    dispatchCallback = new DispatchCallback((DispatchAsynchronousCallback)callback);
+                    DispatchCallback dispatchCallback;
+                    if (method.ReturnType == taskType)
+                    {
+                        Delegate callback = method.CreateDelegate(dispatchAsynchronousType, this);
+                        dispatchCallback = new DispatchCallback((DispatchAsynchronousCallback)callback);
+                    }
+                    else
+                    {
+                        Delegate callback = method.CreateDelegate(dispatchSynchronousType, this);
+                        dispatchCallback = new DispatchCallback((DispatchSynchronousCallback)callback);
+                    }
+
+                    dispatchHandlers[attr.EventName] = dispatchCallback;
                 }
-                else
+            }
+        }
+
+        void LogServerTrace(string prefix, DiscordApiData data)
+        {
+            IList<DiscordApiData> traceArray = data.GetArray("_trace");
+            if (traceArray != null)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 0; i < traceArray.Count; i++)
                 {
-                    Delegate callback = method.CreateDelegate(dispatchSynchronousType, this);
-                    dispatchCallback = new DispatchCallback((DispatchSynchronousCallback)callback);
+                    if (i > 0)
+                        sb.Append(", ");
+
+                    sb.Append(traceArray[i].ToString());
                 }
 
-                dispatchHandlers[attr.EventName] = dispatchCallback;
+                log.LogVerbose($"[{prefix}] trace = {sb}");
             }
         }
 
@@ -123,6 +145,9 @@ namespace Discore.WebSocket.Net
             int protocolVersion = data.GetInteger("v").Value;
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
+
+            // Signal that the connection is ready
+            gatewayReadyEvent.Set();
 
             OnReadyEvent?.Invoke(this, EventArgs.Empty);
 
@@ -814,10 +839,10 @@ namespace Discore.WebSocket.Net
             {
                 DiscordApiData userData = data.Get("user");
                 Snowflake memberId = userData.GetSnowflake("id").Value;
-                
+
                 DiscordUser user = cache.Users.Get(memberId);
                 user = cache.Users.Set(user.PartialUpdate(userData));
-               
+
                 DiscoreMemberCache memberCache;
                 if (guildCache.Members.TryGetValue(memberId, out memberCache))
                 {
@@ -923,25 +948,17 @@ namespace Discore.WebSocket.Net
                             DiscordVoiceConnection connection;
                             if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                             {
-                                try
+                                if (memberCache.VoiceState.IsInVoiceChannel)
                                 {
-                                    if (memberCache.VoiceState.IsInVoiceChannel)
-                                    {
-                                        // Notify the connection of the new state
-                                        await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
-                                    }
-                                    else
-                                    {
-                                        // The user has left the channel, so disconnect.
-                                        await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-                                    }
+                                    // Notify the connection of the new state
+                                    await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
                                 }
-                                catch (Exception ex)
+                                else
                                 {
-                                    // Nothing we can really do here...
-                                    // The voice connection this update is for will timeout, so we'll just log it.
-                                    log.LogError($"[VoiceStateUpdate] {ex}");
+                                    // The user has left the channel, so disconnect.
+                                    await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                                 }
+                                
                             }
                         }
 
@@ -970,16 +987,8 @@ namespace Discore.WebSocket.Net
                 DiscordVoiceConnection connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
-                    try
-                    {
-                        // Notify the connection of the server update
-                        await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Nothing we can really do here...
-                        log.LogError($"[VoiceServerUpdate] {ex}");
-                    }
+                    // Notify the connection of the server update
+                    await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
                 }
                 else
                     throw new DiscoreCacheException($"Voice connection for guild {guildId.Value} was not in the cache!");
