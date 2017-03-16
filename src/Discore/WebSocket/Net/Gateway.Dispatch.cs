@@ -948,25 +948,17 @@ namespace Discore.WebSocket.Net
                             DiscordVoiceConnection connection;
                             if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                             {
-                                try
+                                if (memberCache.VoiceState.IsInVoiceChannel)
                                 {
-                                    if (memberCache.VoiceState.IsInVoiceChannel)
-                                    {
-                                        // Notify the connection of the new state
-                                        await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
-                                    }
-                                    else
-                                    {
-                                        // The user has left the channel, so disconnect.
-                                        await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-                                    }
+                                    // Notify the connection of the new state
+                                    await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
                                 }
-                                catch (Exception ex)
+                                else
                                 {
-                                    // Nothing we can really do here...
-                                    // The voice connection this update is for will timeout, so we'll just log it.
-                                    log.LogError($"[VoiceStateUpdate] {ex}");
+                                    // The user has left the channel, so disconnect.
+                                    await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                                 }
+                                
                             }
                         }
 
@@ -995,16 +987,8 @@ namespace Discore.WebSocket.Net
                 DiscordVoiceConnection connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
-                    try
-                    {
-                        // Notify the connection of the server update
-                        await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Nothing we can really do here...
-                        log.LogError($"[VoiceServerUpdate] {ex}");
-                    }
+                    // Notify the connection of the server update
+                    await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
                 }
                 else
                     throw new DiscoreCacheException($"Voice connection for guild {guildId.Value} was not in the cache!");

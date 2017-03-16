@@ -2,6 +2,7 @@
 using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,7 +48,7 @@ namespace Discore.Voice
         /// </summary>
         public event EventHandler<VoiceConnectionEventArgs> OnDisconnected;
         /// <summary>
-        /// Called when the voice connection unexpectedly closes.
+        /// Called when the voice connection unexpectedly closes or encounters an error while connecting.
         /// </summary>
         public event EventHandler<VoiceConnectionErrorEventArgs> OnError;
         /// <summary>
@@ -157,11 +158,8 @@ namespace Discore.Voice
 
         private async void UdpSocket_OnClosedPrematurely(object sender, EventArgs e)
         {
-            await EnsureWebSocketIsClosed(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                 .ConfigureAwait(false);
-            EnsureUdpSocketIsClosed();
-            await EnsureUserLeftVoiceChannel();
-            Invalidate();
 
             DiscoreException ex = new DiscoreException("The UDP connection closed unexpectedly.");
             OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
@@ -169,11 +167,8 @@ namespace Discore.Voice
 
         private async void WebSocket_OnUnexpectedClose(object sender, EventArgs e)
         {
-            await EnsureWebSocketIsClosed(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                 .ConfigureAwait(false);
-            EnsureUdpSocketIsClosed();
-            await EnsureUserLeftVoiceChannel();
-            Invalidate();
 
             DiscoreException ex = new DiscoreException("The WebSocket connection closed unexpectedly.");
             OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
@@ -181,26 +176,30 @@ namespace Discore.Voice
 
         private async void WebSocket_OnTimedOut(object sender, EventArgs e)
         {
-            await EnsureWebSocketIsClosed(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Connection timed out.")
+            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Connection timed out.")
                 .ConfigureAwait(false);
-            EnsureUdpSocketIsClosed();
-            await EnsureUserLeftVoiceChannel();
-            Invalidate();
 
             DiscoreException ex = new DiscoreException("The WebSocket connection timed out.");
             OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
         }
 
         /// <summary>
-        /// Initiates this voice connection.
+        /// Ensures that: the WebSocket is closed, the UDP socket is closed, the user has left the voice channel,
+        /// and the connection is invalidated.
         /// </summary>
-        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
-        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
-        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
-        [Obsolete("Please use the asynchronous counterpart ConnectAsync(bool, bool) instead.")]
-        public void Connect(bool startMute = false, bool startDeaf = false)
+        /// <exception cref="OperationCanceledException"></exception>
+        async Task CloseAndInvalidate(WebSocketCloseStatus webSocketCloseCode, string webSocketCloseDescription,
+            CancellationToken? cancellationToken = null)
         {
-            ConnectAsync().Wait();
+            await EnsureWebSocketIsClosed(webSocketCloseCode, webSocketCloseDescription, cancellationToken)
+                .ConfigureAwait(false);
+
+            EnsureUdpSocketIsClosed();
+
+            await EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None)
+                .ConfigureAwait(false);
+
+            Invalidate();
         }
 
         /// <summary>
@@ -210,16 +209,36 @@ namespace Discore.Voice
         /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
         /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
         /// <exception cref="OperationCanceledException">
-        /// Thrown if the gateway connection is closed while initiating the voice connection.
+        /// Thrown if the Gateway connection is closed while initiating the voice connection.
         /// </exception>
-        public async Task ConnectAsync(bool startMute = false, bool startDeaf = false)
+        [Obsolete("Please use the asynchronous counterpart ConnectAsync(bool, bool) instead.")]
+        public void Connect(bool startMute = false, bool startDeaf = false)
+        {
+            ConnectAsync().Wait();
+        }
+
+        /// <summary>
+        /// Initiates this voice connection.
+        /// <para>
+        /// Note: An <see cref="OperationCanceledException"/> will be thrown if the Gateway 
+        /// connection is closed while initiating.
+        /// </para>
+        /// </summary>
+        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
+        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
+        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the give cancellation token is cancelled or the Gateway connection is closed while initiating the voice connection.
+        /// </exception>
+        public async Task ConnectAsync(bool startMute = false, bool startDeaf = false, CancellationToken? cancellationToken = null)
         {
             if (isValid)
             {
                 if (!isConnecting && !IsConnected)
                 {
                     isConnecting = true;
-                    await gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, startMute, startDeaf);
+                    await gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, 
+                        startMute, startDeaf, cancellationToken ?? CancellationToken.None);
 
                     connectingCancellationSource = new CancellationTokenSource();
 
@@ -240,18 +259,13 @@ namespace Discore.Voice
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
                 {
-                    await EnsureWebSocketIsClosed(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake")
+                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake")
                         .ConfigureAwait(false);
-
-                    EnsureUdpSocketIsClosed();
-                    await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-
-                    Invalidate();
                 }
             }
             catch (OperationCanceledException)
             {
-                // connectingCancellationSource was cancelled.
+                // connectingCancellationSource was cancelled because we connected successfully.
             }
         }
 
@@ -268,23 +282,30 @@ namespace Discore.Voice
 
         /// <summary>
         /// Closes this voice connection.
+        /// <para>Note: The connection will still be closed if the passed cancellation token is cancelled.</para>
         /// </summary>
+        /// <param name="cancellationToken">A token which will force close the connection when cancelled.</param>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
+        /// <exception cref="OperationCanceledException"></exception>
         public async Task<bool> DisconnectAsync(CancellationToken cancellationToken)
         {
             if (isValid)
             {
-                await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Closing normally...", cancellationToken)
-                    .ConfigureAwait(false);
+                if (!isConnected)
+                    throw new InvalidOperationException("The voice connection is not connected!");
 
-                EnsureUdpSocketIsClosed();
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
+                try
+                {
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...", cancellationToken)
+                        .ConfigureAwait(false);
 
-                Invalidate();
-
-                OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
-                return true;
+                    return true;
+                }
+                finally
+                {
+                    OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
+                }
             }
             else
                 return false;
@@ -398,6 +419,9 @@ namespace Discore.Voice
 
         private async void WebSocket_OnReady(object sender, VoiceReadyEventArgs e)
         {
+            if (!isValid || !isConnected)
+                return;
+
             try
             {
                 // Connect the UDP socket
@@ -407,8 +431,10 @@ namespace Discore.Voice
             {
                 log.LogError($"[OnReady] Failed to connect UDP socket: {ex}");
 
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-                Invalidate();
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                    .ConfigureAwait(false);
+
+                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -425,8 +451,10 @@ namespace Discore.Voice
             {
                 log.LogError($"[OnReady] Failed start IP discovery: {ex}");
 
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-                Invalidate();
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                    .ConfigureAwait(false);
+
+                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -434,6 +462,9 @@ namespace Discore.Voice
 
         private async void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
         {
+            if (!isValid || !isConnected)
+                return;
+
             log.LogVerbose($"[IPDiscovery] Discovered IP: {e.IP}:{e.Port}");
 
             try
@@ -445,8 +476,10 @@ namespace Discore.Voice
             {
                 log.LogError($"[OnIPDiscovered] Failed to select protocol: {ex}");
 
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-                Invalidate();
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                    .ConfigureAwait(false);
+
+                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -454,10 +487,15 @@ namespace Discore.Voice
 
         private void WebSocket_OnSessionDescription(object sender, VoiceSessionDescriptionEventArgs e)
         {
+            if (!isValid || !isConnected)
+                return;
+            
             // Give the UDP socket the secret key to allow sending data.
             udpSocket.Start(e.SecretKey);
         }
 
+        /// <exception cref="ArgumentException">Thrown if the socket host resolved into zero addresses.</exception>
+        /// <exception cref="SocketException">Thrown if the host fails to resolve or the socket fails to connect.</exception>
         async Task ConnectUdpSocket(int port)
         {
             // Create UDP Socket
@@ -488,12 +526,14 @@ namespace Discore.Voice
                 // Connect WebSocket
                 await webSocket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
             }
-            catch (WebSocketException wsex)
+            catch (Exception ex)
             {
-                log.LogError($"Failed to connect to {uri}: {wsex}");
+                log.LogError($"Failed to connect to {uri}: {ex}");
 
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-                Invalidate();
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                    .ConfigureAwait(false);
+
+                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -510,8 +550,12 @@ namespace Discore.Voice
             {
                 log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
 
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-                Invalidate();
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                    .ConfigureAwait(false);
+
+                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
+
+                return;
             }
 
             // We are finished connecting
@@ -528,16 +572,18 @@ namespace Discore.Voice
             {
                 log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
 
-                await EnsureWebSocketIsClosed(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);
 
-                await EnsureUserLeftVoiceChannel().ConfigureAwait(false);
-                Invalidate();
+                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
+
+                return;
             }
 
             OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
         }
 
+        /// <exception cref="OperationCanceledException"></exception>
         async Task EnsureWebSocketIsClosed(WebSocketCloseStatus webSocketCloseStatus, string webSocketCloseDescription,
             CancellationToken? cancellationToken = null)
         {
@@ -557,6 +603,7 @@ namespace Discore.Voice
                         await webSocket.DisconnectAsync(webSocketCloseStatus, webSocketCloseDescription,
                             cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
                     }
+                    catch (OperationCanceledException) { throw; }
                     catch (Exception ex)
                     {
                         log.LogError($"[EnsureWebSocketIsClosed] Unexpected error: {ex}");
@@ -577,11 +624,11 @@ namespace Discore.Voice
             }
         }
 
-        async Task EnsureUserLeftVoiceChannel()
+        async Task EnsureUserLeftVoiceChannel(CancellationToken cancellationToken)
         {
             try
             {
-                await gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false);
+                await gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false, cancellationToken);
             }
             catch (OperationCanceledException)
             {

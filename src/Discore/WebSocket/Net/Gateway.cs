@@ -129,8 +129,10 @@ namespace Discore.WebSocket.Net
         /// </exception>
         async Task RepeatTrySendPayload(CancellationToken ct, Func<Task> callback)
         {
-            while (!ct.IsCancellationRequested)
+            while (true)
             {
+                ct.ThrowIfCancellationRequested();
+
                 if (state != GatewayState.Connected)
                     // Cancel if the gateway connection is closed from the outside.
                     throw new OperationCanceledException("The gateway connection was closed.");
@@ -209,9 +211,10 @@ namespace Discore.WebSocket.Net
         }
 
         /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
-        internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
+        internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf,
+            CancellationToken cancellationToken)
         {
-            await RepeatTrySendPayload(CancellationToken.None, async () =>
+            await RepeatTrySendPayload(cancellationToken, async () =>
             {
                 // Try to send the status update
                 await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
