@@ -416,7 +416,7 @@ namespace Discore.WebSocket.Net
                         .ConfigureAwait(false);
 
                     // At this point the socket has successfully connected
-                    log.LogInfo($"[ConnectLoop] Socket connected successfully.");
+                    log.LogVerbose($"[ConnectLoop] Socket connected successfully.");
                     break;
                 }
                 catch (WebSocketException wsex)

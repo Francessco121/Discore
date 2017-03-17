@@ -137,7 +137,7 @@ namespace Discore.WebSocket
 
                 await gateway.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-                log.LogVerbose("Successfully connected to gateway.");
+                log.LogInfo("Successfully connected to the Gateway.");
                 OnConnected?.Invoke(this, new ShardEventArgs(this));
             }
             else
@@ -171,6 +171,8 @@ namespace Discore.WebSocket
 
                 CleanUp();
                 await gateway.DisconnectAsync().ConfigureAwait(false);
+
+                log.LogInfo("Successfully disconnected from the Gateway.");
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
