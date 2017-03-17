@@ -15,7 +15,7 @@ namespace Discore
         /// <summary>
         /// Gets the actual user data for this member.
         /// </summary>
-        public DiscordUser User { get { return cache != null ? cache.Users[Id] : user; } }
+        public DiscordUser User => cache != null ? cache.Users[Id] : user;
 
         /// <summary>
         /// Gets the guild-wide nickname of the user.

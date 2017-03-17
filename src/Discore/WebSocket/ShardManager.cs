@@ -11,7 +11,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the number of shards currently being managed.
         /// </summary>
-        public int ManagedShardCount { get { return shards?.Length ?? 0; } }
+        public int ManagedShardCount => shards?.Length ?? 0;
         /// <summary>
         /// Gets the total number of shards currently used by the Discord application.
         /// <para>This can be more than the number of managed shards, as other processes could be handling some shards.</para>
@@ -21,7 +21,7 @@ namespace Discore.WebSocket
         /// Gets a list of all shards currently being managed,
         /// or null if no shards have been created yet.
         /// </summary>
-        public IReadOnlyList<Shard> Shards { get { return shards; } }
+        public IReadOnlyList<Shard> Shards => shards;
 
         DiscordWebSocketApplication app;
         DiscoreLogger log;

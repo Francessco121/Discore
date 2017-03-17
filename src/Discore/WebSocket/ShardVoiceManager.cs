@@ -11,10 +11,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets a list of all voice connections for the current authenticated user.
         /// </summary>
-        public ICollection<DiscordVoiceConnection> VoiceConnections
-        {
-            get { return voiceConnections.Values; }
-        }
+        public ICollection<DiscordVoiceConnection> VoiceConnections => voiceConnections.Values;
 
         ConcurrentDictionary<Snowflake, DiscordVoiceConnection> voiceConnections;
         Shard shard;

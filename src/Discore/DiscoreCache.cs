@@ -74,7 +74,7 @@ namespace Discore
         /// </summary>
         public T Value { get; internal set; }
 
-        internal override Snowflake DictionaryId { get { return Value.DictionaryId; } }
+        internal override Snowflake DictionaryId => Value.DictionaryId;
 
         internal DiscoreTypeCache() { }
 

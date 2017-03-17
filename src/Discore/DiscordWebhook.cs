@@ -37,7 +37,7 @@ namespace Discore
         /// <summary>
         /// Gets whether this webhook instance contains the webhook token.
         /// </summary>
-        public bool HasToken { get { return !string.IsNullOrWhiteSpace(Token); } }
+        public bool HasToken => !string.IsNullOrWhiteSpace(Token);
 
         DiscordHttpWebhookEndpoint webhookHttp;
 

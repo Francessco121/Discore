@@ -21,12 +21,9 @@ namespace Discore
         /// </summary>
         public DiscordUser Author
         {
-            get
-            {
-                return cache != null 
-                    ? authorId.HasValue ? cache.Users[authorId.Value] : null 
-                    : author;
-            }
+            get => cache != null 
+                ? authorId.HasValue ? cache.Users[authorId.Value] : null 
+                : author;
         }
         /// <summary>
         /// Gets the contents of this message.
@@ -53,12 +50,9 @@ namespace Discore
         /// </summary>
         public IReadOnlyList<DiscordUser> Mentions
         {
-            get
-            {
-                return cache != null
-                    ? mentionIds != null ? cache.Users[mentionIds] : null
-                    : mentions;
-            }
+            get => cache != null
+                ? mentionIds != null ? cache.Users[mentionIds] : null
+                : mentions;
         }
         /// <summary>
         /// Gets a list of all the ids of mentioned roles in this message.

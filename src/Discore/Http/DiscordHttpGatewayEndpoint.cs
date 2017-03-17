@@ -1,5 +1,4 @@
 ﻿using Discore.Http.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Http

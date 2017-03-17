@@ -14,7 +14,7 @@ namespace Discore
         /// <summary>
         /// Gets the user on the other end of this channel.
         /// </summary>
-        public DiscordUser Recipient { get { return cache != null ? cache.Users[recipientId] : recipient; } }
+        public DiscordUser Recipient => cache != null ? cache.Users[recipientId] : recipient;
 
         IDiscordApplication app;
         DiscordHttpChannelEndpoint channelsHttp;

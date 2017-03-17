@@ -60,16 +60,13 @@ namespace Discore
             }
         }
 
-        public int Count
-        {
-            get { return table.Count; }
-        }
+        public int Count => table.Count;
 
-        bool ICollection<T>.IsReadOnly { get { throw new NotSupportedException(); } }
-        bool ICollection<KeyValuePair<Snowflake, T>>.IsReadOnly { get { throw new NotSupportedException(); } }
+        bool ICollection<T>.IsReadOnly => throw new NotSupportedException();
+        bool ICollection<KeyValuePair<Snowflake, T>>.IsReadOnly => throw new NotSupportedException();
 
-        IEnumerable<Snowflake> IReadOnlyDictionary<Snowflake, T>.Keys { get { return Keys; } }
-        IEnumerable<T> IReadOnlyDictionary<Snowflake, T>.Values { get { return Values; } }
+        IEnumerable<Snowflake> IReadOnlyDictionary<Snowflake, T>.Keys => Keys;
+        IEnumerable<T> IReadOnlyDictionary<Snowflake, T>.Values => Values;
 
         Hashtable table;
 
@@ -106,7 +103,7 @@ namespace Discore
         /// </summary>
         public T this[Snowflake id]
         {
-            get { return Get(id); }
+            get => Get(id);
         }
 
         /// <summary>
@@ -115,7 +112,7 @@ namespace Discore
         /// </summary>
         public T[] this[ICollection<Snowflake> ids]
         {
-            get { return Get(ids); }
+            get => Get(ids);
         }
 
         /// <summary>
@@ -227,8 +224,8 @@ namespace Discore
 
         T IDictionary<Snowflake, T>.this[Snowflake key]
         {
-            get { return this[key]; }
-            set { throw new NotSupportedException(); }
+            get => this[key];
+            set => throw new NotSupportedException();
         }
 
         public IEnumerator GetEnumerator()

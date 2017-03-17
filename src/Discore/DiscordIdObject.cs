@@ -12,7 +12,7 @@ namespace Discore
         /// </summary>
         public Snowflake Id { get; protected set; }
 
-        internal override Snowflake DictionaryId { get { return Id; } }
+        internal override Snowflake DictionaryId => Id;
 
         internal DiscordIdObject() { }
 

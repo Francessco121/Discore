@@ -18,7 +18,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets whether this shard is currently running.
         /// </summary>
-        public bool IsRunning { get { return isRunning; } }
+        public bool IsRunning => isRunning;
 
         /// <summary>
         /// Called when this shard first connects to the Discord gateway.
@@ -51,7 +51,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the gateway manager for this shard.
         /// </summary>
-        public IDiscordGateway Gateway { get { return gateway; } }
+        public IDiscordGateway Gateway => gateway;
 
         /// <summary>
         /// Gets the voice manager for this shard.

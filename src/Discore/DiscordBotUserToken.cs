@@ -5,7 +5,7 @@
         /// <summary>
         /// Will always return true, as bot user tokens can be used to authenticate with the WebSocket API.
         /// </summary>
-        public bool CanAuthenticateWebSocket { get { return true; } }
+        public bool CanAuthenticateWebSocket => true;
 
         string token;
 

@@ -43,7 +43,7 @@ namespace Discore.WebSocket.Net
             || State == WebSocketState.CloseSent
             || State == WebSocketState.CloseReceived;
 
-        protected WebSocketState State { get { return socket.State; } }
+        protected WebSocketState State => socket.State;
 
         const int SEND_BUFFER_SIZE = 4 * 1024;  // 4kb (Discord's max payload size)
         const int RECEIVE_BUFFER_SIZE = 12 * 1024; // 12kb

@@ -10,60 +10,45 @@ namespace Discore.Voice
         /// <summary>
         /// Gets the guild this voice state is for.
         /// </summary>
-        public DiscordGuild Guild
-        {
-            get { return guildCache.Value; }
-        }
+        public DiscordGuild Guild => guildCache.Value;
 
         /// <summary>
         /// Gets the voice channel the user is in (or null if they are not in a voice channel).
         /// </summary>
         public DiscordGuildVoiceChannel Channel
         {
-            get { return channelId.HasValue ? guildCache.VoiceChannels[channelId.Value]?.Value : null; }
+            get => channelId.HasValue ? guildCache.VoiceChannels [channelId.Value]?.Value : null;
         }
 
         /// <summary>
         /// Gets the user this voice state is for.
         /// </summary>
-        public DiscordUser User
-        {
-            get { return cache.Users[userId]; }
-        }
+        public DiscordUser User => cache.Users[userId];
 
         /// <summary>
         /// Returns whether the user is in a voice channel.
         /// <para>Faster than checking if the Channel property is null as this avoids a cache hit.</para>
         /// </summary>
-        public bool IsInVoiceChannel
-        {
-            get { return channelId.HasValue; }
-        }
+        public bool IsInVoiceChannel => channelId.HasValue;
 
         /// <summary>
         /// Gets the ID of the guild this voice state is for.
         /// </summary>
         [Obsolete("Please use Guild.Id instead.")]
-        public Snowflake? GuildId
-        {
-            get { return guildId; }
-        }
+        public Snowflake? GuildId => guildId;
+
         /// <summary>
         /// Gets the ID of the voice channel this user is in.
         /// </summary>
         [Obsolete("Please use Channel.Id instead.")]
-        public Snowflake? ChannelId
-        {
-            get { return channelId; }
-        }
+        public Snowflake? ChannelId => channelId;
+
         /// <summary>
         /// Gets the ID of the user this voice state is for.
         /// </summary>
         [Obsolete("Please use User.Id instead.")]
-        public Snowflake UserId
-        {
-            get { return userId; }
-        }
+        public Snowflake UserId => userId;
+
         /// <summary>
         /// Gets the current session ID of this voice state.
         /// </summary>

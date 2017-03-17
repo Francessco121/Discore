@@ -25,7 +25,7 @@ namespace Discore.Http
         /// </exception>
         public int? Bitrate
         {
-            get { return bitrate; }
+            get => bitrate;
             set
             {
                 if (Type != DiscordGuildChannelType.Voice)
@@ -43,7 +43,7 @@ namespace Discore.Http
         /// </exception>
         public int? UserLimit
         {
-            get { return userlimit; }
+            get => userlimit;
             set
             {
                 if (Type != DiscordGuildChannelType.Voice)
