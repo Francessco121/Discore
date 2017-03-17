@@ -90,12 +90,48 @@ namespace Discore.WebSocket.Net
         public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0)
             => RequestGuildMembersAsync(callback, guildId, query, limit).Wait();
+
+        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
+        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
+        [Obsolete]
+        public async Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
+            string query = "", int limit = 0)
+        {
+            if (isDisposed)
+                throw new ObjectDisposedException(GetType().FullName);
+            if (state != GatewayState.Connected)
+                throw new InvalidOperationException("The gateway is not currently connected!");
+
+            // Create GUILD_MEMBERS_CHUNK event handler
+            EventHandler<GuildMemberChunkEventArgs> eventHandler = null;
+            eventHandler = (sender, args) =>
+            {
+                // Unhook event handler
+                OnGuildMembersChunk -= eventHandler;
+
+                // Return members
+                callback(args.Members);
+            };
+
+            // Hook in event handler
+            OnGuildMembersChunk += eventHandler;
+
+            try
+            {
+                await RepeatTrySendPayload(CancellationToken.None, async () =>
+                {
+                    // Try to request guild members
+                    await socket.SendRequestGuildMembersPayload(guildId, query, limit).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+            }
+            finally
+            {
+                OnGuildMembersChunk -= eventHandler;
+            }
+        }
         #endregion
 
-        /// <remarks>
-        /// This method will retry updating the status if the underlying socket is closed while updating,
-        /// and also wait until the gateway connection is fully ready before trying.
-        /// </remarks>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException">
@@ -114,6 +150,39 @@ namespace Discore.WebSocket.Net
             {
                 // Try to send the status update
                 await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+        }
+
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
+        /// </exception>
+        public async Task RequestGuildMembersAsync(Snowflake guildId, string query = "", int limit = 0, 
+            CancellationToken? cancellationToken = null)
+        {
+            if (isDisposed)
+                throw new ObjectDisposedException(GetType().FullName);
+            if (state != GatewayState.Connected)
+                throw new InvalidOperationException("The gateway is not currently connected!");
+
+            CancellationToken ct = cancellationToken ?? CancellationToken.None;
+
+            await RepeatTrySendPayload(ct, async () =>
+            {
+                // Try to request guild members
+                await socket.SendRequestGuildMembersPayload(guildId, query, limit).ConfigureAwait(false);
+            }).ConfigureAwait(false);
+        }
+
+        /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
+        internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf,
+            CancellationToken cancellationToken)
+        {
+            await RepeatTrySendPayload(cancellationToken, async () =>
+            {
+                // Try to send the status update
+                await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
 
@@ -163,62 +232,6 @@ namespace Discore.WebSocket.Net
                     await Task.Delay(500, ct).ConfigureAwait(false);
                 }
             }
-        }
-
-        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        public Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId, 
-            string query = "", int limit = 0)
-        {
-            if (state != GatewayState.Connected)
-                throw new InvalidOperationException("The gateway is not currently connected!");
-
-            // Create GUILD_MEMBERS_CHUNK event handler
-            EventHandler<DiscordGuildMember[]> eventHandler = null;
-            eventHandler = (sender, members) =>
-            {
-                // Unhook event handler
-                OnGuildMembersChunk -= eventHandler;
-
-                // Return members
-                callback(members);
-            };
-
-            // Hook in event handler
-            OnGuildMembersChunk += eventHandler;
-
-            try
-            {
-                // Send gateway request
-                return socket.SendRequestGuildMembersPayload(guildId, query, limit);
-            }
-            catch (InvalidOperationException ioex)
-            {
-                OnGuildMembersChunk -= eventHandler;
-
-                // InvalidOperation is thrown if the socket is not connected before the call is
-                // made, however since the user of the Gateway doesn't need to worry about the
-                // socket not always being connected, transform the exception so that they only
-                // need to handle one exception.
-                throw new DiscordWebSocketException("The WebSocket connection is closed.",
-                    DiscordWebSocketError.ConnectionClosed, ioex);
-            }
-            catch
-            {
-                OnGuildMembersChunk -= eventHandler;
-                throw;
-            }
-        }
-
-        /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
-        internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf,
-            CancellationToken cancellationToken)
-        {
-            await RepeatTrySendPayload(cancellationToken, async () =>
-            {
-                // Try to send the status update
-                await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
-            }).ConfigureAwait(false);
         }
 
         /// <exception cref="InvalidOperationException"></exception>

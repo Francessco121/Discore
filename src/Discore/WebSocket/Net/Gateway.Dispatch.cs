@@ -66,7 +66,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
-        internal event EventHandler<DiscordGuildMember[]> OnGuildMembersChunk;
+        public event EventHandler<GuildMemberChunkEventArgs> OnGuildMembersChunk;
 
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
@@ -502,8 +502,6 @@ namespace Discore.WebSocket.Net
 
                     Snowflake memberId = user.Id;
 
-                    bool memberExistedPreviously = guildCache.Members.ContainsKey(memberId);
-
                     DiscoreMemberCache memberCache;
                     if (!guildCache.Members.TryGetValue(memberId, out memberCache))
                     {
@@ -515,17 +513,10 @@ namespace Discore.WebSocket.Net
                     else
                         memberCache.Value = new DiscordGuildMember(app, cache, memberData, guildId);
 
-                    DiscordGuildMember member = memberCache.Value;
-
-                    members[i] = member;
-
-                    if (memberExistedPreviously)
-                        OnGuildMemberUpdated?.Invoke(this, new GuildMemberEventArgs(shard, guildCache.Value, member));
-                    else
-                        OnGuildMemberAdded?.Invoke(this, new GuildMemberEventArgs(shard, guildCache.Value, member));
+                    members[i] = memberCache.Value;
                 }
 
-                OnGuildMembersChunk?.Invoke(this, members);
+                OnGuildMembersChunk?.Invoke(this, new GuildMemberChunkEventArgs(Shard, guildCache.Value, members));
             }
             else
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");

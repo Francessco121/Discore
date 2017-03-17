@@ -66,6 +66,19 @@ namespace Discore.WebSocket
         }
     }
 
+    public class GuildMemberChunkEventArgs : DiscordGatewayEventArgs
+    {
+        public DiscordGuild Guild { get; }
+        public DiscordGuildMember[] Members { get; }
+
+        public GuildMemberChunkEventArgs(Shard shard, DiscordGuild guild, DiscordGuildMember[] members)
+            : base(shard)
+        {
+            Guild = guild;
+            Members = members;
+        }
+    }
+
     public class GuildUserEventArgs : DiscordGatewayEventArgs
     {
         public DiscordGuild Guild { get; }

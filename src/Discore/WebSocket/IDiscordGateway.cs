@@ -83,6 +83,10 @@ namespace Discore.WebSocket
         /// Called when a member is updated for a specific guild.
         /// </summary>
         event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
+        /// <summary>
+        /// Called when members are requested for a guild.
+        /// </summary>
+        event EventHandler<GuildMemberChunkEventArgs> OnGuildMembersChunk;
 
         /// <summary>
         /// Called when a role is added to a guild.
@@ -144,6 +148,53 @@ namespace Discore.WebSocket
 
         /// <summary>
         /// Updates the status of the bot user.
+        /// <para>Note: This method can only be called 5 times per minute and will wait if this is exceeded.</para>
+        /// <para>
+        /// Note: This method will throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
+        /// </para>
+        /// </summary>
+        /// <param name="game">Either null (if not playing a game), or the name of the game being played.</param>
+        /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
+        /// <param name="cancellationToken">A token used to cancel the update.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the Gateway's shard is stopped while sending.
+        /// </exception>
+        /// <remarks>
+        /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
+        /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
+        /// </remarks>
+        Task UpdateStatusAsync(string game = null, int? idleSince = null, CancellationToken? cancellationToken = null);
+
+        /// <summary>
+        /// Requests guild members from the Discord API, this can be used to retrieve offline members in a guild that is considered 
+        /// "large". "Large" guilds will not automatically have the offline members available.
+        /// <para>
+        /// Members requested here will be available through the <see cref="OnGuildMembersChunk"/> event.
+        /// </para>
+        /// <para>
+        /// Note: This method will throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
+        /// </para>
+        /// </summary>
+        /// <param name="guildId">The if of the guild to retrieve members from.</param>
+        /// <param name="query">Case-insensitive string that the username starts with, or an empty string to request all members.</param>
+        /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
+        /// <param name="cancellationToken">A token used to cancel the request.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the Gateway's shard is stopped while sending.
+        /// </exception>
+        /// <remarks>
+        /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
+        /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
+        /// </remarks>
+        Task RequestGuildMembersAsync(Snowflake guildId, string query = "", int limit = 0, CancellationToken? cancellationToken = null);
+
+        #region Deprecated API
+        /// <summary>
+        /// Updates the status of the bot user.
         /// <para>
         /// Note: If this method is called more than 5 times per minute, 
         /// it will block until the remaining time has passed!!
@@ -151,23 +202,11 @@ namespace Discore.WebSocket
         /// </summary>
         /// <param name="game">Either null, or an object with one key "name", representing the name of the game being played.</param>
         /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
-        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        [Obsolete("Please use the asynchronous counterpart UpdateStatusAsync(string, int?) instead.")]
+        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if the Gateway's shard is stopped while sending.</exception>
+        [Obsolete("Please use the asynchronous counterpart UpdateStatusAsync() instead.")]
         void UpdateStatus(string game = null, int? idleSince = null);
-
-        /// <summary>
-        /// Updates the status of the bot user.
-        /// <para>
-        /// Note: If this method is called more than 5 times per minute, 
-        /// the task will not complete until the remaining time has passed!!
-        /// </para>
-        /// </summary>
-        /// <param name="game">Either null, or an object with one key "name", representing the name of the game being played.</param>
-        /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
-        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        Task UpdateStatusAsync(string game = null, int? idleSince = null, CancellationToken? cancellationToken = null);
 
         /// <summary>
         /// Requests guild members from the Discord API, this can be used to retrieve
@@ -181,9 +220,11 @@ namespace Discore.WebSocket
         /// <param name="guildId">The if of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
-        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        [Obsolete("Please use the asynchronous counterpart RequestGuildMembersAsync() instead.")]
+        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if the Gateway's shard is stopped while sending.</exception>
+        [Obsolete("Please use the asynchronous counterpart RequestGuildMembersAsync() without a callback instead. " +
+            "The callback approach is error-prone.")]
         void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0);
 
@@ -199,9 +240,12 @@ namespace Discore.WebSocket
         /// <param name="guildId">The if of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
-        /// <exception cref="DiscordWebSocketException">Thrown if the status could not be updated at this time.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if the Gateway's shard is stopped while sending.</exception>
+        [Obsolete("Please use RequestGuildMembersAsync() without a callback instead. The callback approach is error-prone.")]
         Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
             string query = "", int limit = 0);
+        #endregion
     }
 }
