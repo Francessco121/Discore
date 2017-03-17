@@ -87,7 +87,11 @@ namespace Discore.Voice.Net
         [Payload(VoiceOPCode.Speaking)]
         void HandleSpeaking(DiscordApiData payload, DiscordApiData data)
         {
-            // TODO
+            Snowflake userId = data.GetSnowflake("user_id").Value;
+            int ssrc = data.GetInteger("ssrc").Value;
+            bool isSpeaking = data.GetBoolean("speaking").Value;
+
+            OnUserSpeaking?.Invoke(this, new VoiceSpeakingEventArgs(userId, ssrc, isSpeaking));
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>

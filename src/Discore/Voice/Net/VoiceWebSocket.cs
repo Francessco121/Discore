@@ -25,6 +25,10 @@ namespace Discore.Voice.Net
         /// Called when the socket is still connected but the heartbeat loop timed out.
         /// </summary>
         public event EventHandler OnTimedOut;
+        /// <summary>
+        /// Called when the speaking state of another user in the voice channel changes.
+        /// </summary>
+        public event EventHandler<VoiceSpeakingEventArgs> OnUserSpeaking;
 
         Task heartbeatTask;
         CancellationTokenSource heartbeatCancellationSource;

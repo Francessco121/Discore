@@ -9,29 +9,6 @@ using System.Threading.Tasks;
 
 namespace Discore.Voice
 {
-    public class VoiceConnectionEventArgs : EventArgs
-    {
-        public Shard Shard { get; }
-        public DiscordVoiceConnection Connection { get; }
-
-        internal VoiceConnectionEventArgs(Shard shard, DiscordVoiceConnection connection)
-        {
-            Shard = shard;
-            Connection = connection;
-        }
-    }
-
-    public class VoiceConnectionErrorEventArgs : VoiceConnectionEventArgs
-    {
-        public Exception Exception { get; }
-
-        internal VoiceConnectionErrorEventArgs(Shard shard, DiscordVoiceConnection connection, Exception exception)
-            : base(shard, connection)
-        {
-            Exception = exception;
-        }
-    }
-
     public sealed class DiscordVoiceConnection : IDisposable
     {
         /// <summary>
@@ -55,6 +32,10 @@ namespace Discore.Voice
         /// Called when this voice connection is no longer useable. (eg. disconnected, error, failure to connect).
         /// </summary>
         public event EventHandler<VoiceConnectionEventArgs> OnInvalidated;
+        /// <summary>
+        /// Called when another user in the voice channel this connection is connected to changes their speaking state.
+        /// </summary>
+        public event EventHandler<MemberSpeakingEventArgs> OnMemberSpeaking;
 
         /// <summary>
         /// Gets the shard this connection is managed by.
@@ -154,6 +135,14 @@ namespace Discore.Voice
 
             isValid = true;
             isSpeaking = true;
+        }
+
+        private void WebSocket_OnUserSpeaking(object sender, VoiceSpeakingEventArgs e)
+        {
+            if (guildCache.Members.TryGetValue(e.UserId, out DiscoreMemberCache memberCache))
+            {
+                OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(memberCache.Value, e.IsSpeaking, Shard, this));
+            }
         }
 
         private async void UdpSocket_OnClosedPrematurely(object sender, EventArgs e)
@@ -515,6 +504,7 @@ namespace Discore.Voice
             webSocket.OnSessionDescription += WebSocket_OnSessionDescription;
             webSocket.OnUnexpectedClose += WebSocket_OnUnexpectedClose;
             webSocket.OnTimedOut += WebSocket_OnTimedOut;
+            webSocket.OnUserSpeaking += WebSocket_OnUserSpeaking;
 
             // Build WebSocket URI
             Uri uri = new Uri($"wss://{endPoint}");
@@ -595,6 +585,7 @@ namespace Discore.Voice
                 webSocket.OnSessionDescription -= WebSocket_OnSessionDescription;
                 webSocket.OnUnexpectedClose -= WebSocket_OnUnexpectedClose;
                 webSocket.OnTimedOut -= WebSocket_OnTimedOut;
+                webSocket.OnUserSpeaking -= WebSocket_OnUserSpeaking;
 
                 if (webSocket.CanBeDisconnected)
                 {
