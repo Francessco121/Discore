@@ -206,6 +206,9 @@ namespace Discore.WebSocket.Net
                     // Cancel if the gateway connection is closed from the outside.
                     throw new OperationCanceledException("The gateway connection was closed.");
 
+                if (!gatewayReadyEvent.IsSet)
+                    log.LogVerbose("[RepeatTrySendPayload] Awaiting gateway ready...");
+
                 // Wait until the gateway connection is ready
                 await gatewayReadyEvent.WaitAsync(ct).ConfigureAwait(false);
 
@@ -219,13 +222,18 @@ namespace Discore.WebSocket.Net
                 }
                 catch (InvalidOperationException)
                 {
+                    log.LogVerbose("[RepeatTrySendPayload] InvalidOperationException, retrying...");
+
                     // The socket was closed between waiting for the socket to open
                     // and sending the payload. Shouldn't ever happen, give the socket
                     // some time to flip back to disconnected.
                     await Task.Delay(500, ct).ConfigureAwait(false);
                 }
-                catch (DiscordWebSocketException)
+                catch (DiscordWebSocketException dwex)
                 {
+                    log.LogVerbose("[RepeatTrySendPayload] DiscordWebSocketException: " +
+                        $"{dwex.Error} = {dwex.Message}, retrying...");
+
                     // Payload failed to send because the socket blew up,
                     // just retry after giving the socket some time to flip to
                     // a disconencted state.

@@ -180,15 +180,14 @@ namespace Discore.Voice
         async Task CloseAndInvalidate(WebSocketCloseStatus webSocketCloseCode, string webSocketCloseDescription,
             CancellationToken? cancellationToken = null)
         {
+            Invalidate();
+            EnsureUdpSocketIsClosed();
+
             await EnsureWebSocketIsClosed(webSocketCloseCode, webSocketCloseDescription, cancellationToken)
                 .ConfigureAwait(false);
 
-            EnsureUdpSocketIsClosed();
-
             await EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None)
                 .ConfigureAwait(false);
-
-            Invalidate();
         }
 
         /// <summary>
@@ -622,10 +621,15 @@ namespace Discore.Voice
                 await gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false, cancellationToken)
                     .ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException oex)
             {
-                // Gateway was disconnected while sending the payload, at this point
-                // the user will automatically leave.
+                if (oex.CancellationToken != cancellationToken)
+                {
+                    // Gateway was disconnected while sending the payload, at this point
+                    // the user will automatically leave.
+                }
+                else
+                    throw;
             }
         }
 
