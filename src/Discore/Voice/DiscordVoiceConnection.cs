@@ -180,14 +180,17 @@ namespace Discore.Voice
         async Task CloseAndInvalidate(WebSocketCloseStatus webSocketCloseCode, string webSocketCloseDescription,
             CancellationToken? cancellationToken = null)
         {
-            Invalidate();
+            Task leaveChannelTask = EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None);
+
+            Task webSocketDisconnectTask = EnsureWebSocketIsClosed(webSocketCloseCode, 
+                webSocketCloseDescription, cancellationToken);
+
             EnsureUdpSocketIsClosed();
 
-            await EnsureWebSocketIsClosed(webSocketCloseCode, webSocketCloseDescription, cancellationToken)
-                .ConfigureAwait(false);
+            await webSocketDisconnectTask.ConfigureAwait(false);
+            await leaveChannelTask.ConfigureAwait(false);
 
-            await EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None)
-                .ConfigureAwait(false);
+            Invalidate();
         }
 
         /// <summary>
