@@ -1,22 +1,21 @@
 # Discore
 [![NuGet](https://img.shields.io/nuget/v/Discore.svg?style=flat-square)](https://www.nuget.org/packages/Discore/)
 
-Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) interface with [Discord's](https://discordapp.com/) HTTP, Gateway, and voice APIs. 
+Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) interface with [Discord's](https://discordapp.com/) HTTP, WebSocket, and voice APIs.
 
-**Please note!** Discore is **not** an official Discord API wrapper.
+**Please note:** Discore is **not** an official Discord API interface!
 
-Released under the [MIT License](../master/LICENSE.md).
+## Compatibility
+See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support) for compatible runtimes. **Discore currently targets .NET Standard 1.6**.
 
 ## Downloading
 Official releases are available through [NuGet](https://www.nuget.org/packages/Discore/). These are published alongside a [GitHub release](https://github.com/BundledSticksInkorperated/Discore/releases), which contains the full change log.
 
-## Compiling
-Discore currently targets .NET Standard 1.6.
-
-The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) or any other .NET build system that can target .NET Standard 1.6.
-
 ## Wiki
 For more information on how to use Discore, see our [documentation right here on GitHub](https://github.com/BundledSticksInkorperated/Discore/wiki).
+
+## Compiling
+The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) (e.g. via the ".NET Core 1.0 - 1.1 development tools").
 
 ## Example Bot: Ping Pong
 ```csharp
@@ -83,5 +82,6 @@ namespace DiscorePingPong
 ```
 
 ## Alternatives
+Don't like our approach? Try some other great options:
 - [Discord.Net](https://github.com/RogueException/Discord.Net)
 - [DSharpPlus](https://github.com/NaamloosDT/DSharpPlus)
