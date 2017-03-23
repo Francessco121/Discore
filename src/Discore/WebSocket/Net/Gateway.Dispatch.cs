@@ -184,8 +184,10 @@ namespace Discore.WebSocket.Net
         [DispatchEvent("RESUMED")]
         void HandleResumedEvent(DiscordApiData data)
         {
-            log.LogInfo("[Resumed] Successfully resumed.");
+            // Signal that the connection is ready
+            gatewayReadyEvent.Set();
 
+            log.LogInfo("[Resumed] Successfully resumed.");
             LogServerTrace("Resumed", data);
         }
 

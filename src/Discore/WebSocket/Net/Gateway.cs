@@ -206,11 +206,18 @@ namespace Discore.WebSocket.Net
                     // Cancel if the gateway connection is closed from the outside.
                     throw new OperationCanceledException("The gateway connection was closed.");
 
+                bool waitingForReady = false;
                 if (!gatewayReadyEvent.IsSet)
+                {
+                    waitingForReady = true;
                     log.LogVerbose("[RepeatTrySendPayload] Awaiting gateway ready...");
+                }
 
                 // Wait until the gateway connection is ready
                 await gatewayReadyEvent.WaitAsync(ct).ConfigureAwait(false);
+
+                if (waitingForReady)
+                    log.LogVerbose("[RepeatTrySendPayload] Gateway is ready.");
 
                 try
                 {
