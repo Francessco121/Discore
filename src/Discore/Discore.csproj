@@ -9,7 +9,8 @@
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>Discord;Discord API</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
-    <Description>Discore aims to fully implement two sides of the Discord API: the HTTP API, and the realtime WebSocket API. It's designed for creating Discord bot applications, as well as applications that do not require realtime data. Please note! Discore is not an official Discord API wrapper.</Description>
+    <Description>Discore provides a .NET Standard interface with Discord's HTTP, WebSocket, and voice APIs.
+Please note: Discore is not an official Discord API interface!</Description>
     <PackageLicenseUrl>https://github.com/BundledSticksInkorperated/Discore/blob/master/LICENSE.md</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
