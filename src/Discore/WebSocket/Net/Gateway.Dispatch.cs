@@ -946,12 +946,11 @@ namespace Discore.WebSocket.Net
                                     // Notify the connection of the new state
                                     await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
                                 }
-                                else
+                                else if (connection.IsConnected)
                                 {
-                                    // The user has left the channel, so disconnect.
+                                    // The user has left the channel, so make sure they are disconnected.
                                     await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                                 }
-                                
                             }
                         }
 
