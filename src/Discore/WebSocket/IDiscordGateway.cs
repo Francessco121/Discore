@@ -150,7 +150,7 @@ namespace Discore.WebSocket
         /// Updates the status of the bot user.
         /// <para>Note: This method can only be called 5 times per minute and will wait if this is exceeded.</para>
         /// <para>
-        /// Note: This method will throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
+        /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
         /// </para>
         /// </summary>
         /// <param name="game">Either null (if not playing a game), or the name of the game being played.</param>
@@ -174,7 +174,7 @@ namespace Discore.WebSocket
         /// Members requested here will be available through the <see cref="OnGuildMembersChunk"/> event.
         /// </para>
         /// <para>
-        /// Note: This method will throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
+        /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
         /// </para>
         /// </summary>
         /// <param name="guildId">The if of the guild to retrieve members from.</param>

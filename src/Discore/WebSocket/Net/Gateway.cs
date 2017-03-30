@@ -53,6 +53,11 @@ namespace Discore.WebSocket.Net
         CancellationTokenSource connectTaskCancellationSource;
 
         AsyncManualResetEvent gatewayReadyEvent;
+        /// <summary>
+        /// Used to cancel operations that wait for the gatewayReadyEvent.
+        /// Cancellation occurs when the Gateway is disconnected publicly (i.e. not from a socket error).
+        /// </summary>
+        CancellationTokenSource gatewayReadyEventCancellationSource;
 
         DiscoreLogger log;
 
@@ -72,6 +77,7 @@ namespace Discore.WebSocket.Net
             state = GatewayState.Disconnected;
 
             gatewayReadyEvent = new AsyncManualResetEvent();
+            gatewayReadyEventCancellationSource = new CancellationTokenSource();
 
             // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
             connectionRateLimiter = new GatewayRateLimiter(5, 1); // 1 connection attempt per 5 seconds
@@ -119,7 +125,7 @@ namespace Discore.WebSocket.Net
 
             try
             {
-                await RepeatTrySendPayload(CancellationToken.None, async () =>
+                await RepeatTrySendPayload(CancellationToken.None, "RequestGuildMembers (obselete)", async () =>
                 {
                     // Try to request guild members
                     await socket.SendRequestGuildMembersPayload(guildId, query, limit).ConfigureAwait(false);
@@ -146,7 +152,7 @@ namespace Discore.WebSocket.Net
 
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
-            await RepeatTrySendPayload(ct, async () =>
+            await RepeatTrySendPayload(ct, "UpdateStatus", async () =>
             {
                 // Try to send the status update
                 await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
@@ -168,7 +174,7 @@ namespace Discore.WebSocket.Net
 
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
-            await RepeatTrySendPayload(ct, async () =>
+            await RepeatTrySendPayload(ct, "RequestGuildMembers", async () =>
             {
                 // Try to request guild members
                 await socket.SendRequestGuildMembersPayload(guildId, query, limit).ConfigureAwait(false);
@@ -179,7 +185,7 @@ namespace Discore.WebSocket.Net
         internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf,
             CancellationToken cancellationToken)
         {
-            await RepeatTrySendPayload(cancellationToken, async () =>
+            await RepeatTrySendPayload(cancellationToken, "RequestGuildMembers", async () =>
             {
                 // Try to send the status update
                 await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
@@ -196,55 +202,62 @@ namespace Discore.WebSocket.Net
         /// <exception cref="OperationCanceledException">
         /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
         /// </exception>
-        async Task RepeatTrySendPayload(CancellationToken ct, Func<Task> callback)
+        async Task RepeatTrySendPayload(CancellationToken ct, string opName, Func<Task> callback)
         {
-            while (true)
+            CancellationTokenSource cts = new CancellationTokenSource();
+
+            // This can be cancelled either by the caller, or the gateway disconnecting.
+            using (ct.Register(() => cts.Cancel()))
+            using (gatewayReadyEventCancellationSource.Token.Register(() => cts.Cancel()))
             {
-                ct.ThrowIfCancellationRequested();
-
-                if (state != GatewayState.Connected)
-                    // Cancel if the gateway connection is closed from the outside.
-                    throw new OperationCanceledException("The gateway connection was closed.");
-
-                bool waitingForReady = false;
-                if (!gatewayReadyEvent.IsSet)
+                while (true)
                 {
-                    waitingForReady = true;
-                    log.LogVerbose("[RepeatTrySendPayload] Awaiting gateway ready...");
-                }
+                    cts.Token.ThrowIfCancellationRequested();
 
-                // Wait until the gateway connection is ready
-                await gatewayReadyEvent.WaitAsync(ct).ConfigureAwait(false);
+                    if (state != GatewayState.Connected)
+                        // Cancel if the gateway connection is closed from the outside.
+                        throw new OperationCanceledException("The gateway connection was closed.");
 
-                if (waitingForReady)
-                    log.LogVerbose("[RepeatTrySendPayload] Gateway is ready.");
+                    bool waitingForReady = false;
+                    if (!gatewayReadyEvent.IsSet)
+                    {
+                        waitingForReady = true;
+                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] Awaiting gateway ready...");
+                    }
 
-                try
-                {
-                    // Try the callback
-                    await callback().ConfigureAwait(false);
+                    // Wait until the gateway connection is ready
+                    await gatewayReadyEvent.WaitAsync(cts.Token).ConfigureAwait(false);
 
-                    // Call succeeded
-                    break;
-                }
-                catch (InvalidOperationException)
-                {
-                    log.LogVerbose("[RepeatTrySendPayload] InvalidOperationException, retrying...");
+                    if (waitingForReady)
+                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] Gateway is ready.");
 
-                    // The socket was closed between waiting for the socket to open
-                    // and sending the payload. Shouldn't ever happen, give the socket
-                    // some time to flip back to disconnected.
-                    await Task.Delay(500, ct).ConfigureAwait(false);
-                }
-                catch (DiscordWebSocketException dwex)
-                {
-                    log.LogVerbose("[RepeatTrySendPayload] DiscordWebSocketException: " +
-                        $"{dwex.Error} = {dwex.Message}, retrying...");
+                    try
+                    {
+                        // Try the callback
+                        await callback().ConfigureAwait(false);
 
-                    // Payload failed to send because the socket blew up,
-                    // just retry after giving the socket some time to flip to
-                    // a disconencted state.
-                    await Task.Delay(500, ct).ConfigureAwait(false);
+                        // Call succeeded
+                        break;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] InvalidOperationException, retrying...");
+
+                        // The socket was closed between waiting for the socket to open
+                        // and sending the payload. Shouldn't ever happen, give the socket
+                        // some time to flip back to disconnected.
+                        await Task.Delay(500, cts.Token).ConfigureAwait(false);
+                    }
+                    catch (DiscordWebSocketException dwex)
+                    {
+                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] DiscordWebSocketException: " +
+                            $"{dwex.Error} = {dwex.Message}, retrying...");
+
+                        // Payload failed to send because the socket blew up,
+                        // just retry after giving the socket some time to flip to
+                        // a disconencted state.
+                        await Task.Delay(500, cts.Token).ConfigureAwait(false);
+                    }
                 }
             }
         }
@@ -297,7 +310,7 @@ namespace Discore.WebSocket.Net
             log.LogVerbose("Disconnecting...");
             state = GatewayState.Disconnected;
 
-            gatewayReadyEvent.Reset();
+            gatewayReadyEventCancellationSource.Cancel();
 
             if (connectTask != null)
             {
@@ -371,6 +384,7 @@ namespace Discore.WebSocket.Net
             log.LogVerbose($"[ConnectLoop] resume = {resume}");
 
             gatewayReadyEvent.Reset();
+            gatewayReadyEventCancellationSource = new CancellationTokenSource();
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -591,6 +605,8 @@ namespace Discore.WebSocket.Net
                 isDisposed = true;
                 state = GatewayState.Disconnected;
 
+                connectTaskCancellationSource?.Dispose();
+                gatewayReadyEventCancellationSource?.Dispose();
                 socket?.Dispose();
             }
         }
