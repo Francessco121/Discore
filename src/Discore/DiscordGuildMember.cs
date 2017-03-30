@@ -15,7 +15,7 @@ namespace Discore
         /// <summary>
         /// Gets the actual user data for this member.
         /// </summary>
-        public DiscordUser User { get { return cache != null ? cache.Users[Id] : user; } }
+        public DiscordUser User => cache != null ? cache.Users[Id] : user;
 
         /// <summary>
         /// Gets the guild-wide nickname of the user.
@@ -133,6 +133,26 @@ namespace Discore
         public Task<bool> Ban(int? deleteMessageDays = null)
         {
             return guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
+        }
+
+        /// <summary>
+        /// Adds a role to this member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> AddRole(Snowflake roleId)
+        {
+            return guildsHttp.AddMemberRole(GuildId, Id, roleId);
+        }
+
+        /// <summary>
+        /// Removes a role from this member.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> RemoveRole(Snowflake roleId)
+        {
+            return guildsHttp.RemoveMemberRole(GuildId, Id, roleId);
         }
 
         public override string ToString()

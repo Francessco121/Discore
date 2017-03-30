@@ -11,7 +11,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the number of shards currently being managed.
         /// </summary>
-        public int ManagedShardCount { get { return shards?.Length ?? 0; } }
+        public int ManagedShardCount => shards?.Length ?? 0;
         /// <summary>
         /// Gets the total number of shards currently used by the Discord application.
         /// <para>This can be more than the number of managed shards, as other processes could be handling some shards.</para>
@@ -21,7 +21,7 @@ namespace Discore.WebSocket
         /// Gets a list of all shards currently being managed,
         /// or null if no shards have been created yet.
         /// </summary>
-        public IReadOnlyList<Shard> Shards { get { return shards; } }
+        public IReadOnlyList<Shard> Shards => shards;
 
         DiscordWebSocketApplication app;
         DiscoreLogger log;
@@ -199,17 +199,17 @@ namespace Discore.WebSocket
         /// Stops all created shards that are running.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        [Obsolete("Please use the asynchronous counterpart StopShardsAsync(CancellationToken) instead.")]
+        [Obsolete("Please use the asynchronous counterpart StopShardsAsync() instead.")]
         public void StopShards()
         {
-            Task.WhenAll(StopShardsAsync(CancellationToken.None)).Wait();
+            Task.WhenAll(StopShardsAsync()).Wait();
         }
 
         /// <summary>
         /// Stops all created shards that are running, and returns a list of tasks representing each disconnection.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public IList<Task> StopShardsAsync(CancellationToken cancellationToken)
+        public IList<Task> StopShardsAsync()
         {
             if (shards != null)
             {
@@ -220,7 +220,7 @@ namespace Discore.WebSocket
                     if (!shard.IsRunning)
                         continue;
 
-                    stopTasks.Add(shards[i].StopAsync(cancellationToken));
+                    stopTasks.Add(shards[i].StopAsync());
                 }
 
                 return stopTasks;

@@ -9,8 +9,8 @@ namespace Discore
 
         public string GatewayUrl
         {
-            get { return data.GetString("gateway_url"); }
-            set { data.Set("gateway_url", value); }
+            get => data.GetString("gateway_url");
+            set => data.Set("gateway_url", value);
         }
 
         const string FILE_NAME = "discore-local-storage.json";

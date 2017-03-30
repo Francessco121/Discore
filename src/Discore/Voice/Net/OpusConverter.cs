@@ -9,6 +9,7 @@ namespace Discore.Voice.Net
         MusicOrMixed = 2049,
         LowLatency = 2051
     }
+
     internal enum OpusError : int
     {
         OK = 0,
@@ -52,7 +53,7 @@ namespace Discore.Voice.Net
 
         protected OpusConverter(int samplingRate, int channels, int frameLength)
         {
-            var os = RuntimeInformation.OSDescription.ToLower();
+            string os = RuntimeInformation.OSDescription.ToLower();
 
             if (os.Contains("linux"))
             { //Linux*
@@ -75,6 +76,7 @@ namespace Discore.Voice.Net
                 samplingRate != 16000 && samplingRate != 24000 &&
                 samplingRate != 48000)
                 throw new ArgumentOutOfRangeException(nameof(samplingRate));
+
             if (channels != 1 && channels != 2)
                 throw new ArgumentOutOfRangeException(nameof(channels));
 
@@ -94,10 +96,12 @@ namespace Discore.Voice.Net
             if (!disposedValue)
                 disposedValue = true;
         }
+
         ~OpusConverter()
         {
             Dispose(false);
         }
+
         public void Dispose()
         {
             Dispose(true);

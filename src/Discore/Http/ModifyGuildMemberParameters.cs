@@ -12,9 +12,9 @@ namespace Discore.Http
         /// </summary>
         public string Nickname { get; set; }
         /// <summary>
-        /// A list of roles the member is assigned to.
+        /// A list of roles IDs the member is assigned to.
         /// </summary>
-        public IEnumerable<DiscordRole> Roles { get; set; }
+        public IEnumerable<Snowflake> RoleIds { get; set; }
         /// <summary>
         /// Whether the user is server muted.
         /// </summary>
@@ -36,11 +36,11 @@ namespace Discore.Http
             data.Set("deaf", IsServerDeaf);
             data.Set("channel_id", ChannelId);
 
-            if (Roles != null)
+            if (RoleIds != null)
             {
                 DiscordApiData rolesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (DiscordRole role in Roles)
-                    rolesArray.Values.Add(role.Serialize());
+                foreach (Snowflake roleId in RoleIds)
+                    rolesArray.Values.Add(new DiscordApiData(roleId));
 
                 data.Set("roles", rolesArray);
             }

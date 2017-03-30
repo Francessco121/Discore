@@ -1,5 +1,4 @@
 ﻿using Discore.Http.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -32,13 +31,15 @@ namespace Discore.Http
             return response.Shards;
         }
 
-        internal async Task<string> Get(CancellationToken cancellationToken)
+        /// <exception cref="DiscordHttpApiException"></exception>
+        internal async Task<string> Get()
         {
             DiscordApiData data = await Rest.Get("gateway", 
-                "gateway", cancellationToken).ConfigureAwait(false);
+                "gateway").ConfigureAwait(false);
             return data.GetString("url");
         }
 
+        /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<GatewayBotResponse> GetBot()
         {
             DiscordApiData data = await Rest.Get("gateway/bot", 

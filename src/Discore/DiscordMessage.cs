@@ -21,12 +21,9 @@ namespace Discore
         /// </summary>
         public DiscordUser Author
         {
-            get
-            {
-                return cache != null 
-                    ? authorId.HasValue ? cache.Users[authorId.Value] : null 
-                    : author;
-            }
+            get => cache != null 
+                ? authorId.HasValue ? cache.Users[authorId.Value] : null 
+                : author;
         }
         /// <summary>
         /// Gets the contents of this message.
@@ -53,12 +50,9 @@ namespace Discore
         /// </summary>
         public IReadOnlyList<DiscordUser> Mentions
         {
-            get
-            {
-                return cache != null
-                    ? mentionIds != null ? cache.Users[mentionIds] : null
-                    : mentions;
-            }
+            get => cache != null
+                ? mentionIds != null ? cache.Users[mentionIds] : null
+                : mentions;
         }
         /// <summary>
         /// Gets a list of all the ids of mentioned roles in this message.
@@ -305,12 +299,22 @@ namespace Discore
         /// Changes the contents of this message.
         /// Note: changes will not be reflected in this message instance.
         /// </summary>
-        /// <param name="newContent">The new contents.</param>
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Edit(string newContent)
         {
             return channelsHttp.EditMessage(ChannelId, Id, newContent);
+        }
+
+        /// <summary>
+        /// Changes the contents of this message.
+        /// Note: changes will not be reflected in this message instance.
+        /// </summary>
+        /// <returns>Returns the editted message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Edit(DiscordMessageEdit editDetails)
+        {
+            return channelsHttp.EditMessage(ChannelId, Id, editDetails);
         }
 
         /// <summary>

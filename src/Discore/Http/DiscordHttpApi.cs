@@ -39,8 +39,8 @@ namespace Discore.Http
         /// </summary>
         public bool RetryWhenRateLimited
         {
-            get { return rest.RetryOnRateLimit; }
-            set { rest.RetryOnRateLimit = value; }
+            get => rest.RetryOnRateLimit;
+            set => rest.RetryOnRateLimit = value;
         }
 
         RestClient rest;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Voice;
+using System;
 
 namespace Discore.WebSocket
 {
@@ -62,6 +63,19 @@ namespace Discore.WebSocket
         {
             Guild = guild;
             Member = member;
+        }
+    }
+
+    public class GuildMemberChunkEventArgs : DiscordGatewayEventArgs
+    {
+        public DiscordGuild Guild { get; }
+        public DiscordGuildMember[] Members { get; }
+
+        public GuildMemberChunkEventArgs(Shard shard, DiscordGuild guild, DiscordGuildMember[] members)
+            : base(shard)
+        {
+            Guild = guild;
+            Members = members;
         }
     }
 
@@ -185,6 +199,19 @@ namespace Discore.WebSocket
             : base(shard)
         {
             Exception = exception;
+        }
+    }
+
+    public class VoiceStateEventArgs : DiscordGatewayEventArgs
+    {
+        public DiscordVoiceState VoiceState { get; }
+        public DiscordGuildMember Member { get; }
+
+        public VoiceStateEventArgs(Shard shard, DiscordVoiceState state, DiscordGuildMember member) 
+            : base(shard)
+        {
+            VoiceState = state;
+            Member = member;
         }
     }
 }

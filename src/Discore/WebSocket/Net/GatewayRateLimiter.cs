@@ -5,7 +5,7 @@ namespace Discore.WebSocket.Net
 {
     class GatewayRateLimiter
     {
-        public int ResetTimeSeconds { get { return resetTime.Seconds; } }
+        public int ResetTimeSeconds => resetTime.Seconds;
 
         readonly TimeSpan resetTime;
         readonly int maxInvokes;
@@ -15,8 +15,9 @@ namespace Discore.WebSocket.Net
 
         public GatewayRateLimiter(int resetTimeSeconds, int maxInvokes)
         {
-            this.resetTime = TimeSpan.FromSeconds(resetTimeSeconds);
             this.maxInvokes = maxInvokes;
+
+            resetTime = TimeSpan.FromSeconds(resetTimeSeconds);
 
             Reset();
         }

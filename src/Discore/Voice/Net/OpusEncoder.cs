@@ -28,10 +28,12 @@ namespace Discore.Voice.Net
 
             OpusError error;
             _ptr = Opus.CreateEncoder(samplingRate, channels, (int)application, out error);
+
             if (error != OpusError.OK)
                 throw new InvalidOperationException($"Error occured while creating encoder: {error}");
 
             SetForwardErrorCorrection(true);
+
             if (bitrate != null)
                 SetBitrate(bitrate.Value);
         }
@@ -49,13 +51,14 @@ namespace Discore.Voice.Net
 
             if (result < 0)
                 throw new Exception(((OpusError)result).ToString());
+
             return result;
         }
 
         /// <summary> Gets or sets whether Forward Error Correction is enabled. </summary>
         public void SetForwardErrorCorrection(bool value)
         {
-            var result = Opus.EncoderCtl(_ptr, OpusCtl.SetInbandFECRequest, value ? 1 : 0);
+            int result = Opus.EncoderCtl(_ptr, OpusCtl.SetInbandFECRequest, value ? 1 : 0);
             if (result < 0)
                 throw new Exception(((OpusError)result).ToString());
         }
@@ -63,7 +66,7 @@ namespace Discore.Voice.Net
         /// <summary> Gets or sets whether Forward Error Correction is enabled. </summary>
         public void SetBitrate(int value)
         {
-            var result = Opus.EncoderCtl(_ptr, OpusCtl.SetBitrateRequest, value * 1000);
+            int result = Opus.EncoderCtl(_ptr, OpusCtl.SetBitrateRequest, value * 1000);
             if (result < 0)
                 throw new Exception(((OpusError)result).ToString());
         }

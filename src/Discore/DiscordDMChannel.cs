@@ -1,6 +1,7 @@
 ﻿using Discore.Http;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -13,7 +14,7 @@ namespace Discore
         /// <summary>
         /// Gets the user on the other end of this channel.
         /// </summary>
-        public DiscordUser Recipient { get { return cache != null ? cache.Users[recipientId] : recipient; } }
+        public DiscordUser Recipient => cache != null ? cache.Users[recipientId] : recipient;
 
         IDiscordApplication app;
         DiscordHttpChannelEndpoint channelsHttp;
@@ -72,6 +73,7 @@ namespace Discore
             return lastId;
         }
 
+        #region Deprecated SendMessage
         /// <summary>
         /// Sends a message to this channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
@@ -81,6 +83,7 @@ namespace Discore
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use CreateMessage instead.")]
         public async Task<DiscordMessage> SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
         {
             DiscordMessage firstOrOnlyMessage = null;
@@ -113,6 +116,7 @@ namespace Discore
         /// <param name="tts">Whether this should be played over text-to-speech.</param>
         /// <returns>Returns the created message (or first if split into multiple).</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use UploadFile instead.")]
         public async Task<DiscordMessage> SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
             bool splitIfTooLong = false, bool tts = false)
         {
@@ -159,12 +163,61 @@ namespace Discore
                 i += subMessage.Length;
             }
         }
+        #endregion
+
+        /// <summary>
+        /// Creates a message in this channel.
+        /// </summary>
+        /// <param name="content">The message text content.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> CreateMessage(string content)
+        {
+            return channelsHttp.CreateMessage(Id, content);
+        }
+
+        /// <summary>
+        /// Creates a message in this channel.
+        /// </summary>
+        /// <param name="details">The details of the message to create.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> CreateMessage(DiscordMessageDetails details)
+        {
+            return channelsHttp.CreateMessage(Id, details);
+        }
+
+        /// <summary>
+        /// Uploads a file with an optional message to this channel.
+        /// </summary>
+        /// <param name="fileData">A stream of the file contents.</param>
+        /// <param name="fileName">The name of the file to use when uploading.</param>
+        /// <param name="details">Optional extra details of the message to create.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null)
+        {
+            return channelsHttp.UploadFile(Id, fileData, fileName, details);
+        }
+        /// <summary>
+        /// Uploads a file with an optional message to this channel.
+        /// </summary>
+        /// <param name="fileData">The file contents.</param>
+        /// <param name="fileName">The name of the file to use when uploading.</param>
+        /// <param name="details">Optional extra details of the message to create.</param>
+        /// <returns>Returns the created message.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> UploadFile(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
+        {
+            return channelsHttp.UploadFile(Id, fileData, fileName, details);
+        }
 
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
-        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
+        /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
@@ -176,7 +229,8 @@ namespace Discore
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
         /// </summary>
-        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
+        /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
+        /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)

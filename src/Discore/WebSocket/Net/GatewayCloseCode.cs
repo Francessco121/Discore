@@ -1,6 +1,6 @@
 ﻿namespace Discore.WebSocket.Net
 {
-    enum GatewayDisconnectCode
+    enum GatewayCloseCode
     {
         UnknownError = 4000,
         UnknownOpCode,
@@ -8,6 +8,10 @@
         NotAuthenticated,
         AuthenticationFailed,
         AlreadyAuthenticated,
+        /// <summary>
+        /// NOTE: this is not currently documented (as of gateway v5).
+        /// </summary>
+        InvalidSession = 4006,
         InvalidSeq = 4007,
         RateLimited,
         SessionTimeout,

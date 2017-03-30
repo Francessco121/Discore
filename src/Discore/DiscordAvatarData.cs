@@ -7,7 +7,7 @@ namespace Discore
         /// <summary>
         /// Gets the avatar data as a base64 encoded string.
         /// </summary>
-        public string Base64AvatarData { get { return base64Jpeg; } }
+        public string Base64AvatarData => base64Jpeg;
 
         string base64Jpeg;
 

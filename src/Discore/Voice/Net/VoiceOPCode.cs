@@ -1,6 +1,6 @@
 ﻿namespace Discore.Voice.Net
 {
-    enum VoiceSocketOPCode : int
+    enum VoiceOPCode : int
     {
         /// <summary>
         /// C->S Used to begin a voice websocket connection.

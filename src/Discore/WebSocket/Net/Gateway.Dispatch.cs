@@ -1,57 +1,89 @@
 ﻿using Discore.Voice;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Net
 {
     partial class Gateway
     {
-        delegate void DispatchCallback(DiscordApiData data);
+        delegate void DispatchSynchronousCallback(DiscordApiData data);
+        delegate Task DispatchAsynchronousCallback(DiscordApiData data);
+
+        class DispatchCallback
+        {
+            public DispatchSynchronousCallback Synchronous { get; }
+            public DispatchAsynchronousCallback Asynchronous { get; }
+
+            public DispatchCallback(DispatchSynchronousCallback synchronous)
+            {
+                Synchronous = synchronous;
+            }
+
+            public DispatchCallback(DispatchAsynchronousCallback asynchronous)
+            {
+                Asynchronous = asynchronous;
+            }
+        }
+
+        [AttributeUsage(AttributeTargets.Method)]
+        class DispatchEventAttribute : Attribute
+        {
+            public string EventName { get; }
+
+            public DispatchEventAttribute(string eventName)
+            {
+                EventName = eventName;
+            }
+        }
 
         public event EventHandler OnReadyEvent;
 
         #region Public Events       
-        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;        
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;        
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;        
-        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;        
+        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;
+        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;
+        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;
         public event EventHandler<GuildChannelEventArgs> OnGuildChannelRemoved;
 
-        
+
         public event EventHandler<GuildEventArgs> OnGuildCreated;
         public event EventHandler<GuildEventArgs> OnGuildUpdated;
         public event EventHandler<GuildEventArgs> OnGuildRemoved;
-        
+
         public event EventHandler<GuildEventArgs> OnGuildUnavailable;
 
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
         public event EventHandler<GuildUserEventArgs> OnGuildBanRemoved;
-        
+
         public event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
-        
+
         public event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
-        
+
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
         public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
-        internal event EventHandler<DiscordGuildMember[]> OnGuildMembersChunk;
+        public event EventHandler<GuildMemberChunkEventArgs> OnGuildMembersChunk;
 
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
-        
+
         public event EventHandler<MessageEventArgs> OnMessageCreated;
         public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
         public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
-        
+
         public event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
-        
+
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
-        
+
         public event EventHandler<UserEventArgs> OnUserUpdated;
+        public event EventHandler<VoiceStateEventArgs> OnVoiceStateUpdated;
         #endregion
 
         Dictionary<string, DispatchCallback> dispatchHandlers;
@@ -59,44 +91,63 @@ namespace Discore.WebSocket.Net
         void InitializeDispatchHandlers()
         {
             dispatchHandlers = new Dictionary<string, DispatchCallback>();
-            dispatchHandlers["READY"] = HandleReadyEvent;
-            dispatchHandlers["RESUMED"] = HandleResumedEvent;
-            dispatchHandlers["GUILD_CREATE"] = HandleGuildCreateEvent;
-            dispatchHandlers["GUILD_UPDATE"] = HandleGuildUpdateEvent;
-            dispatchHandlers["GUILD_DELETE"] = HandleGuildDeleteEvent;
-            dispatchHandlers["CHANNEL_CREATE"] = HandleChannelCreateEvent;
-            dispatchHandlers["CHANNEL_UPDATE"] = HandleChannelUpdateEvent;
-            dispatchHandlers["CHANNEL_DELETE"] = HandleChannelDeleteEvent;
-            dispatchHandlers["GUILD_BAN_ADD"] = HandleGuildBanAddEvent;
-            dispatchHandlers["GUILD_BAN_REMOVE"] = HandleGuildBanRemoveEvent;
-            dispatchHandlers["GUILD_EMOJIS_UPDATE"] = HandleGuildEmojisUpdateEvent;
-            dispatchHandlers["GUILD_INTEGRATIONS_UPDATE"] = HandleGuildIntegrationsUpdateEvent;
-            dispatchHandlers["GUILD_MEMBER_ADD"] = HandleGuildMemberAddEvent;
-            dispatchHandlers["GUILD_MEMBER_REMOVE"] = HandleGuildMemberRemoveEvent;
-            dispatchHandlers["GUILD_MEMBER_UPDATE"] = HandleGuildMemberUpdateEvent;
-            dispatchHandlers["GUILD_MEMBERS_CHUNK"] = HandleGuildMembersChunkEvent;
-            dispatchHandlers["GUILD_ROLE_CREATE"] = HandleGuildRoleCreateEvent;
-            dispatchHandlers["GUILD_ROLE_UPDATE"] = HandleGuildRoleUpdateEvent;
-            dispatchHandlers["GUILD_ROLE_DELETE"] = HandleGuildRoleDeleteEvent;
-            dispatchHandlers["PRESENCE_UPDATE"] = HandlePresenceUpdateEvent;
-            dispatchHandlers["TYPING_START"] = HandleTypingStartEvent;
-            dispatchHandlers["USER_UPDATE"] = HandleUserUpdateEvent;
-            dispatchHandlers["MESSAGE_CREATE"] = HandleMessageCreateEvent;
-            dispatchHandlers["MESSAGE_UPDATE"] = HandleMessageUpdateEvent;
-            dispatchHandlers["MESSAGE_DELETE"] = HandleMessageDeleteEvent;
-            dispatchHandlers["MESSAGE_DELETE_BULK"] = HandleMessageDeleteBulkEvent;
-            dispatchHandlers["MESSAGE_REACTION_ADD"] = HandleMessageReactionAddEvent;
-            dispatchHandlers["MESSAGE_REACTION_REMOVE"] = HandleMessageReactionRemoveEvent;
-            dispatchHandlers["VOICE_STATE_UPDATE"] = HandleVoiceStateUpdateEvent;
-            dispatchHandlers["VOICE_SERVER_UPDATE"] = HandleVoiceServerUpdateEvent;
+
+            Type taskType = typeof(Task);
+            Type gatewayType = typeof(Gateway);
+            Type dispatchSynchronousType = typeof(DispatchSynchronousCallback);
+            Type dispatchAsynchronousType = typeof(DispatchAsynchronousCallback);
+
+            foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
+            {
+                DispatchEventAttribute attr = method.GetCustomAttribute<DispatchEventAttribute>();
+                if (attr != null)
+                {
+                    DispatchCallback dispatchCallback;
+                    if (method.ReturnType == taskType)
+                    {
+                        Delegate callback = method.CreateDelegate(dispatchAsynchronousType, this);
+                        dispatchCallback = new DispatchCallback((DispatchAsynchronousCallback)callback);
+                    }
+                    else
+                    {
+                        Delegate callback = method.CreateDelegate(dispatchSynchronousType, this);
+                        dispatchCallback = new DispatchCallback((DispatchSynchronousCallback)callback);
+                    }
+
+                    dispatchHandlers[attr.EventName] = dispatchCallback;
+                }
+            }
         }
 
+        void LogServerTrace(string prefix, DiscordApiData data)
+        {
+            IList<DiscordApiData> traceArray = data.GetArray("_trace");
+            if (traceArray != null)
+            {
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 0; i < traceArray.Count; i++)
+                {
+                    if (i > 0)
+                        sb.Append(", ");
+
+                    sb.Append(traceArray[i].ToString());
+                }
+
+                log.LogVerbose($"[{prefix}] trace = {sb}");
+            }
+        }
+
+        [DispatchEvent("READY")]
         void HandleReadyEvent(DiscordApiData data)
         {
             // Check gateway protocol
             int protocolVersion = data.GetInteger("v").Value;
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
+
+            // Signal that the connection is ready
+            gatewayReadyEvent.Set();
 
             OnReadyEvent?.Invoke(this, EventArgs.Empty);
 
@@ -130,14 +181,18 @@ namespace Discore.WebSocket.Net
             LogServerTrace("Ready", data);
         }
 
+        [DispatchEvent("RESUMED")]
         void HandleResumedEvent(DiscordApiData data)
         {
-            log.LogInfo("[Resumed] Successfully resumed.");
+            // Signal that the connection is ready
+            gatewayReadyEvent.Set();
 
+            log.LogInfo("[Resumed] Successfully resumed.");
             LogServerTrace("Resumed", data);
         }
 
         #region Guild
+        [DispatchEvent("GUILD_CREATE")]
         void HandleGuildCreateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("id").Value;
@@ -200,9 +255,9 @@ namespace Discore.WebSocket.Net
             IList<DiscordApiData> voiceStatesArray = data.GetArray("voice_states");
             for (int i = 0; i < voiceStatesArray.Count; i++)
             {
-                DiscordVoiceState state = new DiscordVoiceState(voiceStatesArray[i], guildId);
+                DiscordVoiceState state = new DiscordVoiceState(cache, guildCache, voiceStatesArray[i]);
                 DiscoreMemberCache memberCache;
-                if (guildCache.Members.TryGetValue(state.UserId, out memberCache))
+                if (guildCache.Members.TryGetValue(state.User.Id, out memberCache))
                     UpdateMemberVoiceState(guildCache, memberCache, state);
             }
 
@@ -222,6 +277,7 @@ namespace Discore.WebSocket.Net
             OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
         }
 
+        [DispatchEvent("GUILD_UPDATE")]
         void HandleGuildUpdateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("id").Value;
@@ -245,7 +301,8 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
-        void HandleGuildDeleteEvent(DiscordApiData data)
+        [DispatchEvent("GUILD_DELETE")]
+        async Task HandleGuildDeleteEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("id").Value;
 
@@ -266,12 +323,24 @@ namespace Discore.WebSocket.Net
             {
                 DiscoreGuildCache guildCache = cache.Guilds.Remove(guildId);
                 if (guildCache != null)
+                {
+                    if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection voiceConnection) 
+                        && voiceConnection.IsConnected)
+                    {
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        cts.CancelAfter(5000);
+
+                        await voiceConnection.DisconnectAsync(cts.Token).ConfigureAwait(false);
+                    }
+
                     OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
+                }
                 else
                     throw new DiscoreCacheException($"Guild {guildId} was not in the cache! unavailalbe = {unavailable}");
             }
         }
 
+        [DispatchEvent("GUILD_BAN_ADD")]
         void HandleGuildBanAddEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -288,6 +357,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_BAN_REMOVE")]
         void HandleGuildBanRemoveEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -304,6 +374,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_EMOJIS_UPDATE")]
         void HandleGuildEmojisUpdateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -333,6 +404,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_INTEGRATIONS_UPDATE")]
         void HandleGuildIntegrationsUpdateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -346,6 +418,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_MEMBER_ADD")]
         void HandleGuildMemberAddEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -376,6 +449,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_MEMBER_REMOVE")]
         void HandleGuildMemberRemoveEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -395,6 +469,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_MEMBER_UPDATE")]
         void HandleGuildMemberUpdateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -422,6 +497,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_MEMBERS_CHUNK")]
         void HandleGuildMembersChunkEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -439,8 +515,6 @@ namespace Discore.WebSocket.Net
 
                     Snowflake memberId = user.Id;
 
-                    bool memberExistedPreviously = guildCache.Members.ContainsKey(memberId);
-
                     DiscoreMemberCache memberCache;
                     if (!guildCache.Members.TryGetValue(memberId, out memberCache))
                     {
@@ -452,22 +526,16 @@ namespace Discore.WebSocket.Net
                     else
                         memberCache.Value = new DiscordGuildMember(app, cache, memberData, guildId);
 
-                    DiscordGuildMember member = memberCache.Value;
-
-                    members[i] = member;
-
-                    if (memberExistedPreviously)
-                        OnGuildMemberUpdated?.Invoke(this, new GuildMemberEventArgs(shard, guildCache.Value, member));
-                    else
-                        OnGuildMemberAdded?.Invoke(this, new GuildMemberEventArgs(shard, guildCache.Value, member));
+                    members[i] = memberCache.Value;
                 }
 
-                OnGuildMembersChunk?.Invoke(this, members);
+                OnGuildMembersChunk?.Invoke(this, new GuildMemberChunkEventArgs(Shard, guildCache.Value, members));
             }
             else
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_ROLE_CREATE")]
         void HandleGuildRoleCreateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -484,6 +552,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_ROLE_UPDATE")]
         void HandleGuildRoleUpdateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -500,6 +569,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("GUILD_ROLE_DELETE")]
         void HandleGuildRoleDeleteEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -520,6 +590,7 @@ namespace Discore.WebSocket.Net
         #endregion
 
         #region Channel
+        [DispatchEvent("CHANNEL_CREATE")]
         void HandleChannelCreateEvent(DiscordApiData data)
         {
             Snowflake id = data.GetSnowflake("id").Value;
@@ -559,6 +630,7 @@ namespace Discore.WebSocket.Net
             }
         }
 
+        [DispatchEvent("CHANNEL_UPDATE")]
         void HandleChannelUpdateEvent(DiscordApiData data)
         {
             Snowflake id = data.GetSnowflake("id").Value;
@@ -582,6 +654,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("CHANNEL_DELETE")]
         void HandleChannelDeleteEvent(DiscordApiData data)
         {
             Snowflake id = data.GetSnowflake("id").Value;
@@ -633,6 +706,7 @@ namespace Discore.WebSocket.Net
         #endregion
 
         #region Message
+        [DispatchEvent("MESSAGE_CREATE")]
         void HandleMessageCreateEvent(DiscordApiData data)
         {
             // Get author
@@ -652,6 +726,7 @@ namespace Discore.WebSocket.Net
             OnMessageCreated?.Invoke(this, new MessageEventArgs(shard, message));
         }
 
+        [DispatchEvent("MESSAGE_UPDATE")]
         void HandleMessageUpdateEvent(DiscordApiData data)
         {
             // Get author
@@ -677,6 +752,7 @@ namespace Discore.WebSocket.Net
             OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }
 
+        [DispatchEvent("MESSAGE_DELETE")]
         void HandleMessageDeleteEvent(DiscordApiData data)
         {
             Snowflake messageId = data.GetSnowflake("id").Value;
@@ -687,6 +763,7 @@ namespace Discore.WebSocket.Net
                 OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channel));
         }
 
+        [DispatchEvent("MESSAGE_DELETE_BULK")]
         void HandleMessageDeleteBulkEvent(DiscordApiData data)
         {
             Snowflake channelId = data.GetSnowflake("channel_id").Value;
@@ -705,6 +782,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Channel {channelId} was not in the cache!");
         }
 
+        [DispatchEvent("MESSAGE_REACTION_ADD")]
         void HandleMessageReactionAddEvent(DiscordApiData data)
         {
             Snowflake userId = data.GetSnowflake("user_id").Value;
@@ -729,6 +807,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"User {userId} was not in the cache!");
         }
 
+        [DispatchEvent("MESSAGE_REACTION_REMOVE")]
         void HandleMessageReactionRemoveEvent(DiscordApiData data)
         {
             Snowflake userId = data.GetSnowflake("user_id").Value;
@@ -754,6 +833,7 @@ namespace Discore.WebSocket.Net
         }
         #endregion
 
+        [DispatchEvent("PRESENCE_UPDATE")]
         void HandlePresenceUpdateEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -763,10 +843,10 @@ namespace Discore.WebSocket.Net
             {
                 DiscordApiData userData = data.Get("user");
                 Snowflake memberId = userData.GetSnowflake("id").Value;
-                
+
                 DiscordUser user = cache.Users.Get(memberId);
                 user = cache.Users.Set(user.PartialUpdate(userData));
-               
+
                 DiscoreMemberCache memberCache;
                 if (guildCache.Members.TryGetValue(memberId, out memberCache))
                 {
@@ -782,6 +862,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
         }
 
+        [DispatchEvent("TYPING_START")]
         void HandleTypingStartEvent(DiscordApiData data)
         {
             Snowflake userId = data.GetSnowflake("user_id").Value;
@@ -804,6 +885,7 @@ namespace Discore.WebSocket.Net
                 throw new DiscoreCacheException($"User {userId} was not in the cache!");
         }
 
+        [DispatchEvent("USER_UPDATE")]
         void HandleUserUpdateEvent(DiscordApiData data)
         {
             Snowflake userId = data.GetSnowflake("id").Value;
@@ -825,23 +907,29 @@ namespace Discore.WebSocket.Net
             // Set new state
             memberCache.VoiceState = newState;
 
-            if (previousState != null && previousState.ChannelId.HasValue
-                && newState.ChannelId != previousState.ChannelId)
+            DiscordGuildVoiceChannel newVoiceChannel = newState.Channel;
+
+            if (previousState != null)
             {
-                // Remove user from connected members list of previous state
-                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(previousState.ChannelId.Value);
-                voiceChannelCache.ConnectedMembers.Remove(memberCache.DictionaryId);
+                DiscordGuildVoiceChannel previousVoiceChannel = previousState.Channel;
+                if (previousVoiceChannel != null && (newVoiceChannel == null || previousVoiceChannel.Id != newVoiceChannel.Id))
+                {
+                    // Remove user from connected members list of previous state
+                    DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(previousVoiceChannel.Id);
+                    voiceChannelCache.ConnectedMembers.Remove(memberCache.DictionaryId);
+                }
             }
 
-            if (newState.ChannelId.HasValue)
+            if (newVoiceChannel != null)
             {
                 // Add user to connected members list of new state
-                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(newState.ChannelId.Value);
+                DiscoreVoiceChannelCache voiceChannelCache = guildCache.VoiceChannels.Get(newVoiceChannel.Id);
                 voiceChannelCache.ConnectedMembers.Set(memberCache);
             }
         }
 
-        async void HandleVoiceStateUpdateEvent(DiscordApiData data)
+        [DispatchEvent("VOICE_STATE_UPDATE")]
+        async Task HandleVoiceStateUpdateEvent(DiscordApiData data)
         {
             Snowflake? guildId = data.GetSnowflake("guild_id");
             if (guildId.HasValue) // Only guild voice channels are supported so far.
@@ -854,7 +942,7 @@ namespace Discore.WebSocket.Net
                     DiscoreMemberCache memberCache;
                     if (guildCache.Members.TryGetValue(userId, out memberCache))
                     {
-                        DiscordVoiceState newState = new DiscordVoiceState(data, guildId.Value);
+                        DiscordVoiceState newState = new DiscordVoiceState(cache, guildCache, data);
                         UpdateMemberVoiceState(guildCache, memberCache, newState);
 
                         if (userId == shard.User.Id)
@@ -864,27 +952,21 @@ namespace Discore.WebSocket.Net
                             DiscordVoiceConnection connection;
                             if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                             {
-                                try
+                                if (memberCache.VoiceState.IsInVoiceChannel)
                                 {
-                                    if (memberCache.VoiceState.ChannelId != null)
-                                    {
-                                        // Notify the connection of the new state
-                                        await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
-                                    }
-                                    else
-                                    {
-                                        // The user has left the channel, so disconnect.
-                                        await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
-                                    }
+                                    // Notify the connection of the new state
+                                    await connection.OnVoiceStateUpdated(memberCache.VoiceState).ConfigureAwait(false);
                                 }
-                                catch (Exception ex)
+                                else if (connection.IsConnected)
                                 {
-                                    // Nothing we can really do here...
-                                    // The voice connection this update is for will timeout, so we'll just log it.
-                                    log.LogError($"[VoiceStateUpdate] {ex}");
+                                    // The user has left the channel, so make sure they are disconnected.
+                                    await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                                 }
                             }
                         }
+
+                        // Call event
+                        OnVoiceStateUpdated?.Invoke(this, new VoiceStateEventArgs(shard, newState, memberCache.Value));
                     }
                     else
                         throw new DiscoreCacheException($"Member {guildId.Value} was not in the guild {guildId.Value} cache!");
@@ -896,7 +978,8 @@ namespace Discore.WebSocket.Net
                 throw new NotImplementedException("Non-guild voice channels are not supported yet.");
         }
 
-        async void HandleVoiceServerUpdateEvent(DiscordApiData data)
+        [DispatchEvent("VOICE_SERVER_UPDATE")]
+        async Task HandleVoiceServerUpdateEvent(DiscordApiData data)
         {
             Snowflake? guildId = data.GetSnowflake("guild_id");
             if (guildId.HasValue) // Only guild voice channels are supported so far.
@@ -907,16 +990,8 @@ namespace Discore.WebSocket.Net
                 DiscordVoiceConnection connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
-                    try
-                    {
-                        // Notify the connection of the server update
-                        await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Nothing we can really do here...
-                        log.LogError($"[VoiceServerUpdate] {ex}");
-                    }
+                    // Notify the connection of the server update
+                    await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
                 }
                 else
                     throw new DiscoreCacheException($"Voice connection for guild {guildId.Value} was not in the cache!");

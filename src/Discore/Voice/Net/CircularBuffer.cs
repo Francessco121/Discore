@@ -1,6 +1,6 @@
 ﻿using System;
 
-// http://naudio.codeplex.com/SourceControl/latest#NAudio/Utils/CircularBuffer.cs
+// Modified from: http://naudio.codeplex.com/SourceControl/latest#NAudio/Utils/CircularBuffer.cs
 
 namespace Discore.Voice.Net
 {
@@ -36,24 +36,28 @@ namespace Discore.Voice.Net
 
             lock (lockObject)
             {
-                var bytesWritten = 0;
+                int bytesWritten = 0;
+
                 if (count > buffer.Length - byteCount)
-                {
                     count = buffer.Length - byteCount;
-                }
-                // write to end
+
+                // Write to end
                 int writeToEnd = Math.Min(buffer.Length - writePosition, count);
+
                 Array.Copy(data, offset, buffer, writePosition, writeToEnd);
+
                 writePosition += writeToEnd;
                 writePosition %= buffer.Length;
                 bytesWritten += writeToEnd;
+
                 if (bytesWritten < count)
                 {
-                    // must have wrapped round. Write to start
+                    // Must have wrapped round. Write to start
                     Array.Copy(data, offset + bytesWritten, buffer, writePosition, count - bytesWritten);
                     writePosition += (count - bytesWritten);
                     bytesWritten = count;
                 }
+
                 byteCount += bytesWritten;
                 return bytesWritten;
             }
@@ -71,12 +75,13 @@ namespace Discore.Voice.Net
             lock (lockObject)
             {
                 if (count > byteCount)
-                {
                     count = byteCount;
-                }
+
                 int bytesRead = 0;
                 int readToEnd = Math.Min(buffer.Length - readPosition, count);
+
                 Array.Copy(buffer, readPosition, data, offset, readToEnd);
+
                 bytesRead += readToEnd;
                 readPosition += readToEnd;
                 readPosition %= buffer.Length;
@@ -97,18 +102,12 @@ namespace Discore.Voice.Net
         /// <summary>
         /// Maximum length of this circular buffer
         /// </summary>
-        public int MaxLength
-        {
-            get { return buffer.Length; }
-        }
+        public int MaxLength => buffer.Length;
 
         /// <summary>
         /// Number of bytes currently stored in the circular buffer
         /// </summary>
-        public int Count
-        {
-            get { return byteCount; }
-        }
+        public int Count => byteCount;
 
         /// <summary>
         /// Resets the buffer
