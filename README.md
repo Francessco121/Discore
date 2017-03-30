@@ -72,7 +72,7 @@ namespace DiscorePingPong
                 try
                 {
                     // Reply to the user who posted "!ping".
-                    await textChannel.SendMessage($"<@{message.Author.Id}> Pong!");
+                    await textChannel.CreateMessage($"<@{message.Author.Id}> Pong!");
                 }
                 catch (Exception) {  /* Message failed to send... :( */ }
             }
