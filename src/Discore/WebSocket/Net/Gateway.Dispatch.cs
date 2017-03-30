@@ -302,7 +302,7 @@ namespace Discore.WebSocket.Net
         }
 
         [DispatchEvent("GUILD_DELETE")]
-        void HandleGuildDeleteEvent(DiscordApiData data)
+        async Task HandleGuildDeleteEvent(DiscordApiData data)
         {
             Snowflake guildId = data.GetSnowflake("id").Value;
 
@@ -323,7 +323,17 @@ namespace Discore.WebSocket.Net
             {
                 DiscoreGuildCache guildCache = cache.Guilds.Remove(guildId);
                 if (guildCache != null)
+                {
+                    if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection voiceConnection) 
+                        && voiceConnection.IsConnected)
+                    {
+                        CancellationTokenSource cts = new CancellationTokenSource();
+                        cts.CancelAfter(5000);
+                        await voiceConnection.DisconnectAsync(cts.Token);
+                    }
+
                     OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
+                }
                 else
                     throw new DiscoreCacheException($"Guild {guildId} was not in the cache! unavailalbe = {unavailable}");
             }

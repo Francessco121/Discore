@@ -21,7 +21,7 @@ namespace Discore.Voice
         /// </summary>
         public event EventHandler<VoiceConnectionEventArgs> OnConnected;
         /// <summary>
-        /// Called when the voice connection is disconnected.
+        /// Called when the voice connection is disconnected or if the user is removed from the guild this connection is for.
         /// </summary>
         public event EventHandler<VoiceConnectionEventArgs> OnDisconnected;
         /// <summary>
