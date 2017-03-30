@@ -643,7 +643,9 @@ namespace Discore.Voice
                 isValid = false;
                 isConnecting = false;
                 isConnected = false;
-                connectingCancellationSource?.Cancel();
+
+                if (!isDisposed)
+                    connectingCancellationSource?.Cancel();
 
                 log.LogVerbose("[Invalidate] Invalidating voice connection...");
 
