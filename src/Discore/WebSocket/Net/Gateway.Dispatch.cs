@@ -329,7 +329,8 @@ namespace Discore.WebSocket.Net
                     {
                         CancellationTokenSource cts = new CancellationTokenSource();
                         cts.CancelAfter(5000);
-                        await voiceConnection.DisconnectAsync(cts.Token);
+
+                        await voiceConnection.DisconnectAsync(cts.Token).ConfigureAwait(false);
                     }
 
                     OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
