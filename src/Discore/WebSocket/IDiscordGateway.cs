@@ -177,7 +177,7 @@ namespace Discore.WebSocket
         /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
         /// </para>
         /// </summary>
-        /// <param name="guildId">The if of the guild to retrieve members from.</param>
+        /// <param name="guildId">The id of the guild to retrieve members from.</param>
         /// <param name="query">Case-insensitive string that the username starts with, or an empty string to request all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
         /// <param name="cancellationToken">A token used to cancel the request.</param>
@@ -217,7 +217,7 @@ namespace Discore.WebSocket
         /// </para>
         /// </summary>
         /// <param name="callback">Action to be invoked if the members are successfully retrieved.</param>
-        /// <param name="guildId">The if of the guild to retrieve members from.</param>
+        /// <param name="guildId">The id of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
         /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
@@ -237,7 +237,7 @@ namespace Discore.WebSocket
         /// </para>
         /// </summary>
         /// <param name="callback">Action to be invoked if the members are successfully retrieved.</param>
-        /// <param name="guildId">The if of the guild to retrieve members from.</param>
+        /// <param name="guildId">The id of the guild to retrieve members from.</param>
         /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
         /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
