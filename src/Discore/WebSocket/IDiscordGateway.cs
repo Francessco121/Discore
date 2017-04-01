@@ -34,7 +34,7 @@ namespace Discore.WebSocket
         event EventHandler<GuildChannelEventArgs> OnGuildChannelRemoved;
 
         /// <summary>
-        /// Called when this application discovers a guild it is in or joins one.
+        /// Called when this application joins a guild.
         /// </summary>
         event EventHandler<GuildEventArgs> OnGuildCreated;
         /// <summary>
@@ -46,6 +46,11 @@ namespace Discore.WebSocket
         /// </summary>
         event EventHandler<GuildEventArgs> OnGuildRemoved;
 
+        /// <summary>
+        /// Called when a known guild that was unavailable becomes available again.
+        /// (i.e. when the Gateway discovers guilds that the user is in when connecting).
+        /// </summary>
+        event EventHandler<GuildEventArgs> OnGuildAvailable;
         /// <summary>
         /// Called when a known guild to this application becomes unavailable.
         /// This application was NOT removed from the guild.

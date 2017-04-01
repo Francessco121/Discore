@@ -54,6 +54,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildEventArgs> OnGuildUpdated;
         public event EventHandler<GuildEventArgs> OnGuildRemoved;
 
+        public event EventHandler<GuildEventArgs> OnGuildAvailable;
         public event EventHandler<GuildEventArgs> OnGuildUnavailable;
 
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
@@ -197,6 +198,8 @@ namespace Discore.WebSocket.Net
         {
             Snowflake guildId = data.GetSnowflake("id").Value;
 
+            bool wasUnavailable = false;
+
             DiscoreGuildCache guildCache = cache.Guilds.Get(guildId);
             if (guildCache == null)
             {
@@ -206,7 +209,10 @@ namespace Discore.WebSocket.Net
                 cache.Guilds.Set(guildCache);
             }
             else
+            {
+                wasUnavailable = guildCache.Value.IsUnavailable;
                 guildCache.Value = new DiscordGuild(app, guildCache, data);
+            }
 
             guildCache.Clear();
 
@@ -274,7 +280,10 @@ namespace Discore.WebSocket.Net
                     memberCache.Presence = presence;
             }
 
-            OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
+            if (wasUnavailable)
+                OnGuildAvailable?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
+            else
+                OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
         }
 
         [DispatchEvent("GUILD_UPDATE")]
