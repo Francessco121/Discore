@@ -258,6 +258,18 @@ namespace Discore
         }
 
         /// <summary>
+        /// Removes a reaction from this message.
+        /// </summary>
+        /// <param name="userId">The ID of the user who added the reacted.</param>
+        /// <param name="reactionEmoji"></param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> RemoveReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
+        {
+            return channelsHttp.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
+        }
+
+        /// <summary>
         /// Gets all users who reacted with the specified emoji to this message.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>

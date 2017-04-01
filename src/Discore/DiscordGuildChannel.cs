@@ -91,7 +91,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
-            return EditPermissions(member.Id, allow, deny, DiscordOverwriteType.Member);
+            return EditPermissions(member.Id, DiscordOverwriteType.Member, allow, deny);
         }
 
         /// <summary>
@@ -104,13 +104,22 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
-            return EditPermissions(role.Id, allow, deny, DiscordOverwriteType.Role);
+            return EditPermissions(role.Id, DiscordOverwriteType.Role, allow, deny);
         }
 
-        Task<bool> EditPermissions(Snowflake overwriteId, DiscordPermission allow, DiscordPermission deny,
-            DiscordOverwriteType type)
+        /// <summary>
+        /// Adds/edits a guild member or role permission overwrite for this channel.
+        /// </summary>
+        /// <param name="memberOrRoleId">The ID of the member or role this overwrite will change permissions for.</param>
+        /// <param name="overwriteType">Whether the permissions should affect a member or role.</param>
+        /// <param name="allow">Specifically allowed permissions.</param>
+        /// <param name="deny">Specifically denied permissions.</param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> EditPermissions(Snowflake memberOrRoleId, DiscordOverwriteType overwriteType, 
+            DiscordPermission allow, DiscordPermission deny)
         {
-            return channelsHttp.EditPermissions(Id, overwriteId, allow, deny, type);
+            return channelsHttp.EditPermissions(Id, memberOrRoleId, allow, deny, overwriteType);
         }
 
         /// <summary>
@@ -143,9 +152,14 @@ namespace Discore
             return DeletePermission(overwrite.Id);
         }
 
-        Task<bool> DeletePermission(Snowflake overwriteId)
+        /// <summary>
+        /// Deletes a permission overwrite.
+        /// </summary>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> DeletePermission(Snowflake memberOrRoleId)
         {
-            return channelsHttp.DeletePermission(Id, overwriteId);
+            return channelsHttp.DeletePermission(Id, memberOrRoleId);
         }
 
         public override string ToString()
