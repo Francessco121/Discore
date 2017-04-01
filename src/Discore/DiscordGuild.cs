@@ -337,6 +337,16 @@ namespace Discore
         }
 
         /// <summary>
+        /// Creates a new role for this guild.
+        /// </summary>
+        /// <param name="parameters">A set of optional parameters to use when creating the role.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordRole> CreateRole(CreateRoleParameters parameters)
+        {
+            return guildHttp.CreateRole(Id, parameters);
+        }
+
+        /// <summary>
         /// Changes the sorting positions of the roles in this guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>

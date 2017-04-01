@@ -270,6 +270,20 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Creates a new role for a guild.
+        /// </summary>
+        /// <param name="parameters">A set of optional parameters to use when creating the role.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordRole> CreateRole(Snowflake guildId, CreateRoleParameters parameters)
+        {
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/roles", requestData,
+                "guilds/guild/roles").ConfigureAwait(false);
+            return new DiscordRole(App, guildId, returnData);
+        }
+
+        /// <summary>
         /// Modifies the sorting positions of roles in a guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
