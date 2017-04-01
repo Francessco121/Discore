@@ -28,6 +28,8 @@ namespace Discore.WebSocket.Net
         Shard shard;
         DiscoreCache cache;
 
+        ShardStartConfig lastShardStartConfig;
+
         GatewaySocket socket;
 
         GatewayRateLimiter connectionRateLimiter;
@@ -264,7 +266,7 @@ namespace Discore.WebSocket.Net
 
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
-        public Task ConnectAsync(CancellationToken cancellationToken)
+        public Task ConnectAsync(ShardStartConfig config, CancellationToken cancellationToken)
         {
             if (isDisposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -275,6 +277,7 @@ namespace Discore.WebSocket.Net
 
             // Begin connecting
             state = GatewayState.Connecting;
+            lastShardStartConfig = config;
             connectTask = ConnectLoop(false, cancellationToken);
 
             // Register a continue with so we can set the state appropriately once
@@ -529,7 +532,8 @@ namespace Discore.WebSocket.Net
                 socket.SendResumePayload(app.Authenticator.GetToken(), sessionId, lastSequence);
             else
                 // Identify
-                socket.SendIdentifyPayload(app.Authenticator.GetToken(), 250, shard.Id, app.ShardManager.TotalShardCount);
+                socket.SendIdentifyPayload(app.Authenticator.GetToken(), 
+                    lastShardStartConfig.GatewayLargeThreshold, shard.Id, app.ShardManager.TotalShardCount);
         }
 
         private void Socket_OnRateLimited(object sender, EventArgs e)

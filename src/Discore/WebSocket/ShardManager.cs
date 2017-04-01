@@ -175,8 +175,23 @@ namespace Discore.WebSocket
         /// These tasks will not finish until their respected shard has successfully connected (or is canceled).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        public IList<Task> StartShardsAsync(CancellationToken cancellationToken)
+        public IList<Task> StartShardsAsync(CancellationToken? cancellationToken = null)
         {
+            return StartShardsAsync(new ShardStartConfig(), cancellationToken);
+        }
+
+        /// <summary>
+        /// Starts all created shards that are not running, and returns a list of tasks representing each startup.
+        /// These tasks will not finish until their respected shard has successfully connected (or is canceled).
+        /// </summary>
+        /// <param name="config">A set of options to use when starting each shard.</param>
+        /// <exception cref="ArgumentNullException">Thrown if config is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
+        public IList<Task> StartShardsAsync(ShardStartConfig config, CancellationToken? cancellationToken = null)
+        {
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
             if (shards != null)
             {
                 List<Task> startTasks = new List<Task>();
@@ -186,7 +201,7 @@ namespace Discore.WebSocket
                     if (shard.IsRunning)
                         continue;
 
-                    startTasks.Add(shard.StartAsync(cancellationToken));
+                    startTasks.Add(shard.StartAsync(config, cancellationToken));
                 }
 
                 return startTasks;

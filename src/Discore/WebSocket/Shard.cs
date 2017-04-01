@@ -124,10 +124,27 @@ namespace Discore.WebSocket
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public Task StartAsync(CancellationToken? cancellationToken = null)
+        {
+            return StartAsync(new ShardStartConfig(), cancellationToken);
+        }
+
+        /// <summary>
+        /// Starts this shard. 
+        /// The returned task only finishes once the gateway successfully connects (or is canceled), 
+        /// and will continue to retry until then.
+        /// </summary>
+        /// <param name="config">A set of options to use when starting the shard.</param>
+        /// <exception cref="ArgumentNullException">Thrown if config is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException"></exception>
+        public async Task StartAsync(ShardStartConfig config, CancellationToken? cancellationToken = null)
         {
             if (isDisposed)
                 throw new ObjectDisposedException(nameof(gateway), "Shard has been disposed.");
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
 
             if (!isRunning)
             {
@@ -135,7 +152,8 @@ namespace Discore.WebSocket
 
                 CleanUp();
 
-                await gateway.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                CancellationToken ct = cancellationToken ?? CancellationToken.None;
+                await gateway.ConnectAsync(config, ct).ConfigureAwait(false);
 
                 log.LogInfo("Successfully connected to the Gateway.");
                 OnConnected?.Invoke(this, new ShardEventArgs(this));
