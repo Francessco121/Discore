@@ -85,19 +85,5 @@ namespace Discore
         {
             return Name;
         }
-
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("name", Name);
-            data.Set("hoist", IsHoisted);
-            data.Set("position", Position);
-            data.Set("managed", IsManaged);
-            data.Set("mentionable", IsMentionable);
-            data.Set("color", Color.ToHexadecimal());
-            data.Set("permissions", (long)Permissions);
-
-            return data;
-        }
     }
 }
