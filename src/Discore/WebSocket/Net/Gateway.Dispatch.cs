@@ -158,7 +158,7 @@ namespace Discore.WebSocket.Net
             // Store authenticated user in cache for immediate use
             shard.User = cache.Users.Set(new DiscordUser(userData));
 
-            log.LogVerbose($"[Ready] user = {shard.User}");
+            log.LogInfo($"[Ready] user = {shard.User}");
 
             // Get session id
             sessionId = data.GetString("session_id");
