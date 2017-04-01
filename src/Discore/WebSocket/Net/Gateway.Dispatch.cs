@@ -73,6 +73,8 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
 
+        public event EventHandler<ChannelPinsUpdateEventArgs> OnChannelPinsUpdated;
+
         public event EventHandler<MessageEventArgs> OnMessageCreated;
         public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
         public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
@@ -711,6 +713,19 @@ namespace Discore.WebSocket.Net
                 else
                     throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
             }
+        }
+
+        [DispatchEvent("CHANNEL_PINS_UPDATE")]
+        void HandleChannelPinsUpdateEvent(DiscordApiData data)
+        {
+            DateTime? lastPinTimestamp = data.GetDateTime("last_pin_timestamp");
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+
+            DiscordChannel channel;
+            if (cache.Channels.TryGetValue(channelId, out channel))
+                OnChannelPinsUpdated?.Invoke(this, new ChannelPinsUpdateEventArgs(shard, (ITextChannel)channel, lastPinTimestamp));
+            else
+                throw new DiscoreCacheException($"Channel {channelId} was not in the cache!");
         }
         #endregion
 

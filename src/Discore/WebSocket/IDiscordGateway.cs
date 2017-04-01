@@ -107,6 +107,11 @@ namespace Discore.WebSocket
         event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
 
         /// <summary>
+        /// Called when a message is pinned or unpinned from a channel.
+        /// </summary>
+        event EventHandler<ChannelPinsUpdateEventArgs> OnChannelPinsUpdated;
+
+        /// <summary>
         /// Called when a message is created (either from a DM or guild text channel).
         /// </summary>
         event EventHandler<MessageEventArgs> OnMessageCreated;
