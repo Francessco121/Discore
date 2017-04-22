@@ -83,7 +83,7 @@ namespace Discore.WebSocket.Net
         {
             // Resume
             log.LogInfo("[Reconnect] Performing resume...");
-            OnReconnectionRequired?.Invoke(this, false);
+            OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false));
         }
 
         [Payload(GatewayOPCode.InvalidSession)]
@@ -91,7 +91,7 @@ namespace Discore.WebSocket.Net
         {
             // Start new session
             log.LogInfo("[InvalidSession] Reconnecting...");
-            OnReconnectionRequired?.Invoke(this, true);
+            OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true, 5000));
         }
         #endregion
 

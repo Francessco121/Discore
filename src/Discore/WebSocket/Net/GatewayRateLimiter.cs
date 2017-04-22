@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Net
@@ -32,15 +33,18 @@ namespace Discore.WebSocket.Net
         /// Counts for one invocation of whatever this rate limiter represents.
         /// Will block the current thread until the specified time passes if there has been too many invocations.
         /// </summary>
-        public async Task Invoke()
+        /// <exception cref="OperationCanceledException"></exception>
+        public async Task Invoke(CancellationToken? cancellationToken = null)
         {
             if (invokesLeft > 0)
                 invokesLeft--;
             else
             {
+                CancellationToken ct = cancellationToken ?? CancellationToken.None;
+
                 int waitTimeMs = (int)Math.Ceiling((resetAt - DateTime.Now).TotalMilliseconds);
                 if (waitTimeMs > 0)
-                    await Task.Delay(waitTimeMs).ConfigureAwait(false);
+                    await Task.Delay(waitTimeMs, ct).ConfigureAwait(false);
 
                 Reset();
                 invokesLeft--;

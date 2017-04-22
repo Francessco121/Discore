@@ -61,6 +61,11 @@ namespace Discore.WebSocket.Net
         /// </summary>
         CancellationTokenSource gatewayReadyEventCancellationSource;
 
+        /// <summary>
+        /// Milliseconds to wait before attempting the next socket connection. Will be reset after wait completes.
+        /// </summary>
+        int nextConnectionDelayMs;
+
         DiscoreLogger log;
 
         int lastSequence;
@@ -452,7 +457,16 @@ namespace Discore.WebSocket.Net
                 }
 
                 // Make sure we dont try and connect too often
-                await connectionRateLimiter.Invoke().ConfigureAwait(false);
+                await connectionRateLimiter.Invoke(cancellationToken).ConfigureAwait(false);
+
+                // Wait if necessary
+                if (nextConnectionDelayMs > 0)
+                {
+                    log.LogVerbose($"[ConnectLoop] Waiting {nextConnectionDelayMs}ms before connecting socket...");
+
+                    await Task.Delay(nextConnectionDelayMs, cancellationToken).ConfigureAwait(false);
+                    nextConnectionDelayMs = 0;
+                }
 
                 try
                 {
@@ -557,7 +571,7 @@ namespace Discore.WebSocket.Net
             OnFatalDisconnection?.Invoke(this, e);
         }
 
-        void Socket_OnReconnectionRequired(object sender, bool requiresNewSession)
+        void Socket_OnReconnectionRequired(object sender, ReconnectionEventArgs e)
         {
             if (isDisposed)
                 return;
@@ -568,7 +582,10 @@ namespace Discore.WebSocket.Net
 
                 log.LogVerbose("Beginning automatic reconnection...");
                 connectTaskCancellationSource = new CancellationTokenSource();
-                connectTask = ConnectLoop(!requiresNewSession, connectTaskCancellationSource.Token);
+
+                nextConnectionDelayMs = e.ConnectionDelayMs;
+
+                connectTask = ConnectLoop(!e.CreateNewSession, connectTaskCancellationSource.Token);
             }
         }
 

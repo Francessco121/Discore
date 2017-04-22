@@ -17,7 +17,7 @@ namespace Discore.WebSocket.Net
         /// Called when the socket has disconnected and requires reconnection.
         /// The argument specifies whether a new session is required.
         /// </summary>
-        public event EventHandler<bool> OnReconnectionRequired;
+        public event EventHandler<ReconnectionEventArgs> OnReconnectionRequired;
         /// <summary>
         /// Called when the socket has disconnected with a code specifying that
         /// we cannot saftely reconnect.
@@ -106,22 +106,22 @@ namespace Discore.WebSocket.Net
                 case GatewayCloseCode.SessionTimeout:
                 case GatewayCloseCode.UnknownError:
                     // Safe to reconnect, but needs a new session.
-                    OnReconnectionRequired?.Invoke(this, true);
+                    OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true));
                     break;
                 case GatewayCloseCode.NotAuthenticated:
                     // This really should never happen, but will require a new session.
                     log.LogWarning("Sent gateway payload before we identified!");
-                    OnReconnectionRequired?.Invoke(this, true);
+                    OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true));
                     break;
                 case GatewayCloseCode.RateLimited:
                     // Doesn't require a new session, but we need to wait a bit.
                     log.LogWarning("Gateway is being rate limited!");
                     OnRateLimited?.Invoke(this, EventArgs.Empty);
-                    OnReconnectionRequired?.Invoke(this, false);
+                    OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false, 5000));
                     break;
                 default:
                     // Safe to just resume
-                    OnReconnectionRequired?.Invoke(this, false);
+                    OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false));
                     break;
             }
         }
@@ -129,7 +129,7 @@ namespace Discore.WebSocket.Net
         protected override void OnClosedPrematurely()
         {
             // Attempt to resume
-            OnReconnectionRequired?.Invoke(this, false);
+            OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false));
         }
 
         async Task HeartbeatLoop()
@@ -188,7 +188,7 @@ namespace Discore.WebSocket.Net
                     log.LogInfo("Gateway connection timed out.");
 
                     // Notify that this connection needs to be resumed
-                    OnReconnectionRequired?.Invoke(this, false);
+                    OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false));
 
                     break;
                 }
