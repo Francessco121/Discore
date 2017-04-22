@@ -38,7 +38,7 @@ namespace Discore.Http
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("username", username);
-            requestData.Set("avatar", avatar.ToFormattedString());
+            requestData.Set("avatar", avatar.ToDataUriScheme());
 
             DiscordApiData returnData = await Rest.Patch("users/@me", requestData, "users/@me").ConfigureAwait(false);
             return returnData.IsNull ? null : new DiscordUser(returnData);

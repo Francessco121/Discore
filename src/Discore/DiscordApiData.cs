@@ -451,7 +451,7 @@ namespace Discore
 
             string nestedData = GetString(key);
             if (!string.IsNullOrWhiteSpace(nestedData))
-                return new DiscordAvatarData(nestedData);
+                return DiscordAvatarData.FromDataUriScheme(nestedData);
 
             return null;
         }
@@ -548,7 +548,7 @@ namespace Discore
         {
             AssertContainer();
 
-            DiscordApiData apiData = new DiscordApiData(avatar.ToFormattedString());
+            DiscordApiData apiData = new DiscordApiData(avatar.ToDataUriScheme());
             data[key] = apiData;
             return apiData;
         }

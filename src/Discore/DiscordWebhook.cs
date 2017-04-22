@@ -17,7 +17,7 @@ namespace Discore
         /// </summary> 
         public Snowflake ChannelId { get; }
         /// <summary> 
-        /// Gets the wser that created this webhook.
+        /// Gets the user that created this webhook.
         /// </summary> 
         public DiscordUser User { get; }
         /// <summary> 
@@ -25,13 +25,13 @@ namespace Discore
         /// </summary> 
         public string Name { get; }
         /// <summary> 
-        /// Gets the avatar of this webhook.
+        /// Gets the avatar hash of this webhook (or null if the webhook user has no avatar set).
         /// </summary> 
-        public DiscordAvatarData Avatar { get; }
+        public string Avatar { get; }
         /// <summary> 
         /// Gets the token of this webhook. 
         /// <para>This is only populated if the current authenticated user created the webhook, otherwise it's empty/null.</para> 
-        /// <para>It's used for Executing, Updating, and Deleting this webhook without the need of authorization.</para> 
+        /// <para>It's used for executing, updating, and deleting this webhook without the need of authorization.</para> 
         /// </summary> 
         public string Token { get; }
         /// <summary>
@@ -54,8 +54,8 @@ namespace Discore
                 User = new DiscordUser(userData);
 
             Name = data.GetString("name");
-            Avatar = new DiscordAvatarData(data.GetString("avatar"));
             Token = data.GetString("token");
+            Avatar = data.GetString("avatar");
         }
 
         /// <summary>
