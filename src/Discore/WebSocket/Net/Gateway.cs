@@ -521,7 +521,6 @@ namespace Discore.WebSocket.Net
         void SubscribeSocketEvents()
         {
             socket.OnHello += Socket_OnHello;
-            socket.OnRateLimited += Socket_OnRateLimited;
             socket.OnReconnectionRequired += Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection += Socket_OnFatalDisconnection;
             socket.OnDispatch += Socket_OnDispatch;
@@ -530,7 +529,6 @@ namespace Discore.WebSocket.Net
         void UnsubscribeSocketEvents()
         {
             socket.OnHello -= Socket_OnHello;
-            socket.OnRateLimited -= Socket_OnRateLimited;
             socket.OnReconnectionRequired -= Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection -= Socket_OnFatalDisconnection;
             socket.OnDispatch -= Socket_OnDispatch;
@@ -549,14 +547,6 @@ namespace Discore.WebSocket.Net
                 socket.SendIdentifyPayload(app.Authenticator.GetToken(), 
                     lastShardStartConfig.GatewayLargeThreshold, shard.Id, app.ShardManager.TotalShardCount);
         }
-
-        private void Socket_OnRateLimited(object sender, EventArgs e)
-        {
-            if (isDisposed)
-                return;
-
-            log.LogError("Gateway connection was rate limited!!");
-        } 
 
         private void Socket_OnFatalDisconnection(object sender, GatewayCloseCode e)
         {

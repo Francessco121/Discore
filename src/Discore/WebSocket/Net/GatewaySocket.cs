@@ -24,11 +24,6 @@ namespace Discore.WebSocket.Net
         /// </summary>
         public event EventHandler<GatewayCloseCode> OnFatalDisconnection;
         /// <summary>
-        /// Called when the socket is disconnected due to a rate limit.
-        /// The OnReconnectionRequired event will be fired right after this.
-        /// </summary>
-        public event EventHandler OnRateLimited;
-        /// <summary>
         /// Called when the socket receives the HELLO payload.
         /// </summary>
         public event EventHandler OnHello;
@@ -115,8 +110,7 @@ namespace Discore.WebSocket.Net
                     break;
                 case GatewayCloseCode.RateLimited:
                     // Doesn't require a new session, but we need to wait a bit.
-                    log.LogWarning("Gateway is being rate limited!");
-                    OnRateLimited?.Invoke(this, EventArgs.Empty);
+                    log.LogError("Gateway is being rate limited!"); // Error level because we have code that should prevent this.
                     OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false, 5000));
                     break;
                 default:
