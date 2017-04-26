@@ -24,6 +24,7 @@
         public int? DefaultMessageNotifications { get; set; }
         /// <summary>
         /// Gets or sets the ID of the AFK voice channel (or null to leave unchanged).
+        /// <para>Set to <see cref="Snowflake.Null"/> to remove the AFK channel.</para>
         /// </summary>
         public Snowflake? AfkChannelId { get; set; }
         /// <summary>
@@ -66,7 +67,7 @@
         /// <summary>
         /// Sets the required verification level for the guild.
         /// </summary>
-        public ModifyGuildParameters SetVerificationLevel(int? verificationLevel)
+        public ModifyGuildParameters SetVerificationLevel(int verificationLevel)
         {
             VerificationLevel = verificationLevel;
             return this;
@@ -75,7 +76,7 @@
         /// <summary>
         /// Sets the default message notification setting to be used by new members entering the guild.
         /// </summary>
-        public ModifyGuildParameters SetDefaultMessageNotifications(int? defualtMessageNotifications)
+        public ModifyGuildParameters SetDefaultMessageNotifications(int defualtMessageNotifications)
         {
             DefaultMessageNotifications = defualtMessageNotifications;
             return this;
@@ -84,7 +85,8 @@
         /// <summary>
         /// Sets the ID of the AFK channel for the guild.
         /// </summary>
-        public ModifyGuildParameters SetAfkChannel(Snowflake? afkChannelId)
+        /// <param name="afkChannelId">The ID of the AFK channel or <see cref="Snowflake.Null"/> to remove the AFK channel.</param>
+        public ModifyGuildParameters SetAfkChannel(Snowflake afkChannelId)
         {
             AfkChannelId = afkChannelId;
             return this;
@@ -93,7 +95,7 @@
         /// <summary>
         /// Sets the time (in seconds) a member must be idle before being moved to the AFK channel.
         /// </summary>
-        public ModifyGuildParameters SetAfkTimeout(int? afkTimeout)
+        public ModifyGuildParameters SetAfkTimeout(int afkTimeout)
         {
             AfkTimeout = afkTimeout;
             return this;
@@ -111,7 +113,7 @@
         /// <summary>
         /// Sets the ID of the user to transfer guild ownership to (current authenticated user must be guild owner).
         /// </summary>
-        public ModifyGuildParameters SetOwner(Snowflake? ownerId)
+        public ModifyGuildParameters SetOwner(Snowflake ownerId)
         {
             OwnerId = ownerId;
             return this;
