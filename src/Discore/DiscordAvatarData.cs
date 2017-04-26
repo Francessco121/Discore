@@ -5,6 +5,11 @@ namespace Discore
     public class DiscordAvatarData
     {
         /// <summary>
+        /// Gets avatar data representing a cleared image. This can be used to remove avatars from guilds or users.
+        /// </summary>
+        public static readonly DiscordAvatarData None = new DiscordAvatarData(base64Data: null, mediaType: null);
+
+        /// <summary>
         /// Gets the avatar data as a base64 encoded string.
         /// </summary>
         public string Base64AvatarData => base64Data;
@@ -63,7 +68,7 @@ namespace Discore
         /// </summary>
         public string ToDataUriScheme()
         {
-            return $"data:{mediaType};base64,{base64Data}";
+            return string.IsNullOrWhiteSpace(base64Data) ? null : $"data:{mediaType};base64,{base64Data}";
         }
 
         /// <exception cref="ArgumentException">Thrown if the given data URI is not a valid format.</exception>
