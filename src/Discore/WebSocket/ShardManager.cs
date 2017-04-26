@@ -51,6 +51,7 @@ namespace Discore.WebSocket
         /// This number is specified by the Discord API.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
+        /// <exception cref="DiscordHttpApiException">Thrown if the Discord HTTP API failed to return the shard count.</exception>
         [Obsolete("Please use the asynchronous counterpart CreateMinimumRequiredShardsAsync() instead.")]
         public void CreateMinimumRequiredShards()
         {
@@ -62,6 +63,7 @@ namespace Discore.WebSocket
         /// This number is specified by the Discord API.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
+        /// <exception cref="DiscordHttpApiException">Thrown if the Discord HTTP API failed to return the shard count.</exception>
         public async Task CreateMinimumRequiredShardsAsync()
         {
             int numShards;
