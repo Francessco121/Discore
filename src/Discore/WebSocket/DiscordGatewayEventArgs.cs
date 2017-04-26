@@ -207,6 +207,19 @@ namespace Discore.WebSocket
         }
     }
 
+    public class MessageReactionRemoveAllEventArgs : DiscordGatewayEventArgs
+    {
+        public Snowflake MessageId { get; }
+        public ITextChannel TextChannel { get; }
+
+        public MessageReactionRemoveAllEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel)
+            : base(shard)
+        {
+            MessageId = messageId;
+            TextChannel = textChannel;
+        }
+    }
+
     public class ShardExceptionEventArgs : DiscordGatewayEventArgs
     {
         public Exception Exception { get; }

@@ -80,6 +80,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
+        public event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
 
         public event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
 
@@ -854,6 +855,21 @@ namespace Discore.WebSocket.Net
             }
             else
                 throw new DiscoreCacheException($"User {userId} was not in the cache!");
+        }
+
+        [DispatchEvent("MESSAGE_REACTION_REMOVE_ALL")]
+        void HandleMessageReactionRemoveAllEvent(DiscordApiData data)
+        {
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            Snowflake messageId = data.GetSnowflake("message_id").Value;
+
+            ITextChannel textChannel = (ITextChannel)cache.Channels.Get(channelId);
+            if (textChannel != null)
+            {
+                OnMessageAllReactionsRemoved?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, textChannel));
+            }
+            else
+                throw new DiscoreCacheException($"Channel {channelId} was not in the cache!");
         }
         #endregion
 

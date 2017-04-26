@@ -135,6 +135,10 @@ namespace Discore.WebSocket
         /// Called when a reaction is removed from a message.
         /// </summary>
         event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
+        /// <summary>
+        /// Called when all reactions are removed from a message at once.
+        /// </summary>
+        event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
 
         /// <summary>
         /// Called when the presence of a member in a guild is updated.
