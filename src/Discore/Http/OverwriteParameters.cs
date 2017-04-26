@@ -6,17 +6,44 @@
     public class OverwriteParameters
     {
         /// <summary>
-        /// The type of permission overwrite.
+        /// Gets or sets the type the overwrite affects.
         /// </summary>
         public DiscordOverwriteType Type { get; set; }
         /// <summary>
-        /// Specifically allowed permissions.
+        /// Gets or sets the allowed permissions to overwrite.
         /// </summary>
         public DiscordPermission Allow { get; set; }
         /// <summary>
-        /// Specifically denied permissions.
+        /// Gets or sets the denied permissions to overwrite.
         /// </summary>
         public DiscordPermission Deny { get; set; }
+
+        /// <summary>
+        /// Sets the type the overwrite affects.
+        /// </summary>
+        public OverwriteParameters SetType(DiscordOverwriteType type)
+        {
+            Type = type;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the allowed permissions to overwrite.
+        /// </summary>
+        public OverwriteParameters SetAllowedPermissions(DiscordPermission allow)
+        {
+            Allow = allow;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the denied permissions to overwrite.
+        /// </summary>
+        public OverwriteParameters SetDeniedPermissions(DiscordPermission deny)
+        {
+            Deny = deny;
+            return this;
+        }
 
         internal DiscordApiData Build()
         {

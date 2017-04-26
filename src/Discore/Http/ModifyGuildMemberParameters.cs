@@ -8,25 +8,72 @@ namespace Discore.Http
     public class ModifyGuildMemberParameters
     {
         /// <summary>
-        /// The users nickname for the guild.
+        /// Gets or sets the member's nickname for the guild (or null to leave unchanged).
         /// </summary>
         public string Nickname { get; set; }
         /// <summary>
-        /// A list of roles IDs the member is assigned to.
+        /// Gets or sets a list of IDs for each role the member is to be assigned to (or null to leave unchanged).
         /// </summary>
         public IEnumerable<Snowflake> RoleIds { get; set; }
         /// <summary>
-        /// Whether the user is server muted.
+        /// Gets or sets whether the member is server muted (or null to leave unchanged).
         /// </summary>
         public bool? IsServerMute { get; set; }
         /// <summary>
-        /// Whether the user is deafened.
+        /// Gets or sets whether the member is server deafened (or null to leave unchanged).
         /// </summary>
         public bool? IsServerDeaf { get; set; }
         /// <summary>
-        /// ID of the voice channel to move the user to (if they are currently connected to voice).
+        /// Gets or sets the ID of the voice channel to move the member to if they are currently connected to voice 
+        /// (or null to leave unchanged).
         /// </summary>
         public Snowflake? ChannelId { get; set; }
+
+        /// <summary>
+        /// Sets the member's nickname for the guild.
+        /// </summary>
+        public ModifyGuildMemberParameters SetNickname(string nickname)
+        {
+            Nickname = nickname;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the roles the member is to be assigned to.
+        /// </summary>
+        /// <param name="roleIds">A list of IDs for each role the member is to be assigned to.</param>
+        public ModifyGuildMemberParameters SetRoles(IEnumerable<Snowflake> roleIds)
+        {
+            RoleIds = roleIds;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets whether the member is server mute.
+        /// </summary>
+        public ModifyGuildMemberParameters SetServerMute(bool? isServerMute)
+        {
+            IsServerMute = isServerMute;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets whether the member is server deafened.
+        /// </summary>
+        public ModifyGuildMemberParameters SetServerDeaf(bool? isServerDeaf)
+        {
+            IsServerDeaf = isServerDeaf;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the ID of the voice channel to move the member to (if they are currently connected to voice).
+        /// </summary>
+        public ModifyGuildMemberParameters SetVoiceChannel(Snowflake? voiceChannelId)
+        {
+            ChannelId = voiceChannelId;
+            return this;
+        }
 
         internal DiscordApiData Build()
         {
