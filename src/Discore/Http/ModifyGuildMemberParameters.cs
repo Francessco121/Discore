@@ -51,7 +51,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets whether the member is server mute.
         /// </summary>
-        public ModifyGuildMemberParameters SetServerMute(bool? isServerMute)
+        public ModifyGuildMemberParameters SetServerMute(bool isServerMute)
         {
             IsServerMute = isServerMute;
             return this;
@@ -60,7 +60,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets whether the member is server deafened.
         /// </summary>
-        public ModifyGuildMemberParameters SetServerDeaf(bool? isServerDeaf)
+        public ModifyGuildMemberParameters SetServerDeaf(bool isServerDeaf)
         {
             IsServerDeaf = isServerDeaf;
             return this;
@@ -69,7 +69,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the ID of the voice channel to move the member to (if they are currently connected to voice).
         /// </summary>
-        public ModifyGuildMemberParameters SetVoiceChannel(Snowflake? voiceChannelId)
+        public ModifyGuildMemberParameters SetVoiceChannel(Snowflake voiceChannelId)
         {
             ChannelId = voiceChannelId;
             return this;
