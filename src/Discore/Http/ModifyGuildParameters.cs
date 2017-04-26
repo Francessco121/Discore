@@ -24,7 +24,7 @@
         public int? DefaultMessageNotifications { get; set; }
         /// <summary>
         /// Gets or sets the ID of the AFK voice channel (or null to leave unchanged).
-        /// <para>Set to <see cref="Snowflake.Null"/> to remove the AFK channel.</para>
+        /// <para>Set to <see cref="Snowflake.None"/> to remove the AFK channel.</para>
         /// </summary>
         public Snowflake? AfkChannelId { get; set; }
         /// <summary>
@@ -87,7 +87,7 @@
         /// <summary>
         /// Sets the ID of the AFK channel for the guild.
         /// </summary>
-        /// <param name="afkChannelId">The ID of the AFK channel or <see cref="Snowflake.Null"/> to remove the AFK channel.</param>
+        /// <param name="afkChannelId">The ID of the AFK channel or <see cref="Snowflake.None"/> to remove the AFK channel.</param>
         public ModifyGuildParameters SetAfkChannel(Snowflake afkChannelId)
         {
             AfkChannelId = afkChannelId;

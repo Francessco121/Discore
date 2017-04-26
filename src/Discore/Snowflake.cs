@@ -9,16 +9,16 @@ namespace Discore
     public struct Snowflake
     {
         /// <summary>
-        /// Gets a snowflake representing null (or zero).
+        /// Gets a snowflake representing nothing (or zero).
         /// <para>
         /// This can be used when modifying objects such as guilds (e.g. setting/removing an AFK channel). 
         /// </para>
         /// <para>
         /// Leaving properties null when modifying a guild will cause them to be left unchanged. 
-        /// However, <see cref="Null"/> will clear the value (i.e. removing the AFK channel).
+        /// However, <see cref="None"/> will clear the value (i.e. removing the AFK channel).
         /// </para>
         /// </summary>
-        public static readonly Snowflake Null = new Snowflake(0);
+        public static readonly Snowflake None = new Snowflake(0);
 
         public ulong Id;
 
