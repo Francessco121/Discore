@@ -6,4 +6,4 @@ obj/
 project.lock.json
 .DS_Store
 token.txt
-*.xproj.user
+*.csproj.user
