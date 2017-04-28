@@ -60,14 +60,28 @@ namespace Discore
             return lastId;
         }
 
+        #region Deprecated Modify
         /// <summary>
         /// Modifies this text channel.
         /// Any parameters not specified will be unchanged.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use the Modify overload with a builder object instead.")]
         public Task<DiscordGuildTextChannel> Modify(string name = null, int? position = null, string topic = null)
         {
             return channelsHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
+        }
+        #endregion
+
+        /// <summary>
+        /// Modifies this text channel's settings.
+        /// </summary>
+        /// <param name="parameters">A set of parameters to modify the channel with</param>
+        /// <returns>Returns the updated text channel.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildTextChannel> Modify(GuildTextChannelParameters parameters)
+        {
+            return channelsHttp.ModifyTextChannel(Id, parameters);
         }
 
         #region Deprecated SendMessage

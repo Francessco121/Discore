@@ -34,6 +34,7 @@ namespace Discore.Http
             return (T)DeserializeChannelData(data);
         }
 
+        #region Deprecated Modify* Methods
         /// <summary>
         /// Updates the settings of a text guild channel.
         /// </summary>
@@ -42,6 +43,7 @@ namespace Discore.Http
         /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
         /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use the ModifyTextChannel overload using a builder object instead.")]
         public Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
             string name = null, int? position = null, string topic = null)
         {
@@ -57,6 +59,7 @@ namespace Discore.Http
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use the ModifyVoiceChannel overload using a builder object instead.")]
         public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
             string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
         {
@@ -73,6 +76,7 @@ namespace Discore.Http
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use either ModifyTextChannel() or ModifyVoiceChannel() instead.")]
         public async Task<T> Modify<T>(Snowflake channelId,
             string name = null, int? position = null, 
             string topic = null,
@@ -89,6 +93,41 @@ namespace Discore.Http
             DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, 
                 "channels/channel").ConfigureAwait(false);
             return (T)DeserializeChannelData(returnData);            
+        }
+        #endregion
+
+        /// <summary>
+        /// Updates the settings of a guild text channel.
+        /// </summary>
+        /// <param name="textChannelId">The ID of the guild text channel to modify.</param>
+        /// <param name="parameters">A set of parameters to modify the channel with.</param>
+        /// <returns>Returns the updated guild text channel.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake textChannelId, 
+            GuildTextChannelParameters parameters)
+        {
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Patch($"channels/{textChannelId}", requestData,
+                "channels/channel").ConfigureAwait(false);
+            return (DiscordGuildTextChannel)DeserializeChannelData(returnData);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild voice channel.
+        /// </summary>
+        /// <param name="voiceChannelId">The ID of the guild voice channel to modify.</param>
+        /// <param name="parameters">A set of parameters to modify the channel with.</param>
+        /// <returns>Returns the updated guild voice channel.</returns>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake voiceChannelId, 
+            GuildVoiceChannelParameters parameters)
+        {
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Patch($"channels/{voiceChannelId}", requestData,
+                "channels/channel").ConfigureAwait(false);
+            return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData);
         }
 
         /// <summary>
