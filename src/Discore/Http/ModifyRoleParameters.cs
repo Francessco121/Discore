@@ -74,11 +74,16 @@
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("name", Name);
-            data.Set("permissions", (long?)Permissions);
-            data.Set("color", Color?.ToHexadecimal());
-            data.Set("hoist", IsHoisted);
-            data.Set("mentionable", IsMentionable);
+            if (Name != null)
+                data.Set("name", Name);
+            if (Permissions.HasValue)
+                data.Set("permissions", (long)Permissions.Value);
+            if (Color.HasValue)
+                data.Set("color", Color.Value.ToHexadecimal());
+            if (IsHoisted.HasValue)
+                data.Set("hoist", IsHoisted);
+            if (IsMentionable.HasValue)
+                data.Set("mentionable", IsMentionable);
 
             return data;
         }
