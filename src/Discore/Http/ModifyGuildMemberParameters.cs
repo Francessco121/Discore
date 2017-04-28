@@ -78,10 +78,14 @@ namespace Discore.Http
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("nick", Nickname);
-            data.Set("mute", IsServerMute);
-            data.Set("deaf", IsServerDeaf);
-            data.Set("channel_id", ChannelId);
+            if (Nickname != null)
+                data.Set("nick", Nickname);
+            if (IsServerMute.HasValue)
+                data.Set("mute", IsServerMute);
+            if (IsServerDeaf.HasValue)
+                data.Set("deaf", IsServerDeaf);
+            if (ChannelId.HasValue)
+                data.Set("channel_id", ChannelId);
 
             if (RoleIds != null)
             {
