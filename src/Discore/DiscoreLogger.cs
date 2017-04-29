@@ -65,6 +65,19 @@ namespace Discore
         public static DiscoreLogger Default { get; }
 
         /// <summary>
+        /// Gets or sets the minimum log level to be sent through the <see cref="OnLog"/> event.
+        /// <para>
+        /// For example: A log level of <see cref="DiscoreLogType.Info"/> will log 
+        /// everything except <see cref="DiscoreLogType.Verbose"/>.
+        /// </para>
+        /// <para>
+        /// This defaults to <see cref="DiscoreLogType.Verbose"/> when compiled with the DEBUG preprocessor,
+        /// otherwise defaults to <see cref="DiscoreLogType.Info"/>.
+        /// </para>
+        /// </summary>
+        public static DiscoreLogType MinimumLevel { get; set; }
+
+        /// <summary>
         /// Gets or sets the prefix for this <see cref="DiscoreLogger"/>.
         /// </summary>
         public string Prefix { get; set; }
@@ -72,6 +85,12 @@ namespace Discore
         static DiscoreLogger()
         {
             Default = new DiscoreLogger("");
+
+#if DEBUG
+            MinimumLevel = DiscoreLogType.Verbose;
+#else
+            MinimumLevel = DiscoreLogType.Info;
+#endif
         }
 
         /// <summary>
@@ -90,13 +109,16 @@ namespace Discore
         /// <param name="type">The type of log.</param>
         public void Log(string msg, DiscoreLogType type)
         {
-            if (!string.IsNullOrWhiteSpace(Prefix))
-                // Prefix
-                msg = $"[{Prefix}] {msg}";
+            if (type >= MinimumLevel)
+            {
+                if (!string.IsNullOrWhiteSpace(Prefix))
+                    // Prefix
+                    msg = $"[{Prefix}] {msg}";
 
-            try { OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now))); }
-            // Log methods need to be guaranteed to never throw exceptions.
-            catch { }
+                try { OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now))); }
+                // Log methods need to be guaranteed to never throw exceptions.
+                catch { }
+            }
         }
 
         /// <summary>
