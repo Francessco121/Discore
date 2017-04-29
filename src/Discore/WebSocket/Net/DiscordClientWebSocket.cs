@@ -157,7 +157,7 @@ namespace Discore.WebSocket.Net
                     {
                         // Socket did not gracefully disconnect in the given time,
                         // so abort the socket and move on.
-                        log.LogWarning($"Socket failed to disconnect after 5s, aborting...");
+                        log.LogWarning("Socket failed to disconnect after 5s, aborting...");
                         abortCancellationSource.Cancel();
                     }
                 }
@@ -171,11 +171,16 @@ namespace Discore.WebSocket.Net
                 {
                     foreach (Exception ex in aex.InnerExceptions)
                     {
-                        if (ex is WebSocketException wsex && wsex.WebSocketErrorCode == WebSocketError.InvalidState)
-                            // The socket being aborted is normal.
-                            continue;
-
-                        log.LogError($"Uncaught exception found while disconnecting: {ex}");
+                        if (ex is WebSocketException wsex)
+                        {
+                            if (wsex.WebSocketErrorCode == WebSocketError.InvalidState)
+                                // The socket being aborted is normal.
+                                continue;
+                            else
+                                log.LogError($"Uncaught exception found while disconnecting: code = {wsex.WebSocketErrorCode}, error = {ex}");
+                        }
+                        else
+                            log.LogError($"Uncaught exception found while disconnecting: {ex}");
                     }
                 }
 
@@ -228,7 +233,7 @@ namespace Discore.WebSocket.Net
                         {
                             // The only known WebSocketException is ConnectionClosedPrematurely, so
                             // log any others to be handled later.
-                            log.LogError($"[SendAsync] Unexpected WebSocketException error: {wsex}");
+                            log.LogError($"[SendAsync] Unexpected WebSocketException error: code = {wsex.WebSocketErrorCode}, error = {wsex}");
 
                             // Should never happen
                             throw new DiscordWebSocketException("An unexpected WebSocket error occured while sending data.",
@@ -314,10 +319,18 @@ namespace Discore.WebSocket.Net
                                 // or ConnectionClosedPrematurely (with an inner exception detailing what happened).
 
                                 if (wsex.WebSocketErrorCode == WebSocketError.InvalidState)
-                                    log.LogVerbose($"[ReceiveLoop] Socket was aborted while receiving message.");
+                                    log.LogVerbose($"[ReceiveLoop] Socket was aborted while receiving message. code = {wsex.WebSocketErrorCode}");
+                                else if (wsex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
+                                {
+                                    log.LogError($"[ReceiveLoop] Socket closed prematurely while receiving: code = {wsex.WebSocketErrorCode}");
+
+                                    // Notify inherting object
+                                    OnClosedPrematurely();
+                                }
                                 else
                                 {
-                                    log.LogError($"[ReceiveLoop] Socket encountered error while receiving: {wsex}");
+                                    log.LogError("[ReceiveLoop] Socket encountered error while receiving: " +
+                                        $"code = {wsex.WebSocketErrorCode}, error = {wsex}");
 
                                     // Notify inherting object
                                     OnClosedPrematurely();
@@ -402,7 +415,8 @@ namespace Discore.WebSocket.Net
                                         // Unexpected error occured, we should only let it bubble up if the socket
                                         // is not open after the exception.
                                         if (socket.State == WebSocketState.Open)
-                                            log.LogError($"[ReceiveLoop] Unexpected error from OnPayloadReceived: {dwex}");
+                                            log.LogError("[ReceiveLoop] Unexpected error from OnPayloadReceived: " +
+                                                $"code = {dwex.Error}, error = {dwex}");
                                         else
                                             // Don't log since that will be handled below
                                             throw;

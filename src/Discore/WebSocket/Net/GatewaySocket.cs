@@ -105,7 +105,7 @@ namespace Discore.WebSocket.Net
                     break;
                 case GatewayCloseCode.NotAuthenticated:
                     // This really should never happen, but will require a new session.
-                    log.LogWarning("Sent gateway payload before we identified!");
+                    log.LogWarning("[NotAuthenticated] Sent gateway payload before we identified!");
                     OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true));
                     break;
                 case GatewayCloseCode.RateLimited:
@@ -131,7 +131,7 @@ namespace Discore.WebSocket.Net
             // Default to true for the first heartbeat payload we send.
             receivedHeartbeatAck = true;
 
-            log.LogVerbose("[HeartbeatLoop] Running.");
+            log.LogVerbose("[HeartbeatLoop] Begin.");
 
             while (State == WebSocketState.Open && !heartbeatCancellationSource.IsCancellationRequested)
             {
@@ -154,7 +154,8 @@ namespace Discore.WebSocket.Net
                         // Expected to be the socket closing while sending a heartbeat
                         if (dwex.Error != DiscordWebSocketError.ConnectionClosed)
                             // Unexpected errors may not be the socket closing/aborting, so just log and loop around.
-                            log.LogError($"[HeartbeatLoop] Unexpected error occured while sending a heartbeat: {dwex}");
+                            log.LogError("[HeartbeatLoop] Unexpected error occured while sending a heartbeat: " +
+                                $"code = {dwex.Error}, error = {dwex}");
                         else
                             break;
                     }
@@ -179,7 +180,7 @@ namespace Discore.WebSocket.Net
                 else
                 {
                     // Gateway connection has timed out
-                    log.LogInfo("Gateway connection timed out.");
+                    log.LogInfo("Gateway connection timed out (did not receive ack for last heartbeat).");
 
                     // Notify that this connection needs to be resumed
                     OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false));

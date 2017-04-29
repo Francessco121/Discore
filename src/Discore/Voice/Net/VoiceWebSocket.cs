@@ -94,7 +94,7 @@ namespace Discore.Voice.Net
             {
                 if (!receivedHeartbeatAck)
                 {
-                    log.LogVerbose("[HeartbeatLoop] Connection timed out.");
+                    log.LogWarning("[HeartbeatLoop] Connection timed out (did not receive ack for last heartbeat).");
 
                     OnTimedOut?.Invoke(this, EventArgs.Empty);
                     break;

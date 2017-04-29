@@ -123,7 +123,7 @@ namespace Discore.Voice.Net
             data.Set("session_id", sessionId);
             data.Set("token", token);
 
-            log.LogVerbose($"[Identify] Sending payload...");
+            log.LogVerbose("[Identify] Sending payload...");
             return SendPayload(VoiceOPCode.Identify, data);
         }
 

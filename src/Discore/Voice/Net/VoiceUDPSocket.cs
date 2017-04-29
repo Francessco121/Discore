@@ -101,7 +101,7 @@ namespace Discore.Voice.Net
             {
                 // If this occurs then the socket is already borked,
                 // technically shouldn't happen though.
-                log.LogError($"[Shutdown] Unexpected error: {ex}");
+                log.LogError($"[Shutdown] Unexpected error: code = {ex.SocketErrorCode}, error = {ex}");
             }
         }
 
@@ -206,7 +206,7 @@ namespace Discore.Voice.Net
                     else
                     {
                         // Unexpected error
-                        log.LogError($"[ReceiveLoop] Unexpected socket error: {ex}");
+                        log.LogError($"[ReceiveLoop] Unexpected socket error: code = {ex.SocketErrorCode}, error = {ex}");
                         OnClosedPrematurely?.Invoke(this, EventArgs.Empty);
                         break;
                     }
@@ -361,7 +361,7 @@ namespace Discore.Voice.Net
                                 else
                                 {
                                     // Unexpected error
-                                    log.LogError($"[SendLoop] Unexpected socket error: {ex}");
+                                    log.LogError($"[SendLoop] Unexpected socket error: code = {ex.SocketErrorCode}, error = {ex}");
                                     OnClosedPrematurely?.Invoke(this, EventArgs.Empty);
                                     break;
                                 }

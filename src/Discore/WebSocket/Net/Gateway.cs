@@ -236,7 +236,7 @@ namespace Discore.WebSocket.Net
                     await gatewayReadyEvent.WaitAsync(cts.Token).ConfigureAwait(false);
 
                     if (waitingForReady)
-                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] Gateway is ready.");
+                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] Gateway is now ready after waiting.");
 
                     try
                     {
@@ -343,7 +343,7 @@ namespace Discore.WebSocket.Net
                 await socket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None)
                     .ConfigureAwait(false);
 
-            log.LogInfo("Disconnected.");
+            log.LogVerbose("Disconnected.");
         }
 
         async Task<string> GetGatewayUrlAsync()
@@ -409,7 +409,7 @@ namespace Discore.WebSocket.Net
 
                     if (socket.CanBeDisconnected)
                     {
-                        log.LogVerbose($"[ConnectLoop] Disconnecting previous socket...");
+                        log.LogVerbose("[ConnectLoop] Disconnecting previous socket...");
 
                         // If for some reason the socket cannot be disconnected gracefully,
                         // DisconnectAsync will abort the socket after 5s.
@@ -450,7 +450,7 @@ namespace Discore.WebSocket.Net
                 // Ensure we have a URL to the gateway
                 if (string.IsNullOrWhiteSpace(gatewayUrl))
                 {
-                    log.LogError($"[ConnectLoop] No gateway URL to connect with, trying again in 5s...");
+                    log.LogError("[ConnectLoop] No gateway URL to connect with, trying again in 5s...");
                     await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
 
                     continue;
@@ -475,7 +475,7 @@ namespace Discore.WebSocket.Net
                         .ConfigureAwait(false);
 
                     // At this point the socket has successfully connected
-                    log.LogVerbose($"[ConnectLoop] Socket connected successfully.");
+                    log.LogVerbose("[ConnectLoop] Socket connected successfully.");
                     break;
                 }
                 catch (WebSocketException wsex)
@@ -515,7 +515,14 @@ namespace Discore.WebSocket.Net
 
             // If this is an automatic reconnection, fire OnReconnected event
             if (state == GatewayState.Connected)
+            {
+                if (resume)
+                    log.LogInfo("[ConnectLoop:Reconnection] Successfully resumed.");
+                else
+                    log.LogInfo("[ConnectLoop:Reconnection] Successfully created new session.");
+
                 OnReconnected?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         void SubscribeSocketEvents()
@@ -570,7 +577,7 @@ namespace Discore.WebSocket.Net
             {
                 gatewayReadyEvent.Reset();
 
-                log.LogVerbose("Beginning automatic reconnection...");
+                log.LogVerbose("[OnReconnectionRequired] Beginning automatic reconnection...");
                 connectTaskCancellationSource = new CancellationTokenSource();
 
                 nextConnectionDelayMs = e.ConnectionDelayMs;
