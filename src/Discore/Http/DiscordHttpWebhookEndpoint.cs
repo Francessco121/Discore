@@ -128,11 +128,13 @@ namespace Discore.Http
                 "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
         }
 
+        #region Deprecated Execute
         /// <summary>
         /// Executes a webhook with a message as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public async Task<bool> Execute(Snowflake webhookId, string token,
             string content, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -156,6 +158,7 @@ namespace Discore.Http
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public async Task<bool> Execute(Snowflake webhookId, string token,
             byte[] file, string filename = "unknown.jpg",
             string username = null, string avatarUrl = null, bool tts = false)
@@ -189,6 +192,7 @@ namespace Discore.Http
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public async Task<bool> Execute(Snowflake webhookId, string token,
             FileInfo file, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -206,6 +210,7 @@ namespace Discore.Http
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public async Task<bool> Execute(Snowflake webhookId, string token,
             DiscordEmbedBuilder embed, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -220,6 +225,7 @@ namespace Discore.Http
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public async Task<bool> Execute(Snowflake webhookId, string token,
             IEnumerable<DiscordEmbedBuilder> embedBuilders, string username = null,
             string avatarUrl = null, bool tts = false)
@@ -240,8 +246,86 @@ namespace Discore.Http
 
             postData.Set("embeds", embedData);
 
-            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData, 
+            return (await Rest.Post($"webhooks/{webhookId}/{token}", postData,
                 "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
+        }
+        #endregion
+
+        /// <summary>
+        /// Executes a webhook.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="webhookId">The ID of the webhook to execute.</param>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordMessage> Execute(Snowflake webhookId, string token, ExecuteWebhookParameters parameters,
+            bool waitAndReturnMessage = false)
+        {
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", requestData,
+                "webhooks/webhook/token").ConfigureAwait(false);
+
+            return waitAndReturnMessage ? new DiscordMessage(App, returnData) : null;
+        }
+
+        /// <summary>
+        /// Executes a webhook with a file attachment.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="webhookId">The ID of the webhook to execute.</param>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(Snowflake webhookId, string token, Stream fileData, string fileName,
+            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+        {
+            return Execute(webhookId, token, new StreamContent(fileData), fileName, parameters, waitAndReturnMessage);
+        }
+
+        /// <summary>
+        /// Executes a webhook with a file attachment.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="webhookId">The ID of the webhook to execute.</param>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
+            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+        {
+            return Execute(webhookId, token, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, 
+                parameters, waitAndReturnMessage);
+        }
+
+        /// <exception cref="DiscordHttpApiException"></exception>
+        async Task<DiscordMessage> Execute(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
+            ExecuteWebhookParameters parameters, bool waitAndReturnMessage)
+        {
+            DiscordApiData returnData = await Rest.Send(() =>
+            {
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
+                    $"{RestClient.BASE_URL}/webhooks/{webhookId}/{token}");
+
+                MultipartFormDataContent data = new MultipartFormDataContent();
+                data.Add(fileContent, "file", fileName);
+
+                if (parameters != null)
+                {
+                    DiscordApiData payloadJson = parameters.Build();
+                    data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
+                }
+
+                request.Content = data;
+
+                return request;
+            }, "webhooks/webhook/token").ConfigureAwait(false);
+
+            return waitAndReturnMessage ? new DiscordMessage(App, returnData) : null;
         }
     }
 }

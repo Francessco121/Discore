@@ -88,11 +88,13 @@ namespace Discore
             return webhookHttp.DeleteWithToken(Id, token);
         }
 
+        #region Deprecated Execute
         /// <summary>
         /// Executes this webhook with a message as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, string content, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -104,6 +106,7 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, byte[] file, 
             string filename = "unknown.jpg", string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -115,6 +118,7 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, FileInfo fileInfo, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -126,10 +130,54 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
             return webhookHttp.Execute(Id, token, embedBuilders, username, avatarUrl, tts);
+        }
+        #endregion
+
+        /// <summary>
+        /// Executes this webhook.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(string token, ExecuteWebhookParameters parameters,
+            bool waitAndReturnMessage = false)
+        {
+            return webhookHttp.Execute(Id, token, parameters, waitAndReturnMessage);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a file attachment.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
+            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+        {
+            return webhookHttp.Execute(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a file attachment.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
+            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+        {
+            return webhookHttp.Execute(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
         }
     }
 }
