@@ -72,8 +72,12 @@ namespace Discore
         }
 
         /// <exception cref="ArgumentException">Thrown if the given data URI is not a valid format.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         public static DiscordAvatarData FromDataUriScheme(string dataUri)
         {
+            if (dataUri == null)
+                throw new ArgumentNullException(nameof(dataUri));
+
             int colonIndex = dataUri.IndexOf(':');
             if (colonIndex < 0)
                 throw new ArgumentException("String is not a valid data URI.");

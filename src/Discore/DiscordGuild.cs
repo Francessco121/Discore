@@ -224,6 +224,7 @@ namespace Discore
         /// <summary>
         /// Changes the settings of this guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuild> Modify(ModifyGuildParameters parameters)
         {
@@ -252,6 +253,7 @@ namespace Discore
         /// <summary>
         /// Creates a text or voice channel for this guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildChannel> CreateChannel(CreateGuildChannelParameters parameters)
         {
@@ -261,6 +263,7 @@ namespace Discore
         /// <summary>
         /// Changes the sorting positions of the channels in this guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionParameters> positions)
         {
@@ -340,6 +343,7 @@ namespace Discore
         /// Creates a new role for this guild.
         /// </summary>
         /// <param name="parameters">A set of optional parameters to use when creating the role.</param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> CreateRole(CreateRoleParameters parameters)
         {
@@ -349,6 +353,7 @@ namespace Discore
         /// <summary>
         /// Changes the sorting positions of the roles in this guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(IEnumerable<PositionParameters> positions)
         {

@@ -82,6 +82,8 @@ namespace Discore
         /// Deletes this webhook permanently.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeleteWithToken(string token)
         {
@@ -145,6 +147,8 @@ namespace Discore
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="parameters"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(string token, ExecuteWebhookParameters parameters,
             bool waitAndReturnMessage = false)
@@ -159,6 +163,10 @@ namespace Discore
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token is null, 
+        /// or <paramref name="fileData"/> is null,
+        /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
             ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
@@ -173,6 +181,9 @@ namespace Discore
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token is null 
+        /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)

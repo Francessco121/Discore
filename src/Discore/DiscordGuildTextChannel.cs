@@ -78,6 +78,7 @@ namespace Discore
         /// </summary>
         /// <param name="parameters">A set of parameters to modify the channel with</param>
         /// <returns>Returns the updated text channel.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildTextChannel> Modify(GuildTextChannelParameters parameters)
         {
@@ -191,6 +192,7 @@ namespace Discore
         /// </summary>
         /// <param name="details">The details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(DiscordMessageDetails details)
         {
@@ -204,6 +206,7 @@ namespace Discore
         /// <param name="fileName">The name of the file to use when uploading.</param>
         /// <param name="details">Optional extra details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null)
         {
@@ -216,6 +219,7 @@ namespace Discore
         /// <param name="fileName">The name of the file to use when uploading.</param>
         /// <param name="details">Optional extra details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> UploadFile(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
         {
@@ -229,6 +233,7 @@ namespace Discore
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
         /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
         {
@@ -242,6 +247,7 @@ namespace Discore
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
         /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
         {

@@ -322,11 +322,15 @@ namespace Discore.Voice
         /// avoid overflowing the buffer.
         /// </para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown if the specified number of bytes will exceed the buffer size.
         /// </exception>
         public void SendVoiceData(byte[] buffer, int offset, int count)
         {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
+
             if (isValid)
             {
                 udpSocket.SendData(buffer, offset, count);

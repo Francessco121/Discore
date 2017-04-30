@@ -10,9 +10,14 @@ namespace Discore
         /// <param name="permission">The set of permissions to check if the member has.</param>
         /// <param name="member">The member to check the permissions of.</param>
         /// <param name="guild">The guild this member is in.</param>
-        public static bool HasPermission(DiscordPermission permission,
-            DiscordGuildMember member, DiscordGuild guild)
+        /// <exception cref="ArgumentNullException"></exception>
+        public static bool HasPermission(DiscordPermission permission, DiscordGuildMember member, DiscordGuild guild)
         {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+            if (guild == null)
+                throw new ArgumentNullException(nameof(guild));
+
             if (member.GuildId != guild.Id)
                 throw new ArgumentException("Member must be in the specified guild.");
 
@@ -35,9 +40,17 @@ namespace Discore
         /// <param name="forChannel">
         /// The guild channel to check the permissions against (this will take overwrites into account).
         /// </param>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool HasPermission(DiscordPermission permission, 
             DiscordGuildMember member, DiscordGuild guild, DiscordGuildChannel forChannel)
         {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+            if (guild == null)
+                throw new ArgumentNullException(nameof(guild));
+            if (forChannel == null)
+                throw new ArgumentNullException(nameof(forChannel));
+
             if (forChannel.GuildId != member.GuildId)
                 throw new ArgumentException("Guild channel must be in the same guild as this member.");
             if (forChannel.GuildId != guild.Id)
@@ -96,6 +109,8 @@ namespace Discore
         /// Checks whether a member has a set of permissions,
         /// if they don't a <see cref="DiscordPermissionException"/> is thrown with details.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordPermissionException"></exception>
         public static void AssertPermission(DiscordPermission permission,
             DiscordGuildMember member, DiscordGuild guild)
         {
@@ -107,6 +122,8 @@ namespace Discore
         /// Checks whether a member has a set of permissions in the context of a guild channel,
         /// if they don't a <see cref="DiscordPermissionException"/> is thrown with details.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordPermissionException"></exception>
         public static void AssertPermission(DiscordPermission permission,
             DiscordGuildMember member, DiscordGuild guild, DiscordGuildChannel forChannel)
         {

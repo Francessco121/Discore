@@ -37,8 +37,10 @@ namespace Discore.Http
         public async Task<DiscordUser> ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("username", username);
-            requestData.Set("avatar", avatar.ToDataUriScheme());
+            if (username != null)
+                requestData.Set("username", username);
+            if (avatar != null)
+                requestData.Set("avatar", avatar.ToDataUriScheme());
 
             DiscordApiData returnData = await Rest.Patch("users/@me", requestData, "users/@me").ConfigureAwait(false);
             return returnData.IsNull ? null : new DiscordUser(returnData);

@@ -88,9 +88,13 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+
             return EditPermissions(member.Id, DiscordOverwriteType.Member, allow, deny);
         }
 
@@ -101,9 +105,13 @@ namespace Discore
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
+            if (role == null)
+                throw new ArgumentNullException(nameof(role));
+
             return EditPermissions(role.Id, DiscordOverwriteType.Role, allow, deny);
         }
 
@@ -126,9 +134,13 @@ namespace Discore
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(DiscordGuildMember member)
         {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+
             return DeletePermission(member.Id);
         }
 
@@ -136,9 +148,13 @@ namespace Discore
         /// Deletes a permission overwrite for a role.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(DiscordRole role)
         {
+            if (role == null)
+                throw new ArgumentNullException(nameof(role));
+
             return DeletePermission(role.Id);
         }
 
@@ -146,9 +162,13 @@ namespace Discore
         /// Deletes a permission overwrite.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(DiscordOverwrite overwrite)
         {
+            if (overwrite == null)
+                throw new ArgumentNullException(nameof(overwrite));
+
             return DeletePermission(overwrite.Id);
         }
 

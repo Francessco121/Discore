@@ -46,6 +46,7 @@ namespace Discore
         /// </summary>
         /// <param name="parameters">A set of parameters to modify the channel with</param>
         /// <returns>Returns the updated voice channel.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildVoiceChannel> Modify(GuildVoiceChannelParameters parameters)
         {

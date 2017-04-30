@@ -1,4 +1,5 @@
 ﻿using Discore.Http;
+using System;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -66,6 +67,7 @@ namespace Discore
         /// <summary>
         /// Modifies the settings of this role.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
         {

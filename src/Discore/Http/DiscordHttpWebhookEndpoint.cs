@@ -18,9 +18,15 @@ namespace Discore.Http
         /// Creates a webhook.
         /// </summary>
         /// <param name="channelId">The id of the channel the webhook will post to.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> or <paramref name="avatar"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> Create(string name, DiscordAvatarData avatar, Snowflake channelId)
         {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+            if (avatar == null)
+                throw new ArgumentNullException(nameof(avatar));
+
             DiscordApiData apiData = DiscordApiData.CreateContainer();
             apiData.Set("name", name);
             apiData.Set("avatar", avatar);
@@ -47,9 +53,16 @@ namespace Discore.Http
         /// Gets a webhook via its ID.
         /// <para>This call does not require authentication and returns no user in the webhook object.</para>
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> GetWithToken(Snowflake webhookId, string token)
         {
+            if (token == null)
+                throw new ArgumentNullException(nameof(token));
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
+
             DiscordApiData apiData = await Rest.Get($"webhooks/{webhookId}/{token}", 
                 "webhooks/webhook/token").ConfigureAwait(false);
 
@@ -97,8 +110,10 @@ namespace Discore.Http
         public async Task<DiscordWebhook> Modify(Snowflake webhookId, string name = null, DiscordAvatarData avatar = null)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
-            if (!string.IsNullOrWhiteSpace(name)) postData.Set("name", name);
-            if (avatar != null) postData.Set("avatar", avatar);
+            if (!string.IsNullOrWhiteSpace(name))
+                postData.Set("name", name);
+            if (avatar != null)
+                postData.Set("avatar", avatar);
 
             DiscordApiData apiData = await Rest.Patch($"webhooks/{webhookId}", postData, 
                 "webhooks/webhook").ConfigureAwait(false);
@@ -121,9 +136,16 @@ namespace Discore.Http
         /// Deletes a webhook permanently.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteWithToken(Snowflake webhookId, string token)
         {
+            if (token == null)
+                throw new ArgumentNullException(nameof(token));
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
+
             return (await Rest.Delete($"webhooks/{webhookId}/{token}",
                 "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
         }
@@ -259,10 +281,19 @@ namespace Discore.Http
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="parameters"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> Execute(Snowflake webhookId, string token, ExecuteWebhookParameters parameters,
             bool waitAndReturnMessage = false)
         {
+            if (token == null)
+                throw new ArgumentNullException(nameof(token));
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", requestData,
@@ -279,10 +310,17 @@ namespace Discore.Http
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token is null, 
+        /// or <paramref name="fileData"/> is null,
+        /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(Snowflake webhookId, string token, Stream fileData, string fileName,
             ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
         {
+            if (fileData == null)
+                throw new ArgumentNullException(nameof(fileData));
+
             return Execute(webhookId, token, new StreamContent(fileData), fileName, parameters, waitAndReturnMessage);
         }
 
@@ -294,6 +332,9 @@ namespace Discore.Http
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token is null 
+        /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
@@ -302,10 +343,20 @@ namespace Discore.Http
                 parameters, waitAndReturnMessage);
         }
 
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         async Task<DiscordMessage> Execute(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
             ExecuteWebhookParameters parameters, bool waitAndReturnMessage)
         {
+            if (token == null)
+                throw new ArgumentNullException(nameof(token));
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
+            if (string.IsNullOrEmpty(fileName))
+                // Technically already handled when adding the field to the multipart form data.
+                throw new ArgumentNullException(nameof(fileName));
+
             DiscordApiData returnData = await Rest.Send(() =>
             {
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,

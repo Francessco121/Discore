@@ -108,6 +108,7 @@ namespace Discore
         /// Modifies the attributes of this member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Modify(ModifyGuildMemberParameters parameters)
         {
