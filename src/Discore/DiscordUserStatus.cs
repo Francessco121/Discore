@@ -6,6 +6,7 @@
     public enum DiscordUserStatus
     {
         Offline,
+        DoNotDisturb,
         Idle,
         Online
     }

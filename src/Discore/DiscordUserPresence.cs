@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Discore
+﻿namespace Discore
 {
     public sealed class DiscordUserPresence
     {
@@ -35,9 +33,37 @@ namespace Discore
             string statusStr = data.GetString("status");
             if (statusStr != null)
             {
-                DiscordUserStatus status;
-                if (Enum.TryParse(statusStr, true, out status))
-                    Status = status;
+                DiscordUserStatus? status = ParseStatus(statusStr);
+
+                if (!status.HasValue)
+                {
+                    // If we don't have a value for the status yet, 
+                    // we at least know that they aren't offline.
+                    Status = DiscordUserStatus.Online;
+
+                    // However, this should issue a warning.
+                    DiscoreLogger.Default.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {userId}. " +
+                        $"status = {statusStr}");
+                }
+                else
+                    Status = status.Value;
+            }
+        }
+
+        DiscordUserStatus? ParseStatus(string str)
+        {
+            switch (str)
+            {
+                case "offline":
+                    return DiscordUserStatus.Offline;
+                case "dnd":
+                    return DiscordUserStatus.DoNotDisturb;
+                case "idle":
+                    return DiscordUserStatus.Idle;
+                case "online":
+                    return DiscordUserStatus.Online;
+                default:
+                    return null;
             }
         }
     }
