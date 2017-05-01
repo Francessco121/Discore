@@ -28,6 +28,8 @@ namespace Discore.WebSocket.Net
         Shard shard;
         DiscoreCache cache;
 
+        ShardStartConfig lastShardStartConfig;
+
         GatewaySocket socket;
 
         GatewayRateLimiter connectionRateLimiter;
@@ -58,6 +60,11 @@ namespace Discore.WebSocket.Net
         /// Cancellation occurs when the Gateway is disconnected publicly (i.e. not from a socket error).
         /// </summary>
         CancellationTokenSource gatewayReadyEventCancellationSource;
+
+        /// <summary>
+        /// Milliseconds to wait before attempting the next socket connection. Will be reset after wait completes.
+        /// </summary>
+        int nextConnectionDelayMs;
 
         DiscoreLogger log;
 
@@ -229,7 +236,7 @@ namespace Discore.WebSocket.Net
                     await gatewayReadyEvent.WaitAsync(cts.Token).ConfigureAwait(false);
 
                     if (waitingForReady)
-                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] Gateway is ready.");
+                        log.LogVerbose($"[{opName}:RepeatTrySendPayload] Gateway is now ready after waiting.");
 
                     try
                     {
@@ -264,7 +271,7 @@ namespace Discore.WebSocket.Net
 
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
-        public Task ConnectAsync(CancellationToken cancellationToken)
+        public Task ConnectAsync(ShardStartConfig config, CancellationToken cancellationToken)
         {
             if (isDisposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -275,6 +282,7 @@ namespace Discore.WebSocket.Net
 
             // Begin connecting
             state = GatewayState.Connecting;
+            lastShardStartConfig = config;
             connectTask = ConnectLoop(false, cancellationToken);
 
             // Register a continue with so we can set the state appropriately once
@@ -335,7 +343,7 @@ namespace Discore.WebSocket.Net
                 await socket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None)
                     .ConfigureAwait(false);
 
-            log.LogInfo("Disconnected.");
+            log.LogVerbose("Disconnected.");
         }
 
         async Task<string> GetGatewayUrlAsync()
@@ -401,7 +409,7 @@ namespace Discore.WebSocket.Net
 
                     if (socket.CanBeDisconnected)
                     {
-                        log.LogVerbose($"[ConnectLoop] Disconnecting previous socket...");
+                        log.LogVerbose("[ConnectLoop] Disconnecting previous socket...");
 
                         // If for some reason the socket cannot be disconnected gracefully,
                         // DisconnectAsync will abort the socket after 5s.
@@ -442,14 +450,23 @@ namespace Discore.WebSocket.Net
                 // Ensure we have a URL to the gateway
                 if (string.IsNullOrWhiteSpace(gatewayUrl))
                 {
-                    log.LogError($"[ConnectLoop] No gateway URL to connect with, trying again in 5s...");
+                    log.LogError("[ConnectLoop] No gateway URL to connect with, trying again in 5s...");
                     await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
 
                     continue;
                 }
 
                 // Make sure we dont try and connect too often
-                await connectionRateLimiter.Invoke().ConfigureAwait(false);
+                await connectionRateLimiter.Invoke(cancellationToken).ConfigureAwait(false);
+
+                // Wait if necessary
+                if (nextConnectionDelayMs > 0)
+                {
+                    log.LogVerbose($"[ConnectLoop] Waiting {nextConnectionDelayMs}ms before connecting socket...");
+
+                    await Task.Delay(nextConnectionDelayMs, cancellationToken).ConfigureAwait(false);
+                    nextConnectionDelayMs = 0;
+                }
 
                 try
                 {
@@ -458,7 +475,7 @@ namespace Discore.WebSocket.Net
                         .ConfigureAwait(false);
 
                     // At this point the socket has successfully connected
-                    log.LogVerbose($"[ConnectLoop] Socket connected successfully.");
+                    log.LogVerbose("[ConnectLoop] Socket connected successfully.");
                     break;
                 }
                 catch (WebSocketException wsex)
@@ -498,13 +515,19 @@ namespace Discore.WebSocket.Net
 
             // If this is an automatic reconnection, fire OnReconnected event
             if (state == GatewayState.Connected)
+            {
+                if (resume)
+                    log.LogInfo("[ConnectLoop:Reconnection] Successfully resumed.");
+                else
+                    log.LogInfo("[ConnectLoop:Reconnection] Successfully created new session.");
+
                 OnReconnected?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         void SubscribeSocketEvents()
         {
             socket.OnHello += Socket_OnHello;
-            socket.OnRateLimited += Socket_OnRateLimited;
             socket.OnReconnectionRequired += Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection += Socket_OnFatalDisconnection;
             socket.OnDispatch += Socket_OnDispatch;
@@ -513,7 +536,6 @@ namespace Discore.WebSocket.Net
         void UnsubscribeSocketEvents()
         {
             socket.OnHello -= Socket_OnHello;
-            socket.OnRateLimited -= Socket_OnRateLimited;
             socket.OnReconnectionRequired -= Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection -= Socket_OnFatalDisconnection;
             socket.OnDispatch -= Socket_OnDispatch;
@@ -529,16 +551,9 @@ namespace Discore.WebSocket.Net
                 socket.SendResumePayload(app.Authenticator.GetToken(), sessionId, lastSequence);
             else
                 // Identify
-                socket.SendIdentifyPayload(app.Authenticator.GetToken(), 250, shard.Id, app.ShardManager.TotalShardCount);
+                socket.SendIdentifyPayload(app.Authenticator.GetToken(), 
+                    lastShardStartConfig.GatewayLargeThreshold, shard.Id, app.ShardManager.TotalShardCount);
         }
-
-        private void Socket_OnRateLimited(object sender, EventArgs e)
-        {
-            if (isDisposed)
-                return;
-
-            log.LogError("Gateway connection was rate limited!!");
-        } 
 
         private void Socket_OnFatalDisconnection(object sender, GatewayCloseCode e)
         {
@@ -553,7 +568,7 @@ namespace Discore.WebSocket.Net
             OnFatalDisconnection?.Invoke(this, e);
         }
 
-        void Socket_OnReconnectionRequired(object sender, bool requiresNewSession)
+        void Socket_OnReconnectionRequired(object sender, ReconnectionEventArgs e)
         {
             if (isDisposed)
                 return;
@@ -562,9 +577,12 @@ namespace Discore.WebSocket.Net
             {
                 gatewayReadyEvent.Reset();
 
-                log.LogVerbose("Beginning automatic reconnection...");
+                log.LogVerbose("[OnReconnectionRequired] Beginning automatic reconnection...");
                 connectTaskCancellationSource = new CancellationTokenSource();
-                connectTask = ConnectLoop(!requiresNewSession, connectTaskCancellationSource.Token);
+
+                nextConnectionDelayMs = e.ConnectionDelayMs;
+
+                connectTask = ConnectLoop(!e.CreateNewSession, connectTaskCancellationSource.Token);
             }
         }
 

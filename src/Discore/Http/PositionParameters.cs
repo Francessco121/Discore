@@ -6,13 +6,31 @@
     public class PositionParameters
     {
         /// <summary>
-        /// The ID of the item to change the position of.
+        /// Gets or sets the ID of the item to change the position of (e.g. a channel or role ID).
         /// </summary>
         public Snowflake Id { get; set; }
         /// <summary>
-        /// The sorting position of the item.
+        /// Gets or sets the sorting position of the item.
         /// </summary>
         public int Position { get; set; }
+
+        /// <summary>
+        /// Sets the ID of the item to change the position of (e.g. a channel or role ID).
+        /// </summary>
+        public PositionParameters SetId(Snowflake id)
+        {
+            Id = id;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the sorting position of the item.
+        /// </summary>
+        public PositionParameters SetPosition(int position)
+        {
+            Position = position;
+            return this;
+        }
 
         internal DiscordApiData Build()
         {

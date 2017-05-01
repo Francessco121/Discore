@@ -6,17 +6,44 @@
     public class ModifyIntegrationParameters
     {
         /// <summary>
-        /// The behavior when an integration subscription lapses.
+        /// Gets or sets the behavior to follow when the integration subscription lapses.
         /// </summary>
         public int ExpireBehavior { get; set; }
         /// <summary>
-        /// The period (in seconds) where the integration will ignore lapsed subscriptions.
+        /// Gets or sets the period (in seconds) where the integration will ignore lapsed subscriptions.
         /// </summary>
         public int ExpireGracePeriod { get; set; }
         /// <summary>
-        /// Whether emoticons should be synced for this integration (twitch only currently).
+        /// Gets or sets whether emoticons should be synced for this integration (twitch only currently).
         /// </summary>
         public bool EnableEmoticons { get; set; }
+
+        /// <summary>
+        /// Sets the behavior for when the integration subscription lapses.
+        /// </summary>
+        public ModifyIntegrationParameters SetExpireBehavior(int expireBehavior)
+        {
+            ExpireBehavior = expireBehavior;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the period (in seconds) where the integration will ignore lapsed subscriptions.
+        /// </summary>
+        public ModifyIntegrationParameters SetExpireGracePeriod(int expireGracePeriod)
+        {
+            ExpireGracePeriod = expireGracePeriod;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets whether emoticons should be synced for this integration (twitch only currently).
+        /// </summary>
+        public ModifyIntegrationParameters SetEnableEmoticons(bool enableEmoticons)
+        {
+            EnableEmoticons = enableEmoticons;
+            return this;
+        }
 
         internal DiscordApiData Build()
         {

@@ -1,4 +1,6 @@
-﻿namespace Discore
+﻿using System;
+
+namespace Discore
 {
     public class DiscordBotUserToken : IDiscordAuthenticator
     {
@@ -9,8 +11,15 @@
 
         string token;
 
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace cahracters.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         public DiscordBotUserToken(string token)
         {
+            if (token == null)
+                throw new ArgumentNullException(nameof(token));
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
+
             this.token = token;
         }
 

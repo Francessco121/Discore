@@ -17,7 +17,7 @@ namespace Discore
         /// </summary> 
         public Snowflake ChannelId { get; }
         /// <summary> 
-        /// Gets the wser that created this webhook.
+        /// Gets the user that created this webhook.
         /// </summary> 
         public DiscordUser User { get; }
         /// <summary> 
@@ -25,13 +25,13 @@ namespace Discore
         /// </summary> 
         public string Name { get; }
         /// <summary> 
-        /// Gets the avatar of this webhook.
+        /// Gets the avatar hash of this webhook (or null if the webhook user has no avatar set).
         /// </summary> 
-        public DiscordAvatarData Avatar { get; }
+        public string Avatar { get; }
         /// <summary> 
         /// Gets the token of this webhook. 
         /// <para>This is only populated if the current authenticated user created the webhook, otherwise it's empty/null.</para> 
-        /// <para>It's used for Executing, Updating, and Deleting this webhook without the need of authorization.</para> 
+        /// <para>It's used for executing, updating, and deleting this webhook without the need of authorization.</para> 
         /// </summary> 
         public string Token { get; }
         /// <summary>
@@ -54,8 +54,8 @@ namespace Discore
                 User = new DiscordUser(userData);
 
             Name = data.GetString("name");
-            Avatar = new DiscordAvatarData(data.GetString("avatar"));
             Token = data.GetString("token");
+            Avatar = data.GetString("avatar");
         }
 
         /// <summary>
@@ -82,17 +82,21 @@ namespace Discore
         /// Deletes this webhook permanently.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeleteWithToken(string token)
         {
             return webhookHttp.DeleteWithToken(Id, token);
         }
 
+        #region Deprecated Execute
         /// <summary>
         /// Executes this webhook with a message as the content.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, string content, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -104,6 +108,7 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, byte[] file, 
             string filename = "unknown.jpg", string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -115,6 +120,7 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, FileInfo fileInfo, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
@@ -126,10 +132,63 @@ namespace Discore
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use an Execute overload with a builder object.")]
         public Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
             string username = null, string avatarUrl = null, bool tts = false)
         {
             return webhookHttp.Execute(Id, token, embedBuilders, username, avatarUrl, tts);
+        }
+        #endregion
+
+        /// <summary>
+        /// Executes this webhook.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(string token, ExecuteWebhookParameters parameters,
+            bool waitAndReturnMessage = false)
+        {
+            return webhookHttp.Execute(Id, token, parameters, waitAndReturnMessage);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a file attachment.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token is null, 
+        /// or <paramref name="fileData"/> is null,
+        /// or the file name is null, empty, or only contains whitespace characters.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
+            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+        {
+            return webhookHttp.Execute(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
+        }
+
+        /// <summary>
+        /// Executes this webhook with a file attachment.
+        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
+        /// </summary>
+        /// <param name="token">The webhook's token.</param>
+        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
+        /// and have it returned from this method.</param>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token is null 
+        /// or the file name is null, empty, or only contains whitespace characters.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
+            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+        {
+            return webhookHttp.Execute(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
         }
     }
 }

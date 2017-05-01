@@ -1,117 +1,327 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace Discore
 {
     /// <summary>
-    /// A class to create message embeds used when executing webhooks.
+    /// A builder for message embeds.
     /// </summary>
     public class DiscordEmbedBuilder
     {
-        DiscordApiData product;
-        bool colorSet;
-
-        public DiscordEmbedBuilder()
+        public class EmbedFooter
         {
-            product = DiscordApiData.CreateContainer();
+            /// <summary>
+            /// Gets or sets the text content of the footer.
+            /// </summary>
+            public string Text { get; set; }
+
+            /// <summary>
+            /// Gets or sets the URL of the icon to display in the footer (or null to omit).
+            /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+            /// </summary>
+            public string IconUrl { get; set; }
+
+            public EmbedFooter(string text, string iconUrl = null)
+            {
+                Text = text;
+                IconUrl = iconUrl;
+            }
+
+            internal DiscordApiData Build()
+            {
+                DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+
+                if (Text != null)
+                    data.Set("text", Text);
+                if (IconUrl != null)
+                    data.Set("icon_url", IconUrl);
+
+                return data;
+            }
         }
 
+        public class EmbedAuthor
+        {
+            /// <summary>
+            /// Gets or sets the author's name.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Gets or sets the URL to the author (or null to omit).
+            /// </summary>
+            public string Url { get; set; }
+
+            /// <summary>
+            /// Gets or sets the URL to the icon of the author (or null to omit).
+            /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+            /// </summary>
+            public string IconUrl { get; set; }
+
+            public EmbedAuthor(string name, string url = null, string iconUrl = null)
+            {
+                Name = name;
+                Url = url;
+                IconUrl = iconUrl;
+            }
+
+            internal DiscordApiData Build()
+            {
+                DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+
+                if (Name != null)
+                    data.Set("name", Name);
+                if (Url != null)
+                    data.Set("url", Url);
+                if (IconUrl != null)
+                    data.Set("icon_url", IconUrl);
+
+                return data;
+            }
+        }
+
+        public class EmbedField
+        {
+            /// <summary>
+            /// Gets or sets the name of the field.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Gets or sets the value of the field.
+            /// </summary>
+            public string Value { get; set; }
+            
+            /// <summary>
+            /// Gets or sets whether the field should display inline with other inline fields.
+            /// </summary>
+            public bool IsInline { get; set; }
+
+            public EmbedField(string name, string value, bool isInline = false)
+            {
+                Name = name;
+                Value = value;
+                IsInline = isInline;
+            }
+
+            internal DiscordApiData Build()
+            {
+                DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+
+                if (Name != null)
+                    data.Set("name", Name);
+                if (Value != null)
+                    data.Set("value", Value);
+                
+                data.Set("inline", IsInline);
+
+                return data;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the title of the embed (or null to omit).
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// Gets or sets the description of the embed (or null to omit).
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the URL that the embed links to (or null to omit).
+        /// </summary>
+        public string Url { get; set; }
+
+        /// <summary>
+        /// Gets or sets the timestamp on the embed (or null to omit).
+        /// </summary>
+        public DateTime? Timestamp { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color of the embed (or null to use default).
+        /// </summary>
+        public DiscordColor? Color { get; set; }
+
+        /// <summary>
+        /// Gets or sets the footer of the embed (or null to omit).
+        /// </summary>
+        public EmbedFooter Footer { get; set; }
+
+        /// <summary>
+        /// Gets or sets the URL of the image to include in the embed (or null to omit).
+        /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+        /// </summary>
+        public string ImageUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the author of the embed (or null to omit).
+        /// </summary>
+        public EmbedAuthor Author { get; set; }
+
+        /// <summary>
+        /// Gets or sets the URL of the thumbnail for the embed (or null to omit).
+        /// </summary>
+        public string ThumbnailUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the fields to include in the embed (or null to omit).
+        /// </summary>
+        public IList<EmbedField> Fields { get; set; }
+
+        /// <summary>
+        /// Sets the title of the embed.
+        /// </summary>
         public DiscordEmbedBuilder SetTitle(string title)
         {
-            product.Set("title", title);
+            Title = title;
             return this;
         }
 
+        /// <summary>
+        /// Sets the description of the embed.
+        /// </summary>
         public DiscordEmbedBuilder SetDescription(string description)
         {
-            product.Set("description", description);
+            Description = description;
             return this;
         }
 
+        /// <summary>
+        /// Sets the URL that the embed links to.
+        /// </summary>
         public DiscordEmbedBuilder SetUrl(string url)
         {
-            product.Set("url", url);
+            Url = url;
             return this;
         }
 
-        public DiscordEmbedBuilder SetTimestamp(DateTime time)
+        /// <summary>
+        /// Sets the timestamp on the embed.
+        /// </summary>
+        public DiscordEmbedBuilder SetTimestamp(DateTime timestamp)
         {
-            product.Set("timestamp", time.ToUniversalTime().ToString("s", System.Globalization.CultureInfo.InvariantCulture));
+            Timestamp = timestamp;
             return this;
         }
-        
+
+        /// <summary>
+        /// Sets the color of the embed.
+        /// </summary>
         public DiscordEmbedBuilder SetColor(DiscordColor color)
         {
-            colorSet = true;
-
-            product.Set("color", color);
+            Color = color;
             return this;
         }
 
+        /// <summary>
+        /// Sets the footer of the embed.
+        /// </summary>
+        /// <param name="iconUrl">
+        /// The URL of the icon to display in the footer.
+        /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+        /// </param>
         public DiscordEmbedBuilder SetFooter(string text, string iconUrl = null)
         {
-            DiscordApiData apiData = DiscordApiData.CreateContainer();
-            apiData.Set("text", text);
-            apiData.Set("icon_url", iconUrl);
-
-            product.Set("footer", apiData);
+            Footer = new EmbedFooter(text, iconUrl);
             return this;
         }
 
-        public DiscordEmbedBuilder SetImage(string url)
+        /// <summary>
+        /// Sets the URL of the image to include in the embed.
+        /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+        /// </summary>
+        public DiscordEmbedBuilder SetImage(string imageUrl)
         {
-            DiscordApiData apiData = DiscordApiData.CreateContainer();
-            apiData.Set("url", url);
-
-            product.Set("image", apiData);
+            ImageUrl = imageUrl;
             return this;
         }
 
+        /// <summary>
+        /// Sets the author of the embed.
+        /// </summary>
+        /// <param name="iconUrl">
+        /// The URL of the author's icon.
+        /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+        /// </param>
         public DiscordEmbedBuilder SetAuthor(string name, string url = null, string iconUrl = null)
         {
-            DiscordApiData authorData = DiscordApiData.CreateContainer();
-            authorData.Set("name", name);
-            authorData.Set("url", url);
-            authorData.Set("icon_url", iconUrl);
-
-            product.Set("author", authorData);
+            Author = new EmbedAuthor(name, url, iconUrl);
             return this;
         }
 
-        public DiscordEmbedBuilder SetThumbnail(string url)
+        /// <summary>
+        /// Sets the URL of the thumbnail for the embed.
+        /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
+        /// </summary>
+        public DiscordEmbedBuilder SetThumbnail(string thumbnailUrl)
         {
-            DiscordApiData apiData = DiscordApiData.CreateContainer();
-            apiData.Set("url", url);
-
-            product.Set("thumbnail", apiData);
+            ThumbnailUrl = thumbnailUrl;
             return this;
         }
 
-        /// <param name="inline">Whether this field should display inline with other inline fields.</param>
-        public DiscordEmbedBuilder AddField(string name, string value, bool inline)
+        /// <summary>
+        /// Adds a field to the embed.
+        /// </summary>
+        /// <param name="inline">Whether the field should display inline with other inline fields.</param>
+        public DiscordEmbedBuilder AddField(string name, string value, bool inline = false)
         {
-            DiscordApiData fieldArray = product.Get("fields");
+            if (Fields == null)
+                Fields = new List<EmbedField>();
 
-            // if the field array doesn't exist then we create it
-            if (fieldArray == null)
-                fieldArray = DiscordApiData.CreateArray();
-
-            DiscordApiData apiData = DiscordApiData.CreateContainer();
-            apiData.Set("name", name);
-            apiData.Set("value", value);
-            apiData.Set("inline", inline);
-
-            fieldArray.Values.Add(apiData);
-
-            product.Set("fields", fieldArray);
+            Fields.Add(new EmbedField(name, value, inline));
             return this;
         }
 
         internal DiscordApiData Build()
         {
-            if (!colorSet)
-                product.Set("color", DiscordColor.DefaultEmbed);
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
 
-            return product;
+            if (Title != null)
+                data.Set("title", Title);
+            if (Description != null)
+                data.Set("description", Description);
+            if (Url != null)
+                data.Set("url", Url);
+            if (Timestamp.HasValue)
+                data.Set("timestamp", Timestamp.Value.ToUniversalTime().ToString("s", CultureInfo.InvariantCulture));
+            if (Color.HasValue)
+                data.Set("color", Color.Value.ToHexadecimal());
+
+            if (Footer != null)
+                data.Set("footer", Footer.Build());
+
+            if (ImageUrl != null)
+            {
+                DiscordApiData imageData = new DiscordApiData(DiscordApiDataType.Container);
+                imageData.Set("url", ImageUrl);
+
+                data.Set("image", imageData);
+            }
+
+            if (Author != null)
+                data.Set("author", Author.Build());
+
+            if (ThumbnailUrl != null)
+            {
+                DiscordApiData thumbnailData = new DiscordApiData(DiscordApiDataType.Container);
+                thumbnailData.Set("url", ThumbnailUrl);
+
+                data.Set("thumbnail", thumbnailData);
+            }
+
+            if (Fields != null)
+            {
+                DiscordApiData fieldArray = new DiscordApiData(DiscordApiDataType.Array);
+                foreach (EmbedField field in Fields)
+                    fieldArray.Values.Add(field.Build());
+
+                data.Set("fields", fieldArray);
+            }
+
+            return data;
         }
     }
 }

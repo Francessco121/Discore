@@ -13,7 +13,7 @@
         public string Discriminator { get; }
 
         /// <summary>
-        /// Gets user's avatar hash.
+        /// Gets the user's avatar hash.
         /// </summary>
         public string Avatar { get; private set; }
 

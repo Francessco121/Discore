@@ -54,6 +54,7 @@ namespace Discore
         /// </summary>
         /// <param name="details">The details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<DiscordMessage> CreateMessage(DiscordMessageDetails details);
 
@@ -64,6 +65,7 @@ namespace Discore
         /// <param name="fileName">The name of the file to use when uploading.</param>
         /// <param name="details">Optional extra details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null);
         /// <summary>
@@ -73,6 +75,7 @@ namespace Discore
         /// <param name="fileName">The name of the file to use when uploading.</param>
         /// <param name="details">Optional extra details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<DiscordMessage> UploadFile(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null);
 
@@ -83,6 +86,7 @@ namespace Discore
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks 
         /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true);
         /// <summary>
@@ -92,6 +96,7 @@ namespace Discore
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks 
         /// (messages that are too old cause an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true);
 

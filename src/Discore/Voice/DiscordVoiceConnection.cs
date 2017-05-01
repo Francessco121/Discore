@@ -322,11 +322,15 @@ namespace Discore.Voice
         /// avoid overflowing the buffer.
         /// </para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown if the specified number of bytes will exceed the buffer size.
         /// </exception>
         public void SendVoiceData(byte[] buffer, int offset, int count)
         {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
+
             if (isValid)
             {
                 udpSocket.SendData(buffer, offset, count);
@@ -420,7 +424,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"[OnReady] Failed to connect UDP socket: {ex}");
+                if (ex is SocketException socketEx)
+                    log.LogError($"[OnReady] Failed to connect UDP socket: code = {socketEx.SocketErrorCode}, error = {ex}");
+                else
+                    log.LogError($"[OnReady] Failed to connect UDP socket: {ex}");
 
                 await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);
@@ -440,7 +447,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"[OnReady] Failed start IP discovery: {ex}");
+                if (ex is SocketException socketEx)
+                    log.LogError($"[OnReady] Failed start IP discovery: code = {socketEx.SocketErrorCode}, error = {ex}");
+                else
+                    log.LogError($"[OnReady] Failed start IP discovery: {ex}");
 
                 await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);
@@ -456,7 +466,7 @@ namespace Discore.Voice
             if (!isValid || !isConnected)
                 return;
 
-            log.LogVerbose($"[IPDiscovery] Discovered IP: {e.IP}:{e.Port}");
+            log.LogVerbose($"[IPDiscovery] Discovered EndPoint: {e.IP}:{e.Port}");
 
             try
             {
@@ -465,7 +475,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"[OnIPDiscovered] Failed to select protocol: {ex}");
+                if (ex is DiscordWebSocketException dwex)
+                    log.LogError($"[OnIPDiscovered] Failed to select protocol: code = {dwex.Error}, error = {ex}");
+                else
+                    log.LogError($"[OnIPDiscovered] Failed to select protocol: {ex}");
 
                 await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);
@@ -520,7 +533,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"Failed to connect to {uri}: {ex}");
+                if (ex is WebSocketException wsex)
+                    log.LogError($"Failed to connect to {uri}: code = {wsex.WebSocketErrorCode}, error = {wsex}");
+                else
+                    log.LogError($"Failed to connect to {uri}: {ex}");
 
                 await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);
@@ -540,7 +556,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
+                if (ex is DiscordWebSocketException dwex)
+                    log.LogError($"[ConnectSocket] Failed to send identify payload: code = {dwex.Error}, error = {ex}");
+                else
+                    log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
 
                 await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);
@@ -562,7 +581,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
+                if (ex is DiscordWebSocketException dwex)
+                    log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
+                else
+                    log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
 
                 await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
                     .ConfigureAwait(false);

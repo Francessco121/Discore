@@ -34,6 +34,7 @@ namespace Discore.Http
             return (T)DeserializeChannelData(data);
         }
 
+        #region Deprecated Modify* Methods
         /// <summary>
         /// Updates the settings of a text guild channel.
         /// </summary>
@@ -42,6 +43,7 @@ namespace Discore.Http
         /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
         /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use the ModifyTextChannel overload using a builder object instead.")]
         public Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
             string name = null, int? position = null, string topic = null)
         {
@@ -57,6 +59,7 @@ namespace Discore.Http
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use the ModifyVoiceChannel overload using a builder object instead.")]
         public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
             string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
         {
@@ -73,6 +76,7 @@ namespace Discore.Http
         /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
         /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Please use either ModifyTextChannel() or ModifyVoiceChannel() instead.")]
         public async Task<T> Modify<T>(Snowflake channelId,
             string name = null, int? position = null, 
             string topic = null,
@@ -89,6 +93,49 @@ namespace Discore.Http
             DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, 
                 "channels/channel").ConfigureAwait(false);
             return (T)DeserializeChannelData(returnData);            
+        }
+        #endregion
+
+        /// <summary>
+        /// Updates the settings of a guild text channel.
+        /// </summary>
+        /// <param name="textChannelId">The ID of the guild text channel to modify.</param>
+        /// <param name="parameters">A set of parameters to modify the channel with.</param>
+        /// <returns>Returns the updated guild text channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake textChannelId, 
+            GuildTextChannelParameters parameters)
+        {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Patch($"channels/{textChannelId}", requestData,
+                "channels/channel").ConfigureAwait(false);
+            return (DiscordGuildTextChannel)DeserializeChannelData(returnData);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild voice channel.
+        /// </summary>
+        /// <param name="voiceChannelId">The ID of the guild voice channel to modify.</param>
+        /// <param name="parameters">A set of parameters to modify the channel with.</param>
+        /// <returns>Returns the updated guild voice channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake voiceChannelId, 
+            GuildVoiceChannelParameters parameters)
+        {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Patch($"channels/{voiceChannelId}", requestData,
+                "channels/channel").ConfigureAwait(false);
+            return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData);
         }
 
         /// <summary>
@@ -209,9 +256,13 @@ namespace Discore.Http
         /// Posts a message to a text channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="details"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> CreateMessage(Snowflake channelId, DiscordMessageDetails details)
         {
+            if (details == null)
+                throw new ArgumentNullException(nameof(details));
+
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("content", details.Content);
             requestData.Set("tts", details.TextToSpeech);
@@ -265,10 +316,17 @@ namespace Discore.Http
         /// Uploads a file to a text channel with an optional message.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="fileData"/> is null, 
+        /// or if <paramref name="fileName"/> is null or only contains whitespace characters.
+        /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> UploadFile(Snowflake channelId, Stream fileData, string fileName, 
             DiscordMessageDetails details = null)
         {
+            if (fileData == null)
+                throw new ArgumentNullException(nameof(fileData));
+
             return UploadFile(channelId, new StreamContent(fileData), fileName, details);
         }
 
@@ -276,6 +334,9 @@ namespace Discore.Http
         /// Uploads a file to a text channel with an optional message.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="fileName"/> is null or only contains whitespace characters.
+        /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> UploadFile(Snowflake channelId, ArraySegment<byte> fileData, string fileName,
             DiscordMessageDetails details = null)
@@ -283,8 +344,13 @@ namespace Discore.Http
             return UploadFile(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, details);
         }
 
+        /// <exception cref="ArgumentNullException"></exception>
         async Task<DiscordMessage> UploadFile(Snowflake channelId, HttpContent fileContent, string fileName, DiscordMessageDetails details)
         {
+            if (string.IsNullOrWhiteSpace(fileName))
+                // Technically this is also handled when setting the field on the multipart form data
+                throw new ArgumentNullException(nameof(fileName));
+
             DiscordApiData returnData = await Rest.Send(() =>
             {
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
@@ -330,9 +396,13 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, DiscordMessageEdit editDetails)
         {
+            if (editDetails == null)
+                throw new ArgumentNullException(nameof(editDetails));
+
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("content", editDetails.Content);
 
@@ -362,10 +432,14 @@ namespace Discore.Http
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages,
             bool filterTooOldMessages = true)
         {
+            if (messages == null)
+                throw new ArgumentNullException(nameof(messages));
+
             List<Snowflake> msgIds = new List<Snowflake>();
             foreach (DiscordMessage msg in messages)
                 msgIds.Add(msg.Id);
@@ -379,10 +453,14 @@ namespace Discore.Http
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds, 
             bool filterTooOldMessages = true)
         {
+            if (messageIds == null)
+                throw new ArgumentNullException(nameof(messageIds));
+
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             DiscordApiData messages = requestData.Set("messages", new DiscordApiData(DiscordApiDataType.Array));
 
@@ -450,9 +528,13 @@ namespace Discore.Http
         /// Adds a reaction to a message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
+            if (emoji == null)
+                throw new ArgumentNullException(nameof(emoji));
+
             return (await Rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me", 
                 "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false)).IsNull;
         }
@@ -461,9 +543,13 @@ namespace Discore.Http
         /// Deletes a reaction the currently authenticated user has made for a message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteOwnReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
+            if (emoji == null)
+                throw new ArgumentNullException(nameof(emoji));
+
             return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
                 "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false)).IsNull;
         }
@@ -472,9 +558,13 @@ namespace Discore.Http
         /// Deletes a reaction posted by any user.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> DeleteUserReaction(Snowflake channelId, Snowflake messageId, Snowflake userId, DiscordReactionEmoji emoji)
         {
+            if (emoji == null)
+                throw new ArgumentNullException(nameof(emoji));
+
             return (await Rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}",
                 "channels/channel/messages/message/reactions/emoji/user").ConfigureAwait(false)).IsNull;
         }
@@ -482,9 +572,13 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all users who reacted to the specified message with the specified emoji.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordUser>> GetReactions(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
+            if (emoji == null)
+                throw new ArgumentNullException(nameof(emoji));
+
             DiscordApiData data = await Rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}",
                 "channels/channel/messages/message/reactions/emoji").ConfigureAwait(false);
 

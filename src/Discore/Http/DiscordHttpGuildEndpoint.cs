@@ -1,5 +1,6 @@
 ﻿using Discore.Http.Net;
 using Discore.Voice;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -25,9 +26,13 @@ namespace Discore.Http
         /// <summary>
         /// Changes the settings of a guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> Modify(Snowflake guildId, ModifyGuildParameters parameters)
         {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}", requestData, 
@@ -66,9 +71,13 @@ namespace Discore.Http
         /// <summary>
         /// Creates a new text or voice channel for a guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildChannel> CreateChannel(Snowflake guildId, CreateGuildChannelParameters parameters)
         {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/channels", 
@@ -79,10 +88,14 @@ namespace Discore.Http
         /// <summary>
         /// Changes the settings of a channel in a guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(Snowflake guildId, 
             IEnumerable<PositionParameters> positions)
         {
+            if (positions == null)
+                throw new ArgumentNullException(nameof(positions));
+
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Array);
             foreach (PositionParameters positionParam in positions)
                 requestData.Values.Add(positionParam.Build());
@@ -136,9 +149,13 @@ namespace Discore.Http
         /// Modifies the attributes of a guild member.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> ModifyMember(Snowflake guildId, Snowflake userId, ModifyGuildMemberParameters parameters)
         {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/members/{userId}", requestData, 
@@ -270,12 +287,34 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Creates a new role for a guild.
+        /// </summary>
+        /// <param name="parameters">A set of optional parameters to use when creating the role.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordRole> CreateRole(Snowflake guildId, CreateRoleParameters parameters)
+        {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
+            DiscordApiData requestData = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Post($"guilds/{guildId}/roles", requestData,
+                "guilds/guild/roles").ConfigureAwait(false);
+            return new DiscordRole(App, guildId, returnData);
+        }
+
+        /// <summary>
         /// Modifies the sorting positions of roles in a guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(Snowflake guildId, 
             IEnumerable<PositionParameters> positions)
         {
+            if (positions == null)
+                throw new ArgumentNullException(nameof(positions));
+
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Array);
             foreach (PositionParameters positionParam in positions)
                 requestData.Values.Add(positionParam.Build());
@@ -293,9 +332,13 @@ namespace Discore.Http
         /// <summary>
         /// Modifies the settings of a guild role.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordRole> ModifyRole(Snowflake guildId, Snowflake roleId, ModifyRoleParameters parameters)
         {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData, 
@@ -410,10 +453,14 @@ namespace Discore.Http
         /// Changes the attributes of a guild integration.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> ModifyIntegration(Snowflake guildId, Snowflake integrationId, 
             ModifyIntegrationParameters parameters)
         {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/integrations/{integrationId}", requestData,
@@ -459,9 +506,13 @@ namespace Discore.Http
         /// <summary>
         /// Modifies the properties of the embed for the specified guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildEmbed> ModifyEmbed(Snowflake guildId, ModifyGuildEmbedParameters parameters)
         {
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
+
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await Rest.Patch($"guilds/{guildId}/embed", requestData,

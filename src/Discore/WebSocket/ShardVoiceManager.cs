@@ -42,6 +42,7 @@ namespace Discore.WebSocket
         /// If a voice connection already exists for the given channel,
         /// a new connection is not created and the existing one is returned.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordPermissionException">
         /// Thrown if the current user does not have permission to connect to the voice channel.
         /// </exception>
@@ -50,6 +51,9 @@ namespace Discore.WebSocket
         /// </exception>
         public DiscordVoiceConnection CreateConnection(DiscordGuildVoiceChannel voiceChannel)
         {
+            if (voiceChannel == null)
+                throw new ArgumentNullException(nameof(voiceChannel));
+
             DiscordVoiceConnection connection;
             if (voiceConnections.TryGetValue(voiceChannel.GuildId, out connection))
             {

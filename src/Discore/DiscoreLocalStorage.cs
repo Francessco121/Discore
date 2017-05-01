@@ -48,7 +48,7 @@ namespace Discore
 
                     if (!DiscordApiData.TryParseJson(json, out data))
                     {
-                        log.LogWarning($"{FILE_NAME} contained invalid JSON, overwriting with a new file.");
+                        log.LogWarning($"{FILE_NAME} contained invalid JSON, overwriting with a new file...");
                         await CreateNewFileAsync().ConfigureAwait(false);
                     }
                 }

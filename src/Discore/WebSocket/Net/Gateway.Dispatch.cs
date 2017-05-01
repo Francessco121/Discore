@@ -54,6 +54,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildEventArgs> OnGuildUpdated;
         public event EventHandler<GuildEventArgs> OnGuildRemoved;
 
+        public event EventHandler<GuildEventArgs> OnGuildAvailable;
         public event EventHandler<GuildEventArgs> OnGuildUnavailable;
 
         public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
@@ -72,11 +73,14 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
         public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
 
+        public event EventHandler<ChannelPinsUpdateEventArgs> OnChannelPinsUpdated;
+
         public event EventHandler<MessageEventArgs> OnMessageCreated;
         public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
         public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
+        public event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
 
         public event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
 
@@ -157,7 +161,7 @@ namespace Discore.WebSocket.Net
             // Store authenticated user in cache for immediate use
             shard.User = cache.Users.Set(new DiscordUser(userData));
 
-            log.LogVerbose($"[Ready] user = {shard.User}");
+            log.LogInfo($"[Ready] user = {shard.User}");
 
             // Get session id
             sessionId = data.GetString("session_id");
@@ -197,6 +201,8 @@ namespace Discore.WebSocket.Net
         {
             Snowflake guildId = data.GetSnowflake("id").Value;
 
+            bool wasUnavailable = false;
+
             DiscoreGuildCache guildCache = cache.Guilds.Get(guildId);
             if (guildCache == null)
             {
@@ -206,7 +212,10 @@ namespace Discore.WebSocket.Net
                 cache.Guilds.Set(guildCache);
             }
             else
+            {
+                wasUnavailable = guildCache.Value.IsUnavailable;
                 guildCache.Value = new DiscordGuild(app, guildCache, data);
+            }
 
             guildCache.Clear();
 
@@ -274,7 +283,10 @@ namespace Discore.WebSocket.Net
                     memberCache.Presence = presence;
             }
 
-            OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
+            if (wasUnavailable)
+                OnGuildAvailable?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
+            else
+                OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, guildCache.Value));
         }
 
         [DispatchEvent("GUILD_UPDATE")]
@@ -703,6 +715,19 @@ namespace Discore.WebSocket.Net
                     throw new DiscoreCacheException($"Guild {guildId} was not in the cache!");
             }
         }
+
+        [DispatchEvent("CHANNEL_PINS_UPDATE")]
+        void HandleChannelPinsUpdateEvent(DiscordApiData data)
+        {
+            DateTime? lastPinTimestamp = data.GetDateTime("last_pin_timestamp");
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+
+            DiscordChannel channel;
+            if (cache.Channels.TryGetValue(channelId, out channel))
+                OnChannelPinsUpdated?.Invoke(this, new ChannelPinsUpdateEventArgs(shard, (ITextChannel)channel, lastPinTimestamp));
+            else
+                throw new DiscoreCacheException($"Channel {channelId} was not in the cache!");
+        }
         #endregion
 
         #region Message
@@ -830,6 +855,21 @@ namespace Discore.WebSocket.Net
             }
             else
                 throw new DiscoreCacheException($"User {userId} was not in the cache!");
+        }
+
+        [DispatchEvent("MESSAGE_REACTION_REMOVE_ALL")]
+        void HandleMessageReactionRemoveAllEvent(DiscordApiData data)
+        {
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            Snowflake messageId = data.GetSnowflake("message_id").Value;
+
+            ITextChannel textChannel = (ITextChannel)cache.Channels.Get(channelId);
+            if (textChannel != null)
+            {
+                OnMessageAllReactionsRemoved?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, textChannel));
+            }
+            else
+                throw new DiscoreCacheException($"Channel {channelId} was not in the cache!");
         }
         #endregion
 

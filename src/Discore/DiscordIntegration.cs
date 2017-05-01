@@ -90,8 +90,9 @@ namespace Discore
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
+        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
         public Task<bool> Modify(ModifyIntegrationParameters parameters)
         {
             if (!GuildId.HasValue)
@@ -105,8 +106,8 @@ namespace Discore
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
+        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
         public Task<bool> Delete()
         {
             if (!GuildId.HasValue)
@@ -120,8 +121,8 @@ namespace Discore
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
+        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
         public Task<bool> Sync()
         {
             if (!GuildId.HasValue)

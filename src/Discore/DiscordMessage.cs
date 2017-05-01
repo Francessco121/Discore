@@ -213,9 +213,15 @@ namespace Discore
         /// rather than the full message.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the ID's of each message do not match.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public static DiscordMessage Update(DiscordMessage message, DiscordMessage withPartial)
         {
+            if (message == null)
+                throw new ArgumentNullException(nameof(message));
+            if (withPartial == null)
+                throw new ArgumentNullException(nameof(withPartial));
+
             if (message.Id != withPartial.Id)
                 throw new ArgumentException("Cannot update one message with another. The message ID's must match.");
 
@@ -229,6 +235,7 @@ namespace Discore
         /// Adds a reaction to this message.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> AddReaction(DiscordReactionEmoji emoji)
         {
@@ -239,6 +246,7 @@ namespace Discore
         /// Removes a reaction from this message added from the current authenticated user.
         /// </summary>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
@@ -251,15 +259,33 @@ namespace Discore
         /// <param name="user">The user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
         /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+
             return channelsHttp.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
+        }
+
+        /// <summary>
+        /// Removes a reaction from this message.
+        /// </summary>
+        /// <param name="userId">The ID of the user who added the reacted.</param>
+        /// <param name="reactionEmoji"></param>
+        /// <returns>Returns whether the operation was successful.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<bool> RemoveReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
+        {
+            return channelsHttp.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
         }
 
         /// <summary>
         /// Gets all users who reacted with the specified emoji to this message.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
@@ -311,6 +337,7 @@ namespace Discore
         /// Note: changes will not be reflected in this message instance.
         /// </summary>
         /// <returns>Returns the editted message.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Edit(DiscordMessageEdit editDetails)
         {

@@ -116,6 +116,17 @@ namespace Discore.WebSocket
         }
     }
 
+    public class GuildEventArgs : DiscordGatewayEventArgs
+    {
+        public DiscordGuild Guild { get; }
+
+        public GuildEventArgs(Shard shard, DiscordGuild guild)
+            : base(shard)
+        {
+            Guild = guild;
+        }
+    }
+
     public class GuildChannelEventArgs : DiscordGatewayEventArgs
     {
         public DiscordGuildChannel Channel { get; }
@@ -127,14 +138,19 @@ namespace Discore.WebSocket
         }
     }
 
-    public class GuildEventArgs : DiscordGatewayEventArgs
+    public class ChannelPinsUpdateEventArgs : DiscordGatewayEventArgs
     {
-        public DiscordGuild Guild { get; }
+        public ITextChannel Channel { get; }
+        /// <summary>
+        /// Gets the date-time of the newest pin as of this update (or null if there is no longer any pins).
+        /// </summary>
+        public DateTime? LastPinTimestamp { get; }
 
-        public GuildEventArgs(Shard shard, DiscordGuild guild)
+        public ChannelPinsUpdateEventArgs(Shard shard, ITextChannel channel, DateTime? lastPinTimestamp)
             : base(shard)
         {
-            Guild = guild;
+            Channel = channel;
+            LastPinTimestamp = lastPinTimestamp;
         }
     }
 
@@ -188,6 +204,19 @@ namespace Discore.WebSocket
             Channel = channel;
             User = user;
             Emoji = emoji;
+        }
+    }
+
+    public class MessageReactionRemoveAllEventArgs : DiscordGatewayEventArgs
+    {
+        public Snowflake MessageId { get; }
+        public ITextChannel TextChannel { get; }
+
+        public MessageReactionRemoveAllEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel)
+            : base(shard)
+        {
+            MessageId = messageId;
+            TextChannel = textChannel;
         }
     }
 

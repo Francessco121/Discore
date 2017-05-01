@@ -18,9 +18,11 @@ namespace Discore.Http
 
         /// <param name="authenticator">The method of authentication used by the application.</param>
         /// <param name="httpApiSettings">The initial settings for the HTTP API. Uses the default settings if left null.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="authenticator"/> is null.</exception>
         public DiscordHttpApplication(IDiscordAuthenticator authenticator, InitialHttpApiSettings httpApiSettings = null)
         {
-            Authenticator = authenticator;
+            Authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
+
             HttpApi = new DiscordHttpApi(this, httpApiSettings ?? new InitialHttpApiSettings());
         }
 

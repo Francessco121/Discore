@@ -1,4 +1,5 @@
 ﻿using Discore.Http;
+using System;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -66,6 +67,7 @@ namespace Discore
         /// <summary>
         /// Modifies the settings of this role.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
         {
@@ -84,20 +86,6 @@ namespace Discore
         public override string ToString()
         {
             return Name;
-        }
-
-        internal DiscordApiData Serialize()
-        {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("name", Name);
-            data.Set("hoist", IsHoisted);
-            data.Set("position", Position);
-            data.Set("managed", IsManaged);
-            data.Set("mentionable", IsMentionable);
-            data.Set("color", Color.ToHexadecimal());
-            data.Set("permissions", (long)Permissions);
-
-            return data;
         }
     }
 }

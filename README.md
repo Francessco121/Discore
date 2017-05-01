@@ -20,9 +20,8 @@ The project can be built with [Visual Studio 2017](https://www.visualstudio.com/
 ## Example Bot: Ping Pong
 ```csharp
 using Discore;
+using Discore.Http;
 using Discore.WebSocket;
-using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DiscorePingPong
@@ -34,7 +33,7 @@ namespace DiscorePingPong
             Program program = new Program();
             program.Run().Wait();
         }
-		
+
         public async Task Run()
         {
             // Create authenticator using a bot user token.
@@ -45,7 +44,7 @@ namespace DiscorePingPong
 
             // Create and start a single shard.
             Shard shard = app.ShardManager.CreateSingleShard();
-            await shard.StartAsync(CancellationToken.None);
+            await shard.StartAsync();
 
             // Subscribe to the message creation event.
             shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
@@ -72,9 +71,9 @@ namespace DiscorePingPong
                 try
                 {
                     // Reply to the user who posted "!ping".
-                    await textChannel.CreateMessage($"<@{message.Author.Id}> Pong!");
+                    await textChannel.CreateMessage($"<@!{message.Author.Id}> Pong!");
                 }
-                catch (Exception) {  /* Message failed to send... :( */ }
+                catch (DiscordHttpApiException) { /* Message failed to send... :( */ }
             }
         }
     }

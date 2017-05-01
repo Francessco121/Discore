@@ -83,15 +83,26 @@ namespace Discore.WebSocket.Net
         {
             // Resume
             log.LogInfo("[Reconnect] Performing resume...");
-            OnReconnectionRequired?.Invoke(this, false);
+            OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false));
         }
 
         [Payload(GatewayOPCode.InvalidSession)]
         void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
         {
-            // Start new session
-            log.LogInfo("[InvalidSession] Reconnecting...");
-            OnReconnectionRequired?.Invoke(this, true);
+            bool isResumable = data.ToBoolean().Value;
+
+            if (isResumable)
+            {
+                // Resume
+                log.LogInfo("[InvalidSession] Resuming...");
+                OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(false, 5000));
+            }
+            else
+            {
+                // Start new session
+                log.LogInfo("[InvalidSession] Starting new session...");
+                OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true, 5000));
+            }
         }
         #endregion
 
