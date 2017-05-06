@@ -633,7 +633,7 @@ namespace Discore.Http
             TimeSpan? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            if (maxAge.HasValue) requestData.Set("max_age", maxAge.Value);
+            if (maxAge.HasValue) requestData.Set("max_age", maxAge.Value.Seconds);
             if (maxUses.HasValue) requestData.Set("max_uses", maxUses.Value);
             if (temporary.HasValue) requestData.Set("temporary", temporary.Value);
             if (unique.HasValue) requestData.Set("unique", unique.Value);
