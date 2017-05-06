@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 
 namespace Discore.Http
 {
@@ -17,10 +18,23 @@ namespace Discore.Http
         public HttpStatusCode HttpStatusCode { get; }
 
         internal DiscordHttpApiException(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
-            : base($"{message} ({errorCode})({(int)errorCode})")
+            : base(CreateExceptionMessage(message, errorCode, httpCode))
         {
             ErrorCode = errorCode;
             HttpStatusCode = httpCode;
+        }
+
+        static string CreateExceptionMessage(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(message);
+
+            if (errorCode == DiscordHttpErrorCode.None)
+                sb.Append($" ({httpCode}({(int)httpCode})");
+            else
+                sb.Append($" ({errorCode}({(int)errorCode})");
+
+            return sb.ToString();
         }
     }
 }

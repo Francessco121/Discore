@@ -8,6 +8,7 @@
     {
         None = 0,
 
+        BadRequest = 400,
         TooManyRequests = 429,
 
         UnknownAccount = 10001,

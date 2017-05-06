@@ -96,6 +96,29 @@ namespace Discore.Http.Net
 
                         throw new DiscordHttpApiException(sb.ToString(), DiscordHttpErrorCode.None, response.StatusCode);
                     }
+                    else if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        foreach (KeyValuePair<string, DiscordApiData> pair in data.Entries)
+                        {
+                            sb.Append($"{pair.Key}: ");
+
+                            bool addComma = false;
+                            foreach (DiscordApiData errorData in pair.Value.Values)
+                            {
+                                if (addComma)
+                                    sb.Append(", ");
+
+                                sb.Append(errorData.ToString());
+
+                                addComma = true;
+                            }
+
+                            sb.AppendLine();
+                        }
+
+                        throw new DiscordHttpApiException(sb.ToString(), DiscordHttpErrorCode.BadRequest, response.StatusCode);
+                    }
                     else
                     {
                         long code = data.GetInt64("code") ?? 0;
