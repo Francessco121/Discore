@@ -138,8 +138,10 @@ namespace Discore.Http
             
             if (Type == DiscordGuildChannelType.Voice)
             {
-                data.Set("bitrate", bitrate);
-                data.Set("userlimit", userlimit);
+                if (bitrate.HasValue)
+                    data.Set("bitrate", bitrate.Value);
+                if (userlimit.HasValue)
+                    data.Set("userlimit", userlimit.Value);
             }
             else if (Type == DiscordGuildChannelType.Text)
             {
@@ -147,14 +149,14 @@ namespace Discore.Http
                     data.Set("topic", topic);
             }
 
-            DiscordApiData permissionOverwritesArray = new DiscordApiData(DiscordApiDataType.Array);
             if (PermissionOverwrites != null)
             {
+                DiscordApiData permissionOverwritesArray = new DiscordApiData(DiscordApiDataType.Array);
                 foreach (OverwriteParameters overwriteParam in PermissionOverwrites)
                     permissionOverwritesArray.Values.Add(overwriteParam.Build());
-            }
 
-            data.Set("permission_overwrites", permissionOverwritesArray);
+                data.Set("permission_overwrites", permissionOverwritesArray);
+            }
 
             return data;
         }
