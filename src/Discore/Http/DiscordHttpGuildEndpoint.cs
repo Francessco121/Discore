@@ -24,6 +24,20 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Creates a new guild.
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuild> Create(CreateGuildParameters parameters)
+        {
+            DiscordApiData requestdata = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Post("guilds", requestdata,
+                "guilds").ConfigureAwait(false);
+
+            return new DiscordGuild(App, returnData);
+        }
+
+        /// <summary>
         /// Changes the settings of a guild.
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
