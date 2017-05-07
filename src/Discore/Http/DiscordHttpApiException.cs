@@ -27,12 +27,13 @@ namespace Discore.Http
         static string CreateExceptionMessage(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append(message);
 
             if (errorCode == DiscordHttpErrorCode.None)
-                sb.Append($" ({httpCode}({(int)httpCode})");
+                sb.Append($"{httpCode}({(int)httpCode}): ");
             else
-                sb.Append($" ({errorCode}({(int)errorCode})");
+                sb.Append($"{errorCode}({(int)errorCode}): ");
+
+            sb.Append(message);
 
             return sb.ToString();
         }
