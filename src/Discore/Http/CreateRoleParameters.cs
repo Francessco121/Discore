@@ -86,8 +86,11 @@
             if (Color.HasValue)
                 data.Set("color", Color.Value.ToHexadecimal());
 
-            data.Set("hoist", IsHoisted);
-            data.Set("mentionable", IsMentionable);
+            if (IsHoisted.HasValue)
+                data.Set("hoist", IsHoisted);
+
+            if (IsMentionable.HasValue)
+                data.Set("mentionable", IsMentionable);
 
             return data;
         }
