@@ -25,7 +25,7 @@ namespace Discore
         /// <summary>
         /// Gets the ids of all of the roles this member has.
         /// </summary>
-        public IReadOnlyCollection<Snowflake> RoleIds { get; private set; }
+        public IReadOnlyList<Snowflake> RoleIds { get; private set; }
 
         /// <summary>
         /// Gets the time this member joined the guild.
