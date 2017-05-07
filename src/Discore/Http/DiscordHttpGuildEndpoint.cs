@@ -59,11 +59,10 @@ namespace Discore.Http
         /// Authenticated user must be the owner.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuild> Delete(Snowflake guildId)
+        public async Task Delete(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}", 
+            await Rest.Delete($"guilds/{guildId}", 
                 "guilds/guild").ConfigureAwait(false);
-            return new DiscordGuild(App, data);
         }
 
         /// <summary>
