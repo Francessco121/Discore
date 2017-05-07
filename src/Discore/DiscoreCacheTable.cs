@@ -62,8 +62,8 @@ namespace Discore
 
         public int Count => table.Count;
 
-        bool ICollection<T>.IsReadOnly => throw new NotSupportedException();
-        bool ICollection<KeyValuePair<Snowflake, T>>.IsReadOnly => throw new NotSupportedException();
+        bool ICollection<T>.IsReadOnly => true;
+        bool ICollection<KeyValuePair<Snowflake, T>>.IsReadOnly => true;
 
         IEnumerable<Snowflake> IReadOnlyDictionary<Snowflake, T>.Keys => Keys;
         IEnumerable<T> IReadOnlyDictionary<Snowflake, T>.Values => Values;
@@ -242,7 +242,7 @@ namespace Discore
                     entries[i++] = new KeyValuePair<Snowflake, T>((Snowflake)entry.Key, (T)entry.Value);
             }
 
-            return entries.GetEnumerator();
+            return ((IList<KeyValuePair<Snowflake, T>>)entries).GetEnumerator();
         }
 
         #region Unsupported Methods
@@ -268,7 +268,7 @@ namespace Discore
 
         IEnumerator<KeyValuePair<Snowflake, T>> IEnumerable<KeyValuePair<Snowflake, T>>.GetEnumerator()
         {
-            throw new NotSupportedException();
+            return (IEnumerator<KeyValuePair<Snowflake, T>>)GetEnumerator();
         }
 
         void IDictionary<Snowflake, T>.Add(Snowflake key, T value)
