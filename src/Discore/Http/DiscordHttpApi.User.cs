@@ -97,20 +97,5 @@ namespace Discore.Http
                 "users/@me/channels").ConfigureAwait(false);
             return new DiscordDMChannel(app, returnData);
         }
-
-        /// <summary>
-        /// Gets a list of connections for the current authenticated user.
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordConnection[]> GetCurrentUserConnections()
-        {
-            DiscordApiData data = await rest.Get("users/@me/connections", "users/@me/connections").ConfigureAwait(false);
-            DiscordConnection[] connections = new DiscordConnection[data.Values.Count];
-
-            for (int i = 0; i < connections.Length; i++)
-                connections[i] = new DiscordConnection(app, data.Values[i]);
-
-            return connections;
-        }
     }
 }
