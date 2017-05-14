@@ -72,24 +72,6 @@ namespace Discore
         public int MFALevel { get; }
 
         /// <summary>
-        /// Gets the number of members in this guild (if information is available).
-        /// </summary>
-        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
-        public int? MemberCount { get; }
-
-        /// <summary>
-        /// Gets the date-time that the current authenticated user joined this guild (if information is available).
-        /// </summary>
-        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
-        public DateTime? JoinedAt { get; }
-
-        /// <summary>
-        /// Gets whether this guild is considered large (if information is available).
-        /// </summary>
-        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
-        public bool? IsLarge { get;  }
-
-        /// <summary>
         /// Gets whether this guild is unavailable (if information is available).
         /// </summary>
         public bool IsUnavailable { get; private set; }
@@ -120,15 +102,6 @@ namespace Discore
             : this(app, data, true)
         {
             this.guildCache = guildCache;
-
-            DiscordGuild existing = guildCache.Value;
-            if (existing != null)
-            {
-                // Default to previous data if we didn't deserialize it in the new one.
-                JoinedAt = JoinedAt ?? existing.JoinedAt;
-                IsLarge = IsLarge ?? existing.IsLarge;
-                MemberCount = MemberCount ?? existing.MemberCount;
-            }
         }
 
         internal DiscordGuild(IDiscordApplication app, DiscordApiData data)
@@ -144,7 +117,6 @@ namespace Discore
             if (IsUnavailable)
                 return;
 
-            // Always available
             Name                        = data.GetString("name");
             Icon                        = data.GetString("icon");
             Splash                      = data.GetString("splash");
@@ -157,11 +129,6 @@ namespace Discore
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
-
-            // Only available in GUILD_CREATE
-            MemberCount                 = data.GetInteger("member_count");
-            JoinedAt                    = data.GetDateTime("joined_at");
-            IsLarge                     = data.GetBoolean("large");
 
             // Get features
             IList<DiscordApiData> featuresData = data.GetArray("features");
