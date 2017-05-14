@@ -54,7 +54,7 @@ namespace Discore
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpApi http;
 
         internal DiscordIntegration(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
             : this(app, data)
@@ -65,7 +65,7 @@ namespace Discore
         internal DiscordIntegration(IDiscordApplication app, DiscordApiData data)
             : base(data)
         {
-            guildsHttp = app.HttpApi.Guilds;
+            http = app.HttpApi;
 
             Name = data.GetString("name");
             Type = data.GetString("type");
@@ -98,7 +98,7 @@ namespace Discore
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return guildsHttp.ModifyIntegration(GuildId.Value, Id, parameters);
+            return http.ModifyGuildIntegration(GuildId.Value, Id, parameters);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Discore
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return guildsHttp.DeleteIntegration(GuildId.Value, Id);
+            return http.DeleteGuildIntegration(GuildId.Value, Id);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Discore
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return guildsHttp.SyncIntegration(GuildId.Value, Id);
+            return http.SyncGuildIntegration(GuildId.Value, Id);
         }
 
         public override string ToString()

@@ -56,7 +56,7 @@ namespace Discore.WebSocket
         {
             int numShards;
 
-            GatewayBotResponse response = await app.HttpApi.Gateway.GetBot().ConfigureAwait(false);
+            GatewayBotResponse response = await app.HttpApi.GetBot().ConfigureAwait(false);
             numShards = response.Shards;
 
             // GET /gateway/bot also specifies the gateway url, update local storage

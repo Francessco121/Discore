@@ -16,12 +16,12 @@ namespace Discore
         /// </summary>
         public int UserLimit { get; }
 
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpApi http;
 
         internal DiscordGuildVoiceChannel(IDiscordApplication app, DiscordApiData data, Snowflake? guildId = null)
             : base(app, data, DiscordGuildChannelType.Voice, guildId)
         {
-            channelsHttp = app.HttpApi.Channels;
+            http = app.HttpApi;
 
             Bitrate = data.GetInteger("bitrate").Value;
             UserLimit = data.GetInteger("user_limit").Value;
@@ -36,7 +36,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildVoiceChannel> Modify(GuildVoiceChannelParameters parameters)
         {
-            return channelsHttp.ModifyVoiceChannel(Id, parameters);
+            return http.ModifyVoiceChannel(Id, parameters);
         }
     }
 }

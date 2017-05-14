@@ -322,7 +322,7 @@ namespace Discore.WebSocket.Net
         {
             DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
 
-            string gatewayUrl = await app.HttpApi.Gateway.Get().ConfigureAwait(false);
+            string gatewayUrl = await app.HttpApi.Get().ConfigureAwait(false);
 
             if (localStorage.GatewayUrl != gatewayUrl)
             {

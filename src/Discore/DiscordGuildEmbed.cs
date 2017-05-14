@@ -18,11 +18,11 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpApi http;
 
         internal DiscordGuildEmbed(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
         {
-            guildsHttp = app.HttpApi.Guilds;
+            http = app.HttpApi;
 
             GuildId = guildId;
 
@@ -36,7 +36,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
         {
-            return guildsHttp.ModifyEmbed(GuildId, parameters);
+            return http.ModifyGuildEmbed(GuildId, parameters);
         }
     }
 }

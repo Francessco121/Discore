@@ -42,12 +42,12 @@ namespace Discore
         /// </summary>
         public bool IsMentionable { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpApi http;
 
         internal DiscordRole(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
             : base(data)
         {
-            guildsHttp = app.HttpApi.Guilds;
+            http = app.HttpApi;
 
             GuildId = guildId;
 
@@ -71,7 +71,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
         {
-            return guildsHttp.ModifyRole(GuildId, Id, parameters);
+            return http.ModifyGuildRole(GuildId, Id, parameters);
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Delete()
         {
-            return guildsHttp.DeleteRole(GuildId, Id);
+            return http.DeleteGuildRole(GuildId, Id);
         }
 
         public override string ToString()

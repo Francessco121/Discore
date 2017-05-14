@@ -39,12 +39,12 @@ namespace Discore
         /// </summary>
         public bool HasToken => !string.IsNullOrWhiteSpace(Token);
 
-        DiscordHttpWebhookEndpoint webhookHttp;
+        DiscordHttpApi http;
 
         internal DiscordWebhook(IDiscordApplication app, DiscordApiData data)
             : base(data)
         {
-            webhookHttp = app.HttpApi.Webhooks;
+            http = app.HttpApi;
 
             GuildId = data.GetSnowflake("guild_id").Value;
             ChannelId = data.GetSnowflake("channel_id").Value;
@@ -64,7 +64,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> Modify(string name = null, DiscordAvatarData avatar = null)
         {
-            return webhookHttp.Modify(Id, name, avatar);
+            return http.ModifyWebook(Id, name, avatar);
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Delete()
         {
-            return webhookHttp.Delete(Id);
+            return http.DeleteWebook(Id);
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeleteWithToken(string token)
         {
-            return webhookHttp.DeleteWithToken(Id, token);
+            return http.DeleteWebookWithToken(Id, token);
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Discore
         public Task<DiscordMessage> Execute(string token, ExecuteWebhookParameters parameters,
             bool waitAndReturnMessage = false)
         {
-            return webhookHttp.Execute(Id, token, parameters, waitAndReturnMessage);
+            return http.ExecuteWebook(Id, token, parameters, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Discore
         public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
             ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
         {
-            return webhookHttp.Execute(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
+            return http.ExecuteWebook(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace Discore
         public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
         {
-            return webhookHttp.Execute(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
+            return http.ExecuteWebook(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
         }
     }
 }

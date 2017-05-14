@@ -14,16 +14,14 @@ namespace Discore
         public string Topic { get; }
 
         IDiscordApplication app;
-        DiscordHttpChannelEndpoint channelsHttp;
-        DiscordHttpWebhookEndpoint webhookHttp;
+        DiscordHttpApi http;
         Snowflake lastMessageId;
 
         internal DiscordGuildTextChannel(IDiscordApplication app, DiscordApiData data, Snowflake? guildId = null)
             : base(app, data, DiscordGuildChannelType.Text, guildId)
         {
             this.app = app;
-            channelsHttp = app.HttpApi.Channels;
-            webhookHttp = app.HttpApi.Webhooks;
+            http = app.HttpApi;
 
             Topic = data.GetString("topic");
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
@@ -35,7 +33,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
         {
-            return webhookHttp.GetChannelWebhooks(Id);
+            return http.GetChannelWebhooks(Id);
         }
 
         /// <summary>
@@ -69,7 +67,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildTextChannel> Modify(GuildTextChannelParameters parameters)
         {
-            return channelsHttp.ModifyTextChannel(Id, parameters);
+            return http.ModifyTextChannel(Id, parameters);
         }
 
         /// <summary>
@@ -80,7 +78,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(string content)
         {
-            return channelsHttp.CreateMessage(Id, content);
+            return http.CreateMessage(Id, content);
         }
 
         /// <summary>
@@ -92,7 +90,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(DiscordMessageDetails details)
         {
-            return channelsHttp.CreateMessage(Id, details);
+            return http.CreateMessage(Id, details);
         }
 
         /// <summary>
@@ -106,7 +104,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null)
         {
-            return channelsHttp.UploadFile(Id, fileData, fileName, details);
+            return http.CreateMessage(Id, fileData, fileName, details);
         }
         /// <summary>
         /// Uploads a file with an optional message to this channel.
@@ -119,7 +117,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> UploadFile(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
         {
-            return channelsHttp.UploadFile(Id, fileData, fileName, details);
+            return http.CreateMessage(Id, fileData, fileName, details);
         }
 
         /// <summary>
@@ -133,7 +131,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
         {
-            return channelsHttp.BulkDeleteMessages(Id, messages, filterTooOldMessages);
+            return http.BulkDeleteMessages(Id, messages, filterTooOldMessages);
         }
 
         /// <summary>
@@ -147,7 +145,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
         {
-            return channelsHttp.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
+            return http.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
         }
 
         /// <summary>
@@ -157,7 +155,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> TriggerTypingIndicator()
         {
-            return channelsHttp.TriggerTypingIndicator(Id);
+            return http.TriggerTypingIndicator(Id);
         }
 
         /// <summary>
@@ -166,7 +164,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages()
         {
-            return channelsHttp.GetPinnedMessages(Id);
+            return http.GetPinnedMessages(Id);
         }
 
         /// <summary>
@@ -175,7 +173,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> GetMessage(Snowflake messageId)
         {
-            return channelsHttp.GetMessage(Id, messageId);
+            return http.GetChannelMessage(Id, messageId);
         }
 
         /// <summary>
@@ -188,7 +186,7 @@ namespace Discore
         public Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null,
             DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
         {
-            return channelsHttp.GetMessages(Id, baseMessageId, limit, getStrategy);
+            return http.GetChannelMessages(Id, baseMessageId, limit, getStrategy);
         }
     }
 }

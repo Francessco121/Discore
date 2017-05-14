@@ -13,13 +13,13 @@ namespace Discore
         /// </summary>
         public DiscordChannelType ChannelType { get; }
 
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpApi http;
 
         internal DiscordChannel(IDiscordApplication app, DiscordApiData data, DiscordChannelType type)
             : base(data)
         {
             ChannelType = type;
-            channelsHttp = app.HttpApi.Channels;
+            http = app.HttpApi;
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> Delete()
         {
-            return channelsHttp.Delete(Id);
+            return http.DeleteChannel(Id);
         }
     }
 }

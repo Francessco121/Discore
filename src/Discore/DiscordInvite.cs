@@ -20,11 +20,11 @@ namespace Discore
         /// </summary>
         public DiscordInviteChannel Channel { get; }
 
-        DiscordHttpInviteEndpoint invitesHttp;
+        DiscordHttpApi http;
 
         internal DiscordInvite(IDiscordApplication app, DiscordApiData data)
         {
-            invitesHttp = app.HttpApi.Invites;
+            http = app.HttpApi;
 
             Code = data.GetString("code");
 
@@ -43,17 +43,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> Delete()
         {
-            return invitesHttp.Delete(Code);
-        }
-
-        /// <summary>
-        /// Accepts this invite.
-        /// Note: This does not work for bot accounts.
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordInvite> Accept()
-        {
-            return invitesHttp.Accept(Code);
+            return http.DeleteInvite(Code);
         }
     }
 }

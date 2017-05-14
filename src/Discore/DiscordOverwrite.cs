@@ -24,12 +24,12 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpApi http;
 
         internal DiscordOverwrite(IDiscordApplication app, Snowflake channelId, DiscordApiData data)
             : base(data)
         {
-            channelsHttp = app.HttpApi.Channels;
+            http = app.HttpApi;
 
             ChannelId = channelId;
 
@@ -53,7 +53,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Edit(DiscordPermission allow, DiscordPermission deny)
         {
-            return channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
+            return http.EditChannelPermissions(ChannelId, Id, allow, deny, Type);
         }
 
         /// <summary>
@@ -64,7 +64,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Delete()
         {
-            return channelsHttp.DeletePermission(ChannelId, Id);
+            return http.DeleteChannelPermission(ChannelId, Id);
         }
 
         public override string ToString()

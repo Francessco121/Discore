@@ -1,21 +1,19 @@
-﻿using Discore.Http.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    public sealed class DiscordHttpUserEndpoint : DiscordHttpApiEndpoint
+    partial class DiscordHttpApi
     {
-        internal DiscordHttpUserEndpoint(IDiscordApplication app, RestClient rest)
-            : base(app, rest)
-        { }
-
         /// <summary>
         /// Gets the user of the current authenticated account for this application.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetCurrentUser()
         {
-            DiscordApiData data = await Rest.Get("users/@me", "users/@me").ConfigureAwait(false);
+            DiscordApiData data = await rest.Get("users/@me", "users/@me").ConfigureAwait(false);
             return new DiscordUser(data);
         }
 
@@ -23,9 +21,9 @@ namespace Discore.Http
         /// Gets a user by their ID.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordUser> Get(Snowflake id)
+        public async Task<DiscordUser> GetUser(Snowflake id)
         {
-            DiscordApiData data = await Rest.Get($"users/{id}", "users/user").ConfigureAwait(false);
+            DiscordApiData data = await rest.Get($"users/{id}", "users/user").ConfigureAwait(false);
             return new DiscordUser(data);
         }
 
@@ -42,7 +40,7 @@ namespace Discore.Http
             if (avatar != null)
                 requestData.Set("avatar", avatar.ToDataUriScheme());
 
-            DiscordApiData returnData = await Rest.Patch("users/@me", requestData, "users/@me").ConfigureAwait(false);
+            DiscordApiData returnData = await rest.Patch("users/@me", requestData, "users/@me").ConfigureAwait(false);
             return returnData.IsNull ? null : new DiscordUser(returnData);
         }
 
@@ -52,7 +50,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUserGuild[]> GetCurrentUserGuilds()
         {
-            DiscordApiData data = await Rest.Get($"users/@me/guilds", "users/@me/guilds").ConfigureAwait(false);
+            DiscordApiData data = await rest.Get($"users/@me/guilds", "users/@me/guilds").ConfigureAwait(false);
             DiscordUserGuild[] guilds = new DiscordUserGuild[data.Values.Count];
 
             for (int i = 0; i < guilds.Length; i++)
@@ -68,7 +66,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<bool> LeaveGuild(Snowflake guildId)
         {
-            return (await Rest.Delete($"users/@me/guilds/{guildId}", "users/@me/guilds/guild").ConfigureAwait(false)).IsNull;
+            return (await rest.Delete($"users/@me/guilds/{guildId}", "users/@me/guilds/guild").ConfigureAwait(false)).IsNull;
         }
 
         /// <summary>
@@ -76,13 +74,13 @@ namespace Discore.Http
         /// <para>Note: This will always return an empty list for bot accounts.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordDMChannel[]> GetCurrentUserDMs()
+        public async Task<DiscordDMChannel[]> GetUserDMs()
         {
-            DiscordApiData data = await Rest.Get("users/@me/channels", "users/@me/channels").ConfigureAwait(false);
+            DiscordApiData data = await rest.Get("users/@me/channels", "users/@me/channels").ConfigureAwait(false);
             DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
 
             for (int i = 0; i < dms.Length; i++)
-                dms[i] = new DiscordDMChannel(App, data.Values[i]);
+                dms[i] = new DiscordDMChannel(app, data.Values[i]);
 
             return dms;
         }
@@ -96,9 +94,9 @@ namespace Discore.Http
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("recipient_id", recipientId);
 
-            DiscordApiData returnData = await Rest.Post("users/@me/channels", requestData, 
+            DiscordApiData returnData = await rest.Post("users/@me/channels", requestData,
                 "users/@me/channels").ConfigureAwait(false);
-            return new DiscordDMChannel(App, returnData);
+            return new DiscordDMChannel(app, returnData);
         }
 
         /// <summary>
@@ -107,11 +105,11 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordConnection[]> GetCurrentUserConnections()
         {
-            DiscordApiData data = await Rest.Get("users/@me/connections", "users/@me/connections").ConfigureAwait(false);
+            DiscordApiData data = await rest.Get("users/@me/connections", "users/@me/connections").ConfigureAwait(false);
             DiscordConnection[] connections = new DiscordConnection[data.Values.Count];
 
             for (int i = 0; i < connections.Length; i++)
-                connections[i] = new DiscordConnection(App, data.Values[i]);
+                connections[i] = new DiscordConnection(app, data.Values[i]);
 
             return connections;
         }

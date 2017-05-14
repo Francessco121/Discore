@@ -84,7 +84,7 @@ namespace Discore
         public Snowflake? WebhookId { get; }
 
         IDiscordApplication app;
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpApi http;
 
         DiscoreCache cache;
         DiscordUser author;
@@ -111,7 +111,7 @@ namespace Discore
             this.app = app;
             this.isWebSocket = isWebSocket;
             originalData = data;
-            channelsHttp = app.HttpApi.Channels;
+            http = app.HttpApi;
 
             Content         = data.GetString("content");
             Timestamp       = data.GetDateTime("timestamp").GetValueOrDefault();
@@ -239,7 +239,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> AddReaction(DiscordReactionEmoji emoji)
         {
-            return channelsHttp.CreateReaction(ChannelId, Id, emoji);
+            return http.CreateReaction(ChannelId, Id, emoji);
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
-            return channelsHttp.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
+            return http.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace Discore
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            return channelsHttp.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
+            return http.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
         }
 
         /// <summary>
@@ -279,7 +279,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
         {
-            return channelsHttp.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
+            return http.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
         }
 
         /// <summary>
@@ -289,7 +289,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
         {
-            return channelsHttp.GetReactions(ChannelId, Id, reactionEmoji);
+            return http.GetReactions(ChannelId, Id, reactionEmoji);
         }
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteAllReactions()
         {
-            return channelsHttp.DeleteAllReactions(ChannelId, Id);
+            return http.DeleteAllReactions(ChannelId, Id);
         }
 
         /// <summary>
@@ -308,7 +308,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Pin()
         {
-            return channelsHttp.AddPinnedMessage(ChannelId, Id);
+            return http.AddPinnedChannelMessage(ChannelId, Id);
         }
 
         /// <summary>
@@ -318,7 +318,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Unpin()
         {
-            return channelsHttp.DeletePinnedMessage(ChannelId, Id);
+            return http.DeletePinnedChannelMessage(ChannelId, Id);
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Edit(string newContent)
         {
-            return channelsHttp.EditMessage(ChannelId, Id, newContent);
+            return http.EditMessage(ChannelId, Id, newContent);
         }
 
         /// <summary>
@@ -341,7 +341,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Edit(DiscordMessageEdit editDetails)
         {
-            return channelsHttp.EditMessage(ChannelId, Id, editDetails);
+            return http.EditMessage(ChannelId, Id, editDetails);
         }
 
         /// <summary>
@@ -350,7 +350,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Delete()
         {
-            return channelsHttp.DeleteMessage(ChannelId, Id);
+            return http.DeleteMessage(ChannelId, Id);
         }
     }
 }

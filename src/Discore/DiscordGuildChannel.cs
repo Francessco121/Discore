@@ -32,13 +32,13 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpApi http;
 
         internal DiscordGuildChannel(IDiscordApplication app, DiscordApiData data, DiscordGuildChannelType type, 
             Snowflake? guildId) 
             : base(app, data, DiscordChannelType.Guild)
         {
-            channelsHttp = app.HttpApi.Channels;
+            http = app.HttpApi;
 
             GuildChannelType = type;
 
@@ -64,7 +64,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
         {
-            return channelsHttp.GetInvites(Id);
+            return http.GetChannelInvites(Id);
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Discore
         public Task<DiscordInvite> CreateInvite(TimeSpan? maxAge = null, int? maxUses = null, 
             bool? temporary = null, bool? unique = null)
         {
-            return channelsHttp.CreateInvite(Id, maxAge, maxUses, temporary, unique);
+            return http.CreateChannelInvite(Id, maxAge, maxUses, temporary, unique);
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ namespace Discore
         public Task<bool> EditPermissions(Snowflake memberOrRoleId, DiscordOverwriteType overwriteType, 
             DiscordPermission allow, DiscordPermission deny)
         {
-            return channelsHttp.EditPermissions(Id, memberOrRoleId, allow, deny, overwriteType);
+            return http.EditChannelPermissions(Id, memberOrRoleId, allow, deny, overwriteType);
         }
 
         /// <summary>
@@ -179,7 +179,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> DeletePermission(Snowflake memberOrRoleId)
         {
-            return channelsHttp.DeletePermission(Id, memberOrRoleId);
+            return http.DeleteChannelPermission(Id, memberOrRoleId);
         }
 
         public override string ToString()

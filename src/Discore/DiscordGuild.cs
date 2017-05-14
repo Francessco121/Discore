@@ -110,8 +110,7 @@ namespace Discore
             get { return guildCache != null ? guildCache.Emojis : emojis; }
         }
 
-        DiscordHttpGuildEndpoint guildHttp;
-        DiscordHttpWebhookEndpoint webhookHttp;
+        DiscordHttpApi http;
 
         DiscoreGuildCache guildCache;
         IReadOnlyDictionary<Snowflake, DiscordRole> roles;
@@ -139,8 +138,7 @@ namespace Discore
         private DiscordGuild(IDiscordApplication app, DiscordApiData data, bool isWebSocket)
             : base(data)
         {
-            guildHttp = app.HttpApi.Guilds;
-            webhookHttp = app.HttpApi.Webhooks;
+            http = app.HttpApi;
 
             IsUnavailable = data.GetBoolean("unavailable") ?? false;
             if (IsUnavailable)
@@ -218,7 +216,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
         {
-            return webhookHttp.GetGuildWebhooks(Id);
+            return http.GetGuildWebhooks(Id);
         }
 
         /// <summary>
@@ -228,7 +226,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuild> Modify(ModifyGuildParameters parameters)
         {
-            return guildHttp.Modify(Id, parameters);
+            return http.ModifyGuild(Id, parameters);
         }
 
         /// <summary>
@@ -238,7 +236,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()
         {
-            return guildHttp.Delete(Id);
+            return http.DeleteGuild(Id);
         }
 
         /// <summary>
@@ -247,7 +245,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildChannel>> GetChannels()
         {
-            return guildHttp.GetChannels(Id);
+            return http.GetGuildChannels(Id);
         }
 
         /// <summary>
@@ -257,7 +255,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildChannel> CreateChannel(CreateGuildChannelParameters parameters)
         {
-            return guildHttp.CreateChannel(Id, parameters);
+            return http.CreateGuildChannel(Id, parameters);
         }
 
         /// <summary>
@@ -267,7 +265,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionParameters> positions)
         {
-            return guildHttp.ModifyChannelPositions(Id, positions);
+            return http.ModifyGuildChannelPositions(Id, positions);
         }
 
         /// <summary>
@@ -276,7 +274,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildMember> GetMember(Snowflake userId)
         {
-            return guildHttp.GetMember(Id, userId);
+            return http.GetGuildMember(Id, userId);
         }
 
         /// <summary>
@@ -288,7 +286,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildMember>> GetMembers(int? limit = null, Snowflake? after = null)
         {
-            return guildHttp.ListMembers(Id, limit, after);
+            return http.ListGuildMembers(Id, limit, after);
         }
 
         /// <summary>
@@ -297,7 +295,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordUser>> GetBans()
         {
-            return guildHttp.GetBans(Id);
+            return http.GetGuildBans(Id);
         }
 
         /// <summary>
@@ -308,7 +306,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> CreateBan(Snowflake userId, int? deleteMessageDays = null)
         {
-            return guildHttp.CreateBan(Id, userId, deleteMessageDays);
+            return http.CreateGuildBan(Id, userId, deleteMessageDays);
         }
 
         /// <summary>
@@ -318,7 +316,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveBan(Snowflake userId)
         {
-            return guildHttp.RemoveBan(Id, userId);
+            return http.RemoveGuildBan(Id, userId);
         }
 
         /// <summary>
@@ -327,7 +325,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordRole>> GetRoles()
         {
-            return guildHttp.GetRoles(Id);
+            return http.GetGuildRoles(Id);
         }
 
         /// <summary>
@@ -336,7 +334,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> CreateRole()
         {
-            return guildHttp.CreateRole(Id);
+            return http.CreateGuildRole(Id);
         }
 
         /// <summary>
@@ -347,7 +345,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> CreateRole(CreateRoleParameters parameters)
         {
-            return guildHttp.CreateRole(Id, parameters);
+            return http.CreateGuildRole(Id, parameters);
         }
 
         /// <summary>
@@ -357,7 +355,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(IEnumerable<PositionParameters> positions)
         {
-            return guildHttp.ModifyRolePositions(Id, positions);
+            return http.ModifyGuildRolePositions(Id, positions);
         }
 
         /// <summary>
@@ -367,7 +365,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<int> GetPruneCount(int days)
         {
-            return guildHttp.GetPruneCount(Id, days);
+            return http.GetGuildPruneCount(Id, days);
         }
 
         /// <summary>
@@ -378,7 +376,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<int> BeginPrune(int days)
         {
-            return guildHttp.BeginPrune(Id, days);
+            return http.BeginGuildPrune(Id, days);
         }
 
         /// <summary>
@@ -387,7 +385,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordVoiceRegion>> GetVoiceRegions()
         {
-            return guildHttp.GetVoiceRegions(Id);
+            return http.GetGuildVoiceRegions(Id);
         }
 
         /// <summary>
@@ -396,7 +394,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
         {
-            return guildHttp.GetInvites(Id);
+            return http.GetGuildInvites(Id);
         }
 
         /// <summary>
@@ -405,7 +403,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordIntegration>> GetIntegrations()
         {
-            return guildHttp.GetIntegrations(Id);
+            return http.GetGuildIntegrations(Id);
         }
 
         /// <summary>
@@ -415,7 +413,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> CreateIntegration(Snowflake integrationId, string type)
         {
-            return guildHttp.CreateIntegration(Id, integrationId, type);
+            return http.CreateGuildIntegration(Id, integrationId, type);
         }
 
         /// <summary>
@@ -424,7 +422,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> GetEmbed()
         {
-            return guildHttp.GetEmbed(Id);
+            return http.GetGuildEmbed(Id);
         }
 
         public override string ToString()

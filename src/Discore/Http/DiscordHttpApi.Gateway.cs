@@ -1,5 +1,4 @@
-﻿using Discore.Http.Net;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Discore.Http
 {
@@ -15,12 +14,8 @@ namespace Discore.Http
         }
     }
 
-    public class DiscordHttpGatewayEndpoint : DiscordHttpApiEndpoint
+    partial class DiscordHttpApi
     {
-        internal DiscordHttpGatewayEndpoint(IDiscordApplication app, RestClient rest) 
-            : base(app, rest)
-        { }
-
         /// <summary>
         /// Gets the minimum number of required shards for the current authenticated Discord application.
         /// </summary>
@@ -34,7 +29,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<string> Get()
         {
-            DiscordApiData data = await Rest.Get("gateway", 
+            DiscordApiData data = await rest.Get("gateway",
                 "gateway").ConfigureAwait(false);
             return data.GetString("url");
         }
@@ -42,7 +37,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<GatewayBotResponse> GetBot()
         {
-            DiscordApiData data = await Rest.Get("gateway/bot", 
+            DiscordApiData data = await rest.Get("gateway/bot",
                 "gateway/bot").ConfigureAwait(false);
             return new GatewayBotResponse(data);
         }

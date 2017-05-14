@@ -42,7 +42,7 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpApi http;
         DiscoreCache cache;
         DiscordUser user;
 
@@ -60,7 +60,7 @@ namespace Discore
             // We do not specify the base constructor here because the member ID must be
             // manually retrieved, as it is actually the user id rather than a unique one.
         {
-            guildsHttp = app.HttpApi.Guilds;
+            http = app.HttpApi;
 
             GuildId = guildId;
 
@@ -112,7 +112,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Modify(ModifyGuildMemberParameters parameters)
         {
-            return guildsHttp.ModifyMember(GuildId, Id, parameters);
+            return http.ModifyGuildMember(GuildId, Id, parameters);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Kick()
         {
-            return guildsHttp.RemoveMember(GuildId, Id);
+            return http.RemoveGuildMember(GuildId, Id);
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> Ban(int? deleteMessageDays = null)
         {
-            return guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
+            return http.CreateGuildBan(GuildId, Id, deleteMessageDays);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> AddRole(Snowflake roleId)
         {
-            return guildsHttp.AddMemberRole(GuildId, Id, roleId);
+            return http.AddGuildMemberRole(GuildId, Id, roleId);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<bool> RemoveRole(Snowflake roleId)
         {
-            return guildsHttp.RemoveMemberRole(GuildId, Id, roleId);
+            return http.RemoveGuildMemberRole(GuildId, Id, roleId);
         }
 
         public override string ToString()
