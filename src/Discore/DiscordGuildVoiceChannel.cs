@@ -27,20 +27,6 @@ namespace Discore
             UserLimit = data.GetInteger("user_limit").Value;
         }
 
-        #region Deprecated Modify
-        /// <summary>
-        /// Modifies this voice channel.
-        /// Any parameters not specified will be unchanged.
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use the Modify overload with a builder object instead.")]
-        public Task<DiscordGuildVoiceChannel> Modify(string name = null, int? position = null, 
-            int? bitrate = null, int? userLimit = null)
-        {
-            return channelsHttp.Modify<DiscordGuildVoiceChannel>(Id, name, position, null, bitrate, userLimit);
-        }
-        #endregion
-
         /// <summary>
         /// Modifies this voice channel's settings.
         /// </summary>

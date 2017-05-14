@@ -60,19 +60,6 @@ namespace Discore
             return lastId;
         }
 
-        #region Deprecated Modify
-        /// <summary>
-        /// Modifies this text channel.
-        /// Any parameters not specified will be unchanged.
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use the Modify overload with a builder object instead.")]
-        public Task<DiscordGuildTextChannel> Modify(string name = null, int? position = null, string topic = null)
-        {
-            return channelsHttp.Modify<DiscordGuildTextChannel>(Id, name, position, topic);
-        }
-        #endregion
-
         /// <summary>
         /// Modifies this text channel's settings.
         /// </summary>
@@ -84,97 +71,6 @@ namespace Discore
         {
             return channelsHttp.ModifyTextChannel(Id, parameters);
         }
-
-        #region Deprecated SendMessage
-        /// <summary>
-        /// Sends a message to this channel.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// </summary>
-        /// <param name="content">The message text content.</param>
-        /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
-        /// <param name="tts">Whether this should be played over text-to-speech.</param>
-        /// <returns>Returns the created message (or first if split into multiple).</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use CreateMessage instead.")]
-        public async Task<DiscordMessage> SendMessage(string content, bool splitIfTooLong = false, bool tts = false)
-        {
-            DiscordMessage firstOrOnlyMessage = null;
-
-            if (splitIfTooLong && content.Length > DiscordMessage.MAX_CHARACTERS)
-            {
-                await SplitSendMessage(content,
-                    async message =>
-                    {
-                        DiscordMessage msg = await channelsHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
-
-                        if (firstOrOnlyMessage == null)
-                            firstOrOnlyMessage = msg;
-                    }).ConfigureAwait(false);
-            }
-            else
-                firstOrOnlyMessage = await channelsHttp.CreateMessage(Id, content, tts).ConfigureAwait(false);
-
-            return firstOrOnlyMessage;
-        }
-
-        /// <summary>
-        /// Sends a message with a file attachment to this channel.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// </summary>
-        /// <param name="fileAttachment">The file data to attach.</param>
-        /// <param name="fileName">The name of the file.</param>
-        /// <param name="content">The message text content.</param>
-        /// <param name="splitIfTooLong">Whether this message should be split into multiple messages if too long.</param>
-        /// <param name="tts">Whether this should be played over text-to-speech.</param>
-        /// <returns>Returns the created message (or first if split into multiple).</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use UploadFile instead.")]
-        public async Task<DiscordMessage> SendMessage(byte[] fileAttachment, string fileName = null, string content = null,
-            bool splitIfTooLong = false, bool tts = false)
-        {
-            DiscordMessage firstOrOnlyMessage = null;
-
-            if (splitIfTooLong && content.Length > DiscordMessage.MAX_CHARACTERS)
-            {
-                await SplitSendMessage(content,
-                    async message =>
-                    {
-                        if (firstOrOnlyMessage == null)
-                        {
-                            DiscordMessage msg = await channelsHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
-                            firstOrOnlyMessage = msg;
-                        }
-                        else
-                            await channelsHttp.CreateMessage(Id, message, tts).ConfigureAwait(false);
-                    }).ConfigureAwait(false);
-            }
-            else
-                firstOrOnlyMessage = await channelsHttp.UploadFile(Id, fileAttachment, fileName, content, tts).ConfigureAwait(false);
-
-            return firstOrOnlyMessage;
-        }
-
-        async Task SplitSendMessage(string content, Func<string, Task> createMessageCallback)
-        {
-            int i = 0;
-            while (i < content.Length)
-            {
-                int maxChars = Math.Min(DiscordMessage.MAX_CHARACTERS, content.Length - i);
-                int lastNewLine = content.LastIndexOf('\n', i + maxChars - 1, maxChars - 1);
-
-                string subMessage;
-                if (lastNewLine > -1)
-                    subMessage = content.Substring(i, lastNewLine - i);
-                else
-                    subMessage = content.Substring(i, maxChars);
-
-                if (!string.IsNullOrWhiteSpace(subMessage))
-                    await createMessageCallback(subMessage).ConfigureAwait(false);
-
-                i += subMessage.Length;
-            }
-        }
-        #endregion
 
         /// <summary>
         /// Creates a message in this channel.

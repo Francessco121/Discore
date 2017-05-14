@@ -195,21 +195,6 @@ namespace Discore.Voice
 
         /// <summary>
         /// Initiates this voice connection.
-        /// </summary>
-        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
-        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
-        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
-        /// <exception cref="OperationCanceledException">
-        /// Thrown if the Gateway connection is closed while initiating the voice connection.
-        /// </exception>
-        [Obsolete("Please use the asynchronous counterpart ConnectAsync(bool, bool) instead.")]
-        public void Connect(bool startMute = false, bool startDeaf = false)
-        {
-            ConnectAsync().Wait();
-        }
-
-        /// <summary>
-        /// Initiates this voice connection.
         /// <para>
         /// Note: An <see cref="OperationCanceledException"/> will be thrown if the Gateway 
         /// connection is closed while initiating.
@@ -258,17 +243,6 @@ namespace Discore.Voice
             {
                 // connectingCancellationSource was cancelled because we connected successfully.
             }
-        }
-
-        /// <summary>
-        /// Closes this voice connection.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
-        [Obsolete("Please use the asynchronous counterpart DisconnectAsync(CancellationToken) instead.")]
-        public bool Disconnect()
-        {
-            return DisconnectAsync(CancellationToken.None).Result;
         }
 
         /// <summary>
@@ -335,15 +309,6 @@ namespace Discore.Voice
             {
                 udpSocket.SendData(buffer, offset, count);
             }
-        }
-
-        /// <summary>
-        /// Sets the speaking state of this connection.
-        /// </summary>
-        [Obsolete("Please use the asynchronous counterpart SetSpeakingAsync(bool) instead.")]
-        public void SetSpeaking(bool speaking)
-        {
-            SetSpeakingAsync(speaking).Wait();
         }
 
         /// <summary>

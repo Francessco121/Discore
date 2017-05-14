@@ -94,57 +94,6 @@ namespace Discore.WebSocket.Net
             InitializeDispatchHandlers();
         }
 
-        #region Deprecated Public API
-        [Obsolete]
-        public void UpdateStatus(string game = null, int? idleSince = default(int?))
-            => UpdateStatusAsync(game, idleSince).Wait();
-
-        [Obsolete]
-        public void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
-            string query = "", int limit = 0)
-            => RequestGuildMembersAsync(callback, guildId, query, limit).Wait();
-
-        /// <exception cref="InvalidOperationException">Thrown if this method is used before the Gateway is connected.</exception>
-        /// <exception cref="ObjectDisposedException"></exception>
-        /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
-        [Obsolete]
-        public async Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
-            string query = "", int limit = 0)
-        {
-            if (isDisposed)
-                throw new ObjectDisposedException(GetType().FullName);
-            if (state != GatewayState.Connected)
-                throw new InvalidOperationException("The gateway is not currently connected!");
-
-            // Create GUILD_MEMBERS_CHUNK event handler
-            EventHandler<GuildMemberChunkEventArgs> eventHandler = null;
-            eventHandler = (sender, args) =>
-            {
-                // Unhook event handler
-                OnGuildMembersChunk -= eventHandler;
-
-                // Return members
-                callback(args.Members);
-            };
-
-            // Hook in event handler
-            OnGuildMembersChunk += eventHandler;
-
-            try
-            {
-                await RepeatTrySendPayload(CancellationToken.None, "RequestGuildMembers (obselete)", async () =>
-                {
-                    // Try to request guild members
-                    await socket.SendRequestGuildMembersPayload(guildId, query, limit).ConfigureAwait(false);
-                }).ConfigureAwait(false);
-            }
-            finally
-            {
-                OnGuildMembersChunk -= eventHandler;
-            }
-        }
-        #endregion
-
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException">

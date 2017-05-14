@@ -52,18 +52,6 @@ namespace Discore.WebSocket
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
         /// <exception cref="DiscordHttpApiException">Thrown if the Discord HTTP API failed to return the shard count.</exception>
-        [Obsolete("Please use the asynchronous counterpart CreateMinimumRequiredShardsAsync() instead.")]
-        public void CreateMinimumRequiredShards()
-        {
-            CreateMinimumRequiredShardsAsync().Wait();
-        }
-
-        /// <summary>
-        /// Creates the minimum number of shards required by the Discord application.
-        /// This number is specified by the Discord API.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if any existing shard is still running.</exception>
-        /// <exception cref="DiscordHttpApiException">Thrown if the Discord HTTP API failed to return the shard count.</exception>
         public async Task CreateMinimumRequiredShardsAsync()
         {
             int numShards;
@@ -163,16 +151,6 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
-        /// Starts all created shards that are not running.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        [Obsolete("Please use the asynchronous counterpart StartShardsAsync(CancellationToken) instead.")]
-        public void StartShards()
-        {
-            StartShardsAsync(CancellationToken.None);
-        }
-
-        /// <summary>
         /// Starts all created shards that are not running, and returns a list of tasks representing each startup.
         /// These tasks will not finish until their respected shard has successfully connected (or is canceled).
         /// </summary>
@@ -210,16 +188,6 @@ namespace Discore.WebSocket
             }
             else
                 throw new InvalidOperationException("No shards have been created.");
-        }
-
-        /// <summary>
-        /// Stops all created shards that are running.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if no shards were created prior.</exception>
-        [Obsolete("Please use the asynchronous counterpart StopShardsAsync() instead.")]
-        public void StopShards()
-        {
-            Task.WhenAll(StopShardsAsync()).Wait();
         }
 
         /// <summary>

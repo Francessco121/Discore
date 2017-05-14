@@ -32,24 +32,6 @@ namespace Discore.Voice
         public bool IsInVoiceChannel => channelId.HasValue;
 
         /// <summary>
-        /// Gets the ID of the guild this voice state is for.
-        /// </summary>
-        [Obsolete("Please use Guild.Id instead.")]
-        public Snowflake? GuildId => guildId;
-
-        /// <summary>
-        /// Gets the ID of the voice channel this user is in.
-        /// </summary>
-        [Obsolete("Please use Channel.Id instead.")]
-        public Snowflake? ChannelId => channelId;
-
-        /// <summary>
-        /// Gets the ID of the user this voice state is for.
-        /// </summary>
-        [Obsolete("Please use User.Id instead.")]
-        public Snowflake UserId => userId;
-
-        /// <summary>
         /// Gets the current session ID of this voice state.
         /// </summary>
         public string SessionId { get; }

@@ -56,16 +56,6 @@ namespace Discore
         /// Converts avatar data to the following format:
         /// <para>data:MEDIA_TYPE;base64,BASE64_IMAGE_DATA</para>
         /// </summary>
-        [Obsolete("Use ToDataUriScheme() instead.")]
-        public string ToFormattedString()
-        {
-            return ToDataUriScheme();
-        }
-
-        /// <summary>
-        /// Converts avatar data to the following format:
-        /// <para>data:MEDIA_TYPE;base64,BASE64_IMAGE_DATA</para>
-        /// </summary>
         public string ToDataUriScheme()
         {
             return string.IsNullOrWhiteSpace(base64Data) ? null : $"data:{mediaType};base64,{base64Data}";

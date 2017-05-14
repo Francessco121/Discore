@@ -11,17 +11,6 @@ namespace Discore
         /// <summary>
         /// Example display: "Streaming Overwatch".
         /// </summary>
-        Streaming,
-
-        /// <summary>
-        /// Normal application.
-        /// </summary>
-        [Obsolete("Use DiscordGameType.Game instead.")]
-        Default = Game,
-        /// <summary>
-        /// Twitch.tv game.
-        /// </summary>
-        [Obsolete("Use DiscordGameType.Streaming instead.")]
-        Twitch = Streaming
+        Streaming
     }
 }

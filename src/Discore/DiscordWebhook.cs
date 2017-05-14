@@ -90,56 +90,6 @@ namespace Discore
             return webhookHttp.DeleteWithToken(Id, token);
         }
 
-        #region Deprecated Execute
-        /// <summary>
-        /// Executes this webhook with a message as the content.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use an Execute overload with a builder object.")]
-        public Task<bool> Execute(string token, string content, 
-            string username = null, string avatarUrl = null, bool tts = false)
-        {
-            return webhookHttp.Execute(Id, token, content, username, avatarUrl, tts);
-        }
-
-        /// <summary>
-        /// Executes this webhook with a file as the content.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use an Execute overload with a builder object.")]
-        public Task<bool> Execute(string token, byte[] file, 
-            string filename = "unknown.jpg", string username = null, string avatarUrl = null, bool tts = false)
-        {
-            return webhookHttp.Execute(Id, token, file, filename, username, avatarUrl, tts);
-        }
-
-        /// <summary>
-        /// Executes this webhook with a file as the content.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use an Execute overload with a builder object.")]
-        public Task<bool> Execute(string token, FileInfo fileInfo, 
-            string username = null, string avatarUrl = null, bool tts = false)
-        {
-            return webhookHttp.Execute(Id, token, fileInfo, username, avatarUrl, tts);
-        }
-
-        /// <summary>
-        /// Executes this webhook with embeds as the contents.
-        /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use an Execute overload with a builder object.")]
-        public Task<bool> Execute(string token, IEnumerable<DiscordEmbedBuilder> embedBuilders, 
-            string username = null, string avatarUrl = null, bool tts = false)
-        {
-            return webhookHttp.Execute(Id, token, embedBuilders, username, avatarUrl, tts);
-        }
-        #endregion
-
         /// <summary>
         /// Executes this webhook.
         /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>

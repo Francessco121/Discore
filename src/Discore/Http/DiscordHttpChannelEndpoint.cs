@@ -34,68 +34,6 @@ namespace Discore.Http
             return (T)DeserializeChannelData(data);
         }
 
-        #region Deprecated Modify* Methods
-        /// <summary>
-        /// Updates the settings of a text guild channel.
-        /// </summary>
-        /// <param name="channelId">The id of the guild channel to modify.</param>
-        /// <param name="name">The name of the channel (or null to leave unchanged).</param>
-        /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
-        /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use the ModifyTextChannel overload using a builder object instead.")]
-        public Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake channelId,
-            string name = null, int? position = null, string topic = null)
-        {
-            return Modify<DiscordGuildTextChannel>(channelId, name, position, topic);
-        }
-
-        /// <summary>
-        /// Updates the settings of a voice guild channel.
-        /// </summary>
-        /// <param name="channelId">The id of the guild channel to modify.</param>
-        /// <param name="name">The name of the channel (or null to leave unchanged).</param>
-        /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
-        /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
-        /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use the ModifyVoiceChannel overload using a builder object instead.")]
-        public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake channelId,
-            string name = null, int? position = null, int? bitrate = null, int? userLimit = null)
-        {
-            return Modify<DiscordGuildVoiceChannel>(channelId, name, position, null, bitrate, userLimit);
-        }
-
-        /// <summary>
-        /// Updates the settings of a text or voice guild channel.
-        /// </summary>
-        /// <param name="channelId">The id of the guild channel to modify.</param>
-        /// <param name="name">The name of the channel (or null to leave unchanged).</param>
-        /// <param name="position">The UI position of the channel (or null to leave unchanged).</param>
-        /// <param name="topic">The topic of the text channel (or null to leave unchanged).</param>
-        /// <param name="bitrate">The bitrate of the voice channel (or null to leave unchanged).</param>
-        /// <param name="userLimit">The user limit of the voice channel (or null to leave unchanged).</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use either ModifyTextChannel() or ModifyVoiceChannel() instead.")]
-        public async Task<T> Modify<T>(Snowflake channelId,
-            string name = null, int? position = null, 
-            string topic = null,
-            int? bitrate = null, int? userLimit = null)
-            where T : DiscordGuildChannel
-        {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("name", name);
-            requestData.Set("position", position);
-            requestData.Set("topic", topic);
-            requestData.Set("bitrate", bitrate);
-            requestData.Set("user_limit", userLimit);
-
-            DiscordApiData returnData = await Rest.Patch($"channels/{channelId}", requestData, 
-                "channels/channel").ConfigureAwait(false);
-            return (T)DeserializeChannelData(returnData);            
-        }
-        #endregion
-
         /// <summary>
         /// Updates the settings of a guild text channel.
         /// </summary>
@@ -222,26 +160,6 @@ namespace Discore.Http
             return new DiscordMessage(App, data);
         }
 
-        #region Deprecated CreateMessage
-        /// <summary>
-        /// Posts a message to a text channel.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use overloads using DiscordMessageDetails when creating messages.")]
-        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, string content, bool tts = false, Snowflake? nonce = null)
-        {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", content);
-            requestData.Set("tts", tts);
-            requestData.Set("nonce", nonce);
-
-            DiscordApiData returnData = await Rest.Post($"channels/{channelId}/messages", requestData,
-                "channels/channel/messages").ConfigureAwait(false);
-            return new DiscordMessage(App, returnData);
-        }
-        #endregion
-
         /// <summary>
         /// Posts a message to a text channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
@@ -275,42 +193,6 @@ namespace Discore.Http
                 "channels/channel/messages").ConfigureAwait(false);
             return new DiscordMessage(App, returnData);
         }
-
-        #region Deprecated UploadFile
-        /// <summary>
-        /// Uploads a file to a text channel with an optional message.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use overloads using DiscordMessageDetails when uploading files.")]
-        public Task<DiscordMessage> UploadFile(Snowflake channelId, FileInfo fileInfo,
-            string message = null, bool tts = false, Snowflake? nonce = null)
-        {
-            DiscordMessageDetails details = new DiscordMessageDetails();
-            details.Content = message;
-            details.TextToSpeech = tts;
-            details.Nonce = nonce;
-
-            return UploadFile(channelId, new StreamContent(fileInfo.OpenRead()), fileInfo.Name, details);
-        }
-
-        /// <summary>
-        /// Uploads a file to a text channel with an optional message.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Please use overloads using DiscordMessageDetails when uploading files.")]
-        public Task<DiscordMessage> UploadFile(Snowflake channelId, byte[] file, string filename = "unknown.jpg",
-            string message = null, bool? tts = null, Snowflake? nonce = null)
-        {
-            DiscordMessageDetails details = new DiscordMessageDetails();
-            details.Content = message;
-            details.TextToSpeech = tts.GetValueOrDefault();
-            details.Nonce = nonce;
-
-            return UploadFile(channelId, new ByteArrayContent(file), filename, details);
-        }
-        #endregion
 
         /// <summary>
         /// Uploads a file to a text channel with an optional message.

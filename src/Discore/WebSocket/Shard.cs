@@ -106,17 +106,6 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
-        /// Starts this shard.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
-        [Obsolete("Please use the asynchronous counterpart StartAsync(CancellationToken) instead.")]
-        public void Start()
-        {
-            StartAsync(CancellationToken.None).Wait();
-        }
-
-        /// <summary>
         /// Starts this shard. 
         /// The returned task only finishes once the gateway successfully connects (or is canceled), 
         /// and will continue to retry until then.
@@ -160,17 +149,6 @@ namespace Discore.WebSocket
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been started!");
-        }
-
-        /// <summary>
-        /// Stop this shard.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this shard is not running.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
-        [Obsolete("Please use the asynchronous counterpart StopAsync() instead.")]
-        public void Stop()
-        {
-            StopAsync().Wait();
         }
 
         /// <summary>
