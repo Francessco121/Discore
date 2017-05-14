@@ -24,6 +24,20 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Creates a new guild.
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuild> Create(CreateGuildParameters parameters)
+        {
+            DiscordApiData requestdata = parameters.Build();
+
+            DiscordApiData returnData = await Rest.Post("guilds", requestdata,
+                "guilds").ConfigureAwait(false);
+
+            return new DiscordGuild(App, returnData);
+        }
+
+        /// <summary>
         /// Changes the settings of a guild.
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
@@ -45,11 +59,10 @@ namespace Discore.Http
         /// Authenticated user must be the owner.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuild> Delete(Snowflake guildId)
+        public async Task Delete(Snowflake guildId)
         {
-            DiscordApiData data = await Rest.Delete($"guilds/{guildId}", 
+            await Rest.Delete($"guilds/{guildId}", 
                 "guilds/guild").ConfigureAwait(false);
-            return new DiscordGuild(App, data);
         }
 
         /// <summary>

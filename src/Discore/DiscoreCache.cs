@@ -74,6 +74,11 @@ namespace Discore
         /// </summary>
         public T Value { get; internal set; }
 
+        /// <summary>
+        /// Gets the ID of the item this cache represents.
+        /// </summary>
+        public Snowflake Id => Value.DictionaryId;
+
         internal override Snowflake DictionaryId => Value.DictionaryId;
 
         internal DiscoreTypeCache() { }

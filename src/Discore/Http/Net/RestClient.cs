@@ -81,10 +81,24 @@ namespace Discore.Http.Net
                     return data;
                 else
                 {
-                    // Determine the type of JSON error Discord sent back.
-                    IList<DiscordApiData> content = data.GetArray("content");
-                    if (content != null)
+                    string message = null;
+                    DiscordHttpErrorCode errorCode = DiscordHttpErrorCode.None;
+
+                    // Get the Discord-specific error code if it exists.
+                    if ((int)response.StatusCode == 429)
+                        errorCode = DiscordHttpErrorCode.TooManyRequests;
+                    else if (data.ContainsKey("code"))
                     {
+                        long? code = data.GetInt64("code");
+                        if (code.HasValue)
+                            errorCode = (DiscordHttpErrorCode)code;
+                    }
+
+                    // Get the message.
+                    if (data.ContainsKey("content"))
+                    {
+                        IList<DiscordApiData> content = data.GetArray("content");
+
                         StringBuilder sb = new StringBuilder();
                         for (int i = 0; i < content.Count; i++)
                         {
@@ -94,24 +108,59 @@ namespace Discore.Http.Net
                                 sb.Append(", ");
                         }
 
-                        throw new DiscordHttpApiException(sb.ToString(), DiscordHttpErrorCode.None, response.StatusCode);
+                        message = sb.ToString();
                     }
-                    else
+                    else if (data.ContainsKey("message"))
                     {
-                        long code = data.GetInt64("code") ?? 0;
-                        string message = data.GetString("message");
+                        message = data.GetString("message");
+                    }
+                    else if (response.StatusCode == HttpStatusCode.BadRequest && data.Type == DiscordApiDataType.Container)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        foreach (KeyValuePair<string, DiscordApiData> pair in data.Entries)
+                        {
+                            sb.Append($"{pair.Key}: ");
 
+                            if (pair.Value.Type != DiscordApiDataType.Array)
+                            {
+                                // Shouldn't happen, but if it does then this error is not one we can parse.
+                                // Set sb to null so that message ends up null and let the application get
+                                // the raw JSON payload so they at least know what happened until we can
+                                // implement the correct parser.
+                                sb = null;
+                                break;
+                            }
+
+                            bool addComma = false;
+                            foreach (DiscordApiData errorData in pair.Value.Values)
+                            {
+                                if (addComma)
+                                    sb.Append(", ");
+
+                                sb.Append(errorData.ToString());
+
+                                addComma = true;
+                            }
+
+                            sb.AppendLine();
+                        }
+
+                        message = sb?.ToString();
+                    }
+
+                    // Throw the appropriate exception
+                    if (message != null) // If null, let the "unknown error" exception be thrown
+                    {
                         if ((int)response.StatusCode == 429 && rateLimitHeaders != null)
-                            throw new DiscordHttpRateLimitException(rateLimitHeaders, 
-                                message, DiscordHttpErrorCode.TooManyRequests, response.StatusCode);
+                            throw new DiscordHttpRateLimitException(rateLimitHeaders, message, errorCode, response.StatusCode);
                         else
-                            throw new DiscordHttpApiException(message, (DiscordHttpErrorCode)code, response.StatusCode);
+                            throw new DiscordHttpApiException(message, errorCode, response.StatusCode);
                     }
                 }
             }
-            else
-                throw new DiscordHttpApiException($"Unknown error. Response: {json}",
-                    DiscordHttpErrorCode.None, response.StatusCode);
+
+            throw new DiscordHttpApiException($"Unknown error. Response: {json}",
+                DiscordHttpErrorCode.None, response.StatusCode);
         }
 
         Task WaitRateLimit(string limiterAction)

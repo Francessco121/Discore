@@ -6,9 +6,13 @@
     public class OverwriteParameters
     {
         /// <summary>
-        /// Gets or sets the type the overwrite affects.
+        /// Gets the ID of the role or user that this overwrites.
         /// </summary>
-        public DiscordOverwriteType Type { get; set; }
+        public Snowflake Id { get; }
+        /// <summary>
+        /// Gets the type the overwrite affects.
+        /// </summary>
+        public DiscordOverwriteType Type { get; }
         /// <summary>
         /// Gets or sets the allowed permissions to overwrite.
         /// </summary>
@@ -18,13 +22,10 @@
         /// </summary>
         public DiscordPermission Deny { get; set; }
 
-        /// <summary>
-        /// Sets the type the overwrite affects.
-        /// </summary>
-        public OverwriteParameters SetType(DiscordOverwriteType type)
+        public OverwriteParameters(Snowflake roleOrUserId, DiscordOverwriteType type)
         {
+            Id = roleOrUserId;
             Type = type;
-            return this;
         }
 
         /// <summary>
@@ -48,6 +49,7 @@
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("id", Id);
             data.Set("type", Type.ToString().ToLower());
             data.Set("allow", (int)Allow);
             data.Set("deny", (int)Deny);
