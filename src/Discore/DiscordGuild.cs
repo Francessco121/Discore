@@ -302,9 +302,8 @@ namespace Discore
         /// Bans the specified user from this guild.
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> CreateBan(Snowflake userId, int? deleteMessageDays = null)
+        public Task CreateBan(Snowflake userId, int? deleteMessageDays = null)
         {
             return http.CreateGuildBan(Id, userId, deleteMessageDays);
         }
@@ -312,9 +311,8 @@ namespace Discore
         /// <summary>
         /// Unbans the specified user from this guild.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> RemoveBan(Snowflake userId)
+        public Task RemoveBan(Snowflake userId)
         {
             return http.RemoveGuildBan(Id, userId);
         }
@@ -409,9 +407,8 @@ namespace Discore
         /// <summary>
         /// Attaches an integration from the current authenticated user to this guild.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> CreateIntegration(Snowflake integrationId, string type)
+        public Task CreateIntegration(Snowflake integrationId, string type)
         {
             return http.CreateGuildIntegration(Id, integrationId, type);
         }

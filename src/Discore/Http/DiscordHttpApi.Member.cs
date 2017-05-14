@@ -45,19 +45,17 @@ namespace Discore.Http
         /// <summary>
         /// Modifies the attributes of a guild member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> ModifyGuildMember(Snowflake guildId, Snowflake userId, ModifyGuildMemberParameters parameters)
+        public async Task ModifyGuildMember(Snowflake guildId, Snowflake userId, ModifyGuildMemberParameters parameters)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
 
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/members/{userId}", requestData,
+            await rest.Patch($"guilds/{guildId}/members/{userId}", requestData,
                 "guilds/guild/members/user").ConfigureAwait(false);
-            return requestData.IsNull;
         }
 
         /// <summary>
@@ -79,13 +77,11 @@ namespace Discore.Http
         /// <summary>
         /// Removes a member from a guild.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> RemoveGuildMember(Snowflake guildId, Snowflake userId)
+        public async Task RemoveGuildMember(Snowflake guildId, Snowflake userId)
         {
-            DiscordApiData data = await rest.Delete($"guilds/{guildId}/members/{userId}",
+            await rest.Delete($"guilds/{guildId}/members/{userId}",
                 "guilds/guild/members/user").ConfigureAwait(false);
-            return data.IsNull;
         }
     }
 }

@@ -119,30 +119,28 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a webhook permanently. The currently authenticated user must be the owner.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteWebook(Snowflake webhookId)
+        public async Task DeleteWebook(Snowflake webhookId)
         {
-            return (await rest.Delete($"webhooks/{webhookId}",
-                "webhooks/webhook").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"webhooks/{webhookId}",
+                "webhooks/webhook").ConfigureAwait(false);
         }
 
         /// <summary>
         /// Deletes a webhook permanently.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteWebookWithToken(Snowflake webhookId, string token)
+        public async Task DeleteWebookWithToken(Snowflake webhookId, string token)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
-            return (await rest.Delete($"webhooks/{webhookId}/{token}",
-                "webhooks/webhook/token").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"webhooks/{webhookId}/{token}",
+                "webhooks/webhook/token").ConfigureAwait(false);
         }
 
         /// <summary>

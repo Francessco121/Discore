@@ -234,10 +234,9 @@ namespace Discore
         /// <summary>
         /// Adds a reaction to this message.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> AddReaction(DiscordReactionEmoji emoji)
+        public Task AddReaction(DiscordReactionEmoji emoji)
         {
             return http.CreateReaction(ChannelId, Id, emoji);
         }
@@ -245,10 +244,9 @@ namespace Discore
         /// <summary>
         /// Removes a reaction from this message added from the current authenticated user.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
+        public Task RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
         {
             return http.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
         }
@@ -258,10 +256,9 @@ namespace Discore
         /// </summary>
         /// <param name="user">The user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
+        public Task RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
@@ -274,10 +271,9 @@ namespace Discore
         /// </summary>
         /// <param name="userId">The ID of the user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> RemoveReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
+        public Task RemoveReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
         {
             return http.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
         }
@@ -304,9 +300,8 @@ namespace Discore
         /// <summary>
         /// Pins this message to the channel it was sent in.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Pin()
+        public Task Pin()
         {
             return http.AddPinnedChannelMessage(ChannelId, Id);
         }
@@ -314,9 +309,8 @@ namespace Discore
         /// <summary>
         /// Unpins this message from the channel it was sent in.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Unpin()
+        public Task Unpin()
         {
             return http.DeletePinnedChannelMessage(ChannelId, Id);
         }
@@ -348,7 +342,7 @@ namespace Discore
         /// Deletes this message.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
             return http.DeleteMessage(ChannelId, Id);
         }

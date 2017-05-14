@@ -87,10 +87,9 @@ namespace Discore
         /// <param name="member">The member this overwrite will change permissions for.</param>
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
+        public Task EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
         {
             if (member == null)
                 throw new ArgumentNullException(nameof(member));
@@ -104,10 +103,9 @@ namespace Discore
         /// <param name="role">The role this overwrite will change permissions for.</param>
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
+        public Task EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
         {
             if (role == null)
                 throw new ArgumentNullException(nameof(role));
@@ -122,9 +120,8 @@ namespace Discore
         /// <param name="overwriteType">Whether the permissions should affect a member or role.</param>
         /// <param name="allow">Specifically allowed permissions.</param>
         /// <param name="deny">Specifically denied permissions.</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> EditPermissions(Snowflake memberOrRoleId, DiscordOverwriteType overwriteType, 
+        public Task EditPermissions(Snowflake memberOrRoleId, DiscordOverwriteType overwriteType, 
             DiscordPermission allow, DiscordPermission deny)
         {
             return http.EditChannelPermissions(Id, memberOrRoleId, allow, deny, overwriteType);
@@ -133,10 +130,9 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite for a guild member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> DeletePermission(DiscordGuildMember member)
+        public Task DeletePermission(DiscordGuildMember member)
         {
             if (member == null)
                 throw new ArgumentNullException(nameof(member));
@@ -147,10 +143,9 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite for a role.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> DeletePermission(DiscordRole role)
+        public Task DeletePermission(DiscordRole role)
         {
             if (role == null)
                 throw new ArgumentNullException(nameof(role));
@@ -161,10 +156,9 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> DeletePermission(DiscordOverwrite overwrite)
+        public Task DeletePermission(DiscordOverwrite overwrite)
         {
             if (overwrite == null)
                 throw new ArgumentNullException(nameof(overwrite));
@@ -175,9 +169,8 @@ namespace Discore
         /// <summary>
         /// Deletes a permission overwrite.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> DeletePermission(Snowflake memberOrRoleId)
+        public Task DeletePermission(Snowflake memberOrRoleId)
         {
             return http.DeleteChannelPermission(Id, memberOrRoleId);
         }

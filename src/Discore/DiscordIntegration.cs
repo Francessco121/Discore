@@ -89,11 +89,10 @@ namespace Discore
         /// Changes the attributes of this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task<bool> Modify(ModifyIntegrationParameters parameters)
+        public Task Modify(ModifyIntegrationParameters parameters)
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
@@ -105,10 +104,9 @@ namespace Discore
         /// Deletes this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
@@ -120,10 +118,9 @@ namespace Discore
         /// Synchronizes this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task<bool> Sync()
+        public Task Sync()
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");

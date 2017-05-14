@@ -97,35 +97,30 @@ namespace Discore.Http
         /// Deletes a role from a guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteGuildRole(Snowflake guildId, Snowflake roleId)
+        public async Task DeleteGuildRole(Snowflake guildId, Snowflake roleId)
         {
-            DiscordApiData data = await rest.Delete($"guilds/{guildId}/roles/{roleId}",
+            await rest.Delete($"guilds/{guildId}/roles/{roleId}",
                 "guilds/guild/roles/role").ConfigureAwait(false);
-            return data.IsNull;
         }
 
         /// <summary>
         /// Adds a role to a guild member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> AddGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
+        public async Task AddGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
         {
-            DiscordApiData data = await rest.Put($"guilds/{guildId}/members/{userId}/roles/{roleId}",
+            await rest.Put($"guilds/{guildId}/members/{userId}/roles/{roleId}",
                 "guilds/guild/members/member/roles/role").ConfigureAwait(false);
-            return data.IsNull;
         }
 
         /// <summary>
         /// Removes a role from a guild member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> RemoveGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
+        public async Task RemoveGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
         {
-            DiscordApiData data = await rest.Delete($"guilds/{guildId}/members/{userId}/roles/{roleId}",
+            await rest.Delete($"guilds/{guildId}/members/{userId}/roles/{roleId}",
                 "guilds/guild/members/member/roles/role").ConfigureAwait(false);
-            return data.IsNull;
         }
     }
 }

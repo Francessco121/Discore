@@ -62,11 +62,10 @@ namespace Discore.Http
         /// <summary>
         /// Removes the current authenticated user from the specified guild.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> LeaveGuild(Snowflake guildId)
+        public async Task LeaveGuild(Snowflake guildId)
         {
-            return (await rest.Delete($"users/@me/guilds/{guildId}", "users/@me/guilds/guild").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"users/@me/guilds/{guildId}", "users/@me/guilds/guild").ConfigureAwait(false);
         }
 
         /// <summary>

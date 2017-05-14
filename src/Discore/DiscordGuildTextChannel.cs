@@ -126,10 +126,9 @@ namespace Discore
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
         /// (messages that are too old cause an API error).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
+        public Task BulkDeleteMessages(IEnumerable<DiscordMessage> messages, bool filterTooOldMessages = true)
         {
             return http.BulkDeleteMessages(Id, messages, filterTooOldMessages);
         }
@@ -140,10 +139,9 @@ namespace Discore
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
         /// (messages that are too old cause an API error).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
+        public Task BulkDeleteMessages(IEnumerable<Snowflake> messageIds, bool filterTooOldMessages = true)
         {
             return http.BulkDeleteMessages(Id, messageIds, filterTooOldMessages);
         }
@@ -151,9 +149,8 @@ namespace Discore
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> TriggerTypingIndicator()
+        public Task TriggerTypingIndicator()
         {
             return http.TriggerTypingIndicator(Id);
         }

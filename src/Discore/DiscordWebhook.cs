@@ -71,9 +71,8 @@ namespace Discore
         /// Deletes this webhook permanently.
         /// Current authenticated user might be the owner.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
             return http.DeleteWebook(Id);
         }
@@ -81,11 +80,10 @@ namespace Discore
         /// <summary>
         /// Deletes this webhook permanently.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> DeleteWithToken(string token)
+        public Task DeleteWithToken(string token)
         {
             return http.DeleteWebookWithToken(Id, token);
         }

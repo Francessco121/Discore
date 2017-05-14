@@ -180,13 +180,11 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a message from a text channel.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteMessage(Snowflake channelId, Snowflake messageId)
+        public async Task DeleteMessage(Snowflake channelId, Snowflake messageId)
         {
-            DiscordApiData data = await rest.Delete($"channels/{channelId}/messages/{messageId}",
+            await rest.Delete($"channels/{channelId}/messages/{messageId}",
                 "channels/channel/messages/message/delete").ConfigureAwait(false);
-            return data.IsNull;
         }
 
         /// <summary>
@@ -194,10 +192,9 @@ namespace Discore.Http
         /// This is much faster than calling DeleteMessage for each message.
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages,
+        public Task BulkDeleteMessages(Snowflake channelId, IEnumerable<DiscordMessage> messages,
             bool filterTooOldMessages = true)
         {
             if (messages == null)
@@ -215,10 +212,9 @@ namespace Discore.Http
         /// This is much faster than calling DeleteMessage for each message.
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds,
+        public async Task BulkDeleteMessages(Snowflake channelId, IEnumerable<Snowflake> messageIds,
             bool filterTooOldMessages = true)
         {
             if (messageIds == null)
@@ -244,9 +240,8 @@ namespace Discore.Http
                 messages.Values.Add(new DiscordApiData(messageId));
             }
 
-            DiscordApiData returnData = await rest.Post($"channels/{channelId}/messages/bulk-delete", requestData,
+            await rest.Post($"channels/{channelId}/messages/bulk-delete", requestData,
                 "channels/channel/messages/message/delete/bulk").ConfigureAwait(false);
-            return returnData.IsNull;
         }
 
         /// <summary>
@@ -269,20 +264,20 @@ namespace Discore.Http
         /// Pins a message in a text channel.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
+        public async Task AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
         {
-            return (await rest.Put($"channels/{channelId}/pins/{messageId}",
-                "channels/channel/pins/message").ConfigureAwait(false)).IsNull;
+            await rest.Put($"channels/{channelId}/pins/{messageId}",
+                "channels/channel/pins/message").ConfigureAwait(false);
         }
 
         /// <summary>
         /// Unpins a message from a text channel.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
+        public async Task DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
         {
-            return (await rest.Delete($"channels/{channelId}/pins/{messageId}",
-                "channels/channel/pins/message").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"channels/{channelId}/pins/{messageId}",
+                "channels/channel/pins/message").ConfigureAwait(false);
         }
     }
 }

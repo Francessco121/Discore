@@ -49,9 +49,8 @@ namespace Discore
         /// Edits the permissions of this overwrite.
         /// If successful, changes will be immediately reflected for this instance.
         /// </summary>
-        /// <returns>Returns whether the operation was successful</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Edit(DiscordPermission allow, DiscordPermission deny)
+        public Task Edit(DiscordPermission allow, DiscordPermission deny)
         {
             return http.EditChannelPermissions(ChannelId, Id, allow, deny, Type);
         }
@@ -60,9 +59,8 @@ namespace Discore
         /// Deletes this overwrite.
         /// If successful, changes will be immediately reflected for the channel this overwrite was in.
         /// </summary>
-        /// <returns>Returns whether the operation was successful</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
             return http.DeleteChannelPermission(ChannelId, Id);
         }

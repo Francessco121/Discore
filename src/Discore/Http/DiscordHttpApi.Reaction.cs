@@ -9,46 +9,43 @@ namespace Discore.Http
         /// <summary>
         /// Adds a reaction to a message.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
+        public async Task CreateReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            return (await rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
-                "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false)).IsNull;
+            await rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
+                "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false);
         }
 
         /// <summary>
         /// Deletes a reaction the currently authenticated user has made for a message.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteOwnReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
+        public async Task DeleteOwnReaction(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
         {
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            return (await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
-                "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
+                "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false);
         }
 
         /// <summary>
         /// Deletes a reaction posted by any user.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteUserReaction(Snowflake channelId, Snowflake messageId, Snowflake userId, DiscordReactionEmoji emoji)
+        public async Task DeleteUserReaction(Snowflake channelId, Snowflake messageId, Snowflake userId, DiscordReactionEmoji emoji)
         {
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            return (await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}",
-                "channels/channel/messages/message/reactions/emoji/user").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}",
+                "channels/channel/messages/message/reactions/emoji/user").ConfigureAwait(false);
         }
 
         /// <summary>

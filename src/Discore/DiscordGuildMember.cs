@@ -107,10 +107,9 @@ namespace Discore
         /// <summary>
         /// Modifies the attributes of this member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Modify(ModifyGuildMemberParameters parameters)
+        public Task Modify(ModifyGuildMemberParameters parameters)
         {
             return http.ModifyGuildMember(GuildId, Id, parameters);
         }
@@ -118,9 +117,8 @@ namespace Discore
         /// <summary>
         /// Removes this user from the guild they are a member of.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Kick()
+        public Task Kick()
         {
             return http.RemoveGuildMember(GuildId, Id);
         }
@@ -129,9 +127,8 @@ namespace Discore
         /// Bans this user from the guild they are a member of.
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Ban(int? deleteMessageDays = null)
+        public Task Ban(int? deleteMessageDays = null)
         {
             return http.CreateGuildBan(GuildId, Id, deleteMessageDays);
         }
@@ -139,9 +136,8 @@ namespace Discore
         /// <summary>
         /// Adds a role to this member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> AddRole(Snowflake roleId)
+        public Task AddRole(Snowflake roleId)
         {
             return http.AddGuildMemberRole(GuildId, Id, roleId);
         }
@@ -149,9 +145,8 @@ namespace Discore
         /// <summary>
         /// Removes a role from this member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> RemoveRole(Snowflake roleId)
+        public Task RemoveRole(Snowflake roleId)
         {
             return http.RemoveGuildMemberRole(GuildId, Id, roleId);
         }

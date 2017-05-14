@@ -91,9 +91,8 @@ namespace Discore.Http
         /// <summary>
         /// Edits a guild channel permission overwrite for a user or role.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> EditChannelPermissions(Snowflake channelId, Snowflake overwriteId,
+        public async Task EditChannelPermissions(Snowflake channelId, Snowflake overwriteId,
             DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -101,30 +100,28 @@ namespace Discore.Http
             data.Set("deny", (int)deny);
             data.Set("type", type.ToString().ToLower());
 
-            return (await rest.Put($"channels/{channelId}/permissions/{overwriteId}", data,
-                "channels/channel/permissions/permission").ConfigureAwait(false)).IsNull;
+            await rest.Put($"channels/{channelId}/permissions/{overwriteId}", data,
+                "channels/channel/permissions/permission").ConfigureAwait(false);
         }
 
         /// <summary>
         /// Deletes a guild channel permission overwrite for a user or role.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteChannelPermission(Snowflake channelId, Snowflake overwriteId)
+        public async Task DeleteChannelPermission(Snowflake channelId, Snowflake overwriteId)
         {
-            return (await rest.Delete($"channels/{channelId}/permissions/{overwriteId}",
-                "channels/channel/permissions/permission").ConfigureAwait(false)).IsNull;
+            await rest.Delete($"channels/{channelId}/permissions/{overwriteId}",
+                "channels/channel/permissions/permission").ConfigureAwait(false);
         }
 
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> TriggerTypingIndicator(Snowflake channelId)
+        public async Task TriggerTypingIndicator(Snowflake channelId)
         {
-            return (await rest.Post($"channels/{channelId}/typing",
-                "channels/channel/typing").ConfigureAwait(false)).IsNull;
+            await rest.Post($"channels/{channelId}/typing",
+                "channels/channel/typing").ConfigureAwait(false);
         }
 
         /// <summary>

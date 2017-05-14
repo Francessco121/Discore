@@ -79,28 +79,24 @@ namespace Discore.Http
         /// Bans a users from the specified guild.
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> CreateGuildBan(Snowflake guildId, Snowflake userId, int? deleteMessageDays = null)
+        public async Task CreateGuildBan(Snowflake guildId, Snowflake userId, int? deleteMessageDays = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("delete-message-days", deleteMessageDays);
 
-            DiscordApiData returnData = await rest.Put($"guilds/{guildId}/bans/{userId}", requestData,
+            await rest.Put($"guilds/{guildId}/bans/{userId}", requestData,
                 "guilds/guild/bans/user").ConfigureAwait(false);
-            return returnData.IsNull;
         }
 
         /// <summary>
         /// Removes a user ban from the specified guild.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> RemoveGuildBan(Snowflake guildId, Snowflake userId)
+        public async Task RemoveGuildBan(Snowflake guildId, Snowflake userId)
         {
-            DiscordApiData data = await rest.Delete($"guilds/{guildId}/bans/{userId}",
+            await rest.Delete($"guilds/{guildId}/bans/{userId}",
                 "guilds/guild/bans/user").ConfigureAwait(false);
-            return data.IsNull;
         }
 
         /// <summary>
@@ -150,26 +146,23 @@ namespace Discore.Http
         /// <summary>
         /// Attaches an integration from the current authenticated user to the specified guild.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> CreateGuildIntegration(Snowflake guildId, Snowflake integrationId, string type)
+        public async Task CreateGuildIntegration(Snowflake guildId, Snowflake integrationId, string type)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("id", integrationId);
             requestData.Set("type", type);
 
-            DiscordApiData returnData = await rest.Post($"guilds/{guildId}/integrations",
+            await rest.Post($"guilds/{guildId}/integrations",
                 "guilds/guild/integrations").ConfigureAwait(false);
-            return returnData.IsNull;
         }
 
         /// <summary>
         /// Changes the attributes of a guild integration.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> ModifyGuildIntegration(Snowflake guildId, Snowflake integrationId,
+        public async Task ModifyGuildIntegration(Snowflake guildId, Snowflake integrationId,
             ModifyIntegrationParameters parameters)
         {
             if (parameters == null)
@@ -177,33 +170,28 @@ namespace Discore.Http
 
             DiscordApiData requestData = parameters.Build();
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/integrations/{integrationId}", requestData,
+            await rest.Patch($"guilds/{guildId}/integrations/{integrationId}", requestData,
                 "guilds/guild/integrations/integration").ConfigureAwait(false);
-            return returnData.IsNull;
         }
 
         /// <summary>
         /// Deletes an attached integration from the specified channel.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> DeleteGuildIntegration(Snowflake guildId, Snowflake integrationId)
+        public async Task DeleteGuildIntegration(Snowflake guildId, Snowflake integrationId)
         {
-            DiscordApiData data = await rest.Delete($"guilds/{guildId}/integrations/{integrationId}",
+            await rest.Delete($"guilds/{guildId}/integrations/{integrationId}",
                 "guilds/guild/integrations/integration").ConfigureAwait(false);
-            return data.IsNull;
         }
 
         /// <summary>
         /// Synchronizes a guild integration.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<bool> SyncGuildIntegration(Snowflake guildId, Snowflake integrationId)
+        public async Task SyncGuildIntegration(Snowflake guildId, Snowflake integrationId)
         {
-            DiscordApiData data = await rest.Post($"guilds/{guildId}/integrations/{integrationId}/sync",
+            await rest.Post($"guilds/{guildId}/integrations/{integrationId}/sync",
                 "guilds/guild/integrations/integration/sync").ConfigureAwait(false);
-            return data.IsNull;
         }
 
         /// <summary>
