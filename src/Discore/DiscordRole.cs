@@ -44,10 +44,10 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordRole(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
+        internal DiscordRole(DiscordHttpApi http, Snowflake guildId, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             GuildId = guildId;
 

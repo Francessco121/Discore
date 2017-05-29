@@ -15,11 +15,17 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordChannel(IDiscordApplication app, DiscordApiData data, DiscordChannelType type)
+        internal DiscordChannel(DiscordHttpApi http, DiscordChannelType type)
+        {
+            this.http = http;
+            ChannelType = type;
+        }
+
+        internal DiscordChannel(DiscordHttpApi http, DiscordApiData data, DiscordChannelType type)
             : base(data)
         {
+            this.http = http;
             ChannelType = type;
-            http = app.HttpApi;
         }
 
         /// <summary>

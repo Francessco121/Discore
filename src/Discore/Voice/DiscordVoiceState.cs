@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Discore.Voice
+﻿namespace Discore.Voice
 {
     /// <summary>
     /// Used to represent a user's voice connection status.
@@ -8,28 +6,18 @@ namespace Discore.Voice
     public sealed class DiscordVoiceState
     {
         /// <summary>
-        /// Gets the guild this voice state is for.
+        /// Gets the ID of the guild this voice state is for.
         /// </summary>
-        public DiscordGuild Guild => guildCache.Value;
+        public Snowflake GuildId { get; }
 
         /// <summary>
-        /// Gets the voice channel the user is in (or null if they are not in a voice channel).
+        /// Gets the ID of the voice channel the user is in (or null if they are not in a voice channel).
         /// </summary>
-        public DiscordGuildVoiceChannel Channel
-        {
-            get => channelId.HasValue ? guildCache.VoiceChannels [channelId.Value]?.Value : null;
-        }
-
+        public Snowflake? ChannelId { get; }
         /// <summary>
-        /// Gets the user this voice state is for.
+        /// Gets the ID of the user this voice state is for.
         /// </summary>
-        public DiscordUser User => cache.Users[userId];
-
-        /// <summary>
-        /// Returns whether the user is in a voice channel.
-        /// <para>Faster than checking if the Channel property is null as this avoids a cache hit.</para>
-        /// </summary>
-        public bool IsInVoiceChannel => channelId.HasValue;
+        public Snowflake UserId { get; }
 
         /// <summary>
         /// Gets the current session ID of this voice state.
@@ -56,22 +44,12 @@ namespace Discore.Voice
         /// </summary>
         public bool IsSuppressed { get; }
 
-        DiscoreCache cache;
-        DiscoreGuildCache guildCache;
-
-        Snowflake guildId;
-        Snowflake userId;
-        Snowflake? channelId;
-
-        internal DiscordVoiceState(DiscoreCache cache, DiscoreGuildCache guildCache, DiscordApiData data)
+        internal DiscordVoiceState(Snowflake guildId, DiscordApiData data)
         {
-            this.cache = cache;
-            this.guildCache = guildCache;
+            GuildId      = guildId;
 
-            guildId = guildCache.DictionaryId;
-
-            channelId    = data.GetSnowflake("channel_id");
-            userId       = data.GetSnowflake("user_id").Value;
+            ChannelId    = data.GetSnowflake("channel_id");
+            UserId       = data.GetSnowflake("user_id").Value;
 
             SessionId    = data.GetString("session_id");
             IsServerDeaf = data.GetBoolean("deaf").Value;

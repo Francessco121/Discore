@@ -13,15 +13,13 @@ namespace Discore
         /// </summary>
         public string Topic { get; }
 
-        IDiscordApplication app;
         DiscordHttpApi http;
         Snowflake lastMessageId;
 
-        internal DiscordGuildTextChannel(IDiscordApplication app, DiscordApiData data, Snowflake? guildId = null)
-            : base(app, data, DiscordGuildChannelType.Text, guildId)
+        internal DiscordGuildTextChannel(DiscordHttpApi http, DiscordApiData data, Snowflake? guildId = null)
+            : base(http, data, DiscordGuildChannelType.Text, guildId)
         {
-            this.app = app;
-            http = app.HttpApi;
+            this.http = http;
 
             Topic = data.GetString("topic");
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);

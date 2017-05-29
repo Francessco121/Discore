@@ -26,7 +26,7 @@ namespace Discore.WebSocket.Net
 
         DiscordWebSocketApplication app;
         Shard shard;
-        DiscoreCache cache;
+        DiscordShardCache cache;
 
         ShardStartConfig lastShardStartConfig;
 

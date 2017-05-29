@@ -1,11 +1,13 @@
-﻿namespace Discore
+﻿using Discore.WebSocket;
+
+namespace Discore
 {
     public sealed class DiscordUser : DiscordIdObject
     {
         /// <summary>
         /// Gets the name of this user.
         /// </summary>
-        public string Username { get; private set; }
+        public string Username { get; }
 
         /// <summary>
         /// Gets the user's 4-digit discord-tag.
@@ -15,7 +17,7 @@
         /// <summary>
         /// Gets the user's avatar hash.
         /// </summary>
-        public string Avatar { get; private set; }
+        public string Avatar { get; }
 
         /// <summary>
         /// Gets whether this account belongs to an OAuth application.
@@ -25,46 +27,49 @@
         /// <summary>
         /// Gets whether this account has two-factor authentication enabled.
         /// </summary>
-        public bool HasTwoFactorAuth { get; private set; }
+        public bool HasTwoFactorAuth { get; }
 
         /// <summary>
         /// Gets whether the email on this account is verified.
         /// </summary>
-        public bool IsVerified { get; private set; }
+        public bool IsVerified { get; }
 
         /// <summary>
         /// Gets the email (if available) of this account.
         /// </summary>
-        public string Email { get; private set; }
+        public string Email { get; }
 
         /// <summary>
-        /// Gets whether this account is a webhook user
+        /// Gets whether this is a webhook user.
         /// </summary>
-        public bool IsWebhook { get; }
+        public bool IsWebhookUser { get; }
 
-        internal DiscordUser(DiscordApiData data, bool isWebhookUser = false)
-            : base(data)
+        internal DiscordUser(MutableUser user)
         {
-            IsWebhook        = isWebhookUser;
-            Username         = data.GetString("username");
-            Discriminator    = data.GetString("discriminator");
-            Avatar           = data.GetString("avatar");
-            IsVerified       = data.GetBoolean("verified").GetValueOrDefault();
-            Email            = data.GetString("email");
-            IsBot            = data.GetBoolean("bot").GetValueOrDefault();
-            HasTwoFactorAuth = data.GetBoolean("mfa_enabled").GetValueOrDefault();
+            Id = user.Id;
+            IsWebhookUser = user.IsWebhookUser;
+
+            Username = user.Username;
+            Discriminator = user.Discriminator;
+            Avatar = user.Avatar;
+            IsBot = user.IsBot;
+            HasTwoFactorAuth = user.HasTwoFactorAuth;
+            IsVerified = user.IsVerified;
+            Email = user.Email;
         }
 
-        internal DiscordUser PartialUpdate(DiscordApiData updateData)
+        internal DiscordUser(DiscordApiData data)
+            : base(data)
         {
-            DiscordUser newUser = (DiscordUser)MemberwiseClone();
-            newUser.Username         = updateData.GetString("username") ?? Username;
-            newUser.Avatar           = updateData.GetString("avatar") ?? Avatar;
-            newUser.IsVerified       = updateData.GetBoolean("verified") ?? IsVerified;
-            newUser.Email            = updateData.GetString("email") ?? Email;
-            newUser.HasTwoFactorAuth = updateData.GetBoolean("mfa_enabled") ?? HasTwoFactorAuth;
+            IsWebhookUser = data.ContainsKey("webhook_id");
 
-            return newUser;
+            Username = data.GetString("username");
+            Discriminator = data.GetString("discriminator");
+            Avatar = data.GetString("avatar");
+            IsBot = data.GetBoolean("bot") ?? false;
+            HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? false;
+            IsVerified = data.GetBoolean("verified") ?? false;
+            Email = data.GetString("email");
         }
 
         public override string ToString()

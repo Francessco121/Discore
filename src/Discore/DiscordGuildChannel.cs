@@ -34,11 +34,11 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordGuildChannel(IDiscordApplication app, DiscordApiData data, DiscordGuildChannelType type, 
+        internal DiscordGuildChannel(DiscordHttpApi http, DiscordApiData data, DiscordGuildChannelType type, 
             Snowflake? guildId) 
-            : base(app, data, DiscordChannelType.Guild)
+            : base(http, data, DiscordChannelType.Guild)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             GuildChannelType = type;
 

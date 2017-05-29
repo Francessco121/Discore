@@ -1,11 +1,15 @@
 ﻿using Discore.Http;
 using Discore.Voice;
+using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Discore
 {
+    /// <summary>
+    /// Represents a collection of users and channels. Also referred to as a "server".
+    /// </summary>
     public sealed class DiscordGuild : DiscordIdObject
     {
         /// <summary>
@@ -64,7 +68,7 @@ namespace Discore
         /// <summary>
         /// Gets a list of guild features.
         /// </summary>
-        public IReadOnlyCollection<string> Features { get; }
+        public IReadOnlyList<string> Features { get; }
 
         /// <summary>
         /// Gets the level of multi-factor authentication for this guild.
@@ -72,50 +76,46 @@ namespace Discore
         public int MFALevel { get; }
 
         /// <summary>
-        /// Gets whether this guild is unavailable (if information is available).
+        /// Gets a dictionary of all roles in this guild.
         /// </summary>
-        public bool IsUnavailable { get; private set; }
+        public IReadOnlyDictionary<Snowflake, DiscordRole> Roles { get; }
 
         /// <summary>
-        /// Gets a table of all roles in this guild.
+        /// Gets a dictionary of all custom emojis in this guild.
         /// </summary>
-        public IReadOnlyDictionary<Snowflake, DiscordRole> Roles
-        {
-            get { return guildCache != null ? guildCache.Roles : roles; }
-        }
-
-        /// <summary>
-        /// Gets a table of all custom emojis in this guild.
-        /// </summary>
-        public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis
-        {
-            get { return guildCache != null ? guildCache.Emojis : emojis; }
-        }
+        public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis { get; }
 
         DiscordHttpApi http;
 
-        DiscoreGuildCache guildCache;
-        IReadOnlyDictionary<Snowflake, DiscordRole> roles;
-        IReadOnlyDictionary<Snowflake, DiscordEmoji> emojis;
-
-        internal DiscordGuild(IDiscordApplication app, DiscoreGuildCache guildCache, DiscordApiData data)
-            : this(app, data, true)
+        internal DiscordGuild(DiscordHttpApi http, MutableGuild guild)
         {
-            this.guildCache = guildCache;
+            this.http = http;
+
+            Id = guild.Id;
+
+            Name = guild.Name;
+            Icon = guild.Icon;
+            Splash = guild.Splash;
+            RegionId = guild.RegionId;
+            AfkTimeout = guild.AfkTimeout;
+            IsEmbedEnabled = guild.IsEmbedEnabled;
+            VerificationLevel = guild.VerificationLevel;
+            MFALevel = guild.MFALevel;
+            DefaultMessageNotifications = guild.DefaultMessageNotifications;
+            OwnerId = guild.OwnerId;
+            AfkChannelId = guild.AfkChannelId;
+            EmbedChannelId = guild.EmbedChannelId;
+
+            Features = new List<string>(guild.Features);
+
+            Roles = guild.Roles.CreateReadonlyCopy();
+            Emojis = guild.Emojis.CreateReadonlyCopy();
         }
 
-        internal DiscordGuild(IDiscordApplication app, DiscordApiData data)
-            : this(app, data, false)
-        { }
-
-        private DiscordGuild(IDiscordApplication app, DiscordApiData data, bool isWebSocket)
+        internal DiscordGuild(DiscordHttpApi http, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
-
-            IsUnavailable = data.GetBoolean("unavailable") ?? false;
-            if (IsUnavailable)
-                return;
+            this.http = http;
 
             Name                        = data.GetString("name");
             Icon                        = data.GetString("icon");
@@ -139,42 +139,29 @@ namespace Discore
 
             Features = features;
 
-            // Only deserialize if not created from the websocket interface,
-            // this information is already available in the websocket cache.
-            if (!isWebSocket)
+            // Get roles
+            IList<DiscordApiData> rolesData = data.GetArray("roles");
+            Dictionary<Snowflake, DiscordRole> roles = new Dictionary<Snowflake, DiscordRole>();
+
+            for (int i = 0; i < rolesData.Count; i++)
             {
-                // Get roles
-                IList<DiscordApiData> rolesData = data.GetArray("roles");
-                Dictionary<Snowflake, DiscordRole> roles = new Dictionary<Snowflake, DiscordRole>();
-
-                for (int i = 0; i < rolesData.Count; i++)
-                {
-                    DiscordRole role = new DiscordRole(app, Id, rolesData[i]);
-                    roles.Add(role.Id, role);
-                }
-
-                this.roles = roles;
-
-                // Get emojis
-                IList<DiscordApiData> emojisArray = data.GetArray("emojis");
-                Dictionary<Snowflake, DiscordEmoji> emojis = new Dictionary<Snowflake, DiscordEmoji>();
-
-                for (int i = 0; i < emojisArray.Count; i++)
-                {
-                    DiscordEmoji emoji = new DiscordEmoji(emojisArray[i]);
-                    emojis.Add(emoji.Id, emoji);
-                }
-
-                this.emojis = emojis;
+                DiscordRole role = new DiscordRole(http, Id, rolesData[i]);
+                roles.Add(role.Id, role);
             }
-        }
 
-        internal DiscordGuild UpdateUnavailable(bool unavailable)
-        {
-            DiscordGuild guild = (DiscordGuild)MemberwiseClone();
-            guild.IsUnavailable = unavailable;
+            Roles = roles;
 
-            return guild;
+            // Get emojis
+            IList<DiscordApiData> emojisArray = data.GetArray("emojis");
+            Dictionary<Snowflake, DiscordEmoji> emojis = new Dictionary<Snowflake, DiscordEmoji>();
+
+            for (int i = 0; i < emojisArray.Count; i++)
+            {
+                DiscordEmoji emoji = new DiscordEmoji(emojisArray[i]);
+                emojis.Add(emoji.Id, emoji);
+            }
+
+            Emojis = emojis;
         }
 
         /// <summary>

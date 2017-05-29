@@ -18,10 +18,10 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordGuildVoiceChannel(IDiscordApplication app, DiscordApiData data, Snowflake? guildId = null)
-            : base(app, data, DiscordGuildChannelType.Voice, guildId)
+        internal DiscordGuildVoiceChannel(DiscordHttpApi http, DiscordApiData data, Snowflake? guildId = null)
+            : base(http, data, DiscordGuildChannelType.Voice, guildId)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             Bitrate = data.GetInteger("bitrate").Value;
             UserLimit = data.GetInteger("user_limit").Value;
