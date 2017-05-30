@@ -1,4 +1,5 @@
-﻿using Discore.WebSocket.Net;
+﻿using Discore.Voice;
+using Discore.WebSocket.Net;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;

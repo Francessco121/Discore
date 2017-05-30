@@ -69,10 +69,15 @@ namespace Discore.WebSocket
             return innerDictionary;
         }
 
-        public void Remove(Snowflake parentId, Snowflake childId)
+        public bool TryRemove(Snowflake parentId, Snowflake childId, out T value)
         {
             if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
-                dictionary.TryRemove(childId, out _);
+                return innerDictionary.TryRemove(childId, out value);
+            else
+            {
+                value = null;
+                return false;
+            }
         }
 
         public void Clear()

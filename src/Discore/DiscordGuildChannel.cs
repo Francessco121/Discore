@@ -51,7 +51,7 @@ namespace Discore
 
             for (int i = 0; i < overwrites.Count; i++)
             {
-                DiscordOverwrite overwrite = new DiscordOverwrite(app, Id, overwrites[i]);
+                DiscordOverwrite overwrite = new DiscordOverwrite(http, Id, overwrites[i]);
                 permissionOverwrites.Add(overwrite.Id, overwrite);
             }
 

@@ -31,6 +31,23 @@ namespace Discore.WebSocket
             IsDeaf = data.GetBoolean("deaf") ?? false;
             IsMute = data.GetBoolean("mute") ?? false;
 
+            UpdateRoles(data);
+
+            Dirty();
+        }
+
+        public void PartialUpdate(DiscordApiData data)
+        {
+            Nickname = data.GetString("nick") ?? Nickname;
+
+            if (data.ContainsKey("roles"))
+                UpdateRoles(data);
+
+            Dirty();
+        }
+
+        void UpdateRoles(DiscordApiData data)
+        {
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
             Snowflake[] roleIds = new Snowflake[rolesArray.Count];
 
@@ -38,8 +55,6 @@ namespace Discore.WebSocket
                 roleIds[i] = rolesArray[i].ToSnowflake().Value;
 
             RoleIds = roleIds;
-
-            Dirty();
         }
 
         protected override DiscordGuildMember BuildImmutableEntity()

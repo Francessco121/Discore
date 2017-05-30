@@ -1,10 +1,11 @@
-﻿using Discore.Voice;
+﻿using ConcurrentCollections;
+using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace Discore.WebSocket
+namespace Discore.Voice
 {
     public class ShardVoiceManager
     {
@@ -14,9 +15,11 @@ namespace Discore.WebSocket
         public ICollection<DiscordVoiceConnection> VoiceConnections => voiceConnections.Values;
 
         ConcurrentDictionary<Snowflake, DiscordVoiceConnection> voiceConnections;
+        ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> voiceChannelUsers;
+
         Shard shard;
         Gateway gateway;
-        DiscoreCache cache;
+        DiscordShardCache cache;
 
         internal ShardVoiceManager(Shard shard, Gateway gateway)
         {
@@ -26,6 +29,25 @@ namespace Discore.WebSocket
             cache = shard.Cache;
 
             voiceConnections = new ConcurrentDictionary<Snowflake, DiscordVoiceConnection>();
+            voiceChannelUsers = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
+        }
+
+        /// <summary>
+        /// Gets a list of the IDs of every user currently in the specified voice channel.
+        /// <para>Note: Will return an empty list if the voice channel is not found.</para>
+        /// </summary>
+        public IReadOnlyList<Snowflake> GetUsersInVoiceChannel(Snowflake voiceChannelId)
+        {
+            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake> userIds))
+            {
+                List<Snowflake> ids = new List<Snowflake>(userIds.Count);
+                foreach (Snowflake id in userIds)
+                    ids.Add(id);
+
+                return ids;
+            }
+            else
+                return new Snowflake[0];
         }
 
         /// <summary>
@@ -61,13 +83,11 @@ namespace Discore.WebSocket
                 return connection;
             }
 
-            // Get the guild cache
-            DiscoreGuildCache guildCache;
-            if (cache.Guilds.TryGetValue(voiceChannel.GuildId, out guildCache))
+            // Get the guild
+            if (cache.Guilds.TryGetValue(voiceChannel.GuildId, out MutableGuild mutableGuild))
             {
                 // Get the authenticated user's guild member from cache
-                DiscoreMemberCache memberCache;
-                if (guildCache.Members.TryGetValue(shard.User.Id, out memberCache))
+                if (cache.GuildMembers.TryGetValue(shard.User.Id, out memberCache))
                 {
                     // Check if the user has permission to connect.
                     DiscordPermissionHelper.AssertPermission(DiscordPermission.Connect,
@@ -107,13 +127,31 @@ namespace Discore.WebSocket
 
         internal void RemoveVoiceConnection(Snowflake guildId)
         {
-            DiscordVoiceConnection temp;
-            voiceConnections.TryRemove(guildId, out temp);
+            voiceConnections.TryRemove(guildId, out _);
+        }
+
+        internal void AddUserToVoiceChannel(Snowflake voiceChannelId, Snowflake userId)
+        {
+            ConcurrentHashSet<Snowflake> userList;
+            if (!voiceChannelUsers.TryGetValue(voiceChannelId, out userList))
+            {
+                userList = new ConcurrentHashSet<Snowflake>();
+                voiceChannelUsers[voiceChannelId] = userList;
+            }
+
+            userList.Add(userId);
+        }
+
+        internal void RemoveUserFromVoiceChannel(Snowflake voiceChannelId, Snowflake userId)
+        {
+            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake> userList))
+                userList.TryRemove(userId);
         }
 
         internal void Clear()
         {
             voiceConnections.Clear();
+            voiceChannelUsers.Clear();
         }
     }
 }

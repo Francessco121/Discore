@@ -26,10 +26,10 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordOverwrite(IDiscordApplication app, Snowflake channelId, DiscordApiData data)
+        internal DiscordOverwrite(DiscordHttpApi http, Snowflake channelId, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             ChannelId = channelId;
 

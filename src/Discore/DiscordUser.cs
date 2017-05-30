@@ -58,10 +58,10 @@ namespace Discore
             Email = user.Email;
         }
 
-        internal DiscordUser(DiscordApiData data)
+        internal DiscordUser(bool isWebhookUser, DiscordApiData data)
             : base(data)
         {
-            IsWebhookUser = data.ContainsKey("webhook_id");
+            IsWebhookUser = isWebhookUser;
 
             Username = data.GetString("username");
             Discriminator = data.GetString("discriminator");

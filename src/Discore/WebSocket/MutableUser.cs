@@ -5,8 +5,8 @@ namespace Discore.WebSocket
     class MutableUser : MutableEntity<DiscordUser>
     {
         public Snowflake Id { get; }
+        public bool IsWebhookUser { get; }
 
-        public bool IsWebhookUser { get; private set; }
         public string Username { get; private set; }
         public string Discriminator { get; private set; }
         public string Avatar { get; private set; }
@@ -15,16 +15,23 @@ namespace Discore.WebSocket
         public bool IsVerified { get; private set; }
         public string Email { get; private set; }
 
-        public MutableUser(Snowflake id, DiscordHttpApi http)
+        bool initialized;
+
+        string lastUsername;
+        string lastAvatar;
+        bool lastHasTwoFactorAuth;
+        bool lastIsVerified;
+        string lastEmail;
+
+        public MutableUser(Snowflake id, bool isWebhookUser, DiscordHttpApi http)
             : base(http)
         {
             Id = id;
+            IsWebhookUser = isWebhookUser;
         }
 
         public void Update(DiscordApiData data)
         {
-            IsWebhookUser = data.ContainsKey("webhook_id");
-
             Username = data.GetString("username");
             Discriminator = data.GetString("discriminator");
             Avatar = data.GetString("avatar");
@@ -33,7 +40,37 @@ namespace Discore.WebSocket
             IsVerified = data.GetBoolean("verified") ?? false;
             Email = data.GetString("email");
 
-            Dirty();
+            // To avoid causing every entity that references this user to be unncessarily
+            // dirtied, check to see if any properties actually changed with this update.
+            if (!initialized || Changed())
+                Dirty();
+
+            initialized = true;
+        }
+
+        public void PartialUpdate(DiscordApiData data)
+        {
+            Username = data.GetString("username") ?? Username;
+            Avatar = data.GetString("avatar") ?? Avatar;
+            HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? HasTwoFactorAuth;
+            IsVerified = data.GetBoolean("verified") ?? IsVerified;
+            Email = data.GetString("email") ?? Email;
+
+            // To avoid causing every entity that references this user to be unncessarily
+            // dirtied, check to see if any properties actually changed with this update.
+            if (Changed())
+                Dirty();
+        }
+
+        bool Changed()
+        {
+            // Only check properties that can change
+
+            return lastUsername != Username
+                || lastAvatar != Avatar
+                || lastHasTwoFactorAuth != HasTwoFactorAuth
+                || lastIsVerified != IsVerified
+                || lastEmail != Email;
         }
 
         protected override DiscordUser BuildImmutableEntity()

@@ -17,9 +17,9 @@
         /// </summary>
         public DiscordUserStatus Status { get; }
 
-        internal DiscordUserPresence(DiscordApiData data)
+        internal DiscordUserPresence(Snowflake userId, DiscordApiData data)
         {
-            UserId = data.LocateSnowflake("user.id").Value;
+            UserId = userId;
 
             DiscordApiData gameData = data.Get("game");
             if (gameData != null)

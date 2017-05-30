@@ -14,7 +14,7 @@ namespace Discore.Http
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}",
                 "guilds/guild").ConfigureAwait(false);
-            return new DiscordGuild(app, data);
+            return new DiscordGuild(this, data);
         }
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace Discore.Http
             DiscordApiData returnData = await rest.Post("guilds", requestdata,
                 "guilds").ConfigureAwait(false);
 
-            return new DiscordGuild(app, returnData);
+            return new DiscordGuild(this, returnData);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}", requestData,
                 "guilds/guild").ConfigureAwait(false);
-            return new DiscordGuild(app, returnData);
+            return new DiscordGuild(this, returnData);
         }
 
         /// <summary>
