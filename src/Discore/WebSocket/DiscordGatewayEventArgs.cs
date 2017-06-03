@@ -92,13 +92,13 @@ namespace Discore.WebSocket
 
     public class GuildUserEventArgs : DiscordGatewayEventArgs
     {
-        public DiscordGuild Guild { get; }
+        public Snowflake GuildId { get; }
         public DiscordUser User { get; }
 
-        public GuildUserEventArgs(Shard shard, DiscordGuild guild, DiscordUser user)
+        public GuildUserEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
             : base(shard)
         {
-            Guild = guild;
+            GuildId = guildId;
             User = user;
         }
     }

@@ -420,14 +420,7 @@ namespace Discore.WebSocket.Net
 
             mutableUser.Update(userData);
 
-            MutableGuild mutableGuild;
-            if (cache.Guilds.TryGetValue(guildId, out mutableGuild))
-            {
-                OnGuildBanAdded?.Invoke(this, new GuildUserEventArgs(shard, 
-                    mutableGuild.ImmutableEntity, mutableUser.ImmutableEntity));
-            }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+            OnGuildBanAdded?.Invoke(this, new GuildUserEventArgs(shard, guildId, mutableUser.ImmutableEntity));
         }
 
         [DispatchEvent("GUILD_BAN_REMOVE")]
@@ -446,14 +439,7 @@ namespace Discore.WebSocket.Net
 
             mutableUser.Update(userData);
 
-            MutableGuild mutableGuild;
-            if (cache.Guilds.TryGetValue(guildId, out mutableGuild))
-            {
-                OnGuildBanRemoved?.Invoke(this, new GuildUserEventArgs(shard, 
-                    mutableGuild.ImmutableEntity, mutableUser.ImmutableEntity));
-            }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+            OnGuildBanRemoved?.Invoke(this, new GuildUserEventArgs(shard, guildId, mutableUser.ImmutableEntity));
         }
 
         [DispatchEvent("GUILD_EMOJIS_UPDATE")]
