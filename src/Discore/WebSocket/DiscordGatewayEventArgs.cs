@@ -55,13 +55,13 @@ namespace Discore.WebSocket
 
     public class GuildMemberEventArgs : DiscordGatewayEventArgs
     {
-        public DiscordGuild Guild { get; }
+        public Snowflake GuildId { get; }
         public DiscordGuildMember Member { get; }
 
-        public GuildMemberEventArgs(Shard shard, DiscordGuild guild, DiscordGuildMember member)
+        public GuildMemberEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member)
             : base(shard)
         {
-            Guild = guild;
+            GuildId = guildId;
             Member = member;
         }
     }
@@ -70,8 +70,8 @@ namespace Discore.WebSocket
     {
         public DiscordUserPresence Presence { get; }
 
-        public PresenceEventArgs(Shard shard, DiscordGuild guild, DiscordGuildMember member, DiscordUserPresence presence)
-            : base(shard, guild, member)
+        public PresenceEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member, DiscordUserPresence presence)
+            : base(shard, guildId, member)
         {
             Presence = presence;
         }
@@ -79,13 +79,13 @@ namespace Discore.WebSocket
 
     public class GuildMemberChunkEventArgs : DiscordGatewayEventArgs
     {
-        public DiscordGuild Guild { get; }
+        public Snowflake GuildId { get; }
         public DiscordGuildMember[] Members { get; }
 
-        public GuildMemberChunkEventArgs(Shard shard, DiscordGuild guild, DiscordGuildMember[] members)
+        public GuildMemberChunkEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember[] members)
             : base(shard)
         {
-            Guild = guild;
+            GuildId = guildId;
             Members = members;
         }
     }
@@ -138,29 +138,42 @@ namespace Discore.WebSocket
         }
     }
 
-    public class GuildChannelEventArgs : GuildEventArgs
+    public class GuildIntegrationsEventArgs : DiscordGatewayEventArgs
     {
+        public Snowflake GuildId { get; }
+
+        public GuildIntegrationsEventArgs(Shard shard, Snowflake guildId)
+            : base(shard)
+        {
+            GuildId = guildId;
+        }
+    }
+
+    public class GuildChannelEventArgs : DiscordGatewayEventArgs
+    {
+        public Snowflake GuildId { get; }
         public DiscordGuildChannel Channel { get; }
 
-        public GuildChannelEventArgs(Shard shard, DiscordGuild guild, DiscordGuildChannel channel)
-            : base(shard, guild)
+        public GuildChannelEventArgs(Shard shard, Snowflake guildId, DiscordGuildChannel channel)
+            : base(shard)
         {
+            GuildId = guildId;
             Channel = channel;
         }
     }
 
     public class ChannelPinsUpdateEventArgs : DiscordGatewayEventArgs
     {
-        public ITextChannel Channel { get; }
+        public Snowflake ChannelId { get; }
         /// <summary>
         /// Gets the date-time of the newest pin as of this update (or null if there is no longer any pins).
         /// </summary>
         public DateTime? LastPinTimestamp { get; }
 
-        public ChannelPinsUpdateEventArgs(Shard shard, ITextChannel channel, DateTime? lastPinTimestamp)
+        public ChannelPinsUpdateEventArgs(Shard shard, Snowflake channelId, DateTime? lastPinTimestamp)
             : base(shard)
         {
-            Channel = channel;
+            ChannelId = channelId;
             LastPinTimestamp = lastPinTimestamp;
         }
     }
@@ -203,17 +216,17 @@ namespace Discore.WebSocket
     public class MessageReactionEventArgs : DiscordGatewayEventArgs
     {
         public Snowflake MessageId { get; }
-        public DiscordUser User { get; }
-        public ITextChannel TextChannel { get; }
+        public Snowflake UserId { get; }
+        public Snowflake ChannelId { get; }
         public DiscordReactionEmoji Emoji { get; }
 
-        public MessageReactionEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel, 
-            DiscordUser user, DiscordReactionEmoji emoji)
+        public MessageReactionEventArgs(Shard shard, Snowflake messageId, Snowflake channelId,
+            Snowflake userId, DiscordReactionEmoji emoji)
             : base(shard)
         {
             MessageId = messageId;
-            TextChannel = textChannel;
-            User = user;
+            ChannelId = channelId;
+            UserId = userId;
             Emoji = emoji;
         }
     }
@@ -221,13 +234,13 @@ namespace Discore.WebSocket
     public class MessageReactionRemoveAllEventArgs : DiscordGatewayEventArgs
     {
         public Snowflake MessageId { get; }
-        public ITextChannel TextChannel { get; }
+        public Snowflake ChannelId { get; }
 
-        public MessageReactionRemoveAllEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel)
+        public MessageReactionRemoveAllEventArgs(Shard shard, Snowflake messageId, Snowflake channelId)
             : base(shard)
         {
             MessageId = messageId;
-            TextChannel = textChannel;
+            ChannelId = channelId;
         }
     }
 

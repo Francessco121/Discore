@@ -73,7 +73,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when the integrations of a guild are updated.
         /// </summary>
-        event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
+        event EventHandler<GuildIntegrationsEventArgs> OnGuildIntegrationsUpdated;
 
         /// <summary>
         /// Called when a user joins a guild.
