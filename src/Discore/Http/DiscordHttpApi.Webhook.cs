@@ -15,7 +15,7 @@ namespace Discore.Http
         /// <param name="channelId">The id of the channel the webhook will post to.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> or <paramref name="avatar"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> CreateWebook(string name, DiscordAvatarData avatar, Snowflake channelId)
+        public async Task<DiscordWebhook> CreateWebook(string name, DiscordImageData avatar, Snowflake channelId)
         {
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
@@ -102,7 +102,7 @@ namespace Discore.Http
         /// Modifies an exsting webhook.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> ModifyWebook(Snowflake webhookId, string name = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordWebhook> ModifyWebook(Snowflake webhookId, string name = null, DiscordImageData avatar = null)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
             if (!string.IsNullOrWhiteSpace(name))

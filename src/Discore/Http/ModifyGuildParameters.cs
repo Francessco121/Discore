@@ -34,9 +34,9 @@
         public int? AfkTimeout { get; set; }
         /// <summary>
         /// Gets or sets the icon for the guild (or null to leave unchanged).
-        /// <para>Set to <see cref="DiscordAvatarData.None"/> to remove the icon.</para>
+        /// <para>Set to <see cref="DiscordImageData.None"/> to remove the icon.</para>
         /// </summary>
-        public DiscordAvatarData Icon { get; set; }
+        public DiscordImageData Icon { get; set; }
         /// <summary>
         /// Gets or sets the ID of the user to transfer guild ownership to (or null to leave unchanged) 
         /// (current authenticated user must be guild owner).
@@ -44,9 +44,9 @@
         public Snowflake? OwnerId { get; set; }
         /// <summary>
         /// Gets or sets the image splash for the guild (or null to leave unchanged) (VIP guilds only).
-        /// <para>Set to <see cref="DiscordAvatarData.None"/> to remove the splash.</para>
+        /// <para>Set to <see cref="DiscordImageData.None"/> to remove the splash.</para>
         /// </summary>
-        public DiscordAvatarData Splash { get; set; }
+        public DiscordImageData Splash { get; set; }
 
         /// <summary>
         /// Sets the name of the guild.
@@ -106,8 +106,8 @@
         /// <summary>
         /// Sets the guild icon.
         /// </summary>
-        /// <param name="icon">The avatar data or <see cref="DiscordAvatarData.None"/> to remove the icon.</param>
-        public ModifyGuildParameters SetIcon(DiscordAvatarData icon)
+        /// <param name="icon">The avatar data or <see cref="DiscordImageData.None"/> to remove the icon.</param>
+        public ModifyGuildParameters SetIcon(DiscordImageData icon)
         {
             Icon = icon;
             return this;
@@ -125,8 +125,8 @@
         /// <summary>
         /// Sets the image splash for the guild (VIP guilds only). 
         /// </summary>
-        /// <param name="splash">The avatar data or <see cref="DiscordAvatarData.None"/> to remove the splash.</param>
-        public ModifyGuildParameters SetSplash(DiscordAvatarData splash)
+        /// <param name="splash">The avatar data or <see cref="DiscordImageData.None"/> to remove the splash.</param>
+        public ModifyGuildParameters SetSplash(DiscordImageData splash)
         {
             Splash = splash;
             return this;

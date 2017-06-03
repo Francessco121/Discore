@@ -29,7 +29,7 @@ namespace Discore.Http
         /// Parameters left null will leave the properties unchanged.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordUser> ModifyCurrentUser(string username = null, DiscordAvatarData avatar = null)
+        public async Task<DiscordUser> ModifyCurrentUser(string username = null, DiscordImageData avatar = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             if (username != null)

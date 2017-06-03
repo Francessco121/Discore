@@ -62,7 +62,7 @@ namespace Discore
         /// Modifies the settings of this webhook.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordWebhook> Modify(string name = null, DiscordAvatarData avatar = null)
+        public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null)
         {
             return http.ModifyWebook(Id, name, avatar);
         }

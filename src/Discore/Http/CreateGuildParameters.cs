@@ -21,7 +21,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the icon of the guild (or null to use default).
         /// </summary>
-        public DiscordAvatarData Icon { get; set; }
+        public DiscordImageData Icon { get; set; }
 
         /// <summary>
         /// Gets or sets the verification level of the guild (or null to use default).
@@ -65,7 +65,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the icon of the guild.
         /// </summary>
-        public CreateGuildParameters SetIcon(DiscordAvatarData icon)
+        public CreateGuildParameters SetIcon(DiscordImageData icon)
         {
             Icon = icon;
             return this;
