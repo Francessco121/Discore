@@ -6,6 +6,9 @@ using System.Linq;
 
 namespace Discore.WebSocket
 {
+    /// <summary>
+    /// A set of cached entity data for a Discord shard connection.
+    /// </summary>
     public class DiscordShardCache
     {
         internal ShardCacheDictionary<MutableUser> Users { get; }
@@ -91,11 +94,17 @@ namespace Discore.WebSocket
             GuildChannelIds.TryRemove(guildId, out _);
         }
 
+        /// <summary>
+        /// Returns whether the specified guild is available or false if the guild is not known to this cache.
+        /// </summary>
         public bool IsGuildAvailable(Snowflake guildId)
         {
             return !unavailableGuildIds.Contains(guildId);
         }
 
+        /// <summary>
+        /// Returns a list of the IDs of all guilds currently in this cache.
+        /// </summary>
         public IReadOnlyList<Snowflake> GetAllGuildIds()
         {
             List<Snowflake> ids = new List<Snowflake>(guildIds.Count);
@@ -105,6 +114,9 @@ namespace Discore.WebSocket
             return ids;
         }
 
+        /// <summary>
+        /// Returns a list of the IDs of all unavailable guilds currently in this cache.
+        /// </summary>
         public IReadOnlyList<Snowflake> GetUnavailableGuildIds()
         {
             List<Snowflake> ids = new List<Snowflake>(unavailableGuildIds.Count);
@@ -114,21 +126,33 @@ namespace Discore.WebSocket
             return ids;
         }
 
+        /// <summary>
+        /// Returns the shard-specific metdata for the given guild or null if the guild is not currently cached.
+        /// </summary>
         public DiscordGuildMetadata GetGuildMetadata(Snowflake guildId)
         {
             return GuildMetadata[guildId];
         }
 
+        /// <summary>
+        /// Returns the specified guild or null if it is not currently cached.
+        /// </summary>
         public DiscordGuild GetGuild(Snowflake guildId)
         {
             return Guilds[guildId]?.ImmutableEntity;
         }
 
+        /// <summary>
+        /// Returns the specified user or null if they are not currently cached.
+        /// </summary>
         public DiscordUser GetUser(Snowflake userId)
         {
             return Users[userId]?.ImmutableEntity;
         }
 
+        /// <summary>
+        /// Returns the specified channel or null if it is not currently cached.
+        /// </summary>
         public DiscordChannel GetChannel(Snowflake channelId)
         {
             DiscordGuildChannel guildChannel = GuildChannels[channelId];
@@ -138,11 +162,17 @@ namespace Discore.WebSocket
                 return DMChannels[channelId]?.ImmutableEntity;
         }
 
+        /// <summary>
+        /// Returns the specified DM channel or, null if it is not currently cached or is not a DM channel.
+        /// </summary>
         public DiscordDMChannel GetDMChannel(Snowflake dmChannelId)
         {
             return DMChannels[dmChannelId]?.ImmutableEntity;
         }
 
+        /// <summary>
+        /// Returns a list of all channels in the given guild or null if the guild is not currently cached.
+        /// </summary>
         public IReadOnlyList<DiscordGuildChannel> GetGuildChannels(Snowflake guildId)
         {
             if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
@@ -165,41 +195,70 @@ namespace Discore.WebSocket
                 return new DiscordGuildChannel[0];
         }
 
+        /// <summary>
+        /// Returns the specified guild text channel or, null if it is not currently cached or is not a guild text channel.
+        /// </summary>
         public DiscordGuildTextChannel GetGuildTextChannel(Snowflake guildTextChannelId)
         {
             return GuildChannels[guildTextChannelId] as DiscordGuildTextChannel;
         }
 
+        /// <summary>
+        /// Returns the specified guild voice channel or, null if it is not currently cached or is not a guild voice channel.
+        /// </summary>
         public DiscordGuildVoiceChannel GetGuildVoiceChannel(Snowflake guildVoiceChannelId)
         {
             return GuildChannels[guildVoiceChannelId] as DiscordGuildVoiceChannel;
         }
 
+        /// <summary>
+        /// Returns the specified guild member or,
+        /// null if the member is not currently cached or the guild is not currently cached.
+        /// </summary>
         public DiscordGuildMember GetGuildMember(Snowflake guildId, Snowflake userId)
         {
             return GuildMembers[guildId, userId]?.ImmutableEntity;
         }
 
+        /// <summary>
+        /// Returns a list of all currently cached members for the given guild, or null if the guild is not currently cached.
+        /// </summary>
         public IReadOnlyList<DiscordGuildMember> GetGuildMembers(Snowflake guildId)
         {
             return GuildMembers.GetValues(guildId)?.Select(x => x.ImmutableEntity).ToList();
         }
 
+        /// <summary>
+        /// Returns the presence for the specified user or, 
+        /// null if the presence is not currently cached or the guild is not currently cached.
+        /// </summary>
         public DiscordUserPresence GetUserPresence(Snowflake guildId, Snowflake userId)
         {
             return GuildPresences[guildId, userId];
         }
 
+        /// <summary>
+        /// Returns a list of all currently cached user presences for the given guild, 
+        /// or null if the guild is not currently cached.
+        /// </summary>
         public IReadOnlyList<DiscordUserPresence> GetUserPresences(Snowflake guildId)
         {
             return GuildPresences.GetValues(guildId)?.ToList();
         }
 
+        /// <summary>
+        /// Returns the voice state for the specified user or, 
+        /// null if the voice state is not currently cached or the guild is not currently cached.
+        /// </summary>
         public DiscordVoiceState GetVoiceState(Snowflake guildId, Snowflake userId)
         {
             return GuildVoiceStates[guildId, userId];
         }
 
+        /// <summary>
+        /// Returns a list of all currently cached voice states for the given guild, 
+        /// or null if the guild is not currently cached.
+        /// </summary>
         public IReadOnlyList<DiscordVoiceState> GetVoiceStates(Snowflake guildId)
         {
             return GuildVoiceStates.GetValues(guildId)?.ToList();
