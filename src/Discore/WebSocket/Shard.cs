@@ -1,5 +1,7 @@
-﻿using Discore.WebSocket.Net;
+﻿using Discore.Voice;
+using Discore.WebSocket.Net;
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,13 +42,13 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets the local memory cache of data from the Discord API.
         /// </summary>
-        public DiscoreCache Cache { get; }
+        public DiscordShardCache Cache { get; }
 
         /// <summary>
-        /// Gets the user used to authenticate this shard connection.
+        /// Gets the ID of the user used to authenticate this shard connection.
         /// Or null if the gateway is not currently connected.
         /// </summary>
-        public DiscordUser User { get; internal set; }
+        public Snowflake? UserId { get; internal set; }
 
         /// <summary>
         /// Gets the gateway manager for this shard.
@@ -63,6 +65,8 @@ namespace Discore.WebSocket
         bool isDisposed;
         DiscoreLogger log;
 
+        ConcurrentDictionary<Snowflake, bool> guildAvailableStates;
+
         internal Shard(DiscordWebSocketApplication app, int shardId)
         {
             Application = app;
@@ -70,7 +74,8 @@ namespace Discore.WebSocket
 
             log = new DiscoreLogger($"Shard#{shardId}");
 
-            Cache = new DiscoreCache();
+            Cache = new DiscordShardCache();
+            guildAvailableStates = new ConcurrentDictionary<Snowflake, bool>();
 
             gateway = new Gateway(app, this);
             gateway.OnFatalDisconnection += Gateway_OnFatalDisconnection;
@@ -174,8 +179,28 @@ namespace Discore.WebSocket
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
         }
 
+        /// <summary>
+        /// Returns whether this shard is managing the specified guild.
+        /// </summary>
+        public bool HasGuild(Snowflake guildId)
+        {
+            // TODO: This will always return null if the gateway has not received READY...
+
+            return guildAvailableStates.ContainsKey(guildId);
+        }
+
+        public bool IsGuildAvailable(Snowflake guildId)
+        {
+            if (guildAvailableStates.TryGetValue(guildId, out bool isAvailable))
+                return isAvailable;
+            else
+                return false;
+        }
+
         void CleanUp()
         {
+            UserId = null;
+
             Cache.Clear();
             Voice.Clear();
         }

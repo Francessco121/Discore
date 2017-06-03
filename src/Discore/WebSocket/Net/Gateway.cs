@@ -26,7 +26,7 @@ namespace Discore.WebSocket.Net
 
         DiscordWebSocketApplication app;
         Shard shard;
-        DiscoreCache cache;
+        DiscordShardCache cache;
 
         ShardStartConfig lastShardStartConfig;
 
@@ -552,7 +552,7 @@ namespace Discore.WebSocket.Net
                     else
                         await callback.Asynchronous(e.Data).ConfigureAwait(false);
                 }
-                catch (DiscoreCacheException cex)
+                catch (ShardCacheException cex)
                 {
                     log.LogWarning($"[{eventName}] Did not complete because: {cex.Message}.");
                 }

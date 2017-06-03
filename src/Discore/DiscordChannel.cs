@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// A <see cref="DiscordDMChannel"/> or a <see cref="DiscordGuildChannel"/>.
     /// </summary>
-    public abstract class DiscordChannel : DiscordIdObject
+    public abstract class DiscordChannel : DiscordIdEntity
     {
         /// <summary>
         /// Gets the type of this channel.
@@ -15,11 +15,17 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordChannel(IDiscordApplication app, DiscordApiData data, DiscordChannelType type)
+        internal DiscordChannel(DiscordHttpApi http, DiscordChannelType type)
+        {
+            this.http = http;
+            ChannelType = type;
+        }
+
+        internal DiscordChannel(DiscordHttpApi http, DiscordApiData data, DiscordChannelType type)
             : base(data)
         {
+            this.http = http;
             ChannelType = type;
-            http = app.HttpApi;
         }
 
         /// <summary>

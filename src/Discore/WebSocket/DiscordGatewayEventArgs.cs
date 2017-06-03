@@ -38,17 +38,17 @@ namespace Discore.WebSocket
     public class TypingStartEventArgs : DiscordGatewayEventArgs
     {
         public DiscordUser User { get; }
-        public DiscordChannel Channel { get; }
+        public ITextChannel TextChannel { get; }
         /// <summary>
         /// Unix time in seconds when the typing started.
         /// </summary>
         public int Timestamp { get; }
 
-        public TypingStartEventArgs(Shard shard, DiscordUser user, DiscordChannel channel, int timestamp)
+        public TypingStartEventArgs(Shard shard, DiscordUser user, ITextChannel textChannel, int timestamp)
             : base(shard)
         {
             User = user;
-            Channel = channel;
+            TextChannel = textChannel;
             Timestamp = timestamp;
         }
     }
@@ -63,6 +63,17 @@ namespace Discore.WebSocket
         {
             Guild = guild;
             Member = member;
+        }
+    }
+
+    public class PresenceEventArgs : GuildMemberEventArgs
+    {
+        public DiscordUserPresence Presence { get; }
+
+        public PresenceEventArgs(Shard shard, DiscordGuild guild, DiscordGuildMember member, DiscordUserPresence presence)
+            : base(shard, guild, member)
+        {
+            Presence = presence;
         }
     }
 
@@ -127,12 +138,12 @@ namespace Discore.WebSocket
         }
     }
 
-    public class GuildChannelEventArgs : DiscordGatewayEventArgs
+    public class GuildChannelEventArgs : GuildEventArgs
     {
         public DiscordGuildChannel Channel { get; }
 
-        public GuildChannelEventArgs(Shard shard, DiscordGuildChannel channel)
-            : base(shard)
+        public GuildChannelEventArgs(Shard shard, DiscordGuild guild, DiscordGuildChannel channel)
+            : base(shard, guild)
         {
             Channel = channel;
         }
@@ -179,13 +190,13 @@ namespace Discore.WebSocket
     public class MessageDeleteEventArgs : DiscordGatewayEventArgs
     {
         public Snowflake MessageId { get; }
-        public DiscordChannel Channel { get; }
+        public ITextChannel TextChannel { get; }
 
-        public MessageDeleteEventArgs(Shard shard, Snowflake messageId, DiscordChannel channel)
+        public MessageDeleteEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel)
             : base(shard)
         {
             MessageId = messageId;
-            Channel = channel;
+            TextChannel = textChannel;
         }
     }
 
@@ -193,15 +204,15 @@ namespace Discore.WebSocket
     {
         public Snowflake MessageId { get; }
         public DiscordUser User { get; }
-        public DiscordChannel Channel { get; }
+        public ITextChannel TextChannel { get; }
         public DiscordReactionEmoji Emoji { get; }
 
-        public MessageReactionEventArgs(Shard shard, Snowflake messageId, DiscordChannel channel, 
+        public MessageReactionEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel, 
             DiscordUser user, DiscordReactionEmoji emoji)
             : base(shard)
         {
             MessageId = messageId;
-            Channel = channel;
+            TextChannel = textChannel;
             User = user;
             Emoji = emoji;
         }
@@ -234,13 +245,11 @@ namespace Discore.WebSocket
     public class VoiceStateEventArgs : DiscordGatewayEventArgs
     {
         public DiscordVoiceState VoiceState { get; }
-        public DiscordGuildMember Member { get; }
 
-        public VoiceStateEventArgs(Shard shard, DiscordVoiceState state, DiscordGuildMember member) 
+        public VoiceStateEventArgs(Shard shard, DiscordVoiceState state) 
             : base(shard)
         {
             VoiceState = state;
-            Member = member;
         }
     }
 }

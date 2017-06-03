@@ -1,12 +1,16 @@
 ﻿using Discore.Http;
 using Discore.Voice;
+using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Discore
 {
-    public sealed class DiscordGuild : DiscordIdObject
+    /// <summary>
+    /// Represents a collection of users and channels. Also referred to as a "server".
+    /// </summary>
+    public sealed class DiscordGuild : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this guild.
@@ -64,7 +68,7 @@ namespace Discore
         /// <summary>
         /// Gets a list of guild features.
         /// </summary>
-        public IReadOnlyCollection<string> Features { get; }
+        public IReadOnlyList<string> Features { get; }
 
         /// <summary>
         /// Gets the level of multi-factor authentication for this guild.
@@ -72,79 +76,47 @@ namespace Discore
         public int MFALevel { get; }
 
         /// <summary>
-        /// Gets the number of members in this guild (if information is available).
+        /// Gets a dictionary of all roles in this guild.
         /// </summary>
-        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
-        public int? MemberCount { get; }
+        public IReadOnlyDictionary<Snowflake, DiscordRole> Roles { get; }
 
         /// <summary>
-        /// Gets the date-time that the current authenticated user joined this guild (if information is available).
+        /// Gets a dictionary of all custom emojis in this guild.
         /// </summary>
-        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
-        public DateTime? JoinedAt { get; }
-
-        /// <summary>
-        /// Gets whether this guild is considered large (if information is available).
-        /// </summary>
-        /// <remarks>Available if this guild was retrieved through the gateway.</remarks>
-        public bool? IsLarge { get;  }
-
-        /// <summary>
-        /// Gets whether this guild is unavailable (if information is available).
-        /// </summary>
-        public bool IsUnavailable { get; private set; }
-
-        /// <summary>
-        /// Gets a table of all roles in this guild.
-        /// </summary>
-        public IReadOnlyDictionary<Snowflake, DiscordRole> Roles
-        {
-            get { return guildCache != null ? guildCache.Roles : roles; }
-        }
-
-        /// <summary>
-        /// Gets a table of all custom emojis in this guild.
-        /// </summary>
-        public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis
-        {
-            get { return guildCache != null ? guildCache.Emojis : emojis; }
-        }
+        public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis { get; }
 
         DiscordHttpApi http;
 
-        DiscoreGuildCache guildCache;
-        IReadOnlyDictionary<Snowflake, DiscordRole> roles;
-        IReadOnlyDictionary<Snowflake, DiscordEmoji> emojis;
-
-        internal DiscordGuild(IDiscordApplication app, DiscoreGuildCache guildCache, DiscordApiData data)
-            : this(app, data, true)
+        internal DiscordGuild(DiscordHttpApi http, MutableGuild guild)
         {
-            this.guildCache = guildCache;
+            this.http = http;
 
-            DiscordGuild existing = guildCache.Value;
-            if (existing != null)
-            {
-                // Default to previous data if we didn't deserialize it in the new one.
-                JoinedAt = JoinedAt ?? existing.JoinedAt;
-                IsLarge = IsLarge ?? existing.IsLarge;
-                MemberCount = MemberCount ?? existing.MemberCount;
-            }
+            Id = guild.Id;
+
+            Name = guild.Name;
+            Icon = guild.Icon;
+            Splash = guild.Splash;
+            RegionId = guild.RegionId;
+            AfkTimeout = guild.AfkTimeout;
+            IsEmbedEnabled = guild.IsEmbedEnabled;
+            VerificationLevel = guild.VerificationLevel;
+            MFALevel = guild.MFALevel;
+            DefaultMessageNotifications = guild.DefaultMessageNotifications;
+            OwnerId = guild.OwnerId;
+            AfkChannelId = guild.AfkChannelId;
+            EmbedChannelId = guild.EmbedChannelId;
+
+            Features = new List<string>(guild.Features);
+
+            Roles = guild.Roles.CreateReadonlyCopy();
+            Emojis = guild.Emojis.CreateReadonlyCopy();
         }
 
-        internal DiscordGuild(IDiscordApplication app, DiscordApiData data)
-            : this(app, data, false)
-        { }
-
-        private DiscordGuild(IDiscordApplication app, DiscordApiData data, bool isWebSocket)
+        internal DiscordGuild(DiscordHttpApi http, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
-            IsUnavailable = data.GetBoolean("unavailable") ?? false;
-            if (IsUnavailable)
-                return;
-
-            // Always available
             Name                        = data.GetString("name");
             Icon                        = data.GetString("icon");
             Splash                      = data.GetString("splash");
@@ -158,11 +130,6 @@ namespace Discore
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
 
-            // Only available in GUILD_CREATE
-            MemberCount                 = data.GetInteger("member_count");
-            JoinedAt                    = data.GetDateTime("joined_at");
-            IsLarge                     = data.GetBoolean("large");
-
             // Get features
             IList<DiscordApiData> featuresData = data.GetArray("features");
             string[] features = new string[featuresData.Count];
@@ -172,42 +139,29 @@ namespace Discore
 
             Features = features;
 
-            // Only deserialize if not created from the websocket interface,
-            // this information is already available in the websocket cache.
-            if (!isWebSocket)
+            // Get roles
+            IList<DiscordApiData> rolesData = data.GetArray("roles");
+            Dictionary<Snowflake, DiscordRole> roles = new Dictionary<Snowflake, DiscordRole>();
+
+            for (int i = 0; i < rolesData.Count; i++)
             {
-                // Get roles
-                IList<DiscordApiData> rolesData = data.GetArray("roles");
-                Dictionary<Snowflake, DiscordRole> roles = new Dictionary<Snowflake, DiscordRole>();
-
-                for (int i = 0; i < rolesData.Count; i++)
-                {
-                    DiscordRole role = new DiscordRole(app, Id, rolesData[i]);
-                    roles.Add(role.Id, role);
-                }
-
-                this.roles = roles;
-
-                // Get emojis
-                IList<DiscordApiData> emojisArray = data.GetArray("emojis");
-                Dictionary<Snowflake, DiscordEmoji> emojis = new Dictionary<Snowflake, DiscordEmoji>();
-
-                for (int i = 0; i < emojisArray.Count; i++)
-                {
-                    DiscordEmoji emoji = new DiscordEmoji(emojisArray[i]);
-                    emojis.Add(emoji.Id, emoji);
-                }
-
-                this.emojis = emojis;
+                DiscordRole role = new DiscordRole(http, Id, rolesData[i]);
+                roles.Add(role.Id, role);
             }
-        }
 
-        internal DiscordGuild UpdateUnavailable(bool unavailable)
-        {
-            DiscordGuild guild = (DiscordGuild)MemberwiseClone();
-            guild.IsUnavailable = unavailable;
+            Roles = roles;
 
-            return guild;
+            // Get emojis
+            IList<DiscordApiData> emojisArray = data.GetArray("emojis");
+            Dictionary<Snowflake, DiscordEmoji> emojis = new Dictionary<Snowflake, DiscordEmoji>();
+
+            for (int i = 0; i < emojisArray.Count; i++)
+            {
+                DiscordEmoji emoji = new DiscordEmoji(emojisArray[i]);
+                emojis.Add(emoji.Id, emoji);
+            }
+
+            Emojis = emojis;
         }
 
         /// <summary>

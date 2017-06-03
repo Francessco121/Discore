@@ -169,7 +169,7 @@ namespace Discore.Http
             DiscordApiData returnData = await rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", requestData,
                 "webhooks/webhook/token").ConfigureAwait(false);
 
-            return waitAndReturnMessage ? new DiscordMessage(app, returnData) : null;
+            return waitAndReturnMessage ? new DiscordMessage(this, returnData) : null;
         }
 
         /// <summary>
@@ -246,7 +246,7 @@ namespace Discore.Http
                 return request;
             }, "webhooks/webhook/token").ConfigureAwait(false);
 
-            return waitAndReturnMessage ? new DiscordMessage(app, returnData) : null;
+            return waitAndReturnMessage ? new DiscordMessage(this, returnData) : null;
         }
     }
 }

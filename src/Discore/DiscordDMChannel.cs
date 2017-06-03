@@ -1,4 +1,5 @@
 ﻿using Discore.Http;
+using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,41 +15,30 @@ namespace Discore
         /// <summary>
         /// Gets the user on the other end of this channel.
         /// </summary>
-        public DiscordUser Recipient => cache != null ? cache.Users[recipientId] : recipient;
+        public DiscordUser Recipient { get; }
 
-        IDiscordApplication app;
         DiscordHttpApi http;
         Snowflake lastMessageId;
 
-        DiscoreCache cache;
-        DiscordUser recipient;
-        Snowflake recipientId;
-
-        internal DiscordDMChannel(DiscoreCache cache, IDiscordApplication app, DiscordApiData data)
-            : this(app, data, true)
+        internal DiscordDMChannel(DiscordHttpApi http, MutableDMChannel channel)
+            : base(http, DiscordChannelType.DirectMessage)
         {
-            this.cache = cache;
+            this.http = http;
+
+            Id = channel.Id;
+            Recipient = channel.Recipient.ImmutableEntity;
+            lastMessageId = channel.LastMessageId;
         }
 
-        internal DiscordDMChannel(IDiscordApplication app, DiscordApiData data)
-            : this(app, data, false)
-        { }
-
-        private DiscordDMChannel(IDiscordApplication app, DiscordApiData data, bool isWebSocket) 
-            : base(app, data, DiscordChannelType.DirectMessage)
+        internal DiscordDMChannel(DiscordHttpApi http, DiscordApiData data)
+            : base(http, data, DiscordChannelType.DirectMessage)
         {
-            this.app = app;
-            http = app.HttpApi;
+            this.http = http;
 
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
 
-            if (!isWebSocket)
-            {
-                DiscordApiData recipientData = data.Get("recipient");
-                recipient = new DiscordUser(recipientData);
-            }
-            else
-                recipientId = data.LocateSnowflake("recipient.id").Value;
+            DiscordApiData recipientData = data.Get("recipient");
+            Recipient = new DiscordUser(false, recipientData);
         }
 
         /// <summary>

@@ -17,7 +17,7 @@ namespace Discore.Http
 
             DiscordRole[] roles = new DiscordRole[data.Values.Count];
             for (int i = 0; i < roles.Length; i++)
-                roles[i] = new DiscordRole(app, guildId, data.Values[i]);
+                roles[i] = new DiscordRole(this, guildId, data.Values[i]);
 
             return roles;
         }
@@ -30,7 +30,7 @@ namespace Discore.Http
         {
             DiscordApiData data = await rest.Post($"guilds/{guildId}/roles",
                 "guilds/guild/roles").ConfigureAwait(false);
-            return new DiscordRole(app, guildId, data);
+            return new DiscordRole(this, guildId, data);
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Post($"guilds/{guildId}/roles", requestData,
                 "guilds/guild/roles").ConfigureAwait(false);
-            return new DiscordRole(app, guildId, returnData);
+            return new DiscordRole(this, guildId, returnData);
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Discore.Http
 
             DiscordRole[] roles = new DiscordRole[returnData.Values.Count];
             for (int i = 0; i < roles.Length; i++)
-                roles[i] = new DiscordRole(app, guildId, returnData.Values[i]);
+                roles[i] = new DiscordRole(this, guildId, returnData.Values[i]);
 
             return roles;
         }
@@ -90,7 +90,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData,
                 "guilds/guild/roles/role").ConfigureAwait(false);
-            return new DiscordRole(app, guildId, returnData);
+            return new DiscordRole(this, guildId, returnData);
         }
 
         /// <summary>

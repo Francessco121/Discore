@@ -34,11 +34,11 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordGuildChannel(IDiscordApplication app, DiscordApiData data, DiscordGuildChannelType type, 
+        internal DiscordGuildChannel(DiscordHttpApi http, DiscordApiData data, DiscordGuildChannelType type, 
             Snowflake? guildId) 
-            : base(app, data, DiscordChannelType.Guild)
+            : base(http, data, DiscordChannelType.Guild)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             GuildChannelType = type;
 
@@ -51,7 +51,7 @@ namespace Discore
 
             for (int i = 0; i < overwrites.Count; i++)
             {
-                DiscordOverwrite overwrite = new DiscordOverwrite(app, Id, overwrites[i]);
+                DiscordOverwrite overwrite = new DiscordOverwrite(http, Id, overwrites[i]);
                 permissionOverwrites.Add(overwrite.Id, overwrite);
             }
 

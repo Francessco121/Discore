@@ -7,7 +7,7 @@ namespace Discore
     /// <summary>
     /// A guild integration.
     /// </summary>
-    public sealed class DiscordIntegration : DiscordIdObject
+    public sealed class DiscordIntegration : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this integration.
@@ -78,7 +78,7 @@ namespace Discore
 
             DiscordApiData userData = data.Get("user");
             if (userData != null)
-                User = new DiscordUser(userData);
+                User = new DiscordUser(false, userData);
 
             DiscordApiData accountData = data.Get("account");
             if (accountData != null)

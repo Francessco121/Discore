@@ -3,7 +3,7 @@
     public sealed class DiscordUserPresence
     {
         /// <summary>
-        /// Gets the id of the user this presence is for.
+        /// Gets the ID of the user this presence is for.
         /// </summary>
         public Snowflake UserId { get; }
 
@@ -17,7 +17,7 @@
         /// </summary>
         public DiscordUserStatus Status { get; }
 
-        internal DiscordUserPresence(DiscordApiData data, Snowflake userId)
+        internal DiscordUserPresence(Snowflake userId, DiscordApiData data)
         {
             UserId = userId;
 
@@ -42,7 +42,7 @@
                     Status = DiscordUserStatus.Online;
 
                     // However, this should issue a warning.
-                    DiscoreLogger.Default.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {userId}. " +
+                    DiscoreLogger.Default.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {UserId}. " +
                         $"status = {statusStr}");
                 }
                 else

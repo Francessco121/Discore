@@ -28,15 +28,15 @@ namespace Discore.Http
             bool isPrivate = data.GetBoolean("is_private") ?? false;
 
             if (isPrivate) // if dm channel
-                return new DiscordDMChannel(app, data);
+                return new DiscordDMChannel(this, data);
             else
             {
                 string channelType = data.GetString("type");
 
                 if (channelType == "voice") // if voice channel
-                    return new DiscordGuildVoiceChannel(app, data);
+                    return new DiscordGuildVoiceChannel(this, data);
                 else if (channelType == "text") // if text channel
-                    return new DiscordGuildTextChannel(app, data);
+                    return new DiscordGuildTextChannel(this, data);
             }
 
             throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Discore.Http
 {
@@ -14,7 +11,7 @@ namespace Discore.Http
         public async Task<DiscordUser> GetCurrentUser()
         {
             DiscordApiData data = await rest.Get("users/@me", "users/@me").ConfigureAwait(false);
-            return new DiscordUser(data);
+            return new DiscordUser(false, data);
         }
 
         /// <summary>
@@ -24,7 +21,7 @@ namespace Discore.Http
         public async Task<DiscordUser> GetUser(Snowflake id)
         {
             DiscordApiData data = await rest.Get($"users/{id}", "users/user").ConfigureAwait(false);
-            return new DiscordUser(data);
+            return new DiscordUser(false, data);
         }
 
         /// <summary>
@@ -41,7 +38,7 @@ namespace Discore.Http
                 requestData.Set("avatar", avatar.ToDataUriScheme());
 
             DiscordApiData returnData = await rest.Patch("users/@me", requestData, "users/@me").ConfigureAwait(false);
-            return returnData.IsNull ? null : new DiscordUser(returnData);
+            return returnData.IsNull ? null : new DiscordUser(false, returnData);
         }
 
         /// <summary>
@@ -79,7 +76,7 @@ namespace Discore.Http
             DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
 
             for (int i = 0; i < dms.Length; i++)
-                dms[i] = new DiscordDMChannel(app, data.Values[i]);
+                dms[i] = new DiscordDMChannel(this, data.Values[i]);
 
             return dms;
         }
@@ -95,7 +92,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Post("users/@me/channels", requestData,
                 "users/@me/channels").ConfigureAwait(false);
-            return new DiscordDMChannel(app, returnData);
+            return new DiscordDMChannel(this, returnData);
         }
     }
 }

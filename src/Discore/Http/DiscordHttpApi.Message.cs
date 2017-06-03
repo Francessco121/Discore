@@ -25,7 +25,7 @@ namespace Discore.Http
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
-                messages[i] = new DiscordMessage(app, data.Values[i]);
+                messages[i] = new DiscordMessage(this, data.Values[i]);
 
             return messages;
         }
@@ -38,7 +38,7 @@ namespace Discore.Http
         {
             DiscordApiData data = await rest.Get($"channels/{channelId}/messages/{messageId}",
                 "channels/channel/messages/message").ConfigureAwait(false);
-            return new DiscordMessage(app, data);
+            return new DiscordMessage(this, data);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/messages", requestData,
                 "channels/channel/messages").ConfigureAwait(false);
-            return new DiscordMessage(app, returnData);
+            return new DiscordMessage(this, returnData);
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Discore.Http
 
                 return request;
             }, "channels/channel/messages").ConfigureAwait(false);
-            return new DiscordMessage(app, returnData);
+            return new DiscordMessage(this, returnData);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
                 "channels/channel/messages/message").ConfigureAwait(false);
-            return new DiscordMessage(app, returnData);
+            return new DiscordMessage(this, returnData);
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
                 "channels/channel/messages/message").ConfigureAwait(false);
-            return new DiscordMessage(app, returnData);
+            return new DiscordMessage(this, returnData);
         }
 
         /// <summary>
@@ -255,7 +255,7 @@ namespace Discore.Http
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
-                messages[i] = new DiscordMessage(app, data.Values[i]);
+                messages[i] = new DiscordMessage(this, data.Values[i]);
 
             return messages;
         }

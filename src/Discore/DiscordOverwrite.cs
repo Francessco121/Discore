@@ -7,7 +7,7 @@ namespace Discore
     /// <summary>
     /// A permission overwrite for a <see cref="DiscordRole"/> or <see cref="DiscordGuildMember"/>.
     /// </summary>
-    public sealed class DiscordOverwrite : DiscordIdObject
+    public sealed class DiscordOverwrite : DiscordIdEntity
     {
         public Snowflake ChannelId { get; }
 
@@ -26,10 +26,10 @@ namespace Discore
 
         DiscordHttpApi http;
 
-        internal DiscordOverwrite(IDiscordApplication app, Snowflake channelId, DiscordApiData data)
+        internal DiscordOverwrite(DiscordHttpApi http, Snowflake channelId, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             ChannelId = channelId;
 

@@ -44,7 +44,7 @@ namespace Discore
         {
             DiscordApiData inviterData = data.Get("inviter");
             if (inviterData != null)
-                Inviter = new DiscordUser(inviterData);
+                Inviter = new DiscordUser(false, inviterData);
 
             Uses = data.GetInteger("uses").Value;
             MaxUses = data.GetInteger("max_uses").Value;

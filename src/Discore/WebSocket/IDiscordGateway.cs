@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -143,7 +142,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when the presence of a member in a guild is updated.
         /// </summary>
-        event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
+        event EventHandler<PresenceEventArgs> OnPresenceUpdated;
 
         /// <summary>
         /// Called when a user starts typing.

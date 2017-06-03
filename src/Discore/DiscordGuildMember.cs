@@ -1,11 +1,12 @@
 ﻿using Discore.Http;
+using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Discore
 {
-    public sealed class DiscordGuildMember : DiscordIdObject
+    public sealed class DiscordGuildMember : DiscordIdEntity
     {
         /// <summary>
         /// Gets the id of the guild this member is in.
@@ -13,19 +14,19 @@ namespace Discore
         public Snowflake GuildId { get; }
 
         /// <summary>
-        /// Gets the actual user data for this member.
+        /// Gets the user data for this member.
         /// </summary>
-        public DiscordUser User => cache != null ? cache.Users[Id] : user;
+        public DiscordUser User { get; }
 
         /// <summary>
         /// Gets the guild-wide nickname of the user.
         /// </summary>
-        public string Nickname { get; private set; }
+        public string Nickname { get; }
 
         /// <summary>
         /// Gets the ids of all of the roles this member has.
         /// </summary>
-        public IReadOnlyList<Snowflake> RoleIds { get; private set; }
+        public IReadOnlyList<Snowflake> RoleIds { get; }
 
         /// <summary>
         /// Gets the time this member joined the guild.
@@ -43,65 +44,48 @@ namespace Discore
         public bool IsMute { get; }
 
         DiscordHttpApi http;
-        DiscoreCache cache;
-        DiscordUser user;
 
-        internal DiscordGuildMember(IDiscordApplication app, DiscoreCache cache, DiscordApiData data, Snowflake guildId)
-            : this(app, data, guildId, true)
+        internal DiscordGuildMember(DiscordHttpApi http, MutableGuildMember member)
         {
-            this.cache = cache;
+            this.http = http;
+
+            GuildId = member.GuildId;
+
+            User = member.User.ImmutableEntity;
+
+            Nickname = member.Nickname;
+            JoinedAt = member.JoinedAt;
+            IsDeaf = member.IsDeaf;
+            IsMute = member.IsMute;
+
+            RoleIds = new List<Snowflake>(member.RoleIds);
         }
 
-        internal DiscordGuildMember(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
-            : this(app, data, guildId, false)
-        { }
-
-        private DiscordGuildMember(IDiscordApplication app, DiscordApiData data, Snowflake guildId, bool isWebSocket)
+        internal DiscordGuildMember(DiscordHttpApi http, DiscordApiData data, Snowflake guildId)
             // We do not specify the base constructor here because the member ID must be
             // manually retrieved, as it is actually the user id rather than a unique one.
         {
-            http = app.HttpApi;
+            this.http = http;
 
-            GuildId = guildId;
+            GuildId = GuildId;
 
             Nickname = data.GetString("nick");
             JoinedAt = data.GetDateTime("joined_at").Value;
-            IsDeaf = data.GetBoolean("deaf").Value;
-            IsMute = data.GetBoolean("mute").Value;
+            IsDeaf = data.GetBoolean("deaf") ?? false;
+            IsMute = data.GetBoolean("mute") ?? false;
 
-            // Get roles
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
-            RoleIds = DeserializeRoleIds(rolesArray);
-
-            if (!isWebSocket)
-            {
-                // Get user
-                DiscordApiData userData = data.Get("user");
-                user = new DiscordUser(userData);
-
-                Id = User.Id;
-            }
-            else
-                Id = data.LocateSnowflake("user.id").Value;
-        }
-
-        static Snowflake[] DeserializeRoleIds(IList<DiscordApiData> rolesArray)
-        {
             Snowflake[] roleIds = new Snowflake[rolesArray.Count];
 
             for (int i = 0; i < rolesArray.Count; i++)
                 roleIds[i] = rolesArray[i].ToSnowflake().Value;
 
-            return roleIds;
-        }
+            RoleIds = roleIds;
 
-        internal DiscordGuildMember PartialUpdate(DiscordApiData updateData)
-        {
-            DiscordGuildMember newMember = (DiscordGuildMember)MemberwiseClone();
-            newMember.RoleIds = DeserializeRoleIds(updateData.GetArray("roles"));
-            newMember.Nickname = updateData.GetString("nick");
+            DiscordApiData userData = data.Get("user");
+            User = new DiscordUser(false, userData);
 
-            return newMember;
+            Id = User.Id;
         }
 
         /// <summary>

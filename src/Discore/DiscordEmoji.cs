@@ -2,7 +2,7 @@
 
 namespace Discore
 {
-    public sealed class DiscordEmoji : DiscordIdObject
+    public sealed class DiscordEmoji : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this emoji.
