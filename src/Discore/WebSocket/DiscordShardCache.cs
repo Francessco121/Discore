@@ -96,7 +96,7 @@ namespace Discore.WebSocket
             return !unavailableGuildIds.Contains(guildId);
         }
 
-        public IEnumerable<Snowflake> GetAllGuildIds()
+        public IReadOnlyList<Snowflake> GetAllGuildIds()
         {
             List<Snowflake> ids = new List<Snowflake>(guildIds.Count);
             foreach (Snowflake id in guildIds)
@@ -105,7 +105,7 @@ namespace Discore.WebSocket
             return ids;
         }
 
-        public IEnumerable<Snowflake> GetUnavailableGuildIds()
+        public IReadOnlyList<Snowflake> GetUnavailableGuildIds()
         {
             List<Snowflake> ids = new List<Snowflake>(unavailableGuildIds.Count);
             foreach (Snowflake id in unavailableGuildIds)
@@ -143,7 +143,7 @@ namespace Discore.WebSocket
             return DMChannels[dmChannelId]?.ImmutableEntity;
         }
 
-        public IEnumerable<DiscordGuildChannel> GetGuildChannels(Snowflake guildId)
+        public IReadOnlyList<DiscordGuildChannel> GetGuildChannels(Snowflake guildId)
         {
             if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
             {
@@ -180,9 +180,9 @@ namespace Discore.WebSocket
             return GuildMembers[guildId, userId]?.ImmutableEntity;
         }
 
-        public IEnumerable<DiscordGuildMember> GetGuildMembers(Snowflake guildId)
+        public IReadOnlyList<DiscordGuildMember> GetGuildMembers(Snowflake guildId)
         {
-            return GuildMembers.GetValues(guildId).Select(x => x.ImmutableEntity);
+            return GuildMembers.GetValues(guildId)?.Select(x => x.ImmutableEntity).ToList();
         }
 
         public DiscordUserPresence GetUserPresence(Snowflake guildId, Snowflake userId)
@@ -190,9 +190,9 @@ namespace Discore.WebSocket
             return GuildPresences[guildId, userId];
         }
 
-        public IEnumerable<DiscordUserPresence> GetUserPresences(Snowflake guildId)
+        public IReadOnlyList<DiscordUserPresence> GetUserPresences(Snowflake guildId)
         {
-            return GuildPresences.GetValues(guildId);
+            return GuildPresences.GetValues(guildId)?.ToList();
         }
 
         public DiscordVoiceState GetVoiceState(Snowflake guildId, Snowflake userId)
@@ -200,9 +200,9 @@ namespace Discore.WebSocket
             return GuildVoiceStates[guildId, userId];
         }
 
-        public IEnumerable<DiscordVoiceState> GetVoiceStates(Snowflake guildId)
+        public IReadOnlyList<DiscordVoiceState> GetVoiceStates(Snowflake guildId)
         {
-            return GuildVoiceStates.GetValues(guildId);
+            return GuildVoiceStates.GetValues(guildId)?.ToList();
         }
 
         public void Clear()

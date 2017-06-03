@@ -54,7 +54,7 @@ namespace Discore.WebSocket
             if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
                 return innerDictionary.Values;
             else
-                return new T[0];
+                return null;
         }
 
         public ShardCacheDictionary<T> GetOrCreateInner(Snowflake parentId)
