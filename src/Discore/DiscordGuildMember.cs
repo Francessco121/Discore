@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Discore
 {
-    public sealed class DiscordGuildMember : DiscordIdObject
+    public sealed class DiscordGuildMember : DiscordIdEntity
     {
         /// <summary>
         /// Gets the id of the guild this member is in.

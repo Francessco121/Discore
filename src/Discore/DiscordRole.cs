@@ -7,7 +7,7 @@ namespace Discore
     /// <summary>
     /// Roles represent a set of permissions attached to a group of users.
     /// </summary>
-    public sealed class DiscordRole : DiscordIdObject
+    public sealed class DiscordRole : DiscordIdEntity
     {
         /// <summary>
         /// Gets the id of the guild this role is for.

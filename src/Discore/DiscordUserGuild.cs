@@ -3,7 +3,7 @@
     /// <summary>
     /// A brief version of a guild object.
     /// </summary>
-    public sealed class DiscordUserGuild : DiscordIdObject
+    public sealed class DiscordUserGuild : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this user guild.

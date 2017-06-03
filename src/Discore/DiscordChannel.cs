@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// A <see cref="DiscordDMChannel"/> or a <see cref="DiscordGuildChannel"/>.
     /// </summary>
-    public abstract class DiscordChannel : DiscordIdObject
+    public abstract class DiscordChannel : DiscordIdEntity
     {
         /// <summary>
         /// Gets the type of this channel.

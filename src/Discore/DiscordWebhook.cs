@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Discore
 {
-    public sealed class DiscordWebhook : DiscordIdObject
+    public sealed class DiscordWebhook : DiscordIdEntity
     {
         /// <summary> 
         /// Gets the ID of the guild this webhook belongs to.

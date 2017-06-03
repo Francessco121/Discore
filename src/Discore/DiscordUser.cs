@@ -2,7 +2,7 @@
 
 namespace Discore
 {
-    public sealed class DiscordUser : DiscordIdObject
+    public sealed class DiscordUser : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this user.

@@ -8,7 +8,7 @@ namespace Discore
     /// <summary>
     /// Represents a message sent in a channel within Discord.
     /// </summary>
-    public sealed class DiscordMessage : DiscordIdObject
+    public sealed class DiscordMessage : DiscordIdEntity
     {
         public const int MAX_CHARACTERS = 2000;
 

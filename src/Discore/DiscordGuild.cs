@@ -10,7 +10,7 @@ namespace Discore
     /// <summary>
     /// Represents a collection of users and channels. Also referred to as a "server".
     /// </summary>
-    public sealed class DiscordGuild : DiscordIdObject
+    public sealed class DiscordGuild : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this guild.
