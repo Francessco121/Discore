@@ -4,14 +4,12 @@ using System;
 
 namespace Discore.WebSocket
 {
-    abstract class MutableEntity : IDisposable
+    abstract class MutableEntity
     {
         public bool IsDirty { get; private set; }
 
         ConcurrentHashSet<MutableEntity> referencedBy;
         ConcurrentHashSet<MutableEntity> referencing;
-
-        bool isDisposed;
 
         public MutableEntity()
         {
@@ -22,14 +20,11 @@ namespace Discore.WebSocket
         /// <exception cref="ArgumentNullException"></exception>
         public void Reference(MutableEntity entity)
         {
-            if (!isDisposed)
-            {
-                if (entity == null)
-                    throw new ArgumentNullException(nameof(entity));
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
 
-                referencing.Add(entity);
-                entity.referencedBy.Add(this);
-            }
+            referencing.Add(entity);
+            entity.referencedBy.Add(this);
         }
 
         public void Dirty()
@@ -45,18 +40,13 @@ namespace Discore.WebSocket
             IsDirty = false;
         }
 
-        public void Dispose()
+        public void ClearReferences()
         {
-            if (!isDisposed)
-            {
-                isDisposed = true;
+            foreach (MutableEntity entity in referencedBy)
+                entity.referencing.TryRemove(this);
 
-                foreach (MutableEntity entity in referencedBy)
-                    entity.referencing.TryRemove(this);
-
-                referencedBy.Clear();
-                referencing.Clear();
-            }
+            referencedBy.Clear();
+            referencing.Clear();
         }
     }
 

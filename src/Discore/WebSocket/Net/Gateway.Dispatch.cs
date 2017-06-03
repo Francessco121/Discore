@@ -367,7 +367,7 @@ namespace Discore.WebSocket.Net
                 if (cache.Guilds.TryRemove(guildId, out MutableGuild mutableGuild))
                 {
                     // Ensure all references are cleared
-                    mutableGuild.Dispose();
+                    mutableGuild.ClearReferences();
 
                     // Fire event
                     OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
@@ -530,7 +530,7 @@ namespace Discore.WebSocket.Net
             if (cache.GuildMembers.TryRemove(guildId, userId, out MutableGuildMember mutableMember))
             {
                 // Ensure all references are removed
-                mutableMember.Dispose();
+                mutableMember.ClearReferences();
 
                 // Fire event
                 if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
@@ -779,7 +779,7 @@ namespace Discore.WebSocket.Net
                 DiscordDMChannel dm;
                 if (cache.DMChannels.TryRemove(id, out MutableDMChannel mutableDM))
                 {
-                    mutableDM.Dispose();
+                    mutableDM.ClearReferences();
 
                     dm = mutableDM.ImmutableEntity;
                 }
