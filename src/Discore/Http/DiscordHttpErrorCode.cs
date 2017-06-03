@@ -64,6 +64,7 @@
         /// </summary>
         ProvidedTooFewOrTooManyMessagesToDelete,
         MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019,
+        CannotExecuteActionOnASystemMessage = 50021,
         AMessageProvidedWasTooOldToBulkDelete = 50034,
         ReactionBlocked = 90001
     }
