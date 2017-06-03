@@ -1,4 +1,4 @@
-﻿namespace Discore
+﻿namespace Discore.WebSocket
 {
     /// <summary>
     /// Exception raised when an error occurs internally with the gateway caching system.
