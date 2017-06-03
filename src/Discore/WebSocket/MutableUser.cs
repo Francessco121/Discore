@@ -66,11 +66,22 @@ namespace Discore.WebSocket
         {
             // Only check properties that can change
 
-            return lastUsername != Username
+            bool changed = lastUsername != Username
                 || lastAvatar != Avatar
                 || lastHasTwoFactorAuth != HasTwoFactorAuth
                 || lastIsVerified != IsVerified
                 || lastEmail != Email;
+
+            if (changed)
+            {
+                lastUsername = Username;
+                lastAvatar = Avatar;
+                lastHasTwoFactorAuth = HasTwoFactorAuth;
+                lastIsVerified = IsVerified;
+                lastEmail = Email;
+            }
+
+            return changed;
         }
 
         protected override DiscordUser BuildImmutableEntity()
