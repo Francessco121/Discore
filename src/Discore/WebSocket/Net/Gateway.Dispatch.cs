@@ -1076,21 +1076,9 @@ namespace Discore.WebSocket.Net
         {
             Snowflake userId = data.GetSnowflake("user_id").Value;
             Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            int timestamp = data.GetInteger("timestamp").Value;
 
-            if (cache.Users.TryGetValue(userId, out MutableUser mutableUser))
-            {
-                if (cache.GetChannel(channelId) is ITextChannel textChannel)
-                {
-                    int timestamp = data.GetInteger("timestamp").Value;
-
-                    OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, mutableUser.ImmutableEntity, 
-                        textChannel, timestamp));
-                }
-                else
-                    throw new ShardCacheException($"Channel {channelId} was not in the cache!");
-            }
-            else
-                throw new ShardCacheException($"User {userId} was not in the cache!");
+            OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, userId, channelId, timestamp));
         }
 
         [DispatchEvent("USER_UPDATE")]

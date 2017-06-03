@@ -37,18 +37,18 @@ namespace Discore.WebSocket
 
     public class TypingStartEventArgs : DiscordGatewayEventArgs
     {
-        public DiscordUser User { get; }
-        public ITextChannel TextChannel { get; }
+        public Snowflake UserId { get; }
+        public Snowflake ChannelId { get; }
         /// <summary>
         /// Unix time in seconds when the typing started.
         /// </summary>
         public int Timestamp { get; }
 
-        public TypingStartEventArgs(Shard shard, DiscordUser user, ITextChannel textChannel, int timestamp)
+        public TypingStartEventArgs(Shard shard, Snowflake userId, Snowflake channelId, int timestamp)
             : base(shard)
         {
-            User = user;
-            TextChannel = textChannel;
+            UserId = userId;
+            ChannelId = channelId;
             Timestamp = timestamp;
         }
     }
