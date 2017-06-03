@@ -44,6 +44,13 @@
         /// </summary>
         public bool IsSuppressed { get; }
 
+        internal DiscordVoiceState(Snowflake guildId, Snowflake userId, Snowflake channelId)
+        {
+            GuildId = guildId;
+            UserId = userId;
+            ChannelId = channelId;
+        }
+
         internal DiscordVoiceState(Snowflake guildId, DiscordApiData data)
         {
             GuildId      = guildId;
