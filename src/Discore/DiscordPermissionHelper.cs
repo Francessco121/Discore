@@ -21,10 +21,21 @@ namespace Discore
             if (member.GuildId != guild.Id)
                 throw new ArgumentException("Member must be in the specified guild.");
 
-            // Calculate permissions from member roles
+            // If owner, everything is true
+            if (member.Id == guild.OwnerId)
+                return true;
+
             DiscordPermission userPermissions = 0;
-            foreach (DiscordRole role in guild.Roles.Values)
-                userPermissions = userPermissions | role.Permissions;
+
+            // Apply guild-member role permissions
+            foreach (Snowflake roleId in member.RoleIds)
+            {
+                DiscordRole role;
+                if (guild.Roles.TryGetValue(roleId, out role))
+                {
+                    userPermissions = userPermissions | role.Permissions;
+                }
+            }
 
             // Check for permission
             return userPermissions.HasFlag(DiscordPermission.Administrator) || userPermissions.HasFlag(permission);
