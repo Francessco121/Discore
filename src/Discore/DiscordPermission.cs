@@ -42,6 +42,10 @@ namespace Discore
         /// </summary>
         AddReactions = 0x00000040,
         /// <summary>
+        /// Allows for viewing of audit logs.
+        /// </summary>
+        ViewAuditLog = 0x00000080,
+        /// <summary>
         /// Allows reading messages in a channel. The channel will not appear for users without this permission.
         /// </summary>
         ReadMessages = 0x00000400,
