@@ -80,6 +80,11 @@ namespace Discore.WebSocket
             }
         }
 
+        public void RemoveParent(Snowflake parentId)
+        {
+            dictionary.TryRemove(parentId, out _);
+        }
+
         public void Clear()
         {
             dictionary.Clear();

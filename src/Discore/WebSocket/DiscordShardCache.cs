@@ -20,17 +20,17 @@ namespace Discore.WebSocket
         internal ShardNestedCacheDictionary<DiscordUserPresence> GuildPresences { get; }
         internal ShardNestedCacheDictionary<DiscordVoiceState> GuildVoiceStates { get; }
 
+        internal ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> GuildChannelIds { get; }
+
         ConcurrentHashSet<Snowflake> guildIds;
         ConcurrentHashSet<Snowflake> unavailableGuildIds;
-
-        ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> guildChannelIds;
 
         internal DiscordShardCache()
         {
             guildIds = new ConcurrentHashSet<Snowflake>();
             unavailableGuildIds = new ConcurrentHashSet<Snowflake>();
 
-            guildChannelIds = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
+            GuildChannelIds = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
 
             Users = new ShardCacheDictionary<MutableUser>();
             DMChannels = new ShardCacheDictionary<MutableDMChannel>();
@@ -53,6 +53,7 @@ namespace Discore.WebSocket
         internal void RemoveGuildId(Snowflake guildId)
         {
             guildIds.TryRemove(guildId);
+            unavailableGuildIds.TryRemove(guildId);
         }
 
         internal void SetGuildAvailability(Snowflake guildId, bool isAvailable)
@@ -68,8 +69,11 @@ namespace Discore.WebSocket
             GuildChannels[guildChannel.Id] = guildChannel;
 
             ConcurrentHashSet<Snowflake> guildChannelsIdSet;
-            if (!guildChannelIds.TryGetValue(guildChannel.GuildId, out guildChannelsIdSet))
+            if (!GuildChannelIds.TryGetValue(guildChannel.GuildId, out guildChannelsIdSet))
+            {
                 guildChannelsIdSet = new ConcurrentHashSet<Snowflake>();
+                GuildChannelIds[guildChannel.GuildId] = guildChannelsIdSet;
+            }
 
             guildChannelsIdSet.Add(guildChannel.Id);
         }
@@ -78,13 +82,13 @@ namespace Discore.WebSocket
         {
             GuildChannels.TryRemove(guildChannelId, out _);
 
-            if (guildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
+            if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
                 guildChannelsIdSet.TryRemove(guildChannelId);
         }
 
         internal void ClearGuildChannels(Snowflake guildId)
         {
-            guildChannelIds.TryRemove(guildId, out _);
+            GuildChannelIds.TryRemove(guildId, out _);
         }
 
         public bool IsGuildAvailable(Snowflake guildId)
@@ -141,7 +145,7 @@ namespace Discore.WebSocket
 
         public IEnumerable<DiscordGuildChannel> GetGuildChannels(Snowflake guildId)
         {
-            if (guildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
+            if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
             {
                 List<DiscordGuildChannel> guildChannels = new List<DiscordGuildChannel>();
                 foreach (Snowflake guildChannelId in guildChannelsIdSet)
@@ -206,7 +210,7 @@ namespace Discore.WebSocket
             guildIds.Clear();
             unavailableGuildIds.Clear();
 
-            guildChannelIds.Clear();
+            GuildChannelIds.Clear();
 
             Users.Clear();
             DMChannels.Clear();

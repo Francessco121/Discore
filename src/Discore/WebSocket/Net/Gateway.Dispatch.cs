@@ -1,4 +1,5 @@
-﻿using Discore.Voice;
+﻿using ConcurrentCollections;
+using Discore.Voice;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -241,7 +242,13 @@ namespace Discore.WebSocket.Net
 
             mutableGuild.Update(data);
 
+            // Ensure the cache guildId list contains this guild (it uses a hashset so don't worry about duplicates).
+            cache.AddGuildId(guildId);
+
             // GUILD_CREATE specifics
+            // Update metadata
+            cache.GuildMetadata[guildId] = new DiscordGuildMetadata(data);
+
             // Deserialize members
             cache.GuildMembers.Clear(guildId);
             IList<DiscordApiData> membersArray = data.GetArray("members");
@@ -311,6 +318,9 @@ namespace Discore.WebSocket.Net
                 cache.GuildPresences[guildId, userId] = new DiscordUserPresence(userId, presenceData);
             }
 
+            // Mark the guild as available
+            cache.SetGuildAvailability(guildId, true);
+
             // Fire event
             if (wasUnavailable)
                 OnGuildAvailable?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
@@ -367,6 +377,20 @@ namespace Discore.WebSocket.Net
                     await voiceConnection.DisconnectAsync(cts.Token).ConfigureAwait(false);
                 }
 
+                // Clear all cache data related to the guild
+                cache.GuildMetadata.TryRemove(guildId, out _);
+                cache.GuildMembers.RemoveParent(guildId);
+                cache.GuildPresences.RemoveParent(guildId);
+                cache.GuildVoiceStates.RemoveParent(guildId);
+
+                if (cache.GuildChannelIds.TryRemove(guildId, out  ConcurrentHashSet<Snowflake> channelIds))
+                {
+                    foreach (Snowflake channelId in channelIds)
+                        cache.GuildChannels.TryRemove(channelId, out _);
+                }
+
+                // Remove the guild from cache
+                cache.RemoveGuildId(guildId);
                 if (cache.Guilds.TryRemove(guildId, out MutableGuild mutableGuild))
                 {
                     // Ensure all references are cleared
