@@ -234,7 +234,10 @@ namespace Discore.WebSocket.Net
             // Update guild
             MutableGuild mutableGuild;
             if (!cache.Guilds.TryGetValue(guildId, out mutableGuild))
+            {
                 mutableGuild = new MutableGuild(guildId, app.HttpApi);
+                cache.Guilds[guildId] = mutableGuild;
+            }
 
             mutableGuild.Update(data);
 
