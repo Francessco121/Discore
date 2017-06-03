@@ -951,10 +951,7 @@ namespace Discore.WebSocket.Net
             Snowflake messageId = data.GetSnowflake("id").Value;
             Snowflake channelId = data.GetSnowflake("channel_id").Value;
 
-            if (cache.GetChannel(channelId) is ITextChannel textChannel)
-                OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, textChannel));
-            else
-                throw new ShardCacheException($"Channel {channelId} was not in the cache!");
+            OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
         }
 
         [DispatchEvent("MESSAGE_DELETE_BULK")]
@@ -962,17 +959,12 @@ namespace Discore.WebSocket.Net
         {
             Snowflake channelId = data.GetSnowflake("channel_id").Value;
 
-            if (cache.GetChannel(channelId) is ITextChannel textChannel)
+            IList<DiscordApiData> idArray = data.GetArray("ids");
+            for (int i = 0; i < idArray.Count; i++)
             {
-                IList<DiscordApiData> idArray = data.GetArray("ids");
-                for (int i = 0; i < idArray.Count; i++)
-                {
-                    Snowflake messageId = idArray[i].ToSnowflake().Value;
-                    OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, textChannel));
-                }
+                Snowflake messageId = idArray[i].ToSnowflake().Value;
+                OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
             }
-            else
-                throw new ShardCacheException($"Channel {channelId} was not in the cache!");
         }
 
         [DispatchEvent("MESSAGE_REACTION_ADD")]

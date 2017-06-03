@@ -190,13 +190,13 @@ namespace Discore.WebSocket
     public class MessageDeleteEventArgs : DiscordGatewayEventArgs
     {
         public Snowflake MessageId { get; }
-        public ITextChannel TextChannel { get; }
+        public Snowflake ChannelId { get; }
 
-        public MessageDeleteEventArgs(Shard shard, Snowflake messageId, ITextChannel textChannel)
+        public MessageDeleteEventArgs(Shard shard, Snowflake messageId, Snowflake channelId)
             : base(shard)
         {
             MessageId = messageId;
-            TextChannel = textChannel;
+            ChannelId = channelId;
         }
     }
 
