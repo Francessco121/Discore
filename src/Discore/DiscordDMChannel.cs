@@ -38,7 +38,7 @@ namespace Discore
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
 
             DiscordApiData recipientData = data.Get("recipient");
-            Recipient = new DiscordUser(recipientData);
+            Recipient = new DiscordUser(false, recipientData);
         }
 
         /// <summary>

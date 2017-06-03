@@ -83,7 +83,7 @@ namespace Discore
             RoleIds = roleIds;
 
             DiscordApiData userData = data.Get("user");
-            User = new DiscordUser(userData);
+            User = new DiscordUser(false, userData);
 
             Id = User.Id;
         }

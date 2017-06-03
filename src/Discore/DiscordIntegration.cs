@@ -78,7 +78,7 @@ namespace Discore
 
             DiscordApiData userData = data.Get("user");
             if (userData != null)
-                User = new DiscordUser(userData);
+                User = new DiscordUser(false, userData);
 
             DiscordApiData accountData = data.Get("account");
             if (accountData != null)

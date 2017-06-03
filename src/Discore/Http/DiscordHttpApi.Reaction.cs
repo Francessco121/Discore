@@ -63,7 +63,7 @@ namespace Discore.Http
 
             DiscordUser[] users = new DiscordUser[data.Values.Count];
             for (int i = 0; i < users.Length; i++)
-                users[i] = new DiscordUser(data.Values[i]);
+                users[i] = new DiscordUser(false, data.Values[i]);
 
             return users;
         }
