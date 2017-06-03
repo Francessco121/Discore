@@ -5,14 +5,12 @@ namespace Discore
     /// <summary>
     /// The base class for all Discord API objects that contain an id.
     /// </summary>
-    public abstract class DiscordIdObject : DiscordHashableObject
+    public abstract class DiscordIdObject
     {
         /// <summary>
         /// Gets the id of this Discord API object.
         /// </summary>
         public Snowflake Id { get; protected set; }
-
-        internal override Snowflake DictionaryId => Id;
 
         internal DiscordIdObject() { }
 
