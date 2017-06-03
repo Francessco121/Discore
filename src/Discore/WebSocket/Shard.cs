@@ -48,7 +48,7 @@ namespace Discore.WebSocket
         /// Gets the ID of the user used to authenticate this shard connection.
         /// Or null if the gateway is not currently connected.
         /// </summary>
-        public Snowflake UserId { get; internal set; }
+        public Snowflake? UserId { get; internal set; }
 
         /// <summary>
         /// Gets the gateway manager for this shard.
@@ -199,6 +199,8 @@ namespace Discore.WebSocket
 
         void CleanUp()
         {
+            UserId = null;
+
             Cache.Clear();
             Voice.Clear();
         }
