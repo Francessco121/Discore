@@ -54,18 +54,18 @@ namespace Discore
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordIntegration(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
-            : this(app, data)
+        internal DiscordIntegration(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
+            : this(http, data)
         {
             GuildId = guildId;
         }
 
-        internal DiscordIntegration(IDiscordApplication app, DiscordApiData data)
+        internal DiscordIntegration(DiscordHttpClient http, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             Name = data.GetString("name");
             Type = data.GetString("type");

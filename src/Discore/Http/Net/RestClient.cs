@@ -16,27 +16,24 @@ namespace Discore.Http.Net
 
         public bool RetryOnRateLimit { get; set; } = true;
 
+        const string DISCORE_URL = "https://github.com/BundledSticksInkorperated/Discore";
         static readonly string discoreVersion;
 
-        IDiscordAuthenticator authenticator;
+        string botToken;
         DiscoreLogger log;
 
-        RateLimitHandlingMethod rateLimitMethod;
         Dictionary<string, RateLimitHandler> rateLimitedRoutes;
         AsyncManualResetEvent globalRateLimitResetEvent;
 
         HttpClient globalHttpClient;
 
-        public RestClient(IDiscordAuthenticator authenticator, InitialHttpApiSettings settings)
+        public RestClient(string botToken)
         {
-            this.authenticator = authenticator;
-
-            RetryOnRateLimit = settings.RetryWhenRateLimited;
-            rateLimitMethod = settings.RateLimitHandlingMethod;
+            this.botToken = botToken;
 
             log = new DiscoreLogger("RestClient");
 
-            if (settings.UseSingleHttpClient)
+            if (DiscordHttpClient.UseSingleHttpClient)
                 globalHttpClient = CreateHttpClient();
 
             rateLimitedRoutes = new Dictionary<string, RateLimitHandler>();
@@ -55,8 +52,8 @@ namespace Discore.Http.Net
             HttpClient http = new HttpClient();
             http.DefaultRequestHeaders.Add("Accept", "*/*");
             http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
-            http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot (Discore, {discoreVersion})");
-            http.DefaultRequestHeaders.Add("Authorization", $"{authenticator.GetTokenHttpType()} {authenticator.GetToken()}");
+            http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
+            http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
 
             return http;
         }
@@ -248,15 +245,7 @@ namespace Discore.Http.Net
 
         RateLimitHandler CreateRateLimitHandler()
         {
-            switch (rateLimitMethod)
-            {
-                case RateLimitHandlingMethod.Minimal:
-                    return new MinimalRateLimitHandler();
-                case RateLimitHandlingMethod.Throttle:
-                    return new ThrottleRateLimitHandler();
-                default:
-                    throw new NotImplementedException($"Rate limit handling method: {rateLimitMethod} is not implemented!");
-            }
+            return new MinimalRateLimitHandler();
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>

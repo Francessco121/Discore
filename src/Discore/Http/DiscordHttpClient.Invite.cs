@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Gets an invite by its code.
@@ -20,7 +20,7 @@ namespace Discore.Http
                 throw new ArgumentException("Invite code cannot be empty or only contain whitespace characters.", nameof(inviteCode));
 
             DiscordApiData data = await rest.Get($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
-            return new DiscordInvite(app, data);
+            return new DiscordInvite(this, data);
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace Discore.Http
                 throw new ArgumentException("Invite code cannot be empty or only contain whitespace characters.", nameof(inviteCode));
 
             DiscordApiData data = await rest.Delete($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
-            return new DiscordInvite(app, data);
+            return new DiscordInvite(this, data);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Discore.Http
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
-                invites[i] = new DiscordInviteMetadata(app, data.Values[i]);
+                invites[i] = new DiscordInviteMetadata(this, data.Values[i]);
 
             return invites;
         }
@@ -67,7 +67,7 @@ namespace Discore.Http
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
-                invites[i] = new DiscordInviteMetadata(app, data.Values[i]);
+                invites[i] = new DiscordInviteMetadata(this, data.Values[i]);
 
             return invites;
         }
@@ -95,7 +95,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/invites", requestData,
                 "channels/channel/invites").ConfigureAwait(false);
-            return new DiscordInvite(app, returnData);
+            return new DiscordInvite(this, returnData);
         }
     }
 }

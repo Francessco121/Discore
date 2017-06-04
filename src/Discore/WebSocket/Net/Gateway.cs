@@ -24,8 +24,12 @@ namespace Discore.WebSocket.Net
 
         const int GATEWAY_VERSION = 5;
 
-        DiscordWebSocketApplication app;
+        string botToken;
+        DiscordHttpClient http;
+
         Shard shard;
+        int totalShards;
+
         DiscordShardCache cache;
 
         ShardStartConfig lastShardStartConfig;
@@ -73,10 +77,13 @@ namespace Discore.WebSocket.Net
 
         bool isDisposed;
 
-        internal Gateway(DiscordWebSocketApplication app, Shard shard)
+        internal Gateway(string botToken, Shard shard, int totalShards)
         {
-            this.app = app;
+            this.botToken = botToken;
             this.shard = shard;
+            this.totalShards = totalShards;
+
+            http = new DiscordHttpClient(botToken);
 
             cache = shard.Cache;
 
@@ -99,7 +106,8 @@ namespace Discore.WebSocket.Net
         /// <exception cref="OperationCanceledException">
         /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
         /// </exception>
-        public async Task UpdateStatusAsync(string game = null, int? idleSince = null, CancellationToken? cancellationToken = null)
+        public async Task UpdateStatusAsync(string game = null, int? idleSince = null, 
+            CancellationToken? cancellationToken = null)
         {
             if (isDisposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -322,7 +330,7 @@ namespace Discore.WebSocket.Net
         {
             DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
 
-            string gatewayUrl = await app.HttpApi.Get().ConfigureAwait(false);
+            string gatewayUrl = await http.Get().ConfigureAwait(false);
 
             if (localStorage.GatewayUrl != gatewayUrl)
             {
@@ -497,11 +505,10 @@ namespace Discore.WebSocket.Net
 
             if (isConnectionResuming)
                 // Resume
-                socket.SendResumePayload(app.Authenticator.GetToken(), sessionId, lastSequence);
+                socket.SendResumePayload(botToken, sessionId, lastSequence);
             else
                 // Identify
-                socket.SendIdentifyPayload(app.Authenticator.GetToken(), 
-                    lastShardStartConfig.GatewayLargeThreshold, shard.Id, app.ShardManager.TotalShardCount);
+                socket.SendIdentifyPayload(botToken, lastShardStartConfig.GatewayLargeThreshold, shard.Id, totalShards);
         }
 
         private void Socket_OnFatalDisconnection(object sender, GatewayCloseCode e)

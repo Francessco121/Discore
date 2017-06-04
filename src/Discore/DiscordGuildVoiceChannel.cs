@@ -16,9 +16,9 @@ namespace Discore
         /// </summary>
         public int UserLimit { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordGuildVoiceChannel(DiscordHttpApi http, DiscordApiData data, Snowflake? guildId = null)
+        internal DiscordGuildVoiceChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
             : base(http, data, DiscordGuildChannelType.Voice, guildId)
         {
             this.http = http;

@@ -17,10 +17,10 @@ namespace Discore
         /// </summary>
         public DiscordUser Recipient { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
         Snowflake lastMessageId;
 
-        internal DiscordDMChannel(DiscordHttpApi http, MutableDMChannel channel)
+        internal DiscordDMChannel(DiscordHttpClient http, MutableDMChannel channel)
             : base(http, DiscordChannelType.DirectMessage)
         {
             this.http = http;
@@ -30,7 +30,7 @@ namespace Discore
             lastMessageId = channel.LastMessageId;
         }
 
-        internal DiscordDMChannel(DiscordHttpApi http, DiscordApiData data)
+        internal DiscordDMChannel(DiscordHttpClient http, DiscordApiData data)
             : base(http, data, DiscordChannelType.DirectMessage)
         {
             this.http = http;

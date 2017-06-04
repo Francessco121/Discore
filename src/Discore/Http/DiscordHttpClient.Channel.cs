@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Gets a DM or guild channel by ID.

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Gets a member in a guild by their user ID.

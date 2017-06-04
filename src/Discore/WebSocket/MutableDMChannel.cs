@@ -8,7 +8,7 @@ namespace Discore.WebSocket
         public MutableUser Recipient { get; }
         public Snowflake LastMessageId { get; set; }
 
-        public MutableDMChannel(Snowflake id, MutableUser recipient, DiscordHttpApi http) 
+        public MutableDMChannel(Snowflake id, MutableUser recipient, DiscordHttpClient http) 
             : base(http)
         {
             Id = id;

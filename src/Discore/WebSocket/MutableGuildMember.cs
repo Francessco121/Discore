@@ -15,7 +15,7 @@ namespace Discore.WebSocket
         public bool IsDeaf { get; private set; }
         public bool IsMute { get; private set; }
 
-        public MutableGuildMember(MutableUser user, Snowflake guildId, DiscordHttpApi http) 
+        public MutableGuildMember(MutableUser user, Snowflake guildId, DiscordHttpClient http) 
             : base(http)
         {
             User = user;

@@ -13,27 +13,20 @@ namespace Discore.WebSocket
         /// </summary>
         public ShardManager ShardManager { get; }
         /// <summary>
-        /// Gets the authenticator used for this application.
+        /// Gets the bot user token for this application.
         /// </summary>
-        public IDiscordAuthenticator Authenticator { get; }
+        public string BotToken { get; }
         /// <summary>
         /// Gets an interface for the Discord http/restful api.
         /// </summary>
-        public DiscordHttpApi HttpApi { get; }
+        public DiscordHttpClient HttpApi { get; }
 
-        /// <param name="authenticator">The method of authentication used by the application.</param>
-        /// <param name="httpApiSettings">The initial settings for the HTTP API. Uses the default settings if left null.</param>
-        /// <exception cref="ArgumentException">Thrown if the passed authenticator does not support WebSockets.</exception>
-        /// <exception cref="ArgumentNullException"></exception>
-        public DiscordWebSocketApplication(IDiscordAuthenticator authenticator, InitialHttpApiSettings httpApiSettings = null)
+        public DiscordWebSocketApplication(string botToken)
         {
-            if (!authenticator.CanAuthenticateWebSocket)
-                throw new ArgumentException("Authentication must support WebSockets.", nameof(authenticator));
-
-            Authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
+            BotToken = botToken;
 
             ShardManager = new ShardManager(this);
-            HttpApi = new DiscordHttpApi(this, httpApiSettings ?? new InitialHttpApiSettings());
+            HttpApi = new DiscordHttpClient(botToken);
         }
 
         public void Dispose()

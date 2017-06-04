@@ -73,10 +73,10 @@ namespace Discore
         /// </summary>
         public Snowflake? WebhookId { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
         DiscordApiData originalData;
 
-        internal DiscordMessage(DiscordHttpApi http, DiscordApiData data)
+        internal DiscordMessage(DiscordHttpClient http, DiscordApiData data)
             : base(data)
         {
             this.http = http;

@@ -32,9 +32,9 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordGuildChannel(DiscordHttpApi http, DiscordApiData data, DiscordGuildChannelType type, 
+        internal DiscordGuildChannel(DiscordHttpClient http, DiscordApiData data, DiscordGuildChannelType type, 
             Snowflake? guildId) 
             : base(http, data, DiscordChannelType.Guild)
         {

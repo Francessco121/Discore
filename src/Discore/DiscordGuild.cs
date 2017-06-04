@@ -85,9 +85,9 @@ namespace Discore
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordGuild(DiscordHttpApi http, MutableGuild guild)
+        internal DiscordGuild(DiscordHttpClient http, MutableGuild guild)
         {
             this.http = http;
 
@@ -112,7 +112,7 @@ namespace Discore
             Emojis = guild.Emojis.CreateReadonlyCopy();
         }
 
-        internal DiscordGuild(DiscordHttpApi http, DiscordApiData data)
+        internal DiscordGuild(DiscordHttpClient http, DiscordApiData data)
             : base(data)
         {
             this.http = http;

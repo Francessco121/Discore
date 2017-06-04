@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Gets a guild by ID.
@@ -138,7 +138,7 @@ namespace Discore.Http
 
             DiscordIntegration[] integrations = new DiscordIntegration[data.Values.Count];
             for (int i = 0; i < integrations.Length; i++)
-                integrations[i] = new DiscordIntegration(app, data.Values[i], guildId);
+                integrations[i] = new DiscordIntegration(this, data.Values[i], guildId);
 
             return integrations;
         }
@@ -202,7 +202,7 @@ namespace Discore.Http
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/embed",
                 "guilds/guild/embed").ConfigureAwait(false);
-            return new DiscordGuildEmbed(app, guildId, data);
+            return new DiscordGuildEmbed(this, guildId, data);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/embed", requestData,
                 "guilds/guild/embed").ConfigureAwait(false);
-            return new DiscordGuildEmbed(app, guildId, returnData);
+            return new DiscordGuildEmbed(this, guildId, returnData);
         }
     }
 }

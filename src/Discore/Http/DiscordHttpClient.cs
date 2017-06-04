@@ -3,8 +3,18 @@ using System;
 
 namespace Discore.Http
 {
-    public sealed partial class DiscordHttpApi : IDisposable
+    public sealed partial class DiscordHttpClient : IDisposable
     {
+        /// <summary> 
+        /// Gets or sets whether a single HTTP client should be used for all API requests per 
+        /// <see cref="DiscordHttpClient"/> instance. 
+        /// <para>In rare cases using a single client causes requests to hang until they timeout 
+        /// (believed to be a .NET Core bug).</para>
+        /// <para>This is true by default.</para> 
+        /// <para>Note: This only applies to newly created <see cref="DiscordHttpClient"/> instances.</para> 
+        /// </summary> 
+        public static bool UseSingleHttpClient { get; set; } = true;
+
         /// <summary>
         /// Gets or sets whether to resend requests that get rate-limited.
         /// </summary>
@@ -15,12 +25,10 @@ namespace Discore.Http
         }
 
         RestClient rest;
-        IDiscordApplication app;
 
-        internal DiscordHttpApi(IDiscordApplication app, InitialHttpApiSettings settings)
+        public DiscordHttpClient(string botToken)
         {
-            this.app = app;
-            rest = new RestClient(app.Authenticator, settings);
+            rest = new RestClient(botToken);
         }
 
         DiscordChannel DeserializeChannelData(DiscordApiData data)

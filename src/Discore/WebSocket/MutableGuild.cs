@@ -25,7 +25,7 @@ namespace Discore.WebSocket
         public ShardCacheDictionary<DiscordEmoji> Emojis { get; }
         public ShardCacheDictionary<DiscordRole> Roles { get; }
 
-        public MutableGuild(Snowflake id, DiscordHttpApi http)
+        public MutableGuild(Snowflake id, DiscordHttpClient http)
             : base(http)
         {
             Id = id;

@@ -23,7 +23,7 @@ namespace Discore.WebSocket
         bool lastIsVerified;
         string lastEmail;
 
-        public MutableUser(Snowflake id, bool isWebhookUser, DiscordHttpApi http)
+        public MutableUser(Snowflake id, bool isWebhookUser, DiscordHttpClient http)
             : base(http)
         {
             Id = id;

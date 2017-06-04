@@ -2,7 +2,7 @@
 
 namespace Discore.Http
 {
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Gets the user of the current authenticated account for this application.

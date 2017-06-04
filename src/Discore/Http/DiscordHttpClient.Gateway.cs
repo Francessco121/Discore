@@ -14,7 +14,7 @@ namespace Discore.Http
         }
     }
 
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Gets the minimum number of required shards for the current authenticated Discord application.

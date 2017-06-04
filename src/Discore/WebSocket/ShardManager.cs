@@ -131,7 +131,7 @@ namespace Discore.WebSocket
             int i = 0;
             foreach (int id in shardIds)
             {
-                Shard shard = new Shard(app, id);
+                Shard shard = new Shard(app.BotToken, id, TotalShardCount);
                 shards[i++] = shard;
             }
 

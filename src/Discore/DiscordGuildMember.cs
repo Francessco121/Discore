@@ -43,9 +43,9 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordGuildMember(DiscordHttpApi http, MutableGuildMember member)
+        internal DiscordGuildMember(DiscordHttpClient http, MutableGuildMember member)
         {
             this.http = http;
 
@@ -61,7 +61,7 @@ namespace Discore
             RoleIds = new List<Snowflake>(member.RoleIds);
         }
 
-        internal DiscordGuildMember(DiscordHttpApi http, DiscordApiData data, Snowflake guildId)
+        internal DiscordGuildMember(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
             // We do not specify the base constructor here because the member ID must be
             // manually retrieved, as it is actually the user id rather than a unique one.
         {

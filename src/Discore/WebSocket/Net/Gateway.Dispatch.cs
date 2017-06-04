@@ -163,7 +163,7 @@ namespace Discore.WebSocket.Net
             MutableUser user;
             if (!cache.Users.TryGetValue(userId, out user))
             {
-                user = new MutableUser(userId, false, app.HttpApi);
+                user = new MutableUser(userId, false, http);
                 cache.Users[userId] = user;
             }
 
@@ -195,7 +195,7 @@ namespace Discore.WebSocket.Net
                 MutableUser recipient;
                 if (!cache.Users.TryGetValue(recipientId, out recipient))
                 {
-                    recipient = new MutableUser(recipientId, false, app.HttpApi);
+                    recipient = new MutableUser(recipientId, false, http);
                     cache.Users[recipientId] = recipient;
                 }
 
@@ -204,7 +204,7 @@ namespace Discore.WebSocket.Net
                 MutableDMChannel mutableDMChannel;
                 if (!cache.DMChannels.TryGetValue(channelId, out mutableDMChannel))
                 {
-                    mutableDMChannel = new MutableDMChannel(channelId, recipient, app.HttpApi);
+                    mutableDMChannel = new MutableDMChannel(channelId, recipient, http);
                     cache.DMChannels[channelId] = mutableDMChannel;
                 }
 
@@ -236,7 +236,7 @@ namespace Discore.WebSocket.Net
             MutableGuild mutableGuild;
             if (!cache.Guilds.TryGetValue(guildId, out mutableGuild))
             {
-                mutableGuild = new MutableGuild(guildId, app.HttpApi);
+                mutableGuild = new MutableGuild(guildId, http);
                 cache.Guilds[guildId] = mutableGuild;
             }
 
@@ -262,7 +262,7 @@ namespace Discore.WebSocket.Net
                 MutableUser user;
                 if (!cache.Users.TryGetValue(userId, out user))
                 {
-                    user = new MutableUser(userId, false, app.HttpApi);
+                    user = new MutableUser(userId, false, http);
                     cache.Users[userId] = user;
                 }
 
@@ -271,7 +271,7 @@ namespace Discore.WebSocket.Net
                 MutableGuildMember member;
                 if (!cache.GuildMembers.TryGetValue(guildId, userId, out member))
                 {
-                    member = new MutableGuildMember(user, guildId, app.HttpApi);
+                    member = new MutableGuildMember(user, guildId, http);
                     cache.GuildMembers[guildId, userId] = member;
                 }
 
@@ -288,9 +288,9 @@ namespace Discore.WebSocket.Net
 
                 DiscordGuildChannel channel = null;
                 if (channelType == "text")
-                    channel = new DiscordGuildTextChannel(app.HttpApi, channelData, guildId);
+                    channel = new DiscordGuildTextChannel(http, channelData, guildId);
                 else if (channelType == "voice")
-                    channel = new DiscordGuildVoiceChannel(app.HttpApi, channelData, guildId);
+                    channel = new DiscordGuildVoiceChannel(http, channelData, guildId);
 
                 cache.AddGuildChannel(channel);
             }
@@ -414,7 +414,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
-                mutableUser = new MutableUser(userId, false, app.HttpApi);
+                mutableUser = new MutableUser(userId, false, http);
                 cache.Users[userId] = mutableUser;
             }
 
@@ -433,7 +433,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
-                mutableUser = new MutableUser(userId, false, app.HttpApi);
+                mutableUser = new MutableUser(userId, false, http);
                 cache.Users[userId] = mutableUser;
             }
 
@@ -489,7 +489,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
-                mutableUser = new MutableUser(userId, false, app.HttpApi);
+                mutableUser = new MutableUser(userId, false, http);
                 cache.Users[userId] = mutableUser;
             }
 
@@ -500,7 +500,7 @@ namespace Discore.WebSocket.Net
             MutableGuildMember mutableMember;
             if (!cache.GuildMembers.TryGetValue(guildId, userId, out mutableMember))
             {
-                mutableMember = new MutableGuildMember(mutableUser, guildId, app.HttpApi);
+                mutableMember = new MutableGuildMember(mutableUser, guildId, http);
                 cache.GuildMembers[guildId, userId] = mutableMember;
             }
 
@@ -522,7 +522,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
-                mutableUser = new MutableUser(userId, false, app.HttpApi);
+                mutableUser = new MutableUser(userId, false, http);
                 cache.Users[userId] = mutableUser;
             }
 
@@ -550,7 +550,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
-                mutableUser = new MutableUser(userId, false, app.HttpApi);
+                mutableUser = new MutableUser(userId, false, http);
                 cache.Users[userId] = mutableUser;
             }
 
@@ -588,7 +588,7 @@ namespace Discore.WebSocket.Net
                 MutableUser mutableUser;
                 if (!cache.Users.TryGetValue(userId, out mutableUser))
                 {
-                    mutableUser = new MutableUser(userId, false, app.HttpApi);
+                    mutableUser = new MutableUser(userId, false, http);
                     cache.Users[userId] = mutableUser;
                 }
 
@@ -598,7 +598,7 @@ namespace Discore.WebSocket.Net
                 MutableGuildMember mutableMember;
                 if (!cache.GuildMembers.TryGetValue(guildId, userId, out mutableMember))
                 {
-                    mutableMember = new MutableGuildMember(mutableUser, guildId, app.HttpApi);
+                    mutableMember = new MutableGuildMember(mutableUser, guildId, http);
                     mutableMember.Update(memberData);
 
                     cache.GuildMembers[guildId, userId] = mutableMember;
@@ -619,7 +619,7 @@ namespace Discore.WebSocket.Net
             if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = new DiscordRole(app.HttpApi, guildId, roleData);
+                DiscordRole role = new DiscordRole(http, guildId, roleData);
 
                 mutableGuild.Roles[role.Id] = role;
                 mutableGuild.Dirty();
@@ -638,7 +638,7 @@ namespace Discore.WebSocket.Net
             if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = new DiscordRole(app.HttpApi, guildId, roleData);
+                DiscordRole role = new DiscordRole(http, guildId, roleData);
 
                 mutableGuild.Roles[role.Id] = role;
                 mutableGuild.Dirty();
@@ -684,7 +684,7 @@ namespace Discore.WebSocket.Net
                 MutableUser recipient;
                 if (!cache.Users.TryGetValue(recipientId, out recipient))
                 {
-                    recipient = new MutableUser(recipientId, false, app.HttpApi);
+                    recipient = new MutableUser(recipientId, false, http);
                     cache.Users[recipientId] = recipient;
                 }
 
@@ -693,7 +693,7 @@ namespace Discore.WebSocket.Net
                 MutableDMChannel mutableDMChannel;
                 if (!cache.DMChannels.TryGetValue(id, out mutableDMChannel))
                 {
-                    mutableDMChannel = new MutableDMChannel(id, recipient, app.HttpApi);
+                    mutableDMChannel = new MutableDMChannel(id, recipient, http);
                     cache.DMChannels[id] = mutableDMChannel;
                 }
 
@@ -708,9 +708,9 @@ namespace Discore.WebSocket.Net
                 DiscordGuildChannel channel;
 
                 if (type == "text")
-                    channel = new DiscordGuildTextChannel(app.HttpApi, data, guildId);
+                    channel = new DiscordGuildTextChannel(http, data, guildId);
                 else if (type == "voice")
-                    channel = new DiscordGuildVoiceChannel(app.HttpApi, data, guildId);
+                    channel = new DiscordGuildVoiceChannel(http, data, guildId);
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
 
@@ -730,9 +730,9 @@ namespace Discore.WebSocket.Net
             DiscordGuildChannel channel;
 
             if (type == "text")
-                channel = new DiscordGuildTextChannel(app.HttpApi, data, guildId);
+                channel = new DiscordGuildTextChannel(http, data, guildId);
             else if (type == "voice")
-                channel = new DiscordGuildVoiceChannel(app.HttpApi, data, guildId);
+                channel = new DiscordGuildVoiceChannel(http, data, guildId);
             else
                 throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
 
@@ -758,7 +758,7 @@ namespace Discore.WebSocket.Net
                     dm = mutableDM.ImmutableEntity;
                 }
                 else
-                    dm = new DiscordDMChannel(app.HttpApi, data);
+                    dm = new DiscordDMChannel(http, data);
 
                 OnDMChannelRemoved?.Invoke(this, new DMChannelEventArgs(shard, dm));
             }
@@ -773,12 +773,12 @@ namespace Discore.WebSocket.Net
                 if (type == "text")
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildTextChannel(app.HttpApi, data, guildId);
+                        channel = new DiscordGuildTextChannel(http, data, guildId);
                 }
                 else if (type == "voice")
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildVoiceChannel(app.HttpApi, data, guildId);
+                        channel = new DiscordGuildVoiceChannel(http, data, guildId);
                 }
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
@@ -809,7 +809,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableAuthor;
             if (!cache.Users.TryGetValue(authorId, out mutableAuthor))
             {
-                mutableAuthor = new MutableUser(authorId, isWebhookUser, app.HttpApi);
+                mutableAuthor = new MutableUser(authorId, isWebhookUser, http);
                 cache.Users[authorId] = mutableAuthor;
             }
 
@@ -825,7 +825,7 @@ namespace Discore.WebSocket.Net
                 MutableUser mutableUser;
                 if (!cache.Users.TryGetValue(userId, out mutableUser))
                 {
-                    mutableUser = new MutableUser(userId, false, app.HttpApi);
+                    mutableUser = new MutableUser(userId, false, http);
                     cache.Users[userId] = mutableUser;
                 }
 
@@ -833,7 +833,7 @@ namespace Discore.WebSocket.Net
             }
 
             // Create message
-            DiscordMessage message = new DiscordMessage(app.HttpApi, data);
+            DiscordMessage message = new DiscordMessage(http, data);
 
             OnMessageCreated?.Invoke(this, new MessageEventArgs(shard, message));
         }
@@ -851,7 +851,7 @@ namespace Discore.WebSocket.Net
                 MutableUser mutableAuthor;
                 if (!cache.Users.TryGetValue(authorId, out mutableAuthor))
                 {
-                    mutableAuthor = new MutableUser(authorId, isWebhookUser, app.HttpApi);
+                    mutableAuthor = new MutableUser(authorId, isWebhookUser, http);
                     cache.Users[authorId] = mutableAuthor;
                 }
 
@@ -870,7 +870,7 @@ namespace Discore.WebSocket.Net
                     MutableUser mutableUser;
                     if (!cache.Users.TryGetValue(userId, out mutableUser))
                     {
-                        mutableUser = new MutableUser(userId, false, app.HttpApi);
+                        mutableUser = new MutableUser(userId, false, http);
                         cache.Users[userId] = mutableUser;
                     }
 
@@ -879,7 +879,7 @@ namespace Discore.WebSocket.Net
             }
 
             // Create message
-            DiscordMessage message = new DiscordMessage(app.HttpApi, data);
+            DiscordMessage message = new DiscordMessage(http, data);
 
             OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }
@@ -993,7 +993,7 @@ namespace Discore.WebSocket.Net
             MutableUser mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
-                mutableUser = new MutableUser(userId, false, app.HttpApi);
+                mutableUser = new MutableUser(userId, false, http);
                 cache.Users[userId] = mutableUser;
             }
 

@@ -69,11 +69,11 @@ namespace Discore.WebSocket
             }
         }
 
-        protected DiscordHttpApi Http { get; }
+        protected DiscordHttpClient Http { get; }
 
         T immutableEntity;
 
-        public MutableEntity(DiscordHttpApi http)
+        public MutableEntity(DiscordHttpClient http)
         {
             Http = http;
         }

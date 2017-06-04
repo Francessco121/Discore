@@ -20,11 +20,11 @@ namespace Discore
         /// </summary>
         public DiscordInviteChannel Channel { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordInvite(IDiscordApplication app, DiscordApiData data)
+        internal DiscordInvite(DiscordHttpClient http, DiscordApiData data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             Code = data.GetString("code");
 

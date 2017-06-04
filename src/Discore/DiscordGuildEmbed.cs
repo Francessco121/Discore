@@ -18,11 +18,11 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordGuildEmbed(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
+        internal DiscordGuildEmbed(DiscordHttpClient http, Snowflake guildId, DiscordApiData data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             GuildId = guildId;
 

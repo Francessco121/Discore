@@ -5,12 +5,12 @@ namespace Discore
     public interface IDiscordApplication
     {
         /// <summary>
-        /// Gets the authenticator used for this application.
+        /// Gets the bot user token for this application.
         /// </summary>
-        IDiscordAuthenticator Authenticator { get; }
+        string BotToken { get; }
         /// <summary>
         /// Gets an interface for the Discord http/restful api.
         /// </summary>
-        DiscordHttpApi HttpApi { get; }
+        DiscordHttpClient HttpApi { get; }
     }
 }

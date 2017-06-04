@@ -24,9 +24,9 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordOverwrite(DiscordHttpApi http, Snowflake channelId, DiscordApiData data)
+        internal DiscordOverwrite(DiscordHttpClient http, Snowflake channelId, DiscordApiData data)
             : base(data)
         {
             this.http = http;

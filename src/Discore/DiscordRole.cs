@@ -42,9 +42,9 @@ namespace Discore
         /// </summary>
         public bool IsMentionable { get; }
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordRole(DiscordHttpApi http, Snowflake guildId, DiscordApiData data)
+        internal DiscordRole(DiscordHttpClient http, Snowflake guildId, DiscordApiData data)
             : base(data)
         {
             this.http = http;

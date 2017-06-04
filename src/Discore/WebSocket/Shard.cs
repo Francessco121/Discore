@@ -1,7 +1,6 @@
 ﻿using Discore.Voice;
 using Discore.WebSocket.Net;
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,10 +12,6 @@ namespace Discore.WebSocket
         /// Gets the id of this shard.
         /// </summary>
         public int Id { get; }
-        /// <summary>
-        /// Gets the websocket application this shard was created from.
-        /// </summary>
-        public DiscordWebSocketApplication Application { get; }
         /// <summary>
         /// Gets whether this shard is currently running.
         /// </summary>
@@ -65,19 +60,15 @@ namespace Discore.WebSocket
         bool isDisposed;
         DiscoreLogger log;
 
-        ConcurrentDictionary<Snowflake, bool> guildAvailableStates;
-
-        internal Shard(DiscordWebSocketApplication app, int shardId)
+        internal Shard(string botToken, int shardId, int totalShards)
         {
-            Application = app;
             Id = shardId;
 
             log = new DiscoreLogger($"Shard#{shardId}");
 
             Cache = new DiscordShardCache();
-            guildAvailableStates = new ConcurrentDictionary<Snowflake, bool>();
 
-            gateway = new Gateway(app, this);
+            gateway = new Gateway(botToken, this, totalShards);
             gateway.OnFatalDisconnection += Gateway_OnFatalDisconnection;
             gateway.OnReconnected += Gateway_OnReconnected;
             gateway.OnReadyEvent += Gateway_OnReadyEvent;
@@ -177,24 +168,6 @@ namespace Discore.WebSocket
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
-        }
-
-        /// <summary>
-        /// Returns whether this shard is managing the specified guild.
-        /// </summary>
-        public bool HasGuild(Snowflake guildId)
-        {
-            // TODO: This will always return null if the gateway has not received READY...
-
-            return guildAvailableStates.ContainsKey(guildId);
-        }
-
-        public bool IsGuildAvailable(Snowflake guildId)
-        {
-            if (guildAvailableStates.TryGetValue(guildId, out bool isAvailable))
-                return isAvailable;
-            else
-                return false;
         }
 
         void CleanUp()

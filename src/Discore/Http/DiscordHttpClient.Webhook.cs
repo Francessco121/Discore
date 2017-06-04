@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http
 {
-    partial class DiscordHttpApi
+    partial class DiscordHttpClient
     {
         /// <summary>
         /// Creates a webhook.
@@ -29,7 +29,7 @@ namespace Discore.Http
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/webhooks", apiData,
                 "channels/channel/webhooks").ConfigureAwait(false);
 
-            return new DiscordWebhook(app, returnData);
+            return new DiscordWebhook(this, returnData);
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Discore.Http
             DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}",
                 "webhooks/webhook").ConfigureAwait(false);
 
-            return new DiscordWebhook(app, apiData);
+            return new DiscordWebhook(this, apiData);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Discore.Http
             DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}/{token}",
                 "webhooks/webhook/token").ConfigureAwait(false);
 
-            return new DiscordWebhook(app, apiData);
+            return new DiscordWebhook(this, apiData);
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Discore.Http
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
             for (int i = 0; i < apiData.Values.Count; i++)
-                webhooks[i] = new DiscordWebhook(app, apiData.Values[i]);
+                webhooks[i] = new DiscordWebhook(this, apiData.Values[i]);
 
             return webhooks;
         }
@@ -93,7 +93,7 @@ namespace Discore.Http
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
             for (int i = 0; i < apiData.Values.Count; i++)
-                webhooks[i] = new DiscordWebhook(app, apiData.Values[i]);
+                webhooks[i] = new DiscordWebhook(this, apiData.Values[i]);
 
             return webhooks;
         }
@@ -113,7 +113,7 @@ namespace Discore.Http
             DiscordApiData apiData = await rest.Patch($"webhooks/{webhookId}", postData,
                 "webhooks/webhook").ConfigureAwait(false);
 
-            return new DiscordWebhook(app, apiData);
+            return new DiscordWebhook(this, apiData);
         }
 
         /// <summary>

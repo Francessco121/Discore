@@ -39,12 +39,12 @@ namespace Discore
         /// </summary>
         public bool HasToken => !string.IsNullOrWhiteSpace(Token);
 
-        DiscordHttpApi http;
+        DiscordHttpClient http;
 
-        internal DiscordWebhook(IDiscordApplication app, DiscordApiData data)
+        internal DiscordWebhook(DiscordHttpClient http, DiscordApiData data)
             : base(data)
         {
-            http = app.HttpApi;
+            this.http = http;
 
             GuildId = data.GetSnowflake("guild_id").Value;
             ChannelId = data.GetSnowflake("channel_id").Value;
