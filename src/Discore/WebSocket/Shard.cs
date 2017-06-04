@@ -60,7 +60,7 @@ namespace Discore.WebSocket
         bool isDisposed;
         DiscoreLogger log;
 
-        internal Shard(string botToken, int shardId, int totalShards)
+        public Shard(string botToken, int shardId, int totalShards)
         {
             Id = shardId;
 
