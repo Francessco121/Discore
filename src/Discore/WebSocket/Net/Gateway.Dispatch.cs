@@ -565,8 +565,8 @@ namespace Discore.WebSocket.Net
                 // Fire event
                 OnGuildMemberUpdated?.Invoke(this, new GuildMemberEventArgs(shard, guildId, mutableMember.ImmutableEntity));
             }
-            else
-                throw new ShardCacheException($"Member {userId} was not in the guild {guildId} cache!");
+
+            // It is technically valid for the member to not exist here, especially if the guild is considered large.
         }
 
         [DispatchEvent("GUILD_MEMBERS_CHUNK")]
@@ -971,8 +971,8 @@ namespace Discore.WebSocket.Net
                 // Fire event
                 OnPresenceUpdated?.Invoke(this, new PresenceEventArgs(shard, guildId, mutableMember.ImmutableEntity, presence));
             }
-            else
-                throw new ShardCacheException($"User {userId} was not in the guild {guildId} cache!");
+
+            // It is technically valid for the member to not exist here, especially if the guild is considered large.
         }
 
         [DispatchEvent("TYPING_START")]
