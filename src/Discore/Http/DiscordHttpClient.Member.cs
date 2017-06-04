@@ -14,7 +14,7 @@ namespace Discore.Http
         public async Task<DiscordGuildMember> GetGuildMember(Snowflake guildId, Snowflake userId)
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/members/{userId}",
-                "guilds/guild/members/user").ConfigureAwait(false);
+                $"guilds/{guildId}/members/user").ConfigureAwait(false);
             return new DiscordGuildMember(this, data, guildId);
         }
 
@@ -34,7 +34,7 @@ namespace Discore.Http
             urlParams["after"] = after?.Id.ToString() ?? null;
 
             DiscordApiData data = await rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}",
-                "guilds/guild/members").ConfigureAwait(false);
+                $"guilds/{guildId}/members").ConfigureAwait(false);
             DiscordGuildMember[] members = new DiscordGuildMember[data.Values.Count];
             for (int i = 0; i < members.Length; i++)
                 members[i] = new DiscordGuildMember(this, data.Values[i], guildId);
@@ -55,7 +55,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             await rest.Patch($"guilds/{guildId}/members/{userId}", requestData,
-                "guilds/guild/members/user").ConfigureAwait(false);
+                $"guilds/{guildId}/members/user").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Discore.Http
             requestData.Set("nick", nickname);
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/members/@me/nick", requestData,
-                "guilds/guild/members/@me/nick").ConfigureAwait(false);
+                $"guilds/{guildId}/members/@me/nick").ConfigureAwait(false);
             return returnData.GetString("nick");
         }
 
@@ -81,7 +81,7 @@ namespace Discore.Http
         public async Task RemoveGuildMember(Snowflake guildId, Snowflake userId)
         {
             await rest.Delete($"guilds/{guildId}/members/{userId}",
-                "guilds/guild/members/user").ConfigureAwait(false);
+                $"guilds/{guildId}/members/user").ConfigureAwait(false);
         }
     }
 }

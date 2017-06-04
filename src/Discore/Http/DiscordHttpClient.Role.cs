@@ -13,7 +13,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordRole>> GetGuildRoles(Snowflake guildId)
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/roles",
-                "guilds/guild/roles").ConfigureAwait(false);
+                $"guilds/{guildId}/roles").ConfigureAwait(false);
 
             DiscordRole[] roles = new DiscordRole[data.Values.Count];
             for (int i = 0; i < roles.Length; i++)
@@ -29,7 +29,7 @@ namespace Discore.Http
         public async Task<DiscordRole> CreateGuildRole(Snowflake guildId)
         {
             DiscordApiData data = await rest.Post($"guilds/{guildId}/roles",
-                "guilds/guild/roles").ConfigureAwait(false);
+                $"guilds/{guildId}/roles").ConfigureAwait(false);
             return new DiscordRole(this, guildId, data);
         }
 
@@ -47,7 +47,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await rest.Post($"guilds/{guildId}/roles", requestData,
-                "guilds/guild/roles").ConfigureAwait(false);
+                $"guilds/{guildId}/roles").ConfigureAwait(false);
             return new DiscordRole(this, guildId, returnData);
         }
 
@@ -67,7 +67,7 @@ namespace Discore.Http
                 requestData.Values.Add(positionParam.Build());
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/roles", requestData,
-                "guilds/guild/roles").ConfigureAwait(false);
+                $"guilds/{guildId}/roles").ConfigureAwait(false);
 
             DiscordRole[] roles = new DiscordRole[returnData.Values.Count];
             for (int i = 0; i < roles.Length; i++)
@@ -89,7 +89,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData,
-                "guilds/guild/roles/role").ConfigureAwait(false);
+                $"guilds/{guildId}/roles/role").ConfigureAwait(false);
             return new DiscordRole(this, guildId, returnData);
         }
 
@@ -100,7 +100,7 @@ namespace Discore.Http
         public async Task DeleteGuildRole(Snowflake guildId, Snowflake roleId)
         {
             await rest.Delete($"guilds/{guildId}/roles/{roleId}",
-                "guilds/guild/roles/role").ConfigureAwait(false);
+                $"guilds/{guildId}/roles/role").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Discore.Http
         public async Task AddGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
         {
             await rest.Put($"guilds/{guildId}/members/{userId}/roles/{roleId}",
-                "guilds/guild/members/member/roles/role").ConfigureAwait(false);
+                $"guilds/{guildId}/members/member/roles/role").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Discore.Http
         public async Task RemoveGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
         {
             await rest.Delete($"guilds/{guildId}/members/{userId}/roles/{roleId}",
-                "guilds/guild/members/member/roles/role").ConfigureAwait(false);
+                $"guilds/{guildId}/members/member/roles/role").ConfigureAwait(false);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetGuildVoiceRegions(Snowflake guildId)
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/regions",
-                "guilds/guild/regions").ConfigureAwait(false);
+                $"guilds/{guildId}/regions").ConfigureAwait(false);
 
             DiscordVoiceRegion[] regions = new DiscordVoiceRegion[data.Values.Count];
             for (int i = 0; i < regions.Length; i++)

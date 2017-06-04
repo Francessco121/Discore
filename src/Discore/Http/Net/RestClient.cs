@@ -269,27 +269,27 @@ namespace Discore.Http.Net
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Get(string action, string limiterAction, 
+        public Task<DiscordApiData> Get(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Post(string action, string limiterAction, 
+        public Task<DiscordApiData> Post(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Post(string action, DiscordApiData data, string limiterAction, 
+        public Task<DiscordApiData> Post(string action, DiscordApiData data, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -298,21 +298,21 @@ namespace Discore.Http.Net
                 request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
                 return request;
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Put(string action, string limiterAction, 
+        public Task<DiscordApiData> Put(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Put(string action, DiscordApiData data, string limiterAction, 
+        public Task<DiscordApiData> Put(string action, DiscordApiData data, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -321,11 +321,11 @@ namespace Discore.Http.Net
                 request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
                 return request;
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Patch(string action, DiscordApiData data, string limiterAction, 
+        public Task<DiscordApiData> Patch(string action, DiscordApiData data, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -334,17 +334,17 @@ namespace Discore.Http.Net
                 request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
                 return request;
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Delete(string action, string limiterAction, 
+        public Task<DiscordApiData> Delete(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         public void Dispose()

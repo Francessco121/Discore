@@ -17,7 +17,7 @@ namespace Discore.Http
                 throw new ArgumentNullException(nameof(emoji));
 
             await rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
-                "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/reactions/emoji/@me").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace Discore.Http
                 throw new ArgumentNullException(nameof(emoji));
 
             await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
-                "channels/channel/messages/message/reactions/emoji/@me").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/reactions/emoji/@me").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Discore.Http
                 throw new ArgumentNullException(nameof(emoji));
 
             await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}",
-                "channels/channel/messages/message/reactions/emoji/user").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/reactions/emoji/user").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Discore.Http
                 throw new ArgumentNullException(nameof(emoji));
 
             DiscordApiData data = await rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}",
-                "channels/channel/messages/message/reactions/emoji").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/reactions/emoji").ConfigureAwait(false);
 
             DiscordUser[] users = new DiscordUser[data.Values.Count];
             for (int i = 0; i < users.Length; i++)
@@ -75,7 +75,7 @@ namespace Discore.Http
         public async Task DeleteAllReactions(Snowflake channelId, Snowflake messageId)
         {
             await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions",
-                "channels/channel/messages/message/reactions").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/reactions").ConfigureAwait(false);
         }
     }
 }

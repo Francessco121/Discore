@@ -47,7 +47,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetGuildInvites(Snowflake guildId)
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/invites",
-                "guilds/guild/invites").ConfigureAwait(false);
+                $"guilds/{guildId}/invites").ConfigureAwait(false);
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
@@ -63,7 +63,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetChannelInvites(Snowflake channelId)
         {
             DiscordApiData data = await rest.Get($"channels/{channelId}/invites",
-                "channels/channel/invites").ConfigureAwait(false);
+                $"channels/{channelId}/invites").ConfigureAwait(false);
 
             DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
             for (int i = 0; i < invites.Length; i++)
@@ -94,7 +94,7 @@ namespace Discore.Http
             if (unique.HasValue) requestData.Set("unique", unique.Value);
 
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/invites", requestData,
-                "channels/channel/invites").ConfigureAwait(false);
+                $"channels/{channelId}/invites").ConfigureAwait(false);
             return new DiscordInvite(this, returnData);
         }
     }

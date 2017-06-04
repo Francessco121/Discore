@@ -22,7 +22,7 @@ namespace Discore.Http
         public async Task<T> GetChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await rest.Get($"channels/{channelId}", "channels/channel").ConfigureAwait(false);
+            DiscordApiData data = await rest.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
             return (T)DeserializeChannelData(data);
         }
 
@@ -43,7 +43,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await rest.Patch($"channels/{textChannelId}", requestData,
-                "channels/channel").ConfigureAwait(false);
+                $"channels/{textChannelId}").ConfigureAwait(false);
             return (DiscordGuildTextChannel)DeserializeChannelData(returnData);
         }
 
@@ -64,7 +64,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await rest.Patch($"channels/{voiceChannelId}", requestData,
-                "channels/channel").ConfigureAwait(false);
+                $"channels/{voiceChannelId}").ConfigureAwait(false);
             return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData);
         }
 
@@ -84,7 +84,7 @@ namespace Discore.Http
         public async Task<T> DeleteChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await rest.Delete($"channels/{channelId}", "channels/channel").ConfigureAwait(false);
+            DiscordApiData data = await rest.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
             return (T)DeserializeChannelData(data);
         }
 
@@ -101,7 +101,7 @@ namespace Discore.Http
             data.Set("type", type.ToString().ToLower());
 
             await rest.Put($"channels/{channelId}/permissions/{overwriteId}", data,
-                "channels/channel/permissions/permission").ConfigureAwait(false);
+                $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Discore.Http
         public async Task DeleteChannelPermission(Snowflake channelId, Snowflake overwriteId)
         {
             await rest.Delete($"channels/{channelId}/permissions/{overwriteId}",
-                "channels/channel/permissions/permission").ConfigureAwait(false);
+                $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -121,7 +121,7 @@ namespace Discore.Http
         public async Task TriggerTypingIndicator(Snowflake channelId)
         {
             await rest.Post($"channels/{channelId}/typing",
-                "channels/channel/typing").ConfigureAwait(false);
+                $"channels/{channelId}/typing").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordGuildChannel>> GetGuildChannels(Snowflake guildId)
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/channels",
-                "guilds/guild/channels").ConfigureAwait(false);
+                $"guilds/{guildId}/channels").ConfigureAwait(false);
 
             DiscordGuildChannel[] channels = new DiscordGuildChannel[data.Values.Count];
             for (int i = 0; i < channels.Length; i++)
@@ -153,7 +153,7 @@ namespace Discore.Http
             DiscordApiData requestData = parameters.Build();
 
             DiscordApiData returnData = await rest.Post($"guilds/{guildId}/channels",
-                "guilds/guild/channels").ConfigureAwait(false);
+                $"guilds/{guildId}/channels").ConfigureAwait(false);
             return (DiscordGuildChannel)DeserializeChannelData(returnData);
         }
 
@@ -173,7 +173,7 @@ namespace Discore.Http
                 requestData.Values.Add(positionParam.Build());
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/channels", requestData,
-                "guilds/guild/channels").ConfigureAwait(false);
+                $"guilds/{guildId}/channels").ConfigureAwait(false);
 
             DiscordGuildChannel[] channels = new DiscordGuildChannel[returnData.Values.Count];
             for (int i = 0; i < channels.Length; i++)

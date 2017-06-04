@@ -21,7 +21,7 @@ namespace Discore.Http
             string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
 
             DiscordApiData data = await rest.Get($"channels/{channelId}/messages?{strat}={baseMessageId}{limitStr}",
-                "channels/channel/messages").ConfigureAwait(false);
+                $"channels/{channelId}/messages").ConfigureAwait(false);
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
@@ -37,7 +37,7 @@ namespace Discore.Http
         public async Task<DiscordMessage> GetChannelMessage(Snowflake channelId, Snowflake messageId)
         {
             DiscordApiData data = await rest.Get($"channels/{channelId}/messages/{messageId}",
-                "channels/channel/messages/message").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message").ConfigureAwait(false);
             return new DiscordMessage(this, data);
         }
 
@@ -71,7 +71,7 @@ namespace Discore.Http
                 requestData.Set("embed", details.Embed.Build());
 
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/messages", requestData,
-                "channels/channel/messages").ConfigureAwait(false);
+                $"channels/{channelId}/messages").ConfigureAwait(false);
             return new DiscordMessage(this, returnData);
         }
 
@@ -138,7 +138,7 @@ namespace Discore.Http
                 request.Content = data;
 
                 return request;
-            }, "channels/channel/messages").ConfigureAwait(false);
+            }, $"channels/{channelId}/messages").ConfigureAwait(false);
             return new DiscordMessage(this, returnData);
         }
 
@@ -152,7 +152,7 @@ namespace Discore.Http
             requestData.Set("content", content);
 
             DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
-                "channels/channel/messages/message").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message").ConfigureAwait(false);
             return new DiscordMessage(this, returnData);
         }
 
@@ -173,7 +173,7 @@ namespace Discore.Http
                 requestData.Set("embed", editDetails.Embed.Build());
 
             DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
-                "channels/channel/messages/message").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message").ConfigureAwait(false);
             return new DiscordMessage(this, returnData);
         }
 
@@ -184,7 +184,7 @@ namespace Discore.Http
         public async Task DeleteMessage(Snowflake channelId, Snowflake messageId)
         {
             await rest.Delete($"channels/{channelId}/messages/{messageId}",
-                "channels/channel/messages/message/delete").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/delete").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace Discore.Http
             }
 
             await rest.Post($"channels/{channelId}/messages/bulk-delete", requestData,
-                "channels/channel/messages/message/delete/bulk").ConfigureAwait(false);
+                $"channels/{channelId}/messages/message/delete/bulk").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
         {
             DiscordApiData data = await rest.Get($"channels/{channelId}/pins",
-                "channels/channel/pins").ConfigureAwait(false);
+                $"channels/{channelId}/pins").ConfigureAwait(false);
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
             for (int i = 0; i < messages.Length; i++)
@@ -267,7 +267,7 @@ namespace Discore.Http
         public async Task AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
         {
             await rest.Put($"channels/{channelId}/pins/{messageId}",
-                "channels/channel/pins/message").ConfigureAwait(false);
+                $"channels/{channelId}/pins/message").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ namespace Discore.Http
         public async Task DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
         {
             await rest.Delete($"channels/{channelId}/pins/{messageId}",
-                "channels/channel/pins/message").ConfigureAwait(false);
+                $"channels/{channelId}/pins/message").ConfigureAwait(false);
         }
     }
 }
