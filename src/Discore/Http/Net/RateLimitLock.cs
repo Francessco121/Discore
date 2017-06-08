@@ -7,17 +7,7 @@ namespace Discore.Http.Net
 {
     class RateLimitLock
     {
-        public bool RequiresWait
-        {
-            get
-            {
-                TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
-                ulong epochNowMilliseconds = (ulong)t.TotalMilliseconds;
-
-                int msDelay = (int)(resetAtEpochMilliseconds - epochNowMilliseconds);
-                return msDelay > 0;
-            }
-        }
+        public bool RequiresWait => GetDelay() > 0;
 
         ulong resetAtEpochMilliseconds;
         AsyncLock mutex;
@@ -27,12 +17,20 @@ namespace Discore.Http.Net
             mutex = new AsyncLock();
         }
 
-        public Task WaitAsync(CancellationToken cancellationToken)
+        int GetDelay()
         {
             TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
             ulong epochNowMilliseconds = (ulong)t.TotalMilliseconds;
 
-            int msDelay = (int)(resetAtEpochMilliseconds - epochNowMilliseconds);
+            if (resetAtEpochMilliseconds <= epochNowMilliseconds)
+                return 0;
+            else
+                return (int)(resetAtEpochMilliseconds - epochNowMilliseconds);
+        }
+
+        public Task WaitAsync(CancellationToken cancellationToken)
+        {
+            int msDelay = GetDelay();
             return msDelay <= 0 ? Task.CompletedTask : Task.Delay(msDelay);
         }
 
