@@ -151,9 +151,7 @@ namespace Discore.WebSocket.Net
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
 
-            // Signal that the connection is ready
-            gatewayReadyEvent.Set();
-
+            // Tell the shard we just finished creating a new session
             OnReadyEvent?.Invoke(this, EventArgs.Empty);
 
             // Get the authenticated user
@@ -212,13 +210,16 @@ namespace Discore.WebSocket.Net
             }
 
             LogServerTrace("Ready", data);
+
+            // Signal that the connection is ready
+            handshakeCompleteEvent.Set();
         }
 
         [DispatchEvent("RESUMED")]
         void HandleResumedEvent(DiscordApiData data)
         {
             // Signal that the connection is ready
-            gatewayReadyEvent.Set();
+            handshakeCompleteEvent.Set();
 
             log.LogInfo("[Resumed] Successfully resumed.");
             LogServerTrace("Resumed", data);
@@ -608,7 +609,7 @@ namespace Discore.WebSocket.Net
             }
 
             // Fire event
-            OnGuildMembersChunk?.Invoke(this, new GuildMemberChunkEventArgs(Shard, guildId, members));
+            OnGuildMembersChunk?.Invoke(this, new GuildMemberChunkEventArgs(shard, guildId, members));
         }
 
         [DispatchEvent("GUILD_ROLE_CREATE")]

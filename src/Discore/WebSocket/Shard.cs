@@ -29,10 +29,6 @@ namespace Discore.WebSocket
         /// </para>
         /// </summary>
         public event EventHandler<ShardEventArgs> OnReconnected;
-        /// <summary>
-        /// Called when this shard fails and cannot reconnect due to the error.
-        /// </summary>
-        public event EventHandler<ShardFailureEventArgs> OnFailure;
 
         /// <summary>
         /// Gets the local memory cache of data from the Discord API.
@@ -69,7 +65,6 @@ namespace Discore.WebSocket
             Cache = new DiscordShardCache();
 
             gateway = new Gateway(botToken, this, totalShards);
-            gateway.OnFatalDisconnection += Gateway_OnFatalDisconnection;
             gateway.OnReconnected += Gateway_OnReconnected;
             gateway.OnReadyEvent += Gateway_OnReadyEvent;
 
@@ -86,19 +81,25 @@ namespace Discore.WebSocket
             OnReconnected?.Invoke(this, new ShardEventArgs(this));
         }
 
-        private void Gateway_OnFatalDisconnection(object sender, GatewayCloseCode e)
+        /// <exception cref="ShardStartException"></exception>
+        void ThrowShardStartException(GatewayCloseCode closeCode)
         {
-            ShardFailureReason reason = ShardFailureReason.Unknown;
-            if (e == GatewayCloseCode.InvalidShard)
-                reason = ShardFailureReason.ShardInvalid;
-            else if (e == GatewayCloseCode.AuthenticationFailed)
-                reason = ShardFailureReason.AuthenticationFailed;
-            else if (e == GatewayCloseCode.ShardingRequired)
-                reason = ShardFailureReason.ShardingRequired;
-
-            isRunning = false;
-            CleanUp();
-            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, reason));
+            switch (closeCode)
+            {
+                case GatewayCloseCode.InvalidShard:
+                    throw new ShardStartException("The shard configuration was invalid.", 
+                        this, ShardStartFailReason.ShardInvalid);
+                case GatewayCloseCode.AuthenticationFailed:
+                    throw new ShardStartException("The shard failed to authenticate.", 
+                        this, ShardStartFailReason.AuthenticationFailed);
+                case GatewayCloseCode.ShardingRequired:
+                    throw new ShardStartException("Additional sharding is required.", 
+                        this, ShardStartFailReason.ShardingRequired);
+                default:
+                    throw new ShardStartException(
+                        $"An unknown error occured while starting the shard: {closeCode}({(int)closeCode})",
+                        this, ShardStartFailReason.Unknown);
+            }
         }
 
         /// <summary>
@@ -109,6 +110,7 @@ namespace Discore.WebSocket
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
         /// <exception cref="OperationCanceledException"></exception>
+        /// <exception cref="ShardStartException">Thrown if the shard fails to start.</exception>
         public Task StartAsync(CancellationToken? cancellationToken = null)
         {
             return StartAsync(new ShardStartConfig(), cancellationToken);
@@ -124,6 +126,7 @@ namespace Discore.WebSocket
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
         /// <exception cref="OperationCanceledException"></exception>
+        /// <exception cref="ShardStartException">Thrown if the shard fails to start.</exception>
         public async Task StartAsync(ShardStartConfig config, CancellationToken? cancellationToken = null)
         {
             if (isDisposed)
@@ -138,7 +141,18 @@ namespace Discore.WebSocket
                 CleanUp();
 
                 CancellationToken ct = cancellationToken ?? CancellationToken.None;
-                await gateway.ConnectAsync(config, ct).ConfigureAwait(false);
+
+                try
+                {
+                    await gateway.ConnectAsync(config, ct).ConfigureAwait(false);
+                }
+                catch (GatewayHandshakeException ex)
+                {
+                    isRunning = false;
+                    CleanUp();
+
+                    ThrowShardStartException(ex.CloseCode);
+                }
 
                 log.LogInfo("Successfully connected to the Gateway.");
                 OnConnected?.Invoke(this, new ShardEventArgs(this));

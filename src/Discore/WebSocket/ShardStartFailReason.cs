@@ -1,6 +1,6 @@
 ﻿namespace Discore.WebSocket
 {
-    public enum ShardFailureReason
+    public enum ShardStartFailReason
     {
         /// <summary>
         /// Should be reported to the Discore developers if received.
@@ -11,7 +11,7 @@
         /// </summary>
         ShardInvalid,
         /// <summary>
-        /// The shard failed to authenticate with the Discord gateway websocket API.
+        /// The shard failed to authenticate with the Discord Gateway WebSocket API.
         /// </summary>
         AuthenticationFailed,
         /// <summary>
