@@ -1,6 +1,6 @@
 ﻿namespace Discore.WebSocket
 {
-    public enum ShardStartFailReason
+    public enum ShardFailureReason
     {
         /// <summary>
         /// Should be reported to the Discore developers if received.

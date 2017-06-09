@@ -3,9 +3,9 @@
     public class ShardStartException : DiscoreException
     {
         public Shard Shard { get; }
-        public ShardStartFailReason Reason { get; }
+        public ShardFailureReason Reason { get; }
 
-        public ShardStartException(string message, Shard shard, ShardStartFailReason reason)
+        public ShardStartException(string message, Shard shard, ShardFailureReason reason)
             : base(message)
         {
             Shard = shard;

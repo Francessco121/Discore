@@ -29,6 +29,10 @@ namespace Discore.WebSocket
         /// </para>
         /// </summary>
         public event EventHandler<ShardEventArgs> OnReconnected;
+        /// <summary> 
+        /// Called when this shard fails and cannot reconnect due to the error. 
+        /// </summary> 
+        public event EventHandler<ShardFailureEventArgs> OnFailure;
 
         /// <summary>
         /// Gets the local memory cache of data from the Discord API.
@@ -65,6 +69,7 @@ namespace Discore.WebSocket
             Cache = new DiscordShardCache();
 
             gateway = new Gateway(botToken, this, totalShards);
+            gateway.OnFatalClose += Gateway_OnFatalClose;
             gateway.OnReconnected += Gateway_OnReconnected;
             gateway.OnReadyEvent += Gateway_OnReadyEvent;
 
@@ -81,24 +86,28 @@ namespace Discore.WebSocket
             OnReconnected?.Invoke(this, new ShardEventArgs(this));
         }
 
-        /// <exception cref="ShardStartException"></exception>
-        void ThrowShardStartException(GatewayCloseCode closeCode)
+        private void Gateway_OnFatalClose(object sender, GatewayCloseCode e)
+        {
+            isRunning = false;
+            CleanUp();
+
+            (string message, ShardFailureReason reason) = GatewayCloseCodeToReason(e);
+            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, message, reason));
+        }
+
+        (string message, ShardFailureReason reason) GatewayCloseCodeToReason(GatewayCloseCode closeCode)
         {
             switch (closeCode)
             {
                 case GatewayCloseCode.InvalidShard:
-                    throw new ShardStartException("The shard configuration was invalid.", 
-                        this, ShardStartFailReason.ShardInvalid);
+                    return ("The shard configuration was invalid.", ShardFailureReason.ShardInvalid);
                 case GatewayCloseCode.AuthenticationFailed:
-                    throw new ShardStartException("The shard failed to authenticate.", 
-                        this, ShardStartFailReason.AuthenticationFailed);
+                    return ("The shard failed to authenticate.", ShardFailureReason.AuthenticationFailed);
                 case GatewayCloseCode.ShardingRequired:
-                    throw new ShardStartException("Additional sharding is required.", 
-                        this, ShardStartFailReason.ShardingRequired);
+                    return ("Additional sharding is required.", ShardFailureReason.ShardingRequired);
                 default:
-                    throw new ShardStartException(
-                        $"An unknown error occured while starting the shard: {closeCode}({(int)closeCode})",
-                        this, ShardStartFailReason.Unknown);
+                    return($"An unknown error occured while starting the shard: {closeCode}({(int)closeCode})", 
+                        ShardFailureReason.Unknown);
             }
         }
 
@@ -151,7 +160,15 @@ namespace Discore.WebSocket
                     isRunning = false;
                     CleanUp();
 
-                    ThrowShardStartException(ex.CloseCode);
+                    (string message, ShardFailureReason reason) = GatewayCloseCodeToReason(ex.CloseCode);
+                    throw new ShardStartException(message, this, reason);
+                }
+                catch
+                {
+                    isRunning = false;
+                    CleanUp();
+
+                    throw;
                 }
 
                 log.LogInfo("Successfully connected to the Gateway.");

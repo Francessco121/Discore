@@ -20,6 +20,8 @@ namespace Discore.WebSocket.Net
 
         public event EventHandler OnReconnected;
 
+        public event EventHandler<GatewayCloseCode> OnFatalClose;
+
         const int GATEWAY_VERSION = 5;
 
         string botToken;
@@ -272,11 +274,13 @@ namespace Discore.WebSocket.Net
                 log.LogVerbose("[ConnectAsync] Setting state to Connected.");
                 state = GatewayState.Connected;
             }
-            finally
+            catch
             {
                 // Reset to disconnected if cancelled or failed
                 log.LogVerbose("[ConnectAsync] Setting state to Disconnected.");
                 state = GatewayState.Disconnected;
+
+                throw;
             }
         }
 
@@ -546,6 +550,8 @@ namespace Discore.WebSocket.Net
 
             handshakeFailCloseCode = e;
             handshakeCompleteEvent.Set();
+
+            OnFatalClose?.Invoke(this, e);
         }
 
         void Socket_OnReconnectionRequired(object sender, ReconnectionEventArgs e)
