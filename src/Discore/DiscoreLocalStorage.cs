@@ -9,7 +9,7 @@ namespace Discore
     {
         static DiscoreLocalStorage instance;
 
-        public string GatewayUrl
+        string GatewayUrl
         {
             get => data.GetString("gateway_url");
             set => data.Set("gateway_url", value);
@@ -78,7 +78,7 @@ namespace Discore
         /// <exception cref="PathTooLongException"></exception>
         /// <exception cref="IOException"></exception>
         /// <exception cref="UnauthorizedAccessException"></exception>
-        public async Task SaveAsync()
+        async Task SaveAsync()
         {
             using (FileStream fs = File.Open(FILE_NAME, FileMode.Create, FileAccess.Write, FileShare.None))
             using (StreamWriter writer = new StreamWriter(fs))
@@ -99,6 +99,8 @@ namespace Discore
         {
             if (string.IsNullOrWhiteSpace(GatewayUrl) || !useCached)
             {
+                log.LogVerbose("Retrieving gateway URL from HTTP...");
+
                 string gatewayUrl = await http.Get().ConfigureAwait(false);
 
                 if (GatewayUrl != gatewayUrl)
@@ -120,6 +122,8 @@ namespace Discore
         {
             if (GatewayUrl != null)
             {
+                log.LogVerbose("Invalidating gateway URL...");
+
                 GatewayUrl = null;
                 return SaveAsync();
             }

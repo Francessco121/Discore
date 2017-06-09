@@ -4,11 +4,11 @@ namespace Discore.WebSocket.Net
 {
     class GatewayHandshakeException : Exception
     {
-        public GatewayCloseCode CloseCode { get; }
+        public GatewayFailureData FailureData { get; }
 
-        public GatewayHandshakeException(GatewayCloseCode closeCode)
+        public GatewayHandshakeException(GatewayFailureData failureData)
         {
-            CloseCode = closeCode;
+            FailureData = failureData;
         }
     }
 }

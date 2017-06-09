@@ -20,7 +20,7 @@ namespace Discore.WebSocket.Net
 
         public event EventHandler OnReconnected;
 
-        public event EventHandler<GatewayCloseCode> OnFatalClose;
+        public event EventHandler<GatewayFailureData> OnFailure;
 
         const int GATEWAY_VERSION = 5;
 
@@ -64,7 +64,8 @@ namespace Discore.WebSocket.Net
         /// Cancellation occurs when the Gateway is disconnected publicly (i.e. not from a socket error).
         /// </summary>
         CancellationTokenSource handshakeCompleteCancellationSource;
-        GatewayCloseCode? handshakeFailCloseCode;
+
+        GatewayFailureData gatewayFailureData;
 
         /// <summary>
         /// Milliseconds to wait before attempting the next socket connection. Will be reset after wait completes.
@@ -243,7 +244,7 @@ namespace Discore.WebSocket.Net
             state = GatewayState.Connecting;
             lastShardStartConfig = config;
 
-            handshakeFailCloseCode = null;
+            gatewayFailureData = null;
             handshakeCompleteEvent.Reset();
 
             connectTask = ConnectLoop(false, cancellationToken);
@@ -267,8 +268,8 @@ namespace Discore.WebSocket.Net
                 }
 
                 // Check for errors
-                if (handshakeFailCloseCode.HasValue)
-                    throw new GatewayHandshakeException(handshakeFailCloseCode.Value);
+                if (gatewayFailureData != null)
+                    throw new GatewayHandshakeException(gatewayFailureData);
 
                 // Connection successful
                 log.LogVerbose("[ConnectAsync] Setting state to Connected.");
@@ -330,42 +331,6 @@ namespace Discore.WebSocket.Net
                     .ConfigureAwait(false);
 
             log.LogVerbose("Disconnected.");
-        }
-
-        async Task<string> GetGatewayUrlAsync()
-        {
-            DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
-
-            if (string.IsNullOrWhiteSpace(localStorage.GatewayUrl))
-            {
-                try
-                {
-                    await UpdateGatewayUrlAsync().ConfigureAwait(false);
-                }
-                catch (DiscordHttpApiException httpEx)
-                {
-                    // Application most likely has no connection to the Discord API,
-                    // just return what we have in storage and let the connection loop
-                    // try again.
-
-                    log.LogError($"[GetGatewayUrlAsync] Failed to update gateway url: {httpEx}");
-                }
-            }
-
-            return localStorage.GatewayUrl ?? "";
-        }
-
-        async Task UpdateGatewayUrlAsync()
-        {
-            DiscoreLocalStorage localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
-
-            string gatewayUrl = await http.Get().ConfigureAwait(false);
-
-            if (localStorage.GatewayUrl != gatewayUrl)
-            {
-                localStorage.GatewayUrl = gatewayUrl;
-                await localStorage.SaveAsync().ConfigureAwait(false);
-            }
         }
 
         /// <exception cref="OperationCanceledException"></exception>
@@ -430,17 +395,39 @@ namespace Discore.WebSocket.Net
                 SubscribeSocketEvents();
 
                 // Get the gateway URL
-                string gatewayUrl = await GetGatewayUrlAsync().ConfigureAwait(false);
-                log.LogVerbose($"[ConnectLoop] gatewayUrl = {gatewayUrl}");
-
-                // Ensure we have a URL to the gateway
-                if (string.IsNullOrWhiteSpace(gatewayUrl))
+                DiscoreLocalStorage localStorage;
+                string gatewayUrl;
+                try
                 {
+                    localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
+                    gatewayUrl = await localStorage.GetGatewayUrlAsync(http).ConfigureAwait(false);
+                }
+                catch (DiscordHttpApiException httpEx)
+                {
+                    log.LogError($"[ConnectLoop:GetGatewayUrl] {httpEx}");
                     log.LogError("[ConnectLoop] No gateway URL to connect with, trying again in 5s...");
                     await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
 
                     continue;
                 }
+                catch (Exception ex)
+                {
+                    log.LogError(ex);
+                    log.LogVerbose("IO Error occured while getting/storing gateway URL, setting state to Disconnected.");
+                    state = GatewayState.Disconnected;
+
+                    gatewayFailureData = new GatewayFailureData(
+                        "Failed to retrieve/store the Gateway URL because of an IO error.",
+                        ShardFailureReason.IOError, ex);
+                    handshakeCompleteEvent.Set();
+
+                    OnFailure?.Invoke(this, gatewayFailureData);
+
+                    break;
+                }
+
+                log.LogVerbose($"[ConnectLoop] gatewayUrl = {gatewayUrl}");
+
 
                 // Make sure we dont try and connect too often
                 await connectionRateLimiter.Invoke(cancellationToken).ConfigureAwait(false);
@@ -472,19 +459,27 @@ namespace Discore.WebSocket.Net
                     log.LogError("[ConnectLoop] Failed to connect: " +
                         $"{wsex.WebSocketErrorCode} ({(int)wsex.WebSocketErrorCode}), {wsex.Message}");
 
-                    // Try to update the gateway URL since we failed to connect the socket
                     try
                     {
-                        await UpdateGatewayUrlAsync().ConfigureAwait(false);
+                        // Invalidate the cached URL since we failed to connect the socket
+                        await localStorage.InvalidateGatewayUrlAsync();
                     }
-                    catch (DiscordHttpApiException httpEx)
+                    catch (Exception ex)
                     {
-                        // Application most likely has no connection to the Discord API,
-                        // just let the connection loop try again.
+                        log.LogError(ex);
+                        log.LogVerbose("IO Error occured while invalidating gateway URL, setting state to Disconnected.");
+                        state = GatewayState.Disconnected;
 
-                        log.LogError($"[ConnectLoop] Failed to update gateway url: {httpEx}");
+                        gatewayFailureData = new GatewayFailureData(
+                            "Failed to update the Gateway URL because of an IO error.",
+                            ShardFailureReason.IOError, ex);
+                        handshakeCompleteEvent.Set();
+
+                        OnFailure?.Invoke(this, gatewayFailureData);
+
+                        break;
                     }
-                    
+
                     // Wait 5s then retry
                     log.LogVerbose("[ConnectLoop] Waiting 5s before retrying...");
                     await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
@@ -548,10 +543,11 @@ namespace Discore.WebSocket.Net
             log.LogVerbose("Fatal disconnection occured, setting state to Disconnected.");
             state = GatewayState.Disconnected;
 
-            handshakeFailCloseCode = e;
+            (string message, ShardFailureReason reason) = GatewayCloseCodeToReason(e);
+            gatewayFailureData = new GatewayFailureData(message, reason, null);
             handshakeCompleteEvent.Set();
 
-            OnFatalClose?.Invoke(this, e);
+            OnFailure?.Invoke(this, gatewayFailureData);
         }
 
         void Socket_OnReconnectionRequired(object sender, ReconnectionEventArgs e)
@@ -600,6 +596,22 @@ namespace Discore.WebSocket.Net
             }
             else
                 log.LogWarning($"Missing handler for dispatch event: {eventName}");
+        }
+
+        (string message, ShardFailureReason reason) GatewayCloseCodeToReason(GatewayCloseCode closeCode)
+        {
+            switch (closeCode)
+            {
+                case GatewayCloseCode.InvalidShard:
+                    return ("The shard configuration was invalid.", ShardFailureReason.ShardInvalid);
+                case GatewayCloseCode.AuthenticationFailed:
+                    return ("The shard failed to authenticate.", ShardFailureReason.AuthenticationFailed);
+                case GatewayCloseCode.ShardingRequired:
+                    return ("Additional sharding is required.", ShardFailureReason.ShardingRequired);
+                default:
+                    return ($"An unknown error occured while starting the shard: {closeCode}({(int)closeCode})",
+                        ShardFailureReason.Unknown);
+            }
         }
 
         public void Dispose()

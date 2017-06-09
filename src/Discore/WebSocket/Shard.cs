@@ -69,7 +69,7 @@ namespace Discore.WebSocket
             Cache = new DiscordShardCache();
 
             gateway = new Gateway(botToken, this, totalShards);
-            gateway.OnFatalClose += Gateway_OnFatalClose;
+            gateway.OnFailure += Gateway_OnFailure;
             gateway.OnReconnected += Gateway_OnReconnected;
             gateway.OnReadyEvent += Gateway_OnReadyEvent;
 
@@ -86,29 +86,12 @@ namespace Discore.WebSocket
             OnReconnected?.Invoke(this, new ShardEventArgs(this));
         }
 
-        private void Gateway_OnFatalClose(object sender, GatewayCloseCode e)
+        private void Gateway_OnFailure(object sender, GatewayFailureData e)
         {
             isRunning = false;
             CleanUp();
 
-            (string message, ShardFailureReason reason) = GatewayCloseCodeToReason(e);
-            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, message, reason));
-        }
-
-        (string message, ShardFailureReason reason) GatewayCloseCodeToReason(GatewayCloseCode closeCode)
-        {
-            switch (closeCode)
-            {
-                case GatewayCloseCode.InvalidShard:
-                    return ("The shard configuration was invalid.", ShardFailureReason.ShardInvalid);
-                case GatewayCloseCode.AuthenticationFailed:
-                    return ("The shard failed to authenticate.", ShardFailureReason.AuthenticationFailed);
-                case GatewayCloseCode.ShardingRequired:
-                    return ("Additional sharding is required.", ShardFailureReason.ShardingRequired);
-                default:
-                    return($"An unknown error occured while starting the shard: {closeCode}({(int)closeCode})", 
-                        ShardFailureReason.Unknown);
-            }
+            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, e.Message, e.Reason, e.Exception));
         }
 
         /// <summary>
@@ -160,8 +143,8 @@ namespace Discore.WebSocket
                     isRunning = false;
                     CleanUp();
 
-                    (string message, ShardFailureReason reason) = GatewayCloseCodeToReason(ex.CloseCode);
-                    throw new ShardStartException(message, this, reason);
+                    GatewayFailureData failureData = ex.FailureData;
+                    throw new ShardStartException(failureData.Message, this, failureData.Reason, failureData.Exception);
                 }
                 catch
                 {
