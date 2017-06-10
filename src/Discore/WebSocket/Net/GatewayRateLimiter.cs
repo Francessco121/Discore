@@ -17,15 +17,8 @@ namespace Discore.WebSocket.Net
         public GatewayRateLimiter(int resetTimeSeconds, int maxInvokes)
         {
             this.maxInvokes = maxInvokes;
-
             resetTime = TimeSpan.FromSeconds(resetTimeSeconds);
 
-            Reset();
-        }
-
-        void Reset()
-        {
-            resetAt = DateTime.Now + resetTime;
             invokesLeft = maxInvokes;
         }
 
@@ -36,18 +29,26 @@ namespace Discore.WebSocket.Net
         /// <exception cref="OperationCanceledException"></exception>
         public async Task Invoke(CancellationToken? cancellationToken = null)
         {
+            DateTime now = DateTime.Now;
+            if (now >= resetAt)
+                invokesLeft = maxInvokes;
+
             if (invokesLeft > 0)
+            {
+                if (invokesLeft == maxInvokes)
+                    resetAt = DateTime.Now + resetTime;
+
                 invokesLeft--;
+            }
             else
             {
                 CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
-                int waitTimeMs = (int)Math.Ceiling((resetAt - DateTime.Now).TotalMilliseconds);
+                int waitTimeMs = (int)Math.Ceiling((resetAt - now).TotalMilliseconds);
                 if (waitTimeMs > 0)
                     await Task.Delay(waitTimeMs, ct).ConfigureAwait(false);
 
-                Reset();
-                invokesLeft--;
+                invokesLeft = maxInvokes - 1;
             }
         }
     }
