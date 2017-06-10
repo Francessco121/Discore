@@ -18,7 +18,7 @@ namespace Discore.WebSocket.Net
 
         public Shard Shard => shard;
 
-        public event EventHandler OnReconnected;
+        public event EventHandler<GatewayReconnectedEventArgs> OnReconnected;
 
         public event EventHandler<GatewayFailureData> OnFailure;
 
@@ -502,7 +502,7 @@ namespace Discore.WebSocket.Net
                 else
                     log.LogInfo("[ConnectLoop:Reconnection] Successfully created new session.");
 
-                OnReconnected?.Invoke(this, EventArgs.Empty);
+                OnReconnected?.Invoke(this, new GatewayReconnectedEventArgs(!resume));
             }
         }
 

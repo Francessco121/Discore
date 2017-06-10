@@ -15,6 +15,22 @@ namespace Discore.WebSocket
         }
     }
 
+    public class ShardReconnectedEventArgs : ShardEventArgs
+    {
+        /// <summary>
+        /// Gets whether the shard created a new session.
+        /// A new session means that the bot's user status may have been reset,
+        /// and the cache has been cleared.
+        /// </summary>
+        public bool IsNewSession { get; }
+
+        public ShardReconnectedEventArgs(Shard shard, bool isNewSession) 
+            : base(shard)
+        {
+            IsNewSession = isNewSession;
+        }
+    }
+
     public class ShardFailureEventArgs : ShardEventArgs
     {
         /// <summary>

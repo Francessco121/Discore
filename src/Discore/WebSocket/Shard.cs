@@ -18,17 +18,17 @@ namespace Discore.WebSocket
         public bool IsRunning => isRunning;
 
         /// <summary>
-        /// Called when this shard first connects to the Discord gateway.
+        /// Called when this shard first connects to the Discord Gateway.
         /// </summary>
         public event EventHandler<ShardEventArgs> OnConnected;
         /// <summary>
-        /// Called when the internal connection of this shard reconnected to the Discord gateway.
+        /// Called when the internal connection of this shard reconnected to the Discord Gateway.
         /// <para>
         /// This can be used to reset things such as the user status,
-        /// which are reset when reconnecting.
+        /// which is cleared when a new session has been created.
         /// </para>
         /// </summary>
-        public event EventHandler<ShardEventArgs> OnReconnected;
+        public event EventHandler<ShardReconnectedEventArgs> OnReconnected;
         /// <summary> 
         /// Called when this shard fails and cannot reconnect due to the error. 
         /// </summary> 
@@ -81,9 +81,9 @@ namespace Discore.WebSocket
             Cache.Clear();
         }
 
-        private void Gateway_OnReconnected(object sender, EventArgs e)
+        private void Gateway_OnReconnected(object sender, GatewayReconnectedEventArgs e)
         {
-            OnReconnected?.Invoke(this, new ShardEventArgs(this));
+            OnReconnected?.Invoke(this, new ShardReconnectedEventArgs(this, e.IsNewSession));
         }
 
         private void Gateway_OnFailure(object sender, GatewayFailureData e)
