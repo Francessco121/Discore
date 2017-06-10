@@ -28,6 +28,7 @@ namespace Discore.WebSocket.Net
         /// </summary>
         public event EventHandler OnHello;
 
+        GatewayRateLimiter identifyRateLimiter;
         GatewayRateLimiter outboundPayloadRateLimiter;
         GatewayRateLimiter gameStatusUpdateRateLimiter;
 
@@ -49,12 +50,14 @@ namespace Discore.WebSocket.Net
         DiscoreLogger log;
 
         public GatewaySocket(string loggingName, int sequence, 
-            GatewayRateLimiter outboundPayloadRateLimiter, GatewayRateLimiter gameStatusUpdateRateLimiter)
+            GatewayRateLimiter outboundPayloadRateLimiter, GatewayRateLimiter gameStatusUpdateRateLimiter,
+            GatewayRateLimiter identifyRateLimiter)
             : base(loggingName)
         {
             this.sequence = sequence;
             this.outboundPayloadRateLimiter = outboundPayloadRateLimiter;
             this.gameStatusUpdateRateLimiter = gameStatusUpdateRateLimiter;
+            this.identifyRateLimiter = identifyRateLimiter;
 
             log = new DiscoreLogger(loggingName);
             

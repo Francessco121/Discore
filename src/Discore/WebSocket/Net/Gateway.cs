@@ -36,7 +36,7 @@ namespace Discore.WebSocket.Net
 
         GatewaySocket socket;
 
-        GatewayRateLimiter connectionRateLimiter;
+        GatewayRateLimiter identifyRateLimiter;
         // These two rate limiters are used by the socket itself,
         // but must be saved between creating new sockets.
         GatewayRateLimiter outboundPayloadRateLimiter;
@@ -96,7 +96,7 @@ namespace Discore.WebSocket.Net
             handshakeCompleteCancellationSource = new CancellationTokenSource();
 
             // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
-            connectionRateLimiter = new GatewayRateLimiter(5, 1); // 1 connection attempt per 5 seconds
+            identifyRateLimiter = new GatewayRateLimiter(5, 1); // 1 IDENTIFY per 5 seconds
             outboundPayloadRateLimiter = new GatewayRateLimiter(60, 120); // 120 outbound payloads every 60 seconds
             gameStatusUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute
 
@@ -390,7 +390,7 @@ namespace Discore.WebSocket.Net
 
                 // Create a new socket
                 socket = new GatewaySocket($"GatewaySocket#{shard.Id}", lastSequence,
-                    outboundPayloadRateLimiter, gameStatusUpdateRateLimiter);
+                    outboundPayloadRateLimiter, gameStatusUpdateRateLimiter, identifyRateLimiter);
 
                 SubscribeSocketEvents();
 
@@ -427,10 +427,6 @@ namespace Discore.WebSocket.Net
                 }
 
                 log.LogVerbose($"[ConnectLoop] gatewayUrl = {gatewayUrl}");
-
-
-                // Make sure we dont try and connect too often
-                await connectionRateLimiter.Invoke(cancellationToken).ConfigureAwait(false);
 
                 // Wait if necessary
                 if (nextConnectionDelayMs > 0)
@@ -522,17 +518,17 @@ namespace Discore.WebSocket.Net
             socket.OnDispatch -= Socket_OnDispatch;
         }
 
-        private void Socket_OnHello(object sender, EventArgs e)
+        private async void Socket_OnHello(object sender, EventArgs e)
         {
             if (isDisposed)
                 return;
 
             if (isConnectionResuming)
                 // Resume
-                socket.SendResumePayload(botToken, sessionId, lastSequence);
+                await socket.SendResumePayload(botToken, sessionId, lastSequence);
             else
                 // Identify
-                socket.SendIdentifyPayload(botToken, lastShardStartConfig.GatewayLargeThreshold, shard.Id, totalShards);
+                await socket.SendIdentifyPayload(botToken, lastShardStartConfig.GatewayLargeThreshold, shard.Id, totalShards);
         }
 
         private void Socket_OnFatalDisconnection(object sender, GatewayCloseCode e)
