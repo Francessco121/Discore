@@ -19,7 +19,6 @@ namespace Discore.WebSocket.Net
         public Shard Shard => shard;
 
         public event EventHandler<GatewayReconnectedEventArgs> OnReconnected;
-
         public event EventHandler<GatewayFailureData> OnFailure;
 
         const int GATEWAY_VERSION = 5;
@@ -392,6 +391,20 @@ namespace Discore.WebSocket.Net
                 socket = new GatewaySocket($"GatewaySocket#{shard.Id}", lastSequence,
                     outboundPayloadRateLimiter, gameStatusUpdateRateLimiter, identifyRateLimiter);
 
+                socket.OnHello = async () =>
+                {
+                    if (isDisposed)
+                        return;
+
+                    if (isConnectionResuming)
+                        // Resume
+                        await socket.SendResumePayload(botToken, sessionId, lastSequence);
+                    else
+                        // Identify
+                        await socket.SendIdentifyPayload(botToken, lastShardStartConfig.GatewayLargeThreshold, 
+                            shard.Id, totalShards);
+                };
+
                 SubscribeSocketEvents();
 
                 // Get the gateway URL
@@ -504,7 +517,6 @@ namespace Discore.WebSocket.Net
 
         void SubscribeSocketEvents()
         {
-            socket.OnHello += Socket_OnHello;
             socket.OnReconnectionRequired += Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection += Socket_OnFatalDisconnection;
             socket.OnDispatch += Socket_OnDispatch;
@@ -512,23 +524,9 @@ namespace Discore.WebSocket.Net
 
         void UnsubscribeSocketEvents()
         {
-            socket.OnHello -= Socket_OnHello;
             socket.OnReconnectionRequired -= Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection -= Socket_OnFatalDisconnection;
             socket.OnDispatch -= Socket_OnDispatch;
-        }
-
-        private async void Socket_OnHello(object sender, EventArgs e)
-        {
-            if (isDisposed)
-                return;
-
-            if (isConnectionResuming)
-                // Resume
-                await socket.SendResumePayload(botToken, sessionId, lastSequence);
-            else
-                // Identify
-                await socket.SendIdentifyPayload(botToken, lastShardStartConfig.GatewayLargeThreshold, shard.Id, totalShards);
         }
 
         private void Socket_OnFatalDisconnection(object sender, GatewayCloseCode e)

@@ -41,8 +41,6 @@ namespace Discore.WebSocket.Net
             }
         }
 
-        public event EventHandler OnReadyEvent;
-
         #region Public Events       
         public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;
         public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;
@@ -151,8 +149,8 @@ namespace Discore.WebSocket.Net
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
 
-            // Tell the shard we just finished creating a new session
-            OnReadyEvent?.Invoke(this, EventArgs.Empty);
+            // Clear the cache
+            cache.Clear();
 
             // Get the authenticated user
             DiscordApiData userData = data.Get("user");

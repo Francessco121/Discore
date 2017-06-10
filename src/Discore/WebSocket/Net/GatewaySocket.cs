@@ -7,6 +7,8 @@ namespace Discore.WebSocket.Net
 {
     partial class GatewaySocket : DiscordClientWebSocket
     {
+        public delegate Task HelloCallback();
+
         public int Sequence => sequence;
 
         /// <summary>
@@ -23,10 +25,11 @@ namespace Discore.WebSocket.Net
         /// we cannot saftely reconnect.
         /// </summary>
         public event EventHandler<GatewayCloseCode> OnFatalDisconnection;
+
         /// <summary>
         /// Called when the socket receives the HELLO payload.
         /// </summary>
-        public event EventHandler OnHello;
+        public HelloCallback OnHello { get; set; }
 
         GatewayRateLimiter identifyRateLimiter;
         GatewayRateLimiter outboundPayloadRateLimiter;
@@ -75,14 +78,19 @@ namespace Discore.WebSocket.Net
             heartbeatCancellationSource?.Cancel();
         }
 
-        protected override void OnPayloadReceived(DiscordApiData payload)
+        protected override async Task OnPayloadReceived(DiscordApiData payload)
         {
             GatewayOPCode op = (GatewayOPCode)payload.GetInteger("op");
             DiscordApiData data = payload.Get("d");
 
             PayloadCallback callback;
             if (payloadHandlers.TryGetValue(op, out callback))
-                callback(payload, data);
+            {
+                if (callback.Synchronous != null)
+                    callback.Synchronous(payload, data);
+                else
+                    await callback.Asynchronous(payload, data).ConfigureAwait(false);
+            }
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
         }

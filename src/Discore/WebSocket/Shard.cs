@@ -71,14 +71,8 @@ namespace Discore.WebSocket
             gateway = new Gateway(botToken, this, totalShards);
             gateway.OnFailure += Gateway_OnFailure;
             gateway.OnReconnected += Gateway_OnReconnected;
-            gateway.OnReadyEvent += Gateway_OnReadyEvent;
 
             Voice = new ShardVoiceManager(this, gateway);
-        }
-
-        private void Gateway_OnReadyEvent(object sender, EventArgs e)
-        {
-            Cache.Clear();
         }
 
         private void Gateway_OnReconnected(object sender, GatewayReconnectedEventArgs e)

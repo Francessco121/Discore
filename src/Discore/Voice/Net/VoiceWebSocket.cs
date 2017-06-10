@@ -74,7 +74,7 @@ namespace Discore.Voice.Net
             OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
         }
 
-        protected override void OnPayloadReceived(DiscordApiData payload)
+        protected override Task OnPayloadReceived(DiscordApiData payload)
         {
             VoiceOPCode op = (VoiceOPCode)payload.GetInteger("op").Value;
             DiscordApiData d = payload.Get("d");
@@ -84,6 +84,8 @@ namespace Discore.Voice.Net
                 callback(payload, d);
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
+
+            return Task.CompletedTask;
         }
 
         async Task HeartbeatLoop()

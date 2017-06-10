@@ -10,7 +10,24 @@ namespace Discore.WebSocket.Net
 {
     partial class GatewaySocket
     {
-        delegate void PayloadCallback(DiscordApiData payload, DiscordApiData data);
+        delegate void PayloadSynchronousCallback(DiscordApiData payload, DiscordApiData data);
+        delegate Task PayloadAsynchronousCallback(DiscordApiData payload, DiscordApiData data);
+
+        class PayloadCallback
+        {
+            public PayloadSynchronousCallback Synchronous { get; }
+            public PayloadAsynchronousCallback Asynchronous { get; }
+
+            public PayloadCallback(PayloadSynchronousCallback synchronous)
+            {
+                Synchronous = synchronous;
+            }
+
+            public PayloadCallback(PayloadAsynchronousCallback asynchronous)
+            {
+                Asynchronous = asynchronous;
+            }
+        }
 
         [AttributeUsage(AttributeTargets.Method)]
         class PayloadAttribute : Attribute
@@ -29,14 +46,30 @@ namespace Discore.WebSocket.Net
         {
             payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
 
-            Type gatewayType = typeof(GatewaySocket);
-            Type payloadType = typeof(PayloadCallback);
+            Type taskType = typeof(Task);
+            Type gatewaySocketType = typeof(GatewaySocket);
+            Type payloadSynchronousType = typeof(PayloadSynchronousCallback);
+            Type payloadAsynchronousType = typeof(PayloadAsynchronousCallback);
 
-            foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
+            foreach (MethodInfo method in gatewaySocketType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
             {
                 PayloadAttribute attr = method.GetCustomAttribute<PayloadAttribute>();
                 if (attr != null)
-                    payloadHandlers[attr.OPCode] = (PayloadCallback)method.CreateDelegate(payloadType, this);
+                {
+                    PayloadCallback payloadCallback;
+                    if (method.ReturnType == taskType)
+                    {
+                        Delegate callback = method.CreateDelegate(payloadAsynchronousType, this);
+                        payloadCallback = new PayloadCallback((PayloadAsynchronousCallback)callback);
+                    }
+                    else
+                    {
+                        Delegate callback = method.CreateDelegate(payloadSynchronousType, this);
+                        payloadCallback = new PayloadCallback((PayloadSynchronousCallback)callback);
+                    }
+
+                    payloadHandlers[attr.OPCode] = payloadCallback;
+                }
             }
         }
 
@@ -51,7 +84,7 @@ namespace Discore.WebSocket.Net
         }
 
         [Payload(GatewayOPCode.Hello)]
-        void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
+        async Task HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
         {
             if (!receivedHello)
             {
@@ -66,7 +99,7 @@ namespace Discore.WebSocket.Net
                 heartbeatTask = HeartbeatLoop();
 
                 // Notify so the IDENTIFY or RESUME payloads are sent
-                OnHello?.Invoke(this, EventArgs.Empty);
+                await OnHello?.Invoke();
             }
             else
                 log.LogWarning("Received more than one HELLO payload.");
