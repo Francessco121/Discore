@@ -21,17 +21,9 @@ namespace Discore.Voice
         /// </summary>
         public event EventHandler<VoiceConnectionEventArgs> OnConnected;
         /// <summary>
-        /// Called when the voice connection is disconnected or if the user is removed from the guild this connection is for.
-        /// </summary>
-        public event EventHandler<VoiceConnectionEventArgs> OnDisconnected;
-        /// <summary>
-        /// Called when the voice connection unexpectedly closes or encounters an error while connecting.
-        /// </summary>
-        public event EventHandler<VoiceConnectionErrorEventArgs> OnError;
-        /// <summary>
         /// Called when this voice connection is no longer useable. (eg. disconnected, error, failure to connect).
         /// </summary>
-        public event EventHandler<VoiceConnectionEventArgs> OnInvalidated;
+        public event EventHandler<VoiceConnectionInvalidatedEventArgs> OnInvalidated;
         /// <summary>
         /// Called when another user in the voice channel this connection is connected to changes their speaking state.
         /// </summary>
@@ -211,8 +203,8 @@ namespace Discore.Voice
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake")
-                        .ConfigureAwait(false);
+                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake",
+                        VoiceConnectionInvalidationReason.TimedOut, "Timed out while completing handshake.").ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -266,27 +258,25 @@ namespace Discore.Voice
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task<bool> DisconnectAsync(CancellationToken cancellationToken)
+        public async Task DisconnectAsync(CancellationToken? cancellationToken = null)
         {
-            if (isValid)
-            {
-                if (!isConnected)
-                    throw new InvalidOperationException("The voice connection is not connected!");
+            if (!isConnected)
+                throw new InvalidOperationException("The voice connection is not connected!");
 
-                try
-                {
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...", cancellationToken)
-                        .ConfigureAwait(false);
+            await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...", 
+                VoiceConnectionInvalidationReason.Normal, null, cancellationToken).ConfigureAwait(false);
+        }
 
-                    return true;
-                }
-                finally
-                {
-                    OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
-                }
-            }
-            else
-                return false;
+        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
+        /// <exception cref="OperationCanceledException"></exception>
+        internal async Task DisconnectWithReasonAsync(VoiceConnectionInvalidationReason reason, 
+            CancellationToken? cancellationToken = null)
+        {
+            if (!isConnected)
+                throw new InvalidOperationException("The voice connection is not connected!");
+
+            await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...",
+                reason, null, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -353,29 +343,9 @@ namespace Discore.Voice
             }
         }
 
-        void Invalidate()
-        {
-            if (isValid)
-            {
-                isValid = false;
-                isConnecting = false;
-                isConnected = false;
-
-                voiceState = null;
-
-                if (!isDisposed)
-                    connectingCancellationSource?.Cancel();
-
-                log?.LogVerbose("[Invalidate] Invalidating voice connection...");
-
-                Shard.Voice.RemoveVoiceConnection(guildId);
-
-                OnInvalidated?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
-            }
-        }
-
         /// <summary>
-        /// Invalidates the connection and releases all resources used by this voice connection.
+        /// Releases all resources used by this voice connection.
+        /// <para>Note: this will not invalidate the voice connection.</para>
         /// </summary>
         public void Dispose()
         {
@@ -384,8 +354,6 @@ namespace Discore.Voice
                 isDisposed = true;
 
                 connectingCancellationSource?.Dispose();
-
-                Invalidate();
 
                 webSocket?.Dispose();
                 udpSocket?.Dispose();

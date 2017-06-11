@@ -373,7 +373,8 @@ namespace Discore.WebSocket.Net
                     CancellationTokenSource cts = new CancellationTokenSource();
                     cts.CancelAfter(5000);
 
-                    await voiceConnection.DisconnectAsync(cts.Token).ConfigureAwait(false);
+                    await voiceConnection.DisconnectWithReasonAsync(VoiceConnectionInvalidationReason.BotRemovedFromGuild, 
+                        cts.Token).ConfigureAwait(false);
                 }
 
                 // Clear all cache data related to the guild
@@ -1054,7 +1055,7 @@ namespace Discore.WebSocket.Net
                         else if (connection.IsConnected)
                         {
                             // The user has left the channel, so make sure they are disconnected.
-                            await connection.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+                            await connection.DisconnectAsync().ConfigureAwait(false);
                         }
                     }
                 }

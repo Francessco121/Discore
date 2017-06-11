@@ -54,6 +54,7 @@ namespace Discore.Voice
         /// </summary>
         /// <exception cref="OperationCanceledException"></exception>
         async Task CloseAndInvalidate(WebSocketCloseStatus webSocketCloseCode, string webSocketCloseDescription,
+            VoiceConnectionInvalidationReason reason, string errorMessage = null,
             CancellationToken? cancellationToken = null)
         {
             Task leaveChannelTask = EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None);
@@ -66,7 +67,28 @@ namespace Discore.Voice
             await webSocketDisconnectTask.ConfigureAwait(false);
             await leaveChannelTask.ConfigureAwait(false);
 
-            Invalidate();
+            Invalidate(reason, errorMessage);
+        }
+
+        void Invalidate(VoiceConnectionInvalidationReason reason, string errorMessage = null)
+        {
+            if (isValid)
+            {
+                isValid = false;
+                isConnecting = false;
+                isConnected = false;
+
+                voiceState = null;
+
+                if (!isDisposed)
+                    connectingCancellationSource?.Cancel();
+
+                log?.LogVerbose("[Invalidate] Invalidating voice connection...");
+
+                Shard.Voice.RemoveVoiceConnection(guildId);
+
+                OnInvalidated?.Invoke(this, new VoiceConnectionInvalidatedEventArgs(Shard, this, reason, errorMessage));
+            }
         }
 
         /// <exception cref="OperationCanceledException"></exception>
@@ -137,29 +159,23 @@ namespace Discore.Voice
 
         private async void UdpSocket_OnClosedPrematurely(object sender, EventArgs e)
         {
-            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                VoiceConnectionInvalidationReason.Error, "The UDP connection closed unexpectedly.")
                 .ConfigureAwait(false);
-
-            DiscoreException ex = new DiscoreException("The UDP connection closed unexpectedly.");
-            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
         }
 
         private async void WebSocket_OnUnexpectedClose(object sender, EventArgs e)
         {
-            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                VoiceConnectionInvalidationReason.Error, "The WebSocket connection closed unexpectedly.")
                 .ConfigureAwait(false);
-
-            DiscoreException ex = new DiscoreException("The WebSocket connection closed unexpectedly.");
-            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
         }
 
         private async void WebSocket_OnTimedOut(object sender, EventArgs e)
         {
-            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Connection timed out.")
+            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Connection timed out.",
+                VoiceConnectionInvalidationReason.TimedOut, "The WebSocket connection timed out.")
                 .ConfigureAwait(false);
-
-            DiscoreException ex = new DiscoreException("The WebSocket connection timed out.");
-            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
         }
 
         private async void WebSocket_OnReady(object sender, VoiceReadyEventArgs e)
@@ -179,10 +195,9 @@ namespace Discore.Voice
                 else
                     log.LogError($"[OnReady] Failed to connect UDP socket: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    VoiceConnectionInvalidationReason.Error, "Failed to connect the UDP socket.")
                     .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -202,10 +217,9 @@ namespace Discore.Voice
                 else
                     log.LogError($"[OnReady] Failed start IP discovery: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    VoiceConnectionInvalidationReason.Error, "Failed to start IP discovery.")
                     .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -230,10 +244,9 @@ namespace Discore.Voice
                 else
                     log.LogError($"[OnIPDiscovered] Failed to select protocol: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    VoiceConnectionInvalidationReason.Error, "Failed to select voice protocol.")
                     .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -288,10 +301,9 @@ namespace Discore.Voice
                 else
                     log.LogError($"Failed to connect to {uri}: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    VoiceConnectionInvalidationReason.Error, "Failed to connect WebSocket.")
                     .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -310,10 +322,9 @@ namespace Discore.Voice
                 else
                     log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    VoiceConnectionInvalidationReason.Error, "Failed to send IDENTIFY.")
                     .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
@@ -335,10 +346,9 @@ namespace Discore.Voice
                 else
                     log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    VoiceConnectionInvalidationReason.Error, "Failed to set initial speaking state.")
                     .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
                 return;
             }
