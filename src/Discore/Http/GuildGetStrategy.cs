@@ -1,4 +1,4 @@
-﻿namespace Discore
+﻿namespace Discore.Http
 {
     /// <summary>
     /// Represents a strategy used when retrieving guilds from the Discord API.

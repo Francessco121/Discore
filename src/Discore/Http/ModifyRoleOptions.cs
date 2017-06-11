@@ -3,7 +3,7 @@
     /// <summary>
     /// An optional set of parameters used for modifying a guild role.
     /// </summary>
-    public class ModifyRoleParameters
+    public class ModifyRoleOptions
     {
         /// <summary>
         /// Gets or sets the name of the role (or null to leave unchanged).
@@ -29,7 +29,7 @@
         /// <summary>
         /// Sets the name of the role.
         /// </summary>
-        public ModifyRoleParameters SetName(string name)
+        public ModifyRoleOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -38,7 +38,7 @@
         /// <summary>
         /// Sets the permissions granted by the role.
         /// </summary>
-        public ModifyRoleParameters SetPermissions(DiscordPermission permissions)
+        public ModifyRoleOptions SetPermissions(DiscordPermission permissions)
         {
             Permissions = permissions;
             return this;
@@ -47,7 +47,7 @@
         /// <summary>
         /// Sets the display color of the role.
         /// </summary>
-        public ModifyRoleParameters SetColor(DiscordColor color)
+        public ModifyRoleOptions SetColor(DiscordColor color)
         {
             Color = color;
             return this;
@@ -56,7 +56,7 @@
         /// <summary>
         /// Sets whether the role should be displayed in the sidebar.
         /// </summary>
-        public ModifyRoleParameters SetHoisted(bool isHoisted)
+        public ModifyRoleOptions SetHoisted(bool isHoisted)
         {
             IsHoisted = isHoisted;
             return this;
@@ -65,7 +65,7 @@
         /// <summary>
         /// Sets whether the role is mentionable.
         /// </summary>
-        public ModifyRoleParameters SetMentionable(bool isMentionable)
+        public ModifyRoleOptions SetMentionable(bool isMentionable)
         {
             IsMentionable = isMentionable;
             return this;

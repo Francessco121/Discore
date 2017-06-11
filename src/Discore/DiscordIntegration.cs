@@ -93,12 +93,12 @@ namespace Discore
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task Modify(ModifyIntegrationParameters parameters)
+        public Task Modify(ModifyIntegrationOptions options)
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return http.ModifyGuildIntegration(GuildId.Value, Id, parameters);
+            return http.ModifyGuildIntegration(GuildId.Value, Id, options);
         }
 
         /// <summary>

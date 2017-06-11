@@ -292,9 +292,9 @@ namespace Discore
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Edit(DiscordMessageEdit editDetails)
+        public Task<DiscordMessage> Edit(EditMessageOptions options)
         {
-            return http.EditMessage(ChannelId, Id, editDetails);
+            return http.EditMessage(ChannelId, Id, options);
         }
 
         /// <summary>

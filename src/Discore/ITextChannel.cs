@@ -32,11 +32,11 @@ namespace Discore
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
-        /// <param name="details">The details of the message to create.</param>
+        /// <param name="options">The options of the message to create.</param>
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        Task<DiscordMessage> CreateMessage(DiscordMessageDetails details);
+        Task<DiscordMessage> CreateMessage(CreateMessageOptions options);
         /// <summary>
         /// Posts a message with a file attachment.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
@@ -45,11 +45,11 @@ namespace Discore
         /// </summary>
         /// <param name="fileData">A stream of the file contents.</param>
         /// <param name="fileName">The name of the file to use when uploading.</param>
-        /// <param name="details">Optional extra details of the message to create.</param>
+        /// <param name="options">Optional extra options of the message to create.</param>
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        Task<DiscordMessage> CreateMessage(Stream fileData, string fileName, DiscordMessageDetails details = null);
+        Task<DiscordMessage> CreateMessage(Stream fileData, string fileName, CreateMessageOptions options = null);
         /// <summary>
         /// Posts a message with a file attachment.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
@@ -58,11 +58,11 @@ namespace Discore
         /// </summary>
         /// <param name="fileData">The file contents.</param>
         /// <param name="fileName">The name of the file to use when uploading.</param>
-        /// <param name="details">Optional extra details of the message to create.</param>
+        /// <param name="options">Optional extra options of the message to create.</param>
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        Task<DiscordMessage> CreateMessage(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null);
+        Task<DiscordMessage> CreateMessage(ArraySegment<byte> fileData, string fileName, CreateMessageOptions options = null);
 
         /// <summary>
         /// Deletes a list of messages in one API call.

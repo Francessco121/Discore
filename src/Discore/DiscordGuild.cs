@@ -191,9 +191,9 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuild> Modify(ModifyGuildParameters parameters)
+        public Task<DiscordGuild> Modify(ModifyGuildOptions options)
         {
-            return http.ModifyGuild(Id, parameters);
+            return http.ModifyGuild(Id, options);
         }
 
         /// <summary>
@@ -221,9 +221,9 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildChannel> CreateChannel(CreateGuildChannelParameters parameters)
+        public Task<DiscordGuildChannel> CreateChannel(CreateGuildChannelOptions options)
         {
-            return http.CreateGuildChannel(Id, parameters);
+            return http.CreateGuildChannel(Id, options);
         }
 
         /// <summary>
@@ -232,7 +232,7 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionParameters> positions)
+        public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionOptions> positions)
         {
             return http.ModifyGuildChannelPositions(Id, positions);
         }
@@ -303,12 +303,12 @@ namespace Discore
         /// Creates a new role for this guild.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
-        /// <param name="parameters">A set of optional parameters to use when creating the role.</param>
+        /// <param name="options">A set of optional options to use when creating the role.</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordRole> CreateRole(CreateRoleParameters parameters)
+        public Task<DiscordRole> CreateRole(CreateRoleOptions options)
         {
-            return http.CreateGuildRole(Id, parameters);
+            return http.CreateGuildRole(Id, options);
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(IEnumerable<PositionParameters> positions)
+        public Task<IReadOnlyList<DiscordRole>> ModifyRolePositions(IEnumerable<PositionOptions> positions)
         {
             return http.ModifyGuildRolePositions(Id, positions);
         }

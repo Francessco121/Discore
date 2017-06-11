@@ -3,7 +3,7 @@
     /// <summary>
     /// A set of parameters for modifying a guild integration.
     /// </summary>
-    public class ModifyIntegrationParameters
+    public class ModifyIntegrationOptions
     {
         /// <summary>
         /// Gets or sets the behavior to follow when the integration subscription lapses.
@@ -21,7 +21,7 @@
         /// <summary>
         /// Sets the behavior for when the integration subscription lapses.
         /// </summary>
-        public ModifyIntegrationParameters SetExpireBehavior(int expireBehavior)
+        public ModifyIntegrationOptions SetExpireBehavior(int expireBehavior)
         {
             ExpireBehavior = expireBehavior;
             return this;
@@ -30,7 +30,7 @@
         /// <summary>
         /// Sets the period (in seconds) where the integration will ignore lapsed subscriptions.
         /// </summary>
-        public ModifyIntegrationParameters SetExpireGracePeriod(int expireGracePeriod)
+        public ModifyIntegrationOptions SetExpireGracePeriod(int expireGracePeriod)
         {
             ExpireGracePeriod = expireGracePeriod;
             return this;
@@ -39,7 +39,7 @@
         /// <summary>
         /// Sets whether emoticons should be synced for this integration (twitch only currently).
         /// </summary>
-        public ModifyIntegrationParameters SetEnableEmoticons(bool enableEmoticons)
+        public ModifyIntegrationOptions SetEnableEmoticons(bool enableEmoticons)
         {
             EnableEmoticons = enableEmoticons;
             return this;

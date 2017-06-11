@@ -1,4 +1,4 @@
-﻿namespace Discore
+﻿namespace Discore.Http
 {
     /// <summary>
     /// Represents a strategy used when retrieving messages from the Discord API.

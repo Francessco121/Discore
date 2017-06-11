@@ -51,7 +51,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, string content)
         {
-            return CreateMessage(channelId, new DiscordMessageDetails(content));
+            return CreateMessage(channelId, new CreateMessageOptions(content));
         }
 
         /// <summary>
@@ -60,20 +60,20 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="details"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, DiscordMessageDetails details)
+        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, CreateMessageOptions options)
         {
-            if (details == null)
-                throw new ArgumentNullException(nameof(details));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", details.Content);
-            requestData.Set("tts", details.TextToSpeech);
-            requestData.Set("nonce", details.Nonce);
+            requestData.Set("content", options.Content);
+            requestData.Set("tts", options.TextToSpeech);
+            requestData.Set("nonce", options.Nonce);
 
-            if (details.Embed != null)
-                requestData.Set("embed", details.Embed.Build());
+            if (options.Embed != null)
+                requestData.Set("embed", options.Embed.Build());
 
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/messages", requestData,
                 $"channels/{channelId}/messages").ConfigureAwait(false);
@@ -92,12 +92,12 @@ namespace Discore.Http
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, Stream fileData, string fileName,
-            DiscordMessageDetails details = null)
+            CreateMessageOptions options = null)
         {
             if (fileData == null)
                 throw new ArgumentNullException(nameof(fileData));
 
-            return CreateMessage(channelId, new StreamContent(fileData), fileName, details);
+            return CreateMessage(channelId, new StreamContent(fileData), fileName, options);
         }
 
         /// <summary>
@@ -111,13 +111,14 @@ namespace Discore.Http
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, ArraySegment<byte> fileData, string fileName,
-            DiscordMessageDetails details = null)
+            CreateMessageOptions options = null)
         {
-            return CreateMessage(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, details);
+            return CreateMessage(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, options);
         }
 
         /// <exception cref="ArgumentNullException"></exception>
-        async Task<DiscordMessage> CreateMessage(Snowflake channelId, HttpContent fileContent, string fileName, DiscordMessageDetails details)
+        async Task<DiscordMessage> CreateMessage(Snowflake channelId, HttpContent fileContent, string fileName, 
+            CreateMessageOptions options)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 // Technically this is also handled when setting the field on the multipart form data
@@ -131,15 +132,15 @@ namespace Discore.Http
                 MultipartFormDataContent data = new MultipartFormDataContent();
                 data.Add(fileContent, "file", fileName);
 
-                if (details != null)
+                if (options != null)
                 {
                     DiscordApiData payloadJson = new DiscordApiData();
-                    payloadJson.Set("content", details.Content);
-                    payloadJson.Set("tts", details.TextToSpeech);
-                    payloadJson.Set("nonce", details.Nonce);
+                    payloadJson.Set("content", options.Content);
+                    payloadJson.Set("tts", options.TextToSpeech);
+                    payloadJson.Set("nonce", options.Nonce);
 
-                    if (details.Embed != null)
-                        payloadJson.Set("embed", details.Embed.Build());
+                    if (options.Embed != null)
+                        payloadJson.Set("embed", options.Embed.Build());
 
                     data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
                 }
@@ -172,16 +173,16 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, DiscordMessageEdit editDetails)
+        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, EditMessageOptions options)
         {
-            if (editDetails == null)
-                throw new ArgumentNullException(nameof(editDetails));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", editDetails.Content);
+            requestData.Set("content", options.Content);
 
-            if (editDetails.Embed != null)
-                requestData.Set("embed", editDetails.Embed.Build());
+            if (options.Embed != null)
+                requestData.Set("embed", options.Embed.Build());
 
             DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
                 $"channels/{channelId}/messages/message").ConfigureAwait(false);

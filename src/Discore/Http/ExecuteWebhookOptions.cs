@@ -2,7 +2,7 @@
 
 namespace Discore.Http
 {
-    public class ExecuteWebhookParameters
+    public class ExecuteWebhookOptions
     {
         /// <summary>
         /// Gets or sets the username to override the webhook's normal username with (or null to not override).
@@ -27,12 +27,12 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets embeds to include in the created message (or null to only use text content and/or attachments).
         /// </summary>
-        public IEnumerable<DiscordEmbedBuilder> Embeds { get; set; }
+        public IEnumerable<EmbedOptions> Embeds { get; set; }
 
         /// <summary>
         /// Sets the username to override the webhook's normal username with.
         /// </summary>
-        public ExecuteWebhookParameters SetUsernameOverride(string username)
+        public ExecuteWebhookOptions SetUsernameOverride(string username)
         {
             UsernameOverride = username;
             return this;
@@ -41,7 +41,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the URL of the avatar to override the webhook's normal avatar with.
         /// </summary>
-        public ExecuteWebhookParameters SetAvatarOverride(string avatarUrl)
+        public ExecuteWebhookOptions SetAvatarOverride(string avatarUrl)
         {
             AvatarUrl = avatarUrl;
             return this;
@@ -50,7 +50,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets whether the created message should use text-to-speech.
         /// </summary>
-        public ExecuteWebhookParameters SetTextToSpeech(bool useTextToSpeech)
+        public ExecuteWebhookOptions SetTextToSpeech(bool useTextToSpeech)
         {
             TextToSpeech = useTextToSpeech;
             return this;
@@ -59,7 +59,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the text content to include in the message.
         /// </summary>
-        public ExecuteWebhookParameters SetContent(string textContent)
+        public ExecuteWebhookOptions SetContent(string textContent)
         {
             Content = textContent;
             return this;
@@ -68,16 +68,16 @@ namespace Discore.Http
         /// <summary>
         /// Sets the embed to be included in the created message.
         /// </summary>
-        public ExecuteWebhookParameters SetEmbed(DiscordEmbedBuilder embed)
+        public ExecuteWebhookOptions SetEmbed(EmbedOptions embed)
         {
-            Embeds = new DiscordEmbedBuilder[] { embed };
+            Embeds = new EmbedOptions[] { embed };
             return this;
         }
 
         /// <summary>
         /// Sets the embeds to be included in the created message.
         /// </summary>
-        public ExecuteWebhookParameters SetEmbeds(IEnumerable<DiscordEmbedBuilder> embeds)
+        public ExecuteWebhookOptions SetEmbeds(IEnumerable<EmbedOptions> embeds)
         {
             Embeds = embeds;
             return this;
@@ -99,7 +99,7 @@ namespace Discore.Http
             if (Embeds != null)
             {
                 DiscordApiData embedArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (DiscordEmbedBuilder builder in Embeds)
+                foreach (EmbedOptions builder in Embeds)
                     embedArray.Values.Add(builder.Build());
 
                 data.Set("embeds", embedArray);

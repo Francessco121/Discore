@@ -62,13 +62,13 @@ namespace Discore
         /// Modifies this text channel's settings.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
-        /// <param name="parameters">A set of parameters to modify the channel with</param>
+        /// <param name="options">A set of options to modify the channel with</param>
         /// <returns>Returns the updated text channel.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildTextChannel> Modify(GuildTextChannelParameters parameters)
+        public Task<DiscordGuildTextChannel> Modify(GuildTextChannelOptions options)
         {
-            return http.ModifyTextChannel(Id, parameters);
+            return http.ModifyTextChannel(Id, options);
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Discore
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(DiscordMessageDetails details)
+        public Task<DiscordMessage> CreateMessage(CreateMessageOptions details)
         {
             return http.CreateMessage(Id, details);
         }
@@ -111,7 +111,7 @@ namespace Discore
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(Stream fileData, string fileName, DiscordMessageDetails details = null)
+        public Task<DiscordMessage> CreateMessage(Stream fileData, string fileName, CreateMessageOptions details = null)
         {
             return http.CreateMessage(Id, fileData, fileName, details);
         }
@@ -127,7 +127,7 @@ namespace Discore
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
+        public Task<DiscordMessage> CreateMessage(ArraySegment<byte> fileData, string fileName, CreateMessageOptions details = null)
         {
             return http.CreateMessage(Id, fileData, fileName, details);
         }

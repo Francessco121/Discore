@@ -5,7 +5,7 @@ namespace Discore.Http
     /// <summary>
     /// A set of options to use when creating a new guild.
     /// </summary>
-    public class CreateGuildParameters
+    public class CreateGuildOptions
     {
         /// <summary>
         /// Gets or sets the name of the guild.
@@ -37,17 +37,17 @@ namespace Discore.Http
         /// Gets or sets the initial roles in the guild (or null to not include any additional roles).
         /// <para>Note: The first role in this list will end up as the @everyone role.</para>
         /// </summary>
-        public IList<CreateGuildRoleParameters> Roles { get; set; }
+        public IList<CreateGuildRoleOptions> Roles { get; set; }
 
         /// <summary>
         /// Gets or sets the initial text and voice channels in the guild (or null to use defaults).
         /// </summary>
-        public IList<CreateGuildChannelParameters> Channels { get; set; }
+        public IList<CreateGuildChannelOptions> Channels { get; set; }
 
         /// <summary>
         /// Sets the name of the guild.
         /// </summary>
-        public CreateGuildParameters SetName(string name)
+        public CreateGuildOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -56,7 +56,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the ID of the voice region the guild should use.
         /// </summary>
-        public CreateGuildParameters SetVoiceRegion(string voiceRegion)
+        public CreateGuildOptions SetVoiceRegion(string voiceRegion)
         {
             VoiceRegion = voiceRegion;
             return this;
@@ -65,7 +65,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the icon of the guild.
         /// </summary>
-        public CreateGuildParameters SetIcon(DiscordImageData icon)
+        public CreateGuildOptions SetIcon(DiscordImageData icon)
         {
             Icon = icon;
             return this;
@@ -74,7 +74,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the verification level of the guild.
         /// </summary>
-        public CreateGuildParameters SetVerificationLevel(int verificationLevel)
+        public CreateGuildOptions SetVerificationLevel(int verificationLevel)
         {
             VerificationLevel = verificationLevel;
             return this;
@@ -83,7 +83,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the default notification level for new members joining the guild.
         /// </summary>
-        public CreateGuildParameters SetDefaultMessageNotificationsLevel(int defaultMessageNotificationsLevel)
+        public CreateGuildOptions SetDefaultMessageNotificationsLevel(int defaultMessageNotificationsLevel)
         {
             DefaultMessageNotificationsLevel = defaultMessageNotificationsLevel;
             return this;
@@ -94,10 +94,10 @@ namespace Discore.Http
         /// <para>Note: The first role added will end up as the @everyone role.</para>
         /// </summary>
         /// <param name="role">Note: If this is the first role, it will end up as the @everyone role.</param>
-        public CreateGuildParameters AddRole(CreateGuildRoleParameters role)
+        public CreateGuildOptions AddRole(CreateGuildRoleOptions role)
         {
             if (Roles == null)
-                Roles = new List<CreateGuildRoleParameters>();
+                Roles = new List<CreateGuildRoleOptions>();
 
             Roles.Add(role);
             return this;
@@ -106,10 +106,10 @@ namespace Discore.Http
         /// <summary>
         /// Adds a text or voice channel to be created with the guild.
         /// </summary>
-        public CreateGuildParameters AddChannel(CreateGuildChannelParameters channel)
+        public CreateGuildOptions AddChannel(CreateGuildChannelOptions channel)
         {
             if (Channels == null)
-                Channels = new List<CreateGuildChannelParameters>();
+                Channels = new List<CreateGuildChannelOptions>();
 
             Channels.Add(channel);
             return this;
@@ -136,7 +136,7 @@ namespace Discore.Http
             if (Roles != null)
             {
                 DiscordApiData rolesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (CreateGuildRoleParameters roleParams in Roles)
+                foreach (CreateGuildRoleOptions roleParams in Roles)
                     rolesArray.Values.Add(roleParams.Build());
 
                 data.Set("roles", rolesArray);
@@ -145,7 +145,7 @@ namespace Discore.Http
             if (Channels != null)
             {
                 DiscordApiData channelsArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (CreateGuildChannelParameters channelParams in Channels)
+                foreach (CreateGuildChannelOptions channelParams in Channels)
                     channelsArray.Values.Add(channelParams.Build());
 
                 data.Set("channels", channelsArray);

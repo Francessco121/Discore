@@ -93,9 +93,9 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Modify(ModifyGuildMemberParameters parameters)
+        public Task Modify(ModifyGuildMemberOptions options)
         {
-            return http.ModifyGuildMember(GuildId, Id, parameters);
+            return http.ModifyGuildMember(GuildId, Id, options);
         }
 
         /// <summary>

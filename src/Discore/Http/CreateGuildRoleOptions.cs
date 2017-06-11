@@ -3,7 +3,7 @@
     /// <summary>
     /// A set of parameters for creating roles when creating a new guild.
     /// </summary>
-    public class CreateGuildRoleParameters : CreateRoleParameters
+    public class CreateGuildRoleOptions : CreateRoleOptions
     {
         /// <summary>
         /// Gets or sets a temporary ID for the role. This allows channels also created with
@@ -15,7 +15,7 @@
         public Snowflake TemporaryId { get; set; }
 
         /// <param name="temporaryId">A temporary ID for the role, which will be overwritten upon guild creation.</param>
-        public CreateGuildRoleParameters(Snowflake temporaryId)
+        public CreateGuildRoleOptions(Snowflake temporaryId)
         {
             TemporaryId = temporaryId;
         }
@@ -23,7 +23,7 @@
         /// <summary>
         /// Sets the name of the role to create.
         /// </summary>
-        public new CreateGuildRoleParameters SetName(string name)
+        public new CreateGuildRoleOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -32,7 +32,7 @@
         /// <summary>
         /// Sets the permissions of the role to create.
         /// </summary>
-        public new CreateGuildRoleParameters SetPermissions(DiscordPermission permissions)
+        public new CreateGuildRoleOptions SetPermissions(DiscordPermission permissions)
         {
             Permissions = permissions;
             return this;
@@ -41,7 +41,7 @@
         /// <summary>
         /// Sets the color of the role to create.
         /// </summary>
-        public new CreateGuildRoleParameters SetColor(DiscordColor color)
+        public new CreateGuildRoleOptions SetColor(DiscordColor color)
         {
             Color = color;
             return this;
@@ -50,7 +50,7 @@
         /// <summary>
         /// Sets whether the created role should be displayed in the sidebar.
         /// </summary>
-        public new CreateGuildRoleParameters SetHoisted(bool hoist)
+        public new CreateGuildRoleOptions SetHoisted(bool hoist)
         {
             IsHoisted = hoist;
             return this;
@@ -59,7 +59,7 @@
         /// <summary>
         /// Sets whether the created role should be mentionable.
         /// </summary>
-        public new CreateGuildRoleParameters SetMentionable(bool mentionable)
+        public new CreateGuildRoleOptions SetMentionable(bool mentionable)
         {
             IsMentionable = mentionable;
             return this;

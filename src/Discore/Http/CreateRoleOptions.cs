@@ -1,6 +1,6 @@
 ﻿namespace Discore.Http
 {
-    public class CreateRoleParameters
+    public class CreateRoleOptions
     {
         /// <summary>
         /// Gets or sets the name of the role to create.
@@ -23,9 +23,9 @@
         /// </summary>
         public bool? IsMentionable { get; set; }
 
-        public CreateRoleParameters() { }
+        public CreateRoleOptions() { }
 
-        public CreateRoleParameters(string name)
+        public CreateRoleOptions(string name)
         {
             Name = name;
         }
@@ -33,7 +33,7 @@
         /// <summary>
         /// Sets the name of the role to create.
         /// </summary>
-        public CreateRoleParameters SetName(string name)
+        public CreateRoleOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -42,7 +42,7 @@
         /// <summary>
         /// Sets the permissions of the role to create.
         /// </summary>
-        public CreateRoleParameters SetPermissions(DiscordPermission permissions)
+        public CreateRoleOptions SetPermissions(DiscordPermission permissions)
         {
             Permissions = permissions;
             return this;
@@ -51,7 +51,7 @@
         /// <summary>
         /// Sets the color of the role to create.
         /// </summary>
-        public CreateRoleParameters SetColor(DiscordColor color)
+        public CreateRoleOptions SetColor(DiscordColor color)
         {
             Color = color;
             return this;
@@ -60,7 +60,7 @@
         /// <summary>
         /// Sets whether the created role should be displayed in the sidebar.
         /// </summary>
-        public CreateRoleParameters SetHoisted(bool hoist)
+        public CreateRoleOptions SetHoisted(bool hoist)
         {
             IsHoisted = hoist;
             return this;
@@ -69,7 +69,7 @@
         /// <summary>
         /// Sets whether the created role should be mentionable.
         /// </summary>
-        public CreateRoleParameters SetMentionable(bool mentionable)
+        public CreateRoleOptions SetMentionable(bool mentionable)
         {
             IsMentionable = mentionable;
             return this;

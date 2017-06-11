@@ -157,19 +157,19 @@ namespace Discore.Http
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, ExecuteWebhookParameters parameters,
+        public async Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", requestData,
                 "webhooks/webhook/token").ConfigureAwait(false);
@@ -191,12 +191,12 @@ namespace Discore.Http
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, Stream fileData, string fileName,
-            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
             if (fileData == null)
                 throw new ArgumentNullException(nameof(fileData));
 
-            return ExecuteWebook(webhookId, token, new StreamContent(fileData), fileName, parameters, waitAndReturnMessage);
+            return ExecuteWebook(webhookId, token, new StreamContent(fileData), fileName, options, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -212,17 +212,17 @@ namespace Discore.Http
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
-            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
             return ExecuteWebook(webhookId, token, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName,
-                parameters, waitAndReturnMessage);
+                options, waitAndReturnMessage);
         }
 
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         async Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
-            ExecuteWebhookParameters parameters, bool waitAndReturnMessage)
+            ExecuteWebhookOptions options, bool waitAndReturnMessage)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
@@ -240,9 +240,9 @@ namespace Discore.Http
                 MultipartFormDataContent data = new MultipartFormDataContent();
                 data.Add(fileContent, "file", fileName);
 
-                if (parameters != null)
+                if (options != null)
                 {
-                    DiscordApiData payloadJson = parameters.Build();
+                    DiscordApiData payloadJson = options.Build();
                     data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
                 }
 

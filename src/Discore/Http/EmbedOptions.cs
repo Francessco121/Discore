@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Discore
+namespace Discore.Http
 {
-    /// <summary>
-    /// A builder for message embeds.
-    /// </summary>
-    public class DiscordEmbedBuilder
+    public class EmbedOptions
     {
         public class EmbedFooter
         {
@@ -174,7 +171,7 @@ namespace Discore
         /// <summary>
         /// Sets the title of the embed.
         /// </summary>
-        public DiscordEmbedBuilder SetTitle(string title)
+        public EmbedOptions SetTitle(string title)
         {
             Title = title;
             return this;
@@ -183,7 +180,7 @@ namespace Discore
         /// <summary>
         /// Sets the description of the embed.
         /// </summary>
-        public DiscordEmbedBuilder SetDescription(string description)
+        public EmbedOptions SetDescription(string description)
         {
             Description = description;
             return this;
@@ -192,7 +189,7 @@ namespace Discore
         /// <summary>
         /// Sets the URL that the embed links to.
         /// </summary>
-        public DiscordEmbedBuilder SetUrl(string url)
+        public EmbedOptions SetUrl(string url)
         {
             Url = url;
             return this;
@@ -201,7 +198,7 @@ namespace Discore
         /// <summary>
         /// Sets the timestamp on the embed.
         /// </summary>
-        public DiscordEmbedBuilder SetTimestamp(DateTime timestamp)
+        public EmbedOptions SetTimestamp(DateTime timestamp)
         {
             Timestamp = timestamp;
             return this;
@@ -210,7 +207,7 @@ namespace Discore
         /// <summary>
         /// Sets the color of the embed.
         /// </summary>
-        public DiscordEmbedBuilder SetColor(DiscordColor color)
+        public EmbedOptions SetColor(DiscordColor color)
         {
             Color = color;
             return this;
@@ -223,7 +220,7 @@ namespace Discore
         /// The URL of the icon to display in the footer.
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </param>
-        public DiscordEmbedBuilder SetFooter(string text, string iconUrl = null)
+        public EmbedOptions SetFooter(string text, string iconUrl = null)
         {
             Footer = new EmbedFooter(text, iconUrl);
             return this;
@@ -233,7 +230,7 @@ namespace Discore
         /// Sets the URL of the image to include in the embed.
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </summary>
-        public DiscordEmbedBuilder SetImage(string imageUrl)
+        public EmbedOptions SetImage(string imageUrl)
         {
             ImageUrl = imageUrl;
             return this;
@@ -246,7 +243,7 @@ namespace Discore
         /// The URL of the author's icon.
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </param>
-        public DiscordEmbedBuilder SetAuthor(string name, string url = null, string iconUrl = null)
+        public EmbedOptions SetAuthor(string name, string url = null, string iconUrl = null)
         {
             Author = new EmbedAuthor(name, url, iconUrl);
             return this;
@@ -256,7 +253,7 @@ namespace Discore
         /// Sets the URL of the thumbnail for the embed.
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </summary>
-        public DiscordEmbedBuilder SetThumbnail(string thumbnailUrl)
+        public EmbedOptions SetThumbnail(string thumbnailUrl)
         {
             ThumbnailUrl = thumbnailUrl;
             return this;
@@ -266,7 +263,7 @@ namespace Discore
         /// Adds a field to the embed.
         /// </summary>
         /// <param name="inline">Whether the field should display inline with other inline fields.</param>
-        public DiscordEmbedBuilder AddField(string name, string value, bool inline = false)
+        public EmbedOptions AddField(string name, string value, bool inline = false)
         {
             if (Fields == null)
                 Fields = new List<EmbedField>();

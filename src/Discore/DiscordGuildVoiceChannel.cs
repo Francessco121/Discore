@@ -31,13 +31,13 @@ namespace Discore
         /// Modifies this voice channel's settings.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
-        /// <param name="parameters">A set of parameters to modify the channel with</param>
+        /// <param name="options">A set of options to modify the channel with</param>
         /// <returns>Returns the updated voice channel.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildVoiceChannel> Modify(GuildVoiceChannelParameters parameters)
+        public Task<DiscordGuildVoiceChannel> Modify(GuildVoiceChannelOptions options)
         {
-            return http.ModifyVoiceChannel(Id, parameters);
+            return http.ModifyVoiceChannel(Id, options);
         }
     }
 }

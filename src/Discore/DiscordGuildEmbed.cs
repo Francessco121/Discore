@@ -35,9 +35,9 @@ namespace Discore
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
+        public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedOptions options)
         {
-            return http.ModifyGuildEmbed(GuildId, parameters);
+            return http.ModifyGuildEmbed(GuildId, options);
         }
     }
 }

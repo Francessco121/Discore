@@ -21,9 +21,9 @@ namespace Discore.Http
         /// Creates a new guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuild> CreateGuild(CreateGuildParameters parameters)
+        public async Task<DiscordGuild> CreateGuild(CreateGuildOptions options)
         {
-            DiscordApiData requestdata = parameters.Build();
+            DiscordApiData requestdata = options.Build();
 
             DiscordApiData returnData = await rest.Post("guilds", requestdata,
                 "guilds").ConfigureAwait(false);
@@ -37,12 +37,12 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuild> ModifyGuild(Snowflake guildId, ModifyGuildParameters parameters)
+        public async Task<DiscordGuild> ModifyGuild(Snowflake guildId, ModifyGuildOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}", requestData,
                 $"guilds/{guildId}").ConfigureAwait(false);
@@ -172,12 +172,12 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task ModifyGuildIntegration(Snowflake guildId, Snowflake integrationId,
-            ModifyIntegrationParameters parameters)
+            ModifyIntegrationOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             await rest.Patch($"guilds/{guildId}/integrations/{integrationId}", requestData,
                 $"guilds/{guildId}/integrations/integration").ConfigureAwait(false);
@@ -223,12 +223,12 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuildEmbed> ModifyGuildEmbed(Snowflake guildId, ModifyGuildEmbedParameters parameters)
+        public async Task<DiscordGuildEmbed> ModifyGuildEmbed(Snowflake guildId, ModifyGuildEmbedOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/embed", requestData,
                 $"guilds/{guildId}/embed").ConfigureAwait(false);

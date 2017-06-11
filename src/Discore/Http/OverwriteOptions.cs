@@ -3,7 +3,7 @@
     /// <summary>
     /// A set of parameters defining a permission overwrite.
     /// </summary>
-    public class OverwriteParameters
+    public class OverwriteOptions
     {
         /// <summary>
         /// Gets the ID of the role or user that this overwrites.
@@ -22,7 +22,7 @@
         /// </summary>
         public DiscordPermission Deny { get; set; }
 
-        public OverwriteParameters(Snowflake roleOrUserId, DiscordOverwriteType type)
+        public OverwriteOptions(Snowflake roleOrUserId, DiscordOverwriteType type)
         {
             Id = roleOrUserId;
             Type = type;
@@ -31,7 +31,7 @@
         /// <summary>
         /// Sets the allowed permissions to overwrite.
         /// </summary>
-        public OverwriteParameters SetAllowedPermissions(DiscordPermission allow)
+        public OverwriteOptions SetAllowedPermissions(DiscordPermission allow)
         {
             Allow = allow;
             return this;
@@ -40,7 +40,7 @@
         /// <summary>
         /// Sets the denied permissions to overwrite.
         /// </summary>
-        public OverwriteParameters SetDeniedPermissions(DiscordPermission deny)
+        public OverwriteOptions SetDeniedPermissions(DiscordPermission deny)
         {
             Deny = deny;
             return this;

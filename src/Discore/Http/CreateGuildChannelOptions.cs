@@ -6,7 +6,7 @@ namespace Discore.Http
     /// <summary>
     /// A set of parameters for creating a new text or voice guild channel.
     /// </summary>
-    public class CreateGuildChannelParameters
+    public class CreateGuildChannelOptions
     {
         /// <summary>
         /// Gets or sets the channel name.
@@ -68,13 +68,13 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets a list of permission overwrites.
         /// </summary>
-        public IList<OverwriteParameters> PermissionOverwrites { get; set; }
+        public IList<OverwriteOptions> PermissionOverwrites { get; set; }
 
         int? bitrate;
         int? userlimit;
         string topic;
 
-        public CreateGuildChannelParameters(DiscordGuildChannelType type)
+        public CreateGuildChannelOptions(DiscordGuildChannelType type)
         {
             Type = type;
         }
@@ -82,7 +82,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the channel name.
         /// </summary>
-        public CreateGuildChannelParameters SetName(string name)
+        public CreateGuildChannelOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -92,7 +92,7 @@ namespace Discore.Http
         /// Sets the voice bitrate (if a voice channel).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel</exception>
-        public CreateGuildChannelParameters SetBitrate(int bitrate)
+        public CreateGuildChannelOptions SetBitrate(int bitrate)
         {
             Bitrate = bitrate;
             return this;
@@ -102,7 +102,7 @@ namespace Discore.Http
         /// Sets the user limit (if a voice channel).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel</exception>
-        public CreateGuildChannelParameters SetUserLimit(int userLimit)
+        public CreateGuildChannelOptions SetUserLimit(int userLimit)
         {
             UserLimit = userLimit;
             return this;
@@ -112,7 +112,7 @@ namespace Discore.Http
         /// Sets the topic (if a text channel).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel</exception>
-        public CreateGuildChannelParameters SetTopic(string topic)
+        public CreateGuildChannelOptions SetTopic(string topic)
         {
             Topic = topic;
             return this;
@@ -121,10 +121,10 @@ namespace Discore.Http
         /// <summary>
         /// Adds a permission overwrite to the channel.
         /// </summary>
-        public CreateGuildChannelParameters AddPermissionOverwrite(OverwriteParameters overwrite)
+        public CreateGuildChannelOptions AddPermissionOverwrite(OverwriteOptions overwrite)
         {
             if (PermissionOverwrites == null)
-                PermissionOverwrites = new List<OverwriteParameters>();
+                PermissionOverwrites = new List<OverwriteOptions>();
 
             PermissionOverwrites.Add(overwrite);
             return this;
@@ -152,7 +152,7 @@ namespace Discore.Http
             if (PermissionOverwrites != null)
             {
                 DiscordApiData permissionOverwritesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (OverwriteParameters overwriteParam in PermissionOverwrites)
+                foreach (OverwriteOptions overwriteParam in PermissionOverwrites)
                     permissionOverwritesArray.Values.Add(overwriteParam.Build());
 
                 data.Set("permission_overwrites", permissionOverwritesArray);

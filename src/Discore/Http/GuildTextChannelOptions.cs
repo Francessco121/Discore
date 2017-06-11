@@ -3,7 +3,7 @@
     /// <summary>
     /// An optional set of parameters for modifying a guild text channel.
     /// </summary>
-    public class GuildTextChannelParameters
+    public class GuildTextChannelOptions
     {
         /// <summary>
         /// Gets or sets the name of the channel (or null to leave unchanged).
@@ -23,7 +23,7 @@
         /// <summary>
         /// Sets the name of the channel.
         /// </summary>
-        public GuildTextChannelParameters SetName(string name)
+        public GuildTextChannelOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -32,7 +32,7 @@
         /// <summary>
         /// Sets the sorting position of the channel.
         /// </summary>
-        public GuildTextChannelParameters SetPosition(int position)
+        public GuildTextChannelOptions SetPosition(int position)
         {
             Position = position;
             return this;
@@ -41,7 +41,7 @@
         /// <summary>
         /// Sets the topic of the text channel.
         /// </summary>
-        public GuildTextChannelParameters SetTopic(string topic)
+        public GuildTextChannelOptions SetTopic(string topic)
         {
             Topic = topic;
             return this;

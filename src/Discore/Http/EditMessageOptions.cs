@@ -1,9 +1,6 @@
-﻿namespace Discore
+﻿namespace Discore.Http
 {
-    /// <summary>
-    /// Represents changes to be made to a message.
-    /// </summary>
-    public class DiscordMessageEdit
+    public class EditMessageOptions
     {
         /// <summary>
         /// Gets or sets the content of the message.
@@ -13,11 +10,11 @@
         /// <summary>
         /// Gets or sets the embed within the message.
         /// </summary>
-        public DiscordEmbedBuilder Embed { get; set; }
+        public EmbedOptions Embed { get; set; }
 
-        public DiscordMessageEdit() { }
+        public EditMessageOptions() { }
 
-        public DiscordMessageEdit(string content)
+        public EditMessageOptions(string content)
         {
             Content = content;
         }
@@ -25,7 +22,7 @@
         /// <summary>
         /// Sets the content of the message.
         /// </summary>
-        public DiscordMessageEdit SetContent(string content)
+        public EditMessageOptions SetContent(string content)
         {
             Content = content;
             return this;
@@ -34,7 +31,7 @@
         /// <summary>
         /// Sets the embed within the message.
         /// </summary>
-        public DiscordMessageEdit SetEmbed(DiscordEmbedBuilder embed)
+        public EditMessageOptions SetEmbed(EmbedOptions embed)
         {
             Embed = embed;
             return this;

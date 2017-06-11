@@ -70,9 +70,9 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
+        public Task<DiscordRole> Modify(ModifyRoleOptions options)
         {
-            return http.ModifyGuildRole(GuildId, Id, parameters);
+            return http.ModifyGuildRole(GuildId, Id, options);
         }
 
         /// <summary>

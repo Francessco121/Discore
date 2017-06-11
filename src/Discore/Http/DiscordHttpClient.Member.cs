@@ -47,12 +47,12 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task ModifyGuildMember(Snowflake guildId, Snowflake userId, ModifyGuildMemberParameters parameters)
+        public async Task ModifyGuildMember(Snowflake guildId, Snowflake userId, ModifyGuildMemberOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             await rest.Patch($"guilds/{guildId}/members/{userId}", requestData,
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);

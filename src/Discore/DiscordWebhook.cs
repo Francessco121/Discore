@@ -101,12 +101,12 @@ namespace Discore
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Execute(string token, ExecuteWebhookParameters parameters,
+        public Task<DiscordMessage> Execute(string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
-            return http.ExecuteWebook(Id, token, parameters, waitAndReturnMessage);
+            return http.ExecuteWebook(Id, token, options, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -122,9 +122,9 @@ namespace Discore
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
-            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
-            return http.ExecuteWebook(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
+            return http.ExecuteWebook(Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -139,9 +139,9 @@ namespace Discore
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
-            ExecuteWebhookParameters parameters = null, bool waitAndReturnMessage = false)
+            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
-            return http.ExecuteWebook(Id, token, fileData, fileName, parameters, waitAndReturnMessage);
+            return http.ExecuteWebook(Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
     }
 }

@@ -31,17 +31,17 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <param name="textChannelId">The ID of the guild text channel to modify.</param>
-        /// <param name="parameters">A set of parameters to modify the channel with.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild text channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildTextChannel> ModifyTextChannel(Snowflake textChannelId,
-            GuildTextChannelParameters parameters)
+            GuildTextChannelOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Patch($"channels/{textChannelId}", requestData,
                 $"channels/{textChannelId}").ConfigureAwait(false);
@@ -53,17 +53,17 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <param name="voiceChannelId">The ID of the guild voice channel to modify.</param>
-        /// <param name="parameters">A set of parameters to modify the channel with.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild voice channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="parameters"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(Snowflake voiceChannelId,
-            GuildVoiceChannelParameters parameters)
+            GuildVoiceChannelOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Patch($"channels/{voiceChannelId}", requestData,
                 $"channels/{voiceChannelId}").ConfigureAwait(false);
@@ -155,12 +155,12 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuildChannel> CreateGuildChannel(Snowflake guildId, CreateGuildChannelParameters parameters)
+        public async Task<DiscordGuildChannel> CreateGuildChannel(Snowflake guildId, CreateGuildChannelOptions options)
         {
-            if (parameters == null)
-                throw new ArgumentNullException(nameof(parameters));
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = parameters.Build();
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Post($"guilds/{guildId}/channels",
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
@@ -174,13 +174,13 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> ModifyGuildChannelPositions(Snowflake guildId,
-            IEnumerable<PositionParameters> positions)
+            IEnumerable<PositionOptions> positions)
         {
             if (positions == null)
                 throw new ArgumentNullException(nameof(positions));
 
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Array);
-            foreach (PositionParameters positionParam in positions)
+            foreach (PositionOptions positionParam in positions)
                 requestData.Values.Add(positionParam.Build());
 
             DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/channels", requestData,

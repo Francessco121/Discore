@@ -5,7 +5,7 @@ namespace Discore.Http
     /// <summary>
     /// An optional set of parameters to change the attributes of a guild member.
     /// </summary>
-    public class ModifyGuildMemberParameters
+    public class ModifyGuildMemberOptions
     {
         /// <summary>
         /// Gets or sets the member's nickname for the guild (or null to leave unchanged).
@@ -39,7 +39,7 @@ namespace Discore.Http
         /// Sets the member's nickname for the guild.
         /// <para>Requires <see cref="DiscordPermission.ManageNicknames"/>.</para>
         /// </summary>
-        public ModifyGuildMemberParameters SetNickname(string nickname)
+        public ModifyGuildMemberOptions SetNickname(string nickname)
         {
             Nickname = nickname;
             return this;
@@ -50,7 +50,7 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <param name="roleIds">A list of IDs for each role the member is to be assigned to.</param>
-        public ModifyGuildMemberParameters SetRoles(IEnumerable<Snowflake> roleIds)
+        public ModifyGuildMemberOptions SetRoles(IEnumerable<Snowflake> roleIds)
         {
             RoleIds = roleIds;
             return this;
@@ -60,7 +60,7 @@ namespace Discore.Http
         /// Sets whether the member is server mute.
         /// <para>Requires <see cref="DiscordPermission.MuteMembers"/>.</para>
         /// </summary>
-        public ModifyGuildMemberParameters SetServerMute(bool isServerMute)
+        public ModifyGuildMemberOptions SetServerMute(bool isServerMute)
         {
             IsServerMute = isServerMute;
             return this;
@@ -70,7 +70,7 @@ namespace Discore.Http
         /// Sets whether the member is server deafened.
         /// <para>Requires <see cref="DiscordPermission.DeafenMembers"/>.</para>
         /// </summary>
-        public ModifyGuildMemberParameters SetServerDeaf(bool isServerDeaf)
+        public ModifyGuildMemberOptions SetServerDeaf(bool isServerDeaf)
         {
             IsServerDeaf = isServerDeaf;
             return this;
@@ -81,7 +81,7 @@ namespace Discore.Http
         /// <para>The current bot must have permission to connect to this channel.</para>
         /// <para>Requires <see cref="DiscordPermission.MoveMembers"/>.</para>
         /// </summary>
-        public ModifyGuildMemberParameters SetVoiceChannel(Snowflake voiceChannelId)
+        public ModifyGuildMemberOptions SetVoiceChannel(Snowflake voiceChannelId)
         {
             ChannelId = voiceChannelId;
             return this;

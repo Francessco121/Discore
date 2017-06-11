@@ -3,7 +3,7 @@
     /// <summary>
     /// An optional set of parameters for modifying a guild.
     /// </summary>
-    public class ModifyGuildParameters
+    public class ModifyGuildOptions
     {
         /// <summary>
         /// Gets or sets the guild name (or null to leave unchanged).
@@ -51,7 +51,7 @@
         /// <summary>
         /// Sets the name of the guild.
         /// </summary>
-        public ModifyGuildParameters SetName(string name)
+        public ModifyGuildOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -60,7 +60,7 @@
         /// <summary>
         /// Sets the voice region the guild will use.
         /// </summary>
-        public ModifyGuildParameters SetVoiceRegion(string voiceRegion)
+        public ModifyGuildOptions SetVoiceRegion(string voiceRegion)
         {
             VoiceRegion = voiceRegion;
             return this;
@@ -69,7 +69,7 @@
         /// <summary>
         /// Sets the required verification level for the guild.
         /// </summary>
-        public ModifyGuildParameters SetVerificationLevel(int verificationLevel)
+        public ModifyGuildOptions SetVerificationLevel(int verificationLevel)
         {
             VerificationLevel = verificationLevel;
             return this;
@@ -78,7 +78,7 @@
         /// <summary>
         /// Sets the default message notification setting to be used by new members entering the guild.
         /// </summary>
-        public ModifyGuildParameters SetDefaultMessageNotifications(int defualtMessageNotifications)
+        public ModifyGuildOptions SetDefaultMessageNotifications(int defualtMessageNotifications)
         {
             DefaultMessageNotifications = defualtMessageNotifications;
             return this;
@@ -88,7 +88,7 @@
         /// Sets the ID of the AFK channel for the guild.
         /// </summary>
         /// <param name="afkChannelId">The ID of the AFK channel or <see cref="Snowflake.None"/> to remove the AFK channel.</param>
-        public ModifyGuildParameters SetAfkChannel(Snowflake afkChannelId)
+        public ModifyGuildOptions SetAfkChannel(Snowflake afkChannelId)
         {
             AfkChannelId = afkChannelId;
             return this;
@@ -97,7 +97,7 @@
         /// <summary>
         /// Sets the time (in seconds) a member must be idle before being moved to the AFK channel.
         /// </summary>
-        public ModifyGuildParameters SetAfkTimeout(int afkTimeout)
+        public ModifyGuildOptions SetAfkTimeout(int afkTimeout)
         {
             AfkTimeout = afkTimeout;
             return this;
@@ -107,7 +107,7 @@
         /// Sets the guild icon.
         /// </summary>
         /// <param name="icon">The avatar data or <see cref="DiscordImageData.None"/> to remove the icon.</param>
-        public ModifyGuildParameters SetIcon(DiscordImageData icon)
+        public ModifyGuildOptions SetIcon(DiscordImageData icon)
         {
             Icon = icon;
             return this;
@@ -116,7 +116,7 @@
         /// <summary>
         /// Sets the ID of the user to transfer guild ownership to (current authenticated user must be guild owner).
         /// </summary>
-        public ModifyGuildParameters SetOwner(Snowflake ownerId)
+        public ModifyGuildOptions SetOwner(Snowflake ownerId)
         {
             OwnerId = ownerId;
             return this;
@@ -126,7 +126,7 @@
         /// Sets the image splash for the guild (VIP guilds only). 
         /// </summary>
         /// <param name="splash">The avatar data or <see cref="DiscordImageData.None"/> to remove the splash.</param>
-        public ModifyGuildParameters SetSplash(DiscordImageData splash)
+        public ModifyGuildOptions SetSplash(DiscordImageData splash)
         {
             Splash = splash;
             return this;

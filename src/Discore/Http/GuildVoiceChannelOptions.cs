@@ -3,7 +3,7 @@
     /// <summary>
     /// An optional set of parameters for modifying a guild voice channel.
     /// </summary>
-    public class GuildVoiceChannelParameters
+    public class GuildVoiceChannelOptions
     {
         /// <summary>
         /// Gets or sets the name of the channel (or null to leave unchanged).
@@ -29,7 +29,7 @@
         /// <summary>
         /// Sets the name of the channel.
         /// </summary>
-        public GuildVoiceChannelParameters SetName(string name)
+        public GuildVoiceChannelOptions SetName(string name)
         {
             Name = name;
             return this;
@@ -38,7 +38,7 @@
         /// <summary>
         /// Sets the sorting position of the channel.
         /// </summary>
-        public GuildVoiceChannelParameters SetPosition(int position)
+        public GuildVoiceChannelOptions SetPosition(int position)
         {
             Position = position;
             return this;
@@ -47,7 +47,7 @@
         /// <summary>
         /// Sets the bitrate of the voice channel.
         /// </summary>
-        public GuildVoiceChannelParameters SetBitrate(int bitrate)
+        public GuildVoiceChannelOptions SetBitrate(int bitrate)
         {
             Bitrate = bitrate;
             return this;
@@ -57,7 +57,7 @@
         /// Sets the user limit of the voice channel.
         /// </summary>
         /// <param name="userLimit">The maximum number of users or zero to remove the limit.</param>
-        public GuildVoiceChannelParameters SetUserLimit(int userLimit)
+        public GuildVoiceChannelOptions SetUserLimit(int userLimit)
         {
             UserLimit = userLimit;
             return this;
