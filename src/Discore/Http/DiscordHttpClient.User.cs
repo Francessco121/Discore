@@ -45,9 +45,14 @@ namespace Discore.Http
         /// Gets a list of user guilds the current authenticated user is in.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordUserGuild[]> GetCurrentUserGuilds()
+        public async Task<DiscordUserGuild[]> GetCurrentUserGuilds(int? limit = null,
+            Snowflake? baseGuildId = null, GuildGetStrategy getStrategy = GuildGetStrategy.After)
         {
-            DiscordApiData data = await rest.Get($"users/@me/guilds", "users/@me/guilds").ConfigureAwait(false);
+            string strat = getStrategy.ToString().ToLower();
+            string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
+
+            DiscordApiData data = await rest.Get($"users/@me/guilds?{strat}={baseGuildId}{limitStr}", 
+                "users/@me/guilds").ConfigureAwait(false);
             DiscordUserGuild[] guilds = new DiscordUserGuild[data.Values.Count];
 
             for (int i = 0; i < guilds.Length; i++)
