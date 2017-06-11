@@ -162,6 +162,19 @@ namespace Discore.WebSocket
         }
     }
 
+    public class WebhooksUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        public Snowflake GuildId { get; }
+        public Snowflake ChannelId { get; }
+
+        public WebhooksUpdateEventArgs(Shard shard, Snowflake guildId, Snowflake channelId)
+            : base(shard)
+        {
+            GuildId = guildId;
+            ChannelId = channelId;
+        }
+    }
+
     public class ChannelPinsUpdateEventArgs : DiscordGatewayEventArgs
     {
         public Snowflake ChannelId { get; }

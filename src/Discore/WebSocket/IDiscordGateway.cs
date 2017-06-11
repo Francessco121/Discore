@@ -140,6 +140,11 @@ namespace Discore.WebSocket
         event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
 
         /// <summary>
+        /// Called when a webhook is updated.
+        /// </summary>
+        event EventHandler<WebhooksUpdateEventArgs> OnWebhookUpdated;
+
+        /// <summary>
         /// Called when the presence of a member in a guild is updated.
         /// </summary>
         event EventHandler<PresenceEventArgs> OnPresenceUpdated;

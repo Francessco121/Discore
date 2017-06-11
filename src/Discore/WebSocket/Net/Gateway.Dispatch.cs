@@ -81,6 +81,8 @@ namespace Discore.WebSocket.Net
         public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
         public event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
 
+        public event EventHandler<WebhooksUpdateEventArgs> OnWebhookUpdated;
+
         public event EventHandler<PresenceEventArgs> OnPresenceUpdated;
 
         public event EventHandler<TypingStartEventArgs> OnTypingStarted;
@@ -941,6 +943,15 @@ namespace Discore.WebSocket.Net
             OnMessageAllReactionsRemoved?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, channelId));
         }
         #endregion
+
+        [DispatchEvent("WEBHOOKS_UPDATE")]
+        void HandleWebhooksUpdate(DiscordApiData data)
+        {
+            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+
+            OnWebhookUpdated?.Invoke(this, new WebhooksUpdateEventArgs(shard, guildId, channelId));
+        }
 
         [DispatchEvent("PRESENCE_UPDATE")]
         void HandlePresenceUpdateEvent(DiscordApiData data)
