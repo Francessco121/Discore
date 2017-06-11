@@ -15,9 +15,9 @@ namespace Discore
         public string Discriminator { get; }
 
         /// <summary>
-        /// Gets the user's avatar hash.
+        /// Gets the user's avatar or null if the user does not have an avatar.
         /// </summary>
-        public string Avatar { get; }
+        public DiscordCdnUrl Avatar { get; }
 
         /// <summary>
         /// Gets whether this account belongs to an OAuth application.
@@ -51,11 +51,13 @@ namespace Discore
 
             Username = user.Username;
             Discriminator = user.Discriminator;
-            Avatar = user.Avatar;
             IsBot = user.IsBot;
             HasTwoFactorAuth = user.HasTwoFactorAuth;
             IsVerified = user.IsVerified;
             Email = user.Email;
+
+            if (user.Avatar != null)
+                Avatar = new DiscordCdnUrl(DiscordCdnUrlType.Avatar, user.Id, user.Avatar);
         }
 
         internal DiscordUser(bool isWebhookUser, DiscordApiData data)
@@ -65,11 +67,14 @@ namespace Discore
 
             Username = data.GetString("username");
             Discriminator = data.GetString("discriminator");
-            Avatar = data.GetString("avatar");
             IsBot = data.GetBoolean("bot") ?? false;
             HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? false;
             IsVerified = data.GetBoolean("verified") ?? false;
             Email = data.GetString("email");
+
+            string avatarHash = data.GetString("avatar");
+            if (avatarHash != null)
+                Avatar = new DiscordCdnUrl(DiscordCdnUrlType.Avatar, Id, avatarHash);
         }
 
         public override string ToString()

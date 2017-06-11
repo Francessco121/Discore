@@ -25,9 +25,9 @@ namespace Discore
         /// </summary> 
         public string Name { get; }
         /// <summary> 
-        /// Gets the avatar hash of this webhook (or null if the webhook user has no avatar set).
+        /// Gets the avatar of this webhook (or null if the webhook user has no avatar set).
         /// </summary> 
-        public string Avatar { get; }
+        public DiscordCdnUrl Avatar { get; }
         /// <summary> 
         /// Gets the token of this webhook. 
         /// <para>This is only populated if the current authenticated user created the webhook, otherwise it's empty/null.</para> 
@@ -55,7 +55,10 @@ namespace Discore
 
             Name = data.GetString("name");
             Token = data.GetString("token");
-            Avatar = data.GetString("avatar");
+
+            string avatarHash = data.GetString("avatar");
+            if (avatarHash != null)
+                Avatar = new DiscordCdnUrl(DiscordCdnUrlType.Avatar, Id, avatarHash);
         }
 
         /// <summary>

@@ -18,14 +18,14 @@ namespace Discore
         public string Name { get; }
 
         /// <summary>
-        /// Gets the icon hash of this guild.
+        /// Gets the icon of this guild or null if the guild has no icon set.
         /// </summary>
-        public string Icon { get; }
+        public DiscordCdnUrl Icon { get; }
 
         /// <summary>
-        /// Gets the splash image hash of this guild.
+        /// Gets the splash image of this guild or null if the guild has no splash.
         /// </summary>
-        public string Splash { get; }
+        public DiscordCdnUrl Splash { get; }
 
         /// <summary>
         /// Gets the id of the user who owns this guild.
@@ -94,8 +94,6 @@ namespace Discore
             Id = guild.Id;
 
             Name = guild.Name;
-            Icon = guild.Icon;
-            Splash = guild.Splash;
             RegionId = guild.RegionId;
             AfkTimeout = guild.AfkTimeout;
             IsEmbedEnabled = guild.IsEmbedEnabled;
@@ -105,6 +103,12 @@ namespace Discore
             OwnerId = guild.OwnerId;
             AfkChannelId = guild.AfkChannelId;
             EmbedChannelId = guild.EmbedChannelId;
+
+            if (guild.Icon != null)
+                Icon = new DiscordCdnUrl(DiscordCdnUrlType.Icon, guild.Id, guild.Icon);
+
+            if (guild.Splash != null)
+                Splash = new DiscordCdnUrl(DiscordCdnUrlType.Splash, guild.Id, guild.Splash);
 
             Features = new List<string>(guild.Features);
 
@@ -118,8 +122,6 @@ namespace Discore
             this.http = http;
 
             Name                        = data.GetString("name");
-            Icon                        = data.GetString("icon");
-            Splash                      = data.GetString("splash");
             RegionId                    = data.GetString("region");
             AfkTimeout                  = data.GetInteger("afk_timeout").Value;
             IsEmbedEnabled              = data.GetBoolean("embed_enabled") ?? false;
@@ -129,6 +131,15 @@ namespace Discore
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
+
+            // Get image hashes
+            string iconHash = data.GetString("icon");
+            if (iconHash != null)
+                Icon = new DiscordCdnUrl(DiscordCdnUrlType.Icon, Id, iconHash);
+
+            string splashHash = data.GetString("splash");
+            if (splashHash != null)
+                Splash = new DiscordCdnUrl(DiscordCdnUrlType.Splash, Id, splashHash);
 
             // Get features
             IList<DiscordApiData> featuresData = data.GetArray("features");
