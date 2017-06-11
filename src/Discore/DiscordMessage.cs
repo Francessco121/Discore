@@ -190,7 +190,7 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task AddReaction(DiscordReactionEmoji emoji)
+        public Task CreateReaction(DiscordReactionEmoji emoji)
         {
             return http.CreateReaction(ChannelId, Id, emoji);
         }
@@ -200,7 +200,7 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task RemoveMyReaction(DiscordReactionEmoji reactionEmoji)
+        public Task DeleteOwnReaction(DiscordReactionEmoji reactionEmoji)
         {
             return http.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
         }
@@ -213,7 +213,7 @@ namespace Discore
         /// <param name="reactionEmoji"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task RemoveReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
+        public Task DeleteUserReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
         {
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
@@ -229,7 +229,7 @@ namespace Discore
         /// <param name="reactionEmoji"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task RemoveReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
+        public Task DeleteUserReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
         {
             return http.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
         }
