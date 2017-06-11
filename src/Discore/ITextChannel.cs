@@ -111,7 +111,7 @@ namespace Discore
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null,
-            DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before);
+            MessageGetStrategy getStrategy = MessageGetStrategy.Before);
         /// <summary>
         /// Gets a list of all pinned messages in this channel.
         /// </summary>

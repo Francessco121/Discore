@@ -45,7 +45,7 @@ namespace Discore
             Snowflake lastId = lastMessageId;
             while (true)
             {
-                IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, DiscordMessageGetStrategy.After)
+                IReadOnlyList<DiscordMessage> messages = await GetMessages(lastId, 100, MessageGetStrategy.After)
                     .ConfigureAwait(false);
 
                 lastId = messages.Count == 0 ? lastId : messages[0].Id;
@@ -200,7 +200,7 @@ namespace Discore
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetMessages(Snowflake baseMessageId, int? limit = null,
-            DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
+            MessageGetStrategy getStrategy = MessageGetStrategy.Before)
         {
             return http.GetChannelMessages(Id, baseMessageId, limit, getStrategy);
         }

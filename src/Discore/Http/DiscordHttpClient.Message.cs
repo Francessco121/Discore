@@ -16,7 +16,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordMessage>> GetChannelMessages(Snowflake channelId,
             Snowflake? baseMessageId = null, int? limit = null,
-            DiscordMessageGetStrategy getStrategy = DiscordMessageGetStrategy.Before)
+            MessageGetStrategy getStrategy = MessageGetStrategy.Before)
         {
             string strat = getStrategy.ToString().ToLower();
             string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";

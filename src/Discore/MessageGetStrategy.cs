@@ -3,7 +3,7 @@
     /// <summary>
     /// Represents a strategy used when retrieving messages from the Discord API.
     /// </summary>
-    public enum DiscordMessageGetStrategy
+    public enum MessageGetStrategy
     {
         /// <summary>
         /// Will return messages before and after the base message.
