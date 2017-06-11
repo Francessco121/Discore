@@ -13,17 +13,6 @@ namespace Discore.WebSocket
         }
     }
 
-    public class IntegrationEventArgs : DiscordGatewayEventArgs
-    {
-        public DiscordIntegration Integration { get; }
-
-        internal IntegrationEventArgs(Shard shard, DiscordIntegration integration)
-            : base(shard)
-        {
-            Integration = integration;
-        }
-    }
-
     public class UserEventArgs : DiscordGatewayEventArgs
     {
         public DiscordUser User { get; }
@@ -254,17 +243,6 @@ namespace Discore.WebSocket
         {
             MessageId = messageId;
             ChannelId = channelId;
-        }
-    }
-
-    public class ShardExceptionEventArgs : DiscordGatewayEventArgs
-    {
-        public Exception Exception { get; }
-
-        internal ShardExceptionEventArgs(Shard shard, Exception exception)
-            : base(shard)
-        {
-            Exception = exception;
         }
     }
 
