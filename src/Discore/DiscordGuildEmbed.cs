@@ -32,6 +32,7 @@ namespace Discore
 
         /// <summary>
         /// Modifies the properties of this guild embed.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)

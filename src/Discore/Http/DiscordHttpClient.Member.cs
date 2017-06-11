@@ -60,6 +60,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Modifies the current authenticated user's nickname in the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ChangeNickname"/>.</para>
         /// </summary>
         /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>
         /// <returns>Returns the new nickname (or null if the nickname was removed).</returns>
@@ -76,6 +77,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Removes a member from a guild.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task RemoveGuildMember(Snowflake guildId, Snowflake userId)

@@ -66,6 +66,7 @@ namespace Discore
 
         /// <summary>
         /// Modifies the settings of this role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -76,6 +77,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes this role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()

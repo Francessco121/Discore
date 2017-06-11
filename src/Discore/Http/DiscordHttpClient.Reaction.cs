@@ -8,6 +8,8 @@ namespace Discore.Http
     {
         /// <summary>
         /// Adds a reaction to a message.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessageHistory"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.AddReactions"/> if nobody else has reacted to the message prior.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -36,6 +38,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a reaction posted by any user.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -70,6 +73,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes all reactions on a message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteAllReactions(Snowflake channelId, Snowflake messageId)

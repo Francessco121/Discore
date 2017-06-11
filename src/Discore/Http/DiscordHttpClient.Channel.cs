@@ -28,6 +28,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Updates the settings of a guild text channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <param name="textChannelId">The ID of the guild text channel to modify.</param>
         /// <param name="parameters">A set of parameters to modify the channel with.</param>
@@ -49,6 +50,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Updates the settings of a guild voice channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <param name="voiceChannelId">The ID of the guild voice channel to modify.</param>
         /// <param name="parameters">A set of parameters to modify the channel with.</param>
@@ -70,6 +72,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a guild channel, or closes a DM.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> DeleteChannel(Snowflake channelId)
@@ -79,6 +82,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a guild channel, or closes a DM.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<T> DeleteChannel<T>(Snowflake channelId)
@@ -90,6 +94,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits a guild channel permission overwrite for a user or role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task EditChannelPermissions(Snowflake channelId, Snowflake overwriteId,
@@ -106,6 +111,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a guild channel permission overwrite for a user or role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteChannelPermission(Snowflake channelId, Snowflake overwriteId)
@@ -116,6 +122,9 @@ namespace Discore.Http
 
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.
+        /// <para>Note: it is recommended that bots do not generally use this route.
+        /// This should only be used if the bot is responding to a command that is expected
+        /// to take a few seconds or longer.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task TriggerTypingIndicator(Snowflake channelId)
@@ -142,6 +151,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Creates a new text or voice channel for a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -159,6 +169,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Changes the settings of a channel in a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>

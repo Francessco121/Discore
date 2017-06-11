@@ -33,6 +33,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Changes the settings of a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -61,6 +62,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a list of all users that are banned from the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordUser>> GetGuildBans(Snowflake guildId)
@@ -77,6 +79,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Bans a users from the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -91,6 +94,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Removes a user ban from the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task RemoveGuildBan(Snowflake guildId, Snowflake userId)
@@ -101,6 +105,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Returns the number of members that would be kicked from a guild prune operation.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <param name="days">The number of days to count prune for (1 or more).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -114,6 +119,7 @@ namespace Discore.Http
         /// <summary>
         /// Begins a member prune operation, 
         /// kicking every member that has been offline for the specified number of days.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <param name="days">The number of days to prune (1 or more).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -129,6 +135,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a list of integrations for the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordIntegration>> GetGuildIntegrations(Snowflake guildId)
@@ -145,6 +152,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Attaches an integration from the current authenticated user to the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task CreateGuildIntegration(Snowflake guildId, Snowflake integrationId, string type)
@@ -159,6 +167,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Changes the attributes of a guild integration.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -176,6 +185,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes an attached integration from the specified channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteGuildIntegration(Snowflake guildId, Snowflake integrationId)
@@ -186,6 +196,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Synchronizes a guild integration.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task SyncGuildIntegration(Snowflake guildId, Snowflake integrationId)
@@ -196,6 +207,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Returns the embed for the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildEmbed> GetGuildEmbed(Snowflake guildId)
@@ -207,6 +219,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Modifies the properties of the embed for the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>

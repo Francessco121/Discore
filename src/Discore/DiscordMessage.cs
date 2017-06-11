@@ -185,6 +185,8 @@ namespace Discore
 
         /// <summary>
         /// Adds a reaction to this message.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessageHistory"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.AddReactions"/> if nobody else has reacted to the message prior.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -205,6 +207,7 @@ namespace Discore
 
         /// <summary>
         /// Removes a reaction from this message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <param name="user">The user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
@@ -220,6 +223,7 @@ namespace Discore
 
         /// <summary>
         /// Removes a reaction from this message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <param name="userId">The ID of the user who added the reacted.</param>
         /// <param name="reactionEmoji"></param>
@@ -242,6 +246,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes all reactions to this message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteAllReactions()
@@ -251,6 +256,7 @@ namespace Discore
 
         /// <summary>
         /// Pins this message to the channel it was sent in.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Pin()
@@ -260,6 +266,7 @@ namespace Discore
 
         /// <summary>
         /// Unpins this message from the channel it was sent in.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Unpin()
@@ -269,7 +276,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the contents of this message.
-        /// Note: changes will not be reflected in this message instance.
+        /// <para>Note: only messages created by the current user can be editted.</para>
         /// </summary>
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -280,7 +287,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the contents of this message.
-        /// Note: changes will not be reflected in this message instance.
+        /// <para>Note: only messages created by the current user can be editted.</para>
         /// </summary>
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
@@ -292,6 +299,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes this message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()

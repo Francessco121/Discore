@@ -11,6 +11,7 @@ namespace Discore.Http
     {
         /// <summary>
         /// Creates a webhook.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <param name="channelId">The id of the channel the webhook will post to.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> or <paramref name="avatar"/> is null.</exception>
@@ -66,6 +67,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a list of webhooks active for the specified guild text channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake channelId)
@@ -83,6 +85,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a list of all webhooks in a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake guildId)
@@ -100,6 +103,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Modifies an exsting webhook.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> ModifyWebook(Snowflake webhookId, string name = null, DiscordImageData avatar = null)
@@ -118,6 +122,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a webhook permanently. The currently authenticated user must be the owner.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteWebook(Snowflake webhookId)

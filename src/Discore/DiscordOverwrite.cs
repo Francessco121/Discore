@@ -48,6 +48,7 @@ namespace Discore
         /// <summary>
         /// Edits the permissions of this overwrite.
         /// If successful, changes will be immediately reflected for this instance.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Edit(DiscordPermission allow, DiscordPermission deny)
@@ -58,6 +59,7 @@ namespace Discore
         /// <summary>
         /// Deletes this overwrite.
         /// If successful, changes will be immediately reflected for the channel this overwrite was in.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()

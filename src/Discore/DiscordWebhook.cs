@@ -63,6 +63,7 @@ namespace Discore
 
         /// <summary>
         /// Modifies the settings of this webhook.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null)
@@ -72,7 +73,8 @@ namespace Discore
 
         /// <summary>
         /// Deletes this webhook permanently.
-        /// Current authenticated user might be the owner.
+        /// Current authenticated user must be the owner.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()

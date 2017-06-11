@@ -116,6 +116,7 @@ namespace Discore
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
+        /// <para>Note: can only delete messages sent by the current bot.</para>
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
         /// (messages that are too old cause an API error).</param>
@@ -129,6 +130,7 @@ namespace Discore
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
+        /// <para>Note: can only delete messages sent by the current bot.</para>
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks
         /// (messages that are too old cause an API error).</param>
@@ -141,6 +143,9 @@ namespace Discore
 
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.
+        /// <para>Note: it is recommended that bots do not generally use this route.
+        /// This should only be used if the bot is responding to a command that is expected
+        /// to take a few seconds or longer.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task TriggerTypingIndicator()

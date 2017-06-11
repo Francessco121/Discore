@@ -8,6 +8,7 @@ namespace Discore.Http
     {
         /// <summary>
         /// Gets a list of all roles in a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordRole>> GetGuildRoles(Snowflake guildId)
@@ -42,6 +43,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Modifies the sorting positions of roles in a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -67,6 +69,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Modifies the settings of a guild role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -84,6 +87,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a role from a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteGuildRole(Snowflake guildId, Snowflake roleId)
@@ -94,6 +98,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Adds a role to a guild member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task AddGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)
@@ -104,6 +109,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Removes a role from a guild member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task RemoveGuildMemberRole(Snowflake guildId, Snowflake userId, Snowflake roleId)

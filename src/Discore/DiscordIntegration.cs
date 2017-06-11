@@ -88,6 +88,7 @@ namespace Discore
         /// <summary>
         /// Changes the attributes of this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -103,6 +104,7 @@ namespace Discore
         /// <summary>
         /// Deletes this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
@@ -117,6 +119,7 @@ namespace Discore
         /// <summary>
         /// Synchronizes this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>

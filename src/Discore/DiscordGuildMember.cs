@@ -100,6 +100,7 @@ namespace Discore
 
         /// <summary>
         /// Removes this user from the guild they are a member of.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Kick()
@@ -109,6 +110,7 @@ namespace Discore
 
         /// <summary>
         /// Bans this user from the guild they are a member of.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -119,6 +121,7 @@ namespace Discore
 
         /// <summary>
         /// Adds a role to this member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task AddRole(Snowflake roleId)
@@ -128,6 +131,7 @@ namespace Discore
 
         /// <summary>
         /// Removes a role from this member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task RemoveRole(Snowflake roleId)

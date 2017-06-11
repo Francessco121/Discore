@@ -39,6 +39,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes this invite.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> Delete()

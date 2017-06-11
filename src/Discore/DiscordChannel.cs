@@ -30,6 +30,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes/closes this channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if this is a guild channel.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> Delete()

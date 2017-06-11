@@ -19,6 +19,7 @@ namespace Discore
 
         /// <summary>
         /// Creates a message in this channel.
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
         /// <param name="content">The message text content.</param>
         /// <returns>Returns the created message.</returns>
@@ -26,6 +27,8 @@ namespace Discore
         Task<DiscordMessage> CreateMessage(string content);
         /// <summary>
         /// Creates a message in this channel.
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <param name="details">The details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
@@ -35,6 +38,8 @@ namespace Discore
 
         /// <summary>
         /// Uploads a file with an optional message to this channel.
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <param name="fileData">A stream of the file contents.</param>
         /// <param name="fileName">The name of the file to use when uploading.</param>
@@ -45,6 +50,8 @@ namespace Discore
         Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null);
         /// <summary>
         /// Uploads a file with an optional message to this channel.
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <param name="fileData">The file contents.</param>
         /// <param name="fileName">The name of the file to use when uploading.</param>
@@ -57,6 +64,8 @@ namespace Discore
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
+        /// <para>Note: if this is a DM channel, this can only delete messages sent by the current bot.</para>
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks 
         /// (messages that are too old cause an API error).</param>
@@ -66,6 +75,8 @@ namespace Discore
         /// <summary>
         /// Deletes a list of messages in one API call.
         /// Much quicker than calling Delete() on each message instance.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
+        /// <para>Note: if this is a DM channel, this can only delete messages sent by the current bot.</para>
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks 
         /// (messages that are too old cause an API error).</param>
@@ -75,17 +86,22 @@ namespace Discore
 
         /// <summary>
         /// Causes the current authenticated user to appear as typing in this channel.
+        /// <para>Note: it is recommended that bots do not generally use this route.
+        /// This should only be used if the bot is responding to a command that is expected
+        /// to take a few seconds or longer.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task TriggerTypingIndicator();
 
         /// <summary>
         /// Gets a message in this channel.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessageHistory"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<DiscordMessage> GetMessage(Snowflake messageId);
         /// <summary>
         /// Gets a list of messages in this channel.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessages"/>.</para>
         /// </summary>
         /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
@@ -101,6 +117,7 @@ namespace Discore
 
         /// <summary>
         /// Gets the id of the last message sent in this channel.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         Task<Snowflake> GetLastMessageId();

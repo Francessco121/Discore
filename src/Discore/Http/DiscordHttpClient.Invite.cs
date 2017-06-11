@@ -25,6 +25,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes an invite to a channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the invite code is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException"></exception>
@@ -42,6 +43,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a list of invites for the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetGuildInvites(Snowflake guildId)
@@ -58,6 +60,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a list of all invites for the specified guild channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetChannelInvites(Snowflake channelId)
@@ -74,6 +77,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Creates a new invite for the specified guild channel.
+        /// <para>Requires <see cref="DiscordPermission.CreateInstantInvite"/>.</para>
         /// </summary>
         /// <param name="channelId">The ID of the guild channel.</param>
         /// <param name="maxAge">The duration of invite before expiry, or 0 or null for never.</param>

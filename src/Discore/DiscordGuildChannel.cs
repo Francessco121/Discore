@@ -60,6 +60,7 @@ namespace Discore
 
         /// <summary>
         /// Gets a list of all invites for this channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
@@ -69,6 +70,7 @@ namespace Discore
 
         /// <summary>
         /// Creates an invite to this guild, through this channel.
+        /// <para>Requires <see cref="DiscordPermission.CreateInstantInvite"/>.</para>
         /// </summary>
         /// <param name="maxAge">Duration of invite before expiry, or 0 or null for never.</param>
         /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
@@ -83,6 +85,7 @@ namespace Discore
 
         /// <summary>
         /// Adds/edits a guild member permission overwrite for this channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <param name="member">The member this overwrite will change permissions for.</param>
         /// <param name="allow">Specifically allowed permissions.</param>
@@ -99,6 +102,7 @@ namespace Discore
 
         /// <summary>
         /// Adds/edits a role permission overwrite for this channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <param name="role">The role this overwrite will change permissions for.</param>
         /// <param name="allow">Specifically allowed permissions.</param>
@@ -115,6 +119,7 @@ namespace Discore
 
         /// <summary>
         /// Adds/edits a guild member or role permission overwrite for this channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <param name="memberOrRoleId">The ID of the member or role this overwrite will change permissions for.</param>
         /// <param name="overwriteType">Whether the permissions should affect a member or role.</param>
@@ -129,6 +134,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes a permission overwrite for a guild member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -142,6 +148,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes a permission overwrite for a role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -155,6 +162,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes a permission overwrite.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -168,6 +176,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes a permission overwrite.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeletePermission(Snowflake memberOrRoleId)

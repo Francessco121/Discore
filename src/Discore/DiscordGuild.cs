@@ -177,6 +177,7 @@ namespace Discore
 
         /// <summary>
         /// Gets a list of all webhooks in this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordWebhook>> GetWebhooks()
@@ -186,6 +187,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the settings of this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -215,6 +217,7 @@ namespace Discore
 
         /// <summary>
         /// Creates a text or voice channel for this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -225,6 +228,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the sorting positions of the channels in this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -249,13 +253,14 @@ namespace Discore
         /// <param name="limit">Max number of members to return (1-1000).</param>
         /// <param name="after">The highest user id in the previous page.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordGuildMember>> GetMembers(int? limit = null, Snowflake? after = null)
+        public Task<IReadOnlyList<DiscordGuildMember>> ListGuildMembers(int? limit = null, Snowflake? after = null)
         {
             return http.ListGuildMembers(Id, limit, after);
         }
 
         /// <summary>
         /// Gets a list of all users banned from this guild.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordUser>> GetBans()
@@ -265,6 +270,7 @@ namespace Discore
 
         /// <summary>
         /// Bans the specified user from this guild.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -275,6 +281,7 @@ namespace Discore
 
         /// <summary>
         /// Unbans the specified user from this guild.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task RemoveBan(Snowflake userId)
@@ -284,6 +291,7 @@ namespace Discore
 
         /// <summary>
         /// Gets a list of all roles in this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordRole>> GetRoles()
@@ -293,6 +301,7 @@ namespace Discore
 
         /// <summary>
         /// Creates a new role for this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <param name="parameters">A set of optional parameters to use when creating the role.</param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -304,6 +313,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the sorting positions of the roles in this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -314,6 +324,7 @@ namespace Discore
 
         /// <summary>
         /// Returns the number of members that would be kicked from a prune operation.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <param name="days">The number of days to count prune for (1 or more).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -325,6 +336,7 @@ namespace Discore
         /// <summary>
         /// Begins a member prune operation, 
         /// kicking every member that has been offline for the specified number of days.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <param name="days">The number of days to prune (1 or more).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -344,6 +356,7 @@ namespace Discore
 
         /// <summary>
         /// Gets a list of invites to guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
@@ -353,6 +366,7 @@ namespace Discore
 
         /// <summary>
         /// Gets a list of integrations for this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordIntegration>> GetIntegrations()
@@ -362,6 +376,7 @@ namespace Discore
 
         /// <summary>
         /// Attaches an integration from the current authenticated user to this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task CreateIntegration(Snowflake integrationId, string type)
@@ -371,6 +386,7 @@ namespace Discore
 
         /// <summary>
         /// Returns the embed for this guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> GetEmbed()

@@ -11,6 +11,7 @@ namespace Discore.Http
     {
         /// <summary>
         /// Gets messages from a text channel.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordMessage>> GetChannelMessages(Snowflake channelId,
@@ -32,6 +33,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Gets a single message by ID from a channel.
+        /// <para>Requires <see cref="DiscordPermission.ReadMessageHistory"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> GetChannelMessage(Snowflake channelId, Snowflake messageId)
@@ -44,6 +46,7 @@ namespace Discore.Http
         /// <summary>
         /// Posts a message to a text channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, string content)
@@ -54,6 +57,8 @@ namespace Discore.Http
         /// <summary>
         /// Posts a message to a text channel.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="details"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -78,6 +83,8 @@ namespace Discore.Http
         /// <summary>
         /// Posts a message to a text channel with a file attachment.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="fileData"/> is null, 
@@ -96,6 +103,8 @@ namespace Discore.Http
         /// <summary>
         /// Posts a message to a text channel with a file attachment.
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="fileName"/> is null or only contains whitespace characters.
@@ -144,6 +153,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits an existing message in a text channel.
+        /// <para>Note: only messages created by the current user can be editted.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
@@ -158,6 +168,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits an existing message in a text channel.
+        /// <para>Note: only messages created by the current user can be editted.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -179,6 +190,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a message from a text channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteMessage(Snowflake channelId, Snowflake messageId)
@@ -190,6 +202,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a group of messages all at once from a text channel.
         /// This is much faster than calling DeleteMessage for each message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -210,6 +223,7 @@ namespace Discore.Http
         /// <summary>
         /// Deletes a group of messages all at once from a text channel.
         /// This is much faster than calling DeleteMessage for each message.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <param name="filterTooOldMessages">Whether to ignore deleting messages that are older than 2 weeks (this causes an API error).</param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -262,6 +276,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Pins a message in a text channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
@@ -272,6 +287,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Unpins a message from a text channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
