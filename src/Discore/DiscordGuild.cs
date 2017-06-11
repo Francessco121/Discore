@@ -198,7 +198,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes this guild permanently.
-        /// Authenticated user must be the owner.
+        /// <para>Note: current bot must be the owner.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()
@@ -375,7 +375,7 @@ namespace Discore
         }
 
         /// <summary>
-        /// Attaches an integration from the current authenticated user to this guild.
+        /// Attaches an integration from the current bot to this guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>

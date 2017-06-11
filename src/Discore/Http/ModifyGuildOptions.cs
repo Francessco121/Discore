@@ -39,7 +39,7 @@
         public DiscordImageData Icon { get; set; }
         /// <summary>
         /// Gets or sets the ID of the user to transfer guild ownership to (or null to leave unchanged) 
-        /// (current authenticated user must be guild owner).
+        /// (the current bot must be guild owner).
         /// </summary>
         public Snowflake? OwnerId { get; set; }
         /// <summary>
@@ -114,7 +114,7 @@
         }
 
         /// <summary>
-        /// Sets the ID of the user to transfer guild ownership to (current authenticated user must be guild owner).
+        /// Sets the ID of the user to transfer guild ownership to (the current bot must be guild owner).
         /// </summary>
         public ModifyGuildOptions SetOwner(Snowflake ownerId)
         {

@@ -17,7 +17,7 @@ namespace Discore.Http
     partial class DiscordHttpClient
     {
         /// <summary>
-        /// Gets the minimum number of required shards for the current authenticated Discord application.
+        /// Gets the minimum number of required shards for the current bot.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> GetBotRequiredShards()

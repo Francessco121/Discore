@@ -23,7 +23,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Deletes a reaction the currently authenticated user has made for a message.
+        /// Deletes a reaction that the current bot has added to a message.
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>

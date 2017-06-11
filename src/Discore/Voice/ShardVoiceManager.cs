@@ -9,7 +9,7 @@ namespace Discore.Voice
     public class ShardVoiceManager
     {
         /// <summary>
-        /// Gets a list of all voice connections for the current authenticated user.
+        /// Gets a list of all voice connections for the current bot.
         /// </summary>
         public ICollection<DiscordVoiceConnection> VoiceConnections => voiceConnections.Values;
 
@@ -50,8 +50,7 @@ namespace Discore.Voice
         }
 
         /// <summary>
-        /// Attempts to retrieve a voice connection for the current user,
-        /// by the guild the connection is in.
+        /// Attempts to retrieve a voice connection by the guild the connection is in.
         /// </summary>
         public bool TryGetVoiceConnection(Snowflake guildId, out DiscordVoiceConnection connection)
         {

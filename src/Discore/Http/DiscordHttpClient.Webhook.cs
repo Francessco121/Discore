@@ -121,7 +121,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Deletes a webhook permanently. The currently authenticated user must be the owner.
+        /// Deletes a webhook permanently. The current bot must be the owner.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>

@@ -30,7 +30,7 @@ namespace Discore
         public DiscordCdnUrl Avatar { get; }
         /// <summary> 
         /// Gets the token of this webhook. 
-        /// <para>This is only populated if the current authenticated user created the webhook, otherwise it's empty/null.</para> 
+        /// <para>This is only populated if the current bot created the webhook, otherwise it's empty/null.</para> 
         /// <para>It's used for executing, updating, and deleting this webhook without the need of authorization.</para> 
         /// </summary> 
         public string Token { get; }
@@ -73,7 +73,7 @@ namespace Discore
 
         /// <summary>
         /// Deletes this webhook permanently.
-        /// Current authenticated user must be the owner.
+        /// <para>Note: current bot must be the owner.</para>
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>

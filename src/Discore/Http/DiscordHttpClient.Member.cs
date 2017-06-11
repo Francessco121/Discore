@@ -59,7 +59,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Modifies the current authenticated user's nickname in the specified guild.
+        /// Modifies the current bot's nickname in the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ChangeNickname"/>.</para>
         /// </summary>
         /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>

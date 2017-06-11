@@ -145,14 +145,14 @@ namespace Discore.Voice
         /// connection is closed while initiating.
         /// </para>
         /// </summary>
-        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
-        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
+        /// <param name="startMute">Whether the current bot should connect self-muted.</param>
+        /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
         /// <exception cref="DiscordPermissionException">
-        /// Thrown if the current user does not have permission to connect to the voice channel.
+        /// Thrown if the current bot does not have permission to connect to the voice channel.
         /// </exception>
         /// <exception cref="InvalidOperationException">
         /// Thrown if connect is called more than once, 
-        /// if the voice channel is full and the current user is not an admin, 
+        /// if the voice channel is full and the current bot is not an admin, 
         /// or if the shard behind this connection isn't running.
         /// </exception>
         /// <exception cref="OperationCanceledException">
@@ -214,7 +214,7 @@ namespace Discore.Voice
         }
 
         /// <summary>
-        /// Using the cache, this will attempt to verify that the current user can
+        /// Using the cache, this will attempt to verify that the current bot can
         /// join the selected voice channel. If the cache does not have the required details,
         /// this will NOT throw an exception (the handshake timeout will handle invalid permission anyway).
         /// </summary>
@@ -245,8 +245,8 @@ namespace Discore.Voice
                 }
                 
                 if (!channelHasRoom)
-                    throw new InvalidOperationException("The voice channel is full, and the current authenticated " +
-                        "user does not have the administrator permission.");
+                    throw new InvalidOperationException("The voice channel is full, and the current bot " +
+                        "does not have the administrator permission.");
             }
         }
 

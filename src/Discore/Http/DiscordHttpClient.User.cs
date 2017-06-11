@@ -5,7 +5,7 @@ namespace Discore.Http
     partial class DiscordHttpClient
     {
         /// <summary>
-        /// Gets the user of the current authenticated account for this application.
+        /// Gets the user object of the current bot.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetCurrentUser()
@@ -25,7 +25,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Modifies the current authenticated user.
+        /// Modifies the current bot's user object.
         /// Parameters left null will leave the properties unchanged.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -42,7 +42,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Gets a list of user guilds the current authenticated user is in.
+        /// Gets a list of user guilds the current bot is in.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUserGuild[]> GetCurrentUserGuilds(int? limit = null,
@@ -62,7 +62,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Removes the current authenticated user from the specified guild.
+        /// Removes the current bot from the specified guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task LeaveGuild(Snowflake guildId)
@@ -71,8 +71,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Gets a list of currently opened DM channels for the current authenticated user.
-        /// <para>Note: This will always return an empty list for bot accounts.</para>
+        /// Gets a list of currently opened DM channels for the current bot.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordDMChannel[]> GetUserDMs()

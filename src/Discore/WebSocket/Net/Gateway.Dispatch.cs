@@ -154,7 +154,7 @@ namespace Discore.WebSocket.Net
             // Clear the cache
             cache.Clear();
 
-            // Get the authenticated user
+            // Get the current bot's user object
             DiscordApiData userData = data.Get("user");
             Snowflake userId = userData.GetSnowflake("id").Value;
 
@@ -1051,7 +1051,7 @@ namespace Discore.WebSocket.Net
                 DiscordVoiceState voiceState = new DiscordVoiceState(guildId.Value, data);
                 UpdateMemberVoiceState(voiceState);
 
-                // If this voice state belongs to the current authenticated user,
+                // If this voice state belongs to the current bot,
                 // then we need to notify the connection of the session id.
                 if (userId == shard.UserId)
                 {

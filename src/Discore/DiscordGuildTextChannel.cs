@@ -161,7 +161,7 @@ namespace Discore
         }
 
         /// <summary>
-        /// Causes the current authenticated user to appear as typing in this channel.
+        /// Causes the current bot's user to appear as typing in this channel.
         /// <para>Note: it is recommended that bots do not generally use this route.
         /// This should only be used if the bot is responding to a command that is expected
         /// to take a few seconds or longer.</para>

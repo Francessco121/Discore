@@ -196,7 +196,7 @@ namespace Discore
         }
 
         /// <summary>
-        /// Removes a reaction from this message added from the current authenticated user.
+        /// Removes a reaction from this message added from the current bot.
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -276,7 +276,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the contents of this message.
-        /// <para>Note: only messages created by the current user can be editted.</para>
+        /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -287,7 +287,7 @@ namespace Discore
 
         /// <summary>
         /// Changes the contents of this message.
-        /// <para>Note: only messages created by the current user can be editted.</para>
+        /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
         /// <returns>Returns the editted message.</returns>
         /// <exception cref="ArgumentNullException"></exception>

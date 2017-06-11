@@ -154,7 +154,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current user can be editted.</para>
+        /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
@@ -169,7 +169,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current user can be editted.</para>
+        /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>

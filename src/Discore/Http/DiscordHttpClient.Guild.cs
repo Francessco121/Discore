@@ -51,7 +51,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a guild permanently.
-        /// Authenticated user must be the owner.
+        /// <para>Note: current bot must be the owner.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteGuild(Snowflake guildId)
@@ -151,7 +151,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Attaches an integration from the current authenticated user to the specified guild.
+        /// Attaches an integration from the current bot to the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
