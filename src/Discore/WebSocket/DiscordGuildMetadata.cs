@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Discore
+namespace Discore.WebSocket
 {
     /// <summary>
     /// Shard-specific metadata about a guild.
