@@ -65,6 +65,7 @@ namespace Discore
 
         /// <summary>
         /// Creates a message in this channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <param name="content">The message text content.</param>
         /// <returns>Returns the created message.</returns>
@@ -76,6 +77,7 @@ namespace Discore
 
         /// <summary>
         /// Creates a message in this channel.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <param name="details">The details of the message to create.</param>
         /// <returns>Returns the created message.</returns>
@@ -87,7 +89,8 @@ namespace Discore
         }
 
         /// <summary>
-        /// Uploads a file with an optional message to this channel.
+        /// Posts a message with a file attachment.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <param name="fileData">A stream of the file contents.</param>
         /// <param name="fileName">The name of the file to use when uploading.</param>
@@ -95,12 +98,13 @@ namespace Discore
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> UploadFile(Stream fileData, string fileName, DiscordMessageDetails details = null)
+        public Task<DiscordMessage> CreateMessage(Stream fileData, string fileName, DiscordMessageDetails details = null)
         {
             return http.CreateMessage(Id, fileData, fileName, details);
         }
         /// <summary>
-        /// Uploads a file with an optional message to this channel.
+        /// Posts a message with a file attachment.
+        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// </summary>
         /// <param name="fileData">The file contents.</param>
         /// <param name="fileName">The name of the file to use when uploading.</param>
@@ -108,7 +112,7 @@ namespace Discore
         /// <returns>Returns the created message.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> UploadFile(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
+        public Task<DiscordMessage> CreateMessage(ArraySegment<byte> fileData, string fileName, DiscordMessageDetails details = null)
         {
             return http.CreateMessage(Id, fileData, fileName, details);
         }
