@@ -7,7 +7,7 @@ namespace Discore.WebSocket
     {
         public Shard Shard { get; }
 
-        public DiscordGatewayEventArgs(Shard shard)
+        internal DiscordGatewayEventArgs(Shard shard)
         {
             Shard = shard;
         }
@@ -17,7 +17,7 @@ namespace Discore.WebSocket
     {
         public DiscordIntegration Integration { get; }
 
-        public IntegrationEventArgs(Shard shard, DiscordIntegration integration)
+        internal IntegrationEventArgs(Shard shard, DiscordIntegration integration)
             : base(shard)
         {
             Integration = integration;
@@ -28,7 +28,7 @@ namespace Discore.WebSocket
     {
         public DiscordUser User { get; }
 
-        public UserEventArgs(Shard shard, DiscordUser user)
+        internal UserEventArgs(Shard shard, DiscordUser user)
             : base(shard)
         {
             User = user;
@@ -44,7 +44,7 @@ namespace Discore.WebSocket
         /// </summary>
         public int Timestamp { get; }
 
-        public TypingStartEventArgs(Shard shard, Snowflake userId, Snowflake channelId, int timestamp)
+        internal TypingStartEventArgs(Shard shard, Snowflake userId, Snowflake channelId, int timestamp)
             : base(shard)
         {
             UserId = userId;
@@ -58,7 +58,7 @@ namespace Discore.WebSocket
         public Snowflake GuildId { get; }
         public DiscordGuildMember Member { get; }
 
-        public GuildMemberEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member)
+        internal GuildMemberEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member)
             : base(shard)
         {
             GuildId = guildId;
@@ -70,7 +70,7 @@ namespace Discore.WebSocket
     {
         public DiscordUserPresence Presence { get; }
 
-        public PresenceEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member, DiscordUserPresence presence)
+        internal PresenceEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member, DiscordUserPresence presence)
             : base(shard, guildId, member)
         {
             Presence = presence;
@@ -82,7 +82,7 @@ namespace Discore.WebSocket
         public Snowflake GuildId { get; }
         public DiscordGuildMember[] Members { get; }
 
-        public GuildMemberChunkEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember[] members)
+        internal GuildMemberChunkEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember[] members)
             : base(shard)
         {
             GuildId = guildId;
@@ -95,7 +95,7 @@ namespace Discore.WebSocket
         public Snowflake GuildId { get; }
         public DiscordUser User { get; }
 
-        public GuildUserEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
+        internal GuildUserEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
             : base(shard)
         {
             GuildId = guildId;
@@ -108,7 +108,7 @@ namespace Discore.WebSocket
         public DiscordGuild Guild { get; }
         public DiscordRole Role { get; }
 
-        public GuildRoleEventArgs(Shard shard, DiscordGuild guild, DiscordRole role)
+        internal GuildRoleEventArgs(Shard shard, DiscordGuild guild, DiscordRole role)
             : base(shard)
         {
             Guild = guild;
@@ -120,7 +120,7 @@ namespace Discore.WebSocket
     {
         public DiscordDMChannel Channel { get; }
 
-        public DMChannelEventArgs(Shard shard, DiscordDMChannel channel)
+        internal DMChannelEventArgs(Shard shard, DiscordDMChannel channel)
             : base(shard)
         {
             Channel = channel;
@@ -131,7 +131,7 @@ namespace Discore.WebSocket
     {
         public DiscordGuild Guild { get; }
 
-        public GuildEventArgs(Shard shard, DiscordGuild guild)
+        internal GuildEventArgs(Shard shard, DiscordGuild guild)
             : base(shard)
         {
             Guild = guild;
@@ -142,7 +142,7 @@ namespace Discore.WebSocket
     {
         public Snowflake GuildId { get; }
 
-        public GuildIntegrationsEventArgs(Shard shard, Snowflake guildId)
+        internal GuildIntegrationsEventArgs(Shard shard, Snowflake guildId)
             : base(shard)
         {
             GuildId = guildId;
@@ -154,7 +154,7 @@ namespace Discore.WebSocket
         public Snowflake GuildId { get; }
         public DiscordGuildChannel Channel { get; }
 
-        public GuildChannelEventArgs(Shard shard, Snowflake guildId, DiscordGuildChannel channel)
+        internal GuildChannelEventArgs(Shard shard, Snowflake guildId, DiscordGuildChannel channel)
             : base(shard)
         {
             GuildId = guildId;
@@ -167,7 +167,7 @@ namespace Discore.WebSocket
         public Snowflake GuildId { get; }
         public Snowflake ChannelId { get; }
 
-        public WebhooksUpdateEventArgs(Shard shard, Snowflake guildId, Snowflake channelId)
+        internal WebhooksUpdateEventArgs(Shard shard, Snowflake guildId, Snowflake channelId)
             : base(shard)
         {
             GuildId = guildId;
@@ -183,7 +183,7 @@ namespace Discore.WebSocket
         /// </summary>
         public DateTime? LastPinTimestamp { get; }
 
-        public ChannelPinsUpdateEventArgs(Shard shard, Snowflake channelId, DateTime? lastPinTimestamp)
+        internal ChannelPinsUpdateEventArgs(Shard shard, Snowflake channelId, DateTime? lastPinTimestamp)
             : base(shard)
         {
             ChannelId = channelId;
@@ -195,7 +195,7 @@ namespace Discore.WebSocket
     {
         public DiscordMessage Message { get; }
 
-        public MessageEventArgs(Shard shard, DiscordMessage message)
+        internal MessageEventArgs(Shard shard, DiscordMessage message)
             : base(shard)
         {
             Message = message;
@@ -206,7 +206,7 @@ namespace Discore.WebSocket
     {
         public DiscordMessage PartialMessage { get; }
 
-        public MessageUpdateEventArgs(Shard shard, DiscordMessage message)
+        internal MessageUpdateEventArgs(Shard shard, DiscordMessage message)
             : base(shard)
         {
             PartialMessage = message;
@@ -218,7 +218,7 @@ namespace Discore.WebSocket
         public Snowflake MessageId { get; }
         public Snowflake ChannelId { get; }
 
-        public MessageDeleteEventArgs(Shard shard, Snowflake messageId, Snowflake channelId)
+        internal MessageDeleteEventArgs(Shard shard, Snowflake messageId, Snowflake channelId)
             : base(shard)
         {
             MessageId = messageId;
@@ -233,7 +233,7 @@ namespace Discore.WebSocket
         public Snowflake ChannelId { get; }
         public DiscordReactionEmoji Emoji { get; }
 
-        public MessageReactionEventArgs(Shard shard, Snowflake messageId, Snowflake channelId,
+        internal MessageReactionEventArgs(Shard shard, Snowflake messageId, Snowflake channelId,
             Snowflake userId, DiscordReactionEmoji emoji)
             : base(shard)
         {
@@ -249,7 +249,7 @@ namespace Discore.WebSocket
         public Snowflake MessageId { get; }
         public Snowflake ChannelId { get; }
 
-        public MessageReactionRemoveAllEventArgs(Shard shard, Snowflake messageId, Snowflake channelId)
+        internal MessageReactionRemoveAllEventArgs(Shard shard, Snowflake messageId, Snowflake channelId)
             : base(shard)
         {
             MessageId = messageId;
@@ -261,7 +261,7 @@ namespace Discore.WebSocket
     {
         public Exception Exception { get; }
 
-        public ShardExceptionEventArgs(Shard shard, Exception exception)
+        internal ShardExceptionEventArgs(Shard shard, Exception exception)
             : base(shard)
         {
             Exception = exception;
@@ -272,7 +272,7 @@ namespace Discore.WebSocket
     {
         public DiscordVoiceState VoiceState { get; }
 
-        public VoiceStateEventArgs(Shard shard, DiscordVoiceState state) 
+        internal VoiceStateEventArgs(Shard shard, DiscordVoiceState state) 
             : base(shard)
         {
             VoiceState = state;

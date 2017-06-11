@@ -24,7 +24,7 @@ namespace Discore.WebSocket
         /// </summary>
         public bool IsNewSession { get; }
 
-        public ShardReconnectedEventArgs(Shard shard, bool isNewSession) 
+        internal ShardReconnectedEventArgs(Shard shard, bool isNewSession) 
             : base(shard)
         {
             IsNewSession = isNewSession;
