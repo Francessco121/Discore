@@ -14,7 +14,7 @@
         /// </summary>
         Before,
         /// <summary>
-        /// Will return message after the base message.
+        /// Will return messages after the base message.
         /// </summary>
         After
     }
