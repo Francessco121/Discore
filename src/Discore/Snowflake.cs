@@ -128,5 +128,15 @@ namespace Discore
         {
             return a.Id != b.Id;
         }
+
+        public static implicit operator ulong(Snowflake snowFlake)
+        {
+            return snowFlake.Id;
+        }
+
+        public static implicit operator Snowflake(ulong id)
+        {
+            return new Snowflake(id);
+        }
     }
 }
