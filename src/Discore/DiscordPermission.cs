@@ -4,7 +4,7 @@ namespace Discore
 {
     /// <summary>
     /// Permission types for user abilities.
-    /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/PERMISSIONS.md
+    /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/Permissions.md
     /// </summary>
     [Flags]
     public enum DiscordPermission : int
@@ -41,6 +41,10 @@ namespace Discore
         /// Allows for the addition of reactions to messages.
         /// </summary>
         AddReactions = 0x00000040,
+        /// <summary>
+        /// Allows for viewing of audit logs.
+        /// </summary>
+        ViewAuditLog = 0x00000080,
         /// <summary>
         /// Allows reading messages in a channel. The channel will not appear for users without this permission.
         /// </summary>
