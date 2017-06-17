@@ -59,7 +59,7 @@ namespace Discore.WebSocket
 
         protected override DiscordGuildMember BuildImmutableEntity()
         {
-            throw new NotImplementedException();
+            return new DiscordGuildMember(Http, this);
         }
     }
 }
