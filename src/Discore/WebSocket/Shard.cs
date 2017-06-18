@@ -1,5 +1,6 @@
 ﻿using Discore.Voice;
 using Discore.WebSocket.Net;
+using Nito.AsyncEx;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -60,11 +61,15 @@ namespace Discore.WebSocket
         bool isDisposed;
         DiscoreLogger log;
 
+        AsyncManualResetEvent stoppedResetEvent;
+
         public Shard(string botToken, int shardId, int totalShards)
         {
             Id = shardId;
 
             log = new DiscoreLogger($"Shard#{shardId}");
+
+            stoppedResetEvent = new AsyncManualResetEvent(true);
 
             Cache = new DiscordShardCache();
 
@@ -86,6 +91,8 @@ namespace Discore.WebSocket
             CleanUp();
 
             OnFailure?.Invoke(this, new ShardFailureEventArgs(this, e.Message, e.Reason, e.Exception));
+
+            stoppedResetEvent.Set();
         }
 
         /// <summary>
@@ -137,6 +144,8 @@ namespace Discore.WebSocket
                     isRunning = false;
                     CleanUp();
 
+                    stoppedResetEvent.Set();
+
                     GatewayFailureData failureData = ex.FailureData;
                     throw new ShardStartException(failureData.Message, this, failureData.Reason, failureData.Exception);
                 }
@@ -145,10 +154,15 @@ namespace Discore.WebSocket
                     isRunning = false;
                     CleanUp();
 
+                    stoppedResetEvent.Set();
+
                     throw;
                 }
 
                 log.LogInfo("Successfully connected to the Gateway.");
+
+                stoppedResetEvent.Reset();
+
                 OnConnected?.Invoke(this, new ShardEventArgs(this));
             }
             else
@@ -173,9 +187,21 @@ namespace Discore.WebSocket
                 await gateway.DisconnectAsync().ConfigureAwait(false);
 
                 log.LogInfo("Successfully disconnected from the Gateway.");
+
+                stoppedResetEvent.Set();
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
+        }
+
+        /// <summary>
+        /// Returns a task that completes when this shard is stopped either normally or from an error.
+        /// </summary>
+        /// <param name="cancellationToken">A token to cancel the wait. Will not close the shard on cancellation.</param>
+        /// <exception cref="OperationCanceledException">Thrown if the passed cancellation token is cancelled.</exception>
+        public Task WaitUntilStoppedAsync(CancellationToken? cancellationToken = null)
+        {
+            return stoppedResetEvent.WaitAsync(cancellationToken ?? CancellationToken.None);
         }
 
         void CleanUp()
