@@ -42,7 +42,7 @@
                     Status = DiscordUserStatus.Online;
 
                     // However, this should issue a warning.
-                    DiscoreLogger.Default.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {UserId}. " +
+                    DiscoreLogger.Global.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {UserId}. " +
                         $"status = {statusStr}");
                 }
                 else
