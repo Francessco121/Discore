@@ -22,12 +22,15 @@ The project can be built with [Visual Studio 2017](https://www.visualstudio.com/
 using Discore;
 using Discore.Http;
 using Discore.WebSocket;
+using System;
 using System.Threading.Tasks;
 
 namespace DiscorePingPong
 {
     public class Program
     {
+        DiscordHttpClient http;
+
         public static void Main(string[] args)
         {
             Program program = new Program();
@@ -36,42 +39,41 @@ namespace DiscorePingPong
 
         public async Task Run()
         {
-            // Create authenticator using a bot user token.
-            DiscordBotUserToken token = new DiscordBotUserToken("<bot user token goes here>");
+            const string TOKEN = "<bot user token goes here>";
 
-            // Create a WebSocket application.
-            DiscordWebSocketApplication app = new DiscordWebSocketApplication(token);
+            // Create an HTTP client.
+            http = new DiscordHttpClient(TOKEN);
 
-            // Create and start a single shard.
-            Shard shard = app.ShardManager.CreateSingleShard();
-            await shard.StartAsync();
+            // Create a single shard.
+            using (Shard shard = new Shard(TOKEN, 0, 1))
+            {
+                // Subscribe to the message creation event.
+                shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
 
-            // Subscribe to the message creation event.
-            shard.Gateway.OnMessageCreated += Gateway_OnMessageCreated;
+                // Start the shard.
+                await shard.StartAsync();
+                Console.WriteLine("Bot started!");
 
-            // Wait for the shard to end before closing the program.
-            while (shard.IsRunning)
-                await Task.Delay(1000);
+                // Wait for the shard to end before closing the program.
+                await shard.WaitUntilStoppedAsync();
+            }
         }
 
-        private static async void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
+        private async void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
         {
             Shard shard = e.Shard;
             DiscordMessage message = e.Message;
 
-            if (message.Author == shard.User)
+            if (message.Author.Id == shard.UserId)
                 // Ignore messages created by our bot.
                 return;
 
             if (message.Content == "!ping")
             {
-                // Grab the DM or guild text channel this message was posted in from cache.
-                ITextChannel textChannel = (ITextChannel)shard.Cache.Channels.Get(message.ChannelId);
-
                 try
                 {
                     // Reply to the user who posted "!ping".
-                    await textChannel.CreateMessage($"<@!{message.Author.Id}> Pong!");
+                    await http.CreateMessage(message.ChannelId, $"<@!{message.Author.Id}> Pong!");
                 }
                 catch (DiscordHttpApiException) { /* Message failed to send... :( */ }
             }
