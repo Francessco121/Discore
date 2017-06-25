@@ -18,10 +18,13 @@ namespace Discore.Http
             Snowflake? baseMessageId = null, int? limit = null,
             MessageGetStrategy getStrategy = MessageGetStrategy.Before)
         {
-            string strat = getStrategy.ToString().ToLower();
-            string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
+            UrlParametersBuilder builder = new UrlParametersBuilder();
+            if (baseMessageId.HasValue)
+                builder.Add(getStrategy.ToString().ToLower(), baseMessageId.Value.ToString());
+            if (limit.HasValue)
+                builder.Add("limit", limit.Value.ToString());
 
-            DiscordApiData data = await rest.Get($"channels/{channelId}/messages?{strat}={baseMessageId}{limitStr}",
+            DiscordApiData data = await rest.Get($"channels/{channelId}/messages{builder.ToQueryString()}",
                 $"channels/{channelId}/messages").ConfigureAwait(false);
             DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
 
