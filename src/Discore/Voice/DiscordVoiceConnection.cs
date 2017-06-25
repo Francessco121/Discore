@@ -223,7 +223,7 @@ namespace Discore.Voice
         {
             DiscordGuildMember member = cache.GetGuildMember(guildId, Shard.UserId.Value);
             DiscordGuild guild = cache.GetGuild(guildId);
-            DiscordGuildVoiceChannel voiceChannel = cache.GetGuildVoiceChannel(VoiceChannelId);
+            DiscordGuildVoiceChannel voiceChannel = cache.GetGuildVoiceChannel(voiceChannelId);
 
             if (member != null && guild != null && voiceChannel != null)
             {
