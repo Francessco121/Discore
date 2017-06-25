@@ -135,7 +135,6 @@ namespace Discore.Voice
             gateway = (Gateway)shard.Gateway;
 
             isValid = true;
-            isSpeaking = true;
         }
 
         /// <summary>

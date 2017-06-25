@@ -334,23 +334,27 @@ namespace Discore.Voice
             isConnecting = false;
             connectingCancellationSource.Cancel();
 
-            try
+            // Ensure speaking is set
+            if (isSpeaking)
             {
-                // Set initial speaking state
-                await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is DiscordWebSocketException dwex)
-                    log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
-                else
-                    log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
+                try
+                {
+                    // Set initial speaking state
+                    await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    if (ex is DiscordWebSocketException dwex)
+                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
+                    else
+                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
-                    VoiceConnectionInvalidationReason.Error, "Failed to set initial speaking state.")
-                    .ConfigureAwait(false);
+                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                        VoiceConnectionInvalidationReason.Error, "Failed to set initial speaking state.")
+                        .ConfigureAwait(false);
 
-                return;
+                    return;
+                }
             }
 
             OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
