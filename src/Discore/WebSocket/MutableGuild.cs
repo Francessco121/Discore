@@ -17,7 +17,7 @@ namespace Discore.WebSocket
         public bool IsEmbedEnabled { get; private set; }
         public Snowflake? EmbedChannelId { get; private set; }
         public int VerificationLevel { get; private set; }
-        public int DefaultMessageNotifications { get; private set; }
+        public GuildNotificationOption DefaultMessageNotifications { get; private set; }
         public GuildMfaLevel MfaLevel { get; private set; }
 
         public IReadOnlyList<string> Features { get; private set; }
@@ -45,11 +45,11 @@ namespace Discore.WebSocket
             AfkTimeout = data.GetInteger("afk_timeout").Value;
             IsEmbedEnabled = data.GetBoolean("embed_enabled") ?? false;
             VerificationLevel = data.GetInteger("verification_level").Value;
-            DefaultMessageNotifications = data.GetInteger("default_message_notifications") ?? 0;
             OwnerId = data.GetSnowflake("owner_id").Value;
             AfkChannelId = data.GetSnowflake("afk_channel_id");
             EmbedChannelId = data.GetSnowflake("embed_channel_id");
 
+            DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
             MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
 
             // Deserialize features

@@ -63,7 +63,7 @@ namespace Discore
         /// <summary>
         /// Gets the default message notification level for users joining this guild.
         /// </summary>
-        public int DefaultMessageNotifications { get; }
+        public GuildNotificationOption DefaultMessageNotifications { get; }
 
         /// <summary>
         /// Gets a list of guild features.
@@ -126,11 +126,11 @@ namespace Discore
             AfkTimeout                  = data.GetInteger("afk_timeout").Value;
             IsEmbedEnabled              = data.GetBoolean("embed_enabled") ?? false;
             VerificationLevel           = data.GetInteger("verification_level").Value;
-            DefaultMessageNotifications = data.GetInteger("default_message_notifications") ?? 0;
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
 
+            DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
             MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
 
             // Get image hashes
