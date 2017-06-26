@@ -134,7 +134,6 @@ namespace Discore.Voice
             log = new DiscoreLogger($"VoiceConnection:{guildCache.Value.Name}");
 
             isValid = true;
-            isSpeaking = true;
         }
 
         private void WebSocket_OnUserSpeaking(object sender, VoiceSpeakingEventArgs e)
@@ -574,24 +573,27 @@ namespace Discore.Voice
             isConnecting = false;
             connectingCancellationSource.Cancel();
 
-            try
+            if (isSpeaking)
             {
-                // Set initial speaking state
-                await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is DiscordWebSocketException dwex)
-                    log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
-                else
-                    log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
+                try
+                {
+                    // Set initial speaking state
+                    await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    if (ex is DiscordWebSocketException dwex)
+                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
+                    else
+                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                    .ConfigureAwait(false);
+                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
+                        .ConfigureAwait(false);
 
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
+                    OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
 
-                return;
+                    return;
+                }
             }
 
             OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
