@@ -32,7 +32,7 @@ namespace Discore.Http
             apiData.Set("avatar", avatar);
 
             DiscordApiData returnData = await Rest.Post($"channels/{channelId}/webhooks", apiData, 
-                "channels/channel/webhooks").ConfigureAwait(false);
+                $"channels/{channelId}/webhooks").ConfigureAwait(false);
 
             return new DiscordWebhook(App, returnData);
         }
@@ -76,7 +76,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake channelId)
         {
             DiscordApiData apiData = await Rest.Get($"channels/{channelId}/webhooks", 
-                "channels/channel/webhooks").ConfigureAwait(false);
+                $"channels/{channelId}/webhooks").ConfigureAwait(false);
 
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
@@ -93,7 +93,7 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake guildId)
         {
             DiscordApiData apiData = await Rest.Get($"guilds/{guildId}/webhooks", 
-                "guilds/guild/webhooks").ConfigureAwait(false);
+                $"guilds/{guildId}/webhooks").ConfigureAwait(false);
 
             DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
 
