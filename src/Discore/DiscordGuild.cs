@@ -58,7 +58,7 @@ namespace Discore
         /// <summary>
         /// Gets the level of verification required by this guild.
         /// </summary>
-        public int VerificationLevel { get; }
+        public GuildVerificationLevel VerificationLevel { get; }
 
         /// <summary>
         /// Gets the default message notification level for users joining this guild.
@@ -125,11 +125,11 @@ namespace Discore
             RegionId                    = data.GetString("region");
             AfkTimeout                  = data.GetInteger("afk_timeout").Value;
             IsEmbedEnabled              = data.GetBoolean("embed_enabled") ?? false;
-            VerificationLevel           = data.GetInteger("verification_level").Value;
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
 
+            VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
             DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
             MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
 
