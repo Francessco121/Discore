@@ -73,7 +73,7 @@ namespace Discore
         /// <summary>
         /// Gets the level of multi-factor authentication for this guild.
         /// </summary>
-        public int MFALevel { get; }
+        public GuildMfaLevel MfaLevel { get; }
 
         /// <summary>
         /// Gets a dictionary of all roles in this guild.
@@ -98,7 +98,7 @@ namespace Discore
             AfkTimeout = guild.AfkTimeout;
             IsEmbedEnabled = guild.IsEmbedEnabled;
             VerificationLevel = guild.VerificationLevel;
-            MFALevel = guild.MFALevel;
+            MfaLevel = guild.MfaLevel;
             DefaultMessageNotifications = guild.DefaultMessageNotifications;
             OwnerId = guild.OwnerId;
             AfkChannelId = guild.AfkChannelId;
@@ -126,11 +126,12 @@ namespace Discore
             AfkTimeout                  = data.GetInteger("afk_timeout").Value;
             IsEmbedEnabled              = data.GetBoolean("embed_enabled") ?? false;
             VerificationLevel           = data.GetInteger("verification_level").Value;
-            MFALevel                    = data.GetInteger("mfa_level").Value;
             DefaultMessageNotifications = data.GetInteger("default_message_notifications") ?? 0;
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
+
+            MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
 
             // Get image hashes
             string iconHash = data.GetString("icon");
