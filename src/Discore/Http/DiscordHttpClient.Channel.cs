@@ -28,7 +28,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Updates the settings of a guild text channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <param name="textChannelId">The ID of the guild text channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>
@@ -50,7 +50,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Updates the settings of a guild voice channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <param name="voiceChannelId">The ID of the guild voice channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>

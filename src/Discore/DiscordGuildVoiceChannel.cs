@@ -29,7 +29,7 @@ namespace Discore
 
         /// <summary>
         /// Modifies this voice channel's settings.
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <param name="options">A set of options to modify the channel with</param>
         /// <returns>Returns the updated voice channel.</returns>
