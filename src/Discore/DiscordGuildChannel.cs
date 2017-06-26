@@ -28,7 +28,7 @@ namespace Discore
         public IReadOnlyDictionary<Snowflake, DiscordOverwrite> PermissionOverwrites { get; }
 
         /// <summary>
-        /// Gets the id of the guild this channel is in.
+        /// Gets the ID of the guild this channel is in.
         /// </summary>
         public Snowflake GuildId { get; }
 

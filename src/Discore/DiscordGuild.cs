@@ -28,17 +28,17 @@ namespace Discore
         public DiscordCdnUrl Splash { get; }
 
         /// <summary>
-        /// Gets the id of the user who owns this guild.
+        /// Gets the ID of the user who owns this guild.
         /// </summary>
         public Snowflake OwnerId { get; }
 
         /// <summary>
-        /// Gets the id of the voice region this guild is using.
+        /// Gets the ID of the voice region this guild is using.
         /// </summary>
         public string RegionId { get; }
 
         /// <summary>
-        /// Gets the id of the afk channel in this guild (if set).
+        /// Gets the ID of the afk channel in this guild (if set).
         /// </summary>
         public Snowflake? AfkChannelId { get; }
         /// <summary>
@@ -51,7 +51,7 @@ namespace Discore
         /// </summary>
         public bool IsEmbedEnabled { get; }
         /// <summary>
-        /// Gets the id of the embedded channel, if this guild is embeddable.
+        /// Gets the ID of the embedded channel, if this guild is embeddable.
         /// </summary>
         public Snowflake? EmbedChannelId { get; }
 
@@ -252,7 +252,7 @@ namespace Discore
         /// This method is paged, and cannot always return every member at once.
         /// </summary>
         /// <param name="limit">Max number of members to return (1-1000).</param>
-        /// <param name="after">The highest user id in the previous page.</param>
+        /// <param name="after">The highest user ID in the previous page.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildMember>> ListGuildMembers(int? limit = null, Snowflake? after = null)
         {

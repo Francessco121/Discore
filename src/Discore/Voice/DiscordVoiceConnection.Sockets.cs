@@ -18,7 +18,7 @@ namespace Discore.Voice
                 this.voiceState = voiceState;
 
                 if (!isConnected && !isConnecting && token != null && endPoint != null)
-                    // Either the token or session id can be received first,
+                    // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
                     await ConnectWebSocket().ConfigureAwait(false);
             }
@@ -41,7 +41,7 @@ namespace Discore.Voice
                         EnsureUdpSocketIsClosed();
                     }
 
-                    // Either the token or session id can be received first,
+                    // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
                     await ConnectWebSocket().ConfigureAwait(false);
                 }

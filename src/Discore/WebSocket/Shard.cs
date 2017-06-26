@@ -10,7 +10,7 @@ namespace Discore.WebSocket
     public class Shard : IDisposable
     {
         /// <summary>
-        /// Gets the id of this shard.
+        /// Gets the ID of this shard.
         /// </summary>
         public int Id { get; }
         /// <summary>

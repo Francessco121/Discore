@@ -3,7 +3,7 @@
     public sealed class DiscordReactionEmoji
     {
         /// <summary>
-        /// Gets the id of the emoji (if custom emoji).
+        /// Gets the ID of the emoji (if custom emoji).
         /// </summary>
         public Snowflake? Id { get; }
 

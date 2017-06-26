@@ -13,7 +13,7 @@ namespace Discore.Http
         /// Creates a webhook.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
-        /// <param name="channelId">The id of the channel the webhook will post to.</param>
+        /// <param name="channelId">The ID of the channel the webhook will post to.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> or <paramref name="avatar"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> CreateWebook(string name, DiscordImageData avatar, Snowflake channelId)

@@ -9,7 +9,7 @@ namespace Discore
         /// </summary>
         public string Name { get; }
         /// <summary>
-        /// Gets the ids of associated roles with this emoji.
+        /// Gets the IDs of associated roles with this emoji.
         /// </summary>
         public IReadOnlyList<Snowflake> RoleIds { get; }
         /// <summary>

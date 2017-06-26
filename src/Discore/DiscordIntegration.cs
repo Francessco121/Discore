@@ -26,7 +26,7 @@ namespace Discore
         /// </summary>
         public bool? IsSyncing { get; }
         /// <summary>
-        /// Gets the id of the associated role with this integration.
+        /// Gets the ID of the associated role with this integration.
         /// </summary>
         public Snowflake? RoleId { get; }
         /// <summary>
@@ -50,7 +50,7 @@ namespace Discore
         /// </summary>
         public DateTime? SyncedAt { get; }
         /// <summary>
-        /// Gets the id of the associated guild with this integration.
+        /// Gets the ID of the associated guild with this integration.
         /// </summary>
         public Snowflake? GuildId { get; }
 

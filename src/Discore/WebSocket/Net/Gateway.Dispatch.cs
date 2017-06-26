@@ -171,7 +171,7 @@ namespace Discore.WebSocket.Net
 
             log.LogInfo($"[Ready] user = {user.Username}#{user.Discriminator}");
 
-            // Get session id
+            // Get session ID
             sessionId = data.GetString("session_id");
 
             // Get unavailable guilds
@@ -1052,7 +1052,7 @@ namespace Discore.WebSocket.Net
                 UpdateMemberVoiceState(voiceState);
 
                 // If this voice state belongs to the current bot,
-                // then we need to notify the connection of the session id.
+                // then we need to notify the connection of the session ID.
                 if (userId == shard.UserId)
                 {
                     DiscordVoiceConnection connection;

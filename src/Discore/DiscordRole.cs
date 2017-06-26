@@ -10,7 +10,7 @@ namespace Discore
     public sealed class DiscordRole : DiscordIdEntity
     {
         /// <summary>
-        /// Gets the id of the guild this role is for.
+        /// Gets the ID of the guild this role is for.
         /// </summary>
         public Snowflake GuildId { get; }
         /// <summary>

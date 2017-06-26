@@ -6,7 +6,7 @@
     public sealed class DiscordVoiceRegion
     {
         /// <summary>
-        /// Gets the id of the region.
+        /// Gets the ID of the region.
         /// </summary>
         public string Id { get; }
         /// <summary>

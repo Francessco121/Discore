@@ -36,7 +36,7 @@ namespace Discore
         }
 
         /// <summary>
-        /// Gets the id of the last message sent in this channel.
+        /// Gets the ID of the last message sent in this channel.
         /// <para>Requires <see cref="DiscordPermission.ReadMessages"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException">Thrown if failed to retrieve channel messages.</exception>
@@ -195,7 +195,7 @@ namespace Discore
         /// Gets a list of messages in this channel.
         /// <para>Requires <see cref="DiscordPermission.ReadMessages"/>.</para>
         /// </summary>
-        /// <param name="baseMessageId">The message id the list will start at (is not included in the final list).</param>
+        /// <param name="baseMessageId">The message ID the list will start at (is not included in the final list).</param>
         /// <param name="limit">Maximum number of messages to be returned.</param>
         /// <param name="getStrategy">The way messages will be located based on the <paramref name="baseMessageId"/>.</param>
         /// <exception cref="DiscordHttpApiException"></exception>

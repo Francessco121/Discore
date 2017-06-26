@@ -3,7 +3,7 @@
 namespace Discore
 {
     /// <summary>
-    /// Twitter's snowflake format. Used for ID's in the Discord Api.
+    /// Twitter's snowflake format. Used for IDs in the Discord Api.
     /// https://github.com/twitter/snowflake/tree/snowflake-2010
     /// </summary>
     public struct Snowflake

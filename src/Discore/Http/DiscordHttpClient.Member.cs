@@ -22,9 +22,9 @@ namespace Discore.Http
         /// Gets a list of members in a guild.
         /// This method is paged, and cannot always return every member at once.
         /// </summary>
-        /// <param name="guildId">The id of the guild.</param>
+        /// <param name="guildId">The ID of the guild.</param>
         /// <param name="limit">Max number of members to return (1-1000).</param>
-        /// <param name="after">The highest user id in the previous page.</param>
+        /// <param name="after">The highest user ID in the previous page.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildMember>> ListGuildMembers(Snowflake guildId,
             int? limit = null, Snowflake? after = null)

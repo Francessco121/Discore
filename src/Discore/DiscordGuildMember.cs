@@ -9,7 +9,7 @@ namespace Discore
     public sealed class DiscordGuildMember : DiscordIdEntity
     {
         /// <summary>
-        /// Gets the id of the guild this member is in.
+        /// Gets the ID of the guild this member is in.
         /// </summary>
         public Snowflake GuildId { get; }
 
@@ -24,7 +24,7 @@ namespace Discore
         public string Nickname { get; }
 
         /// <summary>
-        /// Gets the ids of all of the roles this member has.
+        /// Gets the IDs of all of the roles this member has.
         /// </summary>
         public IReadOnlyList<Snowflake> RoleIds { get; }
 
@@ -63,7 +63,7 @@ namespace Discore
 
         internal DiscordGuildMember(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
             // We do not specify the base constructor here because the member ID must be
-            // manually retrieved, as it is actually the user id rather than a unique one.
+            // manually retrieved, as it is actually the user ID rather than a unique one.
         {
             this.http = http;
 

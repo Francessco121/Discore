@@ -13,7 +13,7 @@ namespace Discore
         public const int MAX_CHARACTERS = 2000;
 
         /// <summary>
-        /// Gets the id of the channel this message is in.
+        /// Gets the ID of the channel this message is in.
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
@@ -164,7 +164,7 @@ namespace Discore
         /// for obtaining the full message from a message update event, which only supplies the changes
         /// rather than the full message.
         /// </summary>
-        /// <exception cref="ArgumentException">Thrown if the ID's of each message do not match.</exception>
+        /// <exception cref="ArgumentException">Thrown if the IDs of each message do not match.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public static DiscordMessage Update(DiscordMessage message, DiscordMessage withPartial)
@@ -175,7 +175,7 @@ namespace Discore
                 throw new ArgumentNullException(nameof(withPartial));
 
             if (message.Id != withPartial.Id)
-                throw new ArgumentException("Cannot update one message with another. The message ID's must match.");
+                throw new ArgumentException("Cannot update one message with another. The message IDs must match.");
 
             DiscordApiData updatedData = message.originalData.Clone();
             updatedData.OverwriteUpdate(withPartial.originalData);
