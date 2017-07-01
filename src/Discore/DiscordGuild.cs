@@ -236,7 +236,7 @@ namespace Discore
         /// Authenticated user must be the owner.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuild> Delete()
+        public Task Delete()
         {
             return guildHttp.Delete(Id);
         }

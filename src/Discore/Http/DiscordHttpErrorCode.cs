@@ -64,6 +64,10 @@
         /// </summary>
         ProvidedTooFewOrTooManyMessagesToDelete,
         MessagesCanOnlyBePinnedInTheChannelItWasCreated = 50019,
+        /// <summary>
+        /// Reason: Cannot execute action on a system message.
+        /// </summary>
+        InvalidMessageTarget = 50021,
         AMessageProvidedWasTooOldToBulkDelete = 50034,
         ReactionBlocked = 90001
     }

@@ -4,10 +4,10 @@ namespace Discore
 {
     /// <summary>
     /// Permission types for user abilities.
-    /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/PERMISSIONS.md
+    /// https://github.com/hammerandchisel/discord-api-docs/blob/master/docs/topics/Permissions.md
     /// </summary>
     [Flags]
-    public enum DiscordPermission : long
+    public enum DiscordPermission : int
     {
         /// <summary>
         /// No permissions.
@@ -37,6 +37,14 @@ namespace Discore
         /// Allows management and editing of the guild.
         /// </summary>
         ManageGuild = 0x00000020,
+        /// <summary>
+        /// Allows for the addition of reactions to messages.
+        /// </summary>
+        AddReactions = 0x00000040,
+        /// <summary>
+        /// Allows for viewing of audit logs.
+        /// </summary>
+        ViewAuditLog = 0x00000080,
         /// <summary>
         /// Allows reading messages in a channel. The channel will not appear for users without this permission.
         /// </summary>
@@ -70,6 +78,10 @@ namespace Discore
         /// all online users in a channel.
         /// </summary>
         MentionEveryone = 0x00020000,
+        /// <summary>
+        /// Allows the usage of custom emojis from other servers.
+        /// </summary>
+        UseExternalEmojis = 0x00040000,
         /// <summary>
         /// Allows for joining of a voice channel.
         /// </summary>
@@ -105,6 +117,14 @@ namespace Discore
         /// <summary>
         /// Allows management and editing of roles.
         /// </summary>
-        ManageRoles = 0x10000000
+        ManageRoles = 0x10000000,
+        /// <summary>
+        /// Allows management and editing of webhooks.
+        /// </summary>
+        ManageWebhooks = 0x20000000,
+        /// <summary>
+        /// Allows management and editing of emojis.
+        /// </summary>
+        ManageEmojis = 0x40000000
     }
 }

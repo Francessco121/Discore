@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <Copyright>Bundled Sticks Inkorporated 2017</Copyright>
-    <Version>2.3.0</Version>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
-    <FileVersion>2.3.0.0</FileVersion>
+    <Version>2.4.0</Version>
+    <AssemblyVersion>2.4.0.0</AssemblyVersion>
+    <FileVersion>2.4.0.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>Discord;Discord API</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
@@ -16,6 +16,22 @@ Please note: Discore is not an official Discord API interface!</Description>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
+    <PackageReleaseNotes>- Removed DiscordHttpErrorCode.BadRequest.
+
+- Fixed rate limited routes not taking major parameters into account.
+- Fixed CreateInvite's maxAge argument causing a bad request.
+- Fixed CreateGuildChannelParameters not treating all parameters as optional.
+- Fixed DiscoreCacheTable.GetEnumerator throwing a NotImplementedException in some cases.
+
+- Added ability to create guilds.
+- Added missing DiscordPermission enum values.
+- Added ability to set topic when creating text channels.
+- Added missing Id property to OverwriteParameters.
+- Added DiscoreTypeCache.Id.
+- Added implicit Snowflake &lt;-&gt; ulong operator.
+- Added DiscordHttpErrorCode enum value for error 50021.
+
+And more...</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
