@@ -1,9 +1,9 @@
 # Discore
 [![NuGet](https://img.shields.io/nuget/v/Discore.svg?style=flat-square)](https://www.nuget.org/packages/Discore/)
 
-Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) interface with [Discord's](https://discordapp.com/) HTTP, WebSocket, and voice APIs.
+Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) interface with [Discord's](https://discordapp.com/) HTTP, WebSocket, and voice APIs designed for creating bots.
 
-**Please note:** Discore is **not** an official Discord API interface!
+**Please note:** Discore is **not** an official Discord API library!
 
 ## Compatibility
 See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support) for compatible runtimes. **Discore currently targets .NET Standard 1.6**.
