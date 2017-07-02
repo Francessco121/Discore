@@ -16,7 +16,7 @@ Please note: Discore is not an official Discord API interface!</Description>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/BundledSticksInkorperated/Discore/releases/tag/v3.0.0.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
