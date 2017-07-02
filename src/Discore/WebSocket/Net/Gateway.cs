@@ -569,6 +569,12 @@ namespace Discore.WebSocket.Net
 
             string eventName = e.EventName;
 
+            if (eventName == null)
+            {
+                log.LogError($"[Socket_OnDispatch] eventName was null!");
+                return;
+            }
+
             DispatchCallback callback;
             if (dispatchHandlers.TryGetValue(eventName, out callback))
             {
