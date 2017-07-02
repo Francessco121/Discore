@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// An exception thrown because of a Discord permission issue.
     /// </summary>
-    public class DiscordPermissionException : DiscoreException
+    public class DiscordPermissionException : Exception
     {
         /// <summary>
         /// The required permissions that caused the exception.

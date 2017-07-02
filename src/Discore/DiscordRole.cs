@@ -7,10 +7,10 @@ namespace Discore
     /// <summary>
     /// Roles represent a set of permissions attached to a group of users.
     /// </summary>
-    public sealed class DiscordRole : DiscordIdObject
+    public sealed class DiscordRole : DiscordIdEntity
     {
         /// <summary>
-        /// Gets the id of the guild this role is for.
+        /// Gets the ID of the guild this role is for.
         /// </summary>
         public Snowflake GuildId { get; }
         /// <summary>
@@ -42,12 +42,12 @@ namespace Discore
         /// </summary>
         public bool IsMentionable { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpClient http;
 
-        internal DiscordRole(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
+        internal DiscordRole(DiscordHttpClient http, Snowflake guildId, DiscordApiData data)
             : base(data)
         {
-            guildsHttp = app.HttpApi.Guilds;
+            this.http = http;
 
             GuildId = guildId;
 
@@ -66,21 +66,23 @@ namespace Discore
 
         /// <summary>
         /// Modifies the settings of this role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordRole> Modify(ModifyRoleParameters parameters)
+        public Task<DiscordRole> Modify(ModifyRoleOptions options)
         {
-            return guildsHttp.ModifyRole(GuildId, Id, parameters);
+            return http.ModifyGuildRole(GuildId, Id, options);
         }
 
         /// <summary>
         /// Deletes this role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
-            return guildsHttp.DeleteRole(GuildId, Id);
+            return http.DeleteGuildRole(GuildId, Id);
         }
 
         public override string ToString()

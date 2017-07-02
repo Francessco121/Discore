@@ -1,6 +1,6 @@
 ﻿namespace Discore
 {
-    public sealed class DiscordAttachment : DiscordIdObject
+    public sealed class DiscordAttachment : DiscordIdEntity
     {
         /// <summary>
         /// Gets the file name of the attachment.

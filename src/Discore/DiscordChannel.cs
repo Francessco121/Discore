@@ -6,30 +6,36 @@ namespace Discore
     /// <summary>
     /// A <see cref="DiscordDMChannel"/> or a <see cref="DiscordGuildChannel"/>.
     /// </summary>
-    public abstract class DiscordChannel : DiscordIdObject
+    public abstract class DiscordChannel : DiscordIdEntity
     {
         /// <summary>
         /// Gets the type of this channel.
         /// </summary>
         public DiscordChannelType ChannelType { get; }
 
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpClient http;
 
-        internal DiscordChannel(IDiscordApplication app, DiscordApiData data, DiscordChannelType type)
+        internal DiscordChannel(DiscordHttpClient http, DiscordChannelType type)
+        {
+            this.http = http;
+            ChannelType = type;
+        }
+
+        internal DiscordChannel(DiscordHttpClient http, DiscordApiData data, DiscordChannelType type)
             : base(data)
         {
+            this.http = http;
             ChannelType = type;
-            channelsHttp = app.HttpApi.Channels;
         }
 
         /// <summary>
         /// Deletes/closes this channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if this is a guild channel.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> Delete()
         {
-            return channelsHttp.Delete(Id);
+            return http.DeleteChannel(Id);
         }
     }
 }

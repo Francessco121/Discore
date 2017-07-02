@@ -2,14 +2,14 @@
 using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
-using System.Net.Sockets;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Voice
 {
-    public sealed class DiscordVoiceConnection : IDisposable
+    public sealed partial class DiscordVoiceConnection : IDisposable
     {
         /// <summary>
         /// The byte size of a single PCM audio block.
@@ -21,17 +21,9 @@ namespace Discore.Voice
         /// </summary>
         public event EventHandler<VoiceConnectionEventArgs> OnConnected;
         /// <summary>
-        /// Called when the voice connection is disconnected or if the user is removed from the guild this connection is for.
-        /// </summary>
-        public event EventHandler<VoiceConnectionEventArgs> OnDisconnected;
-        /// <summary>
-        /// Called when the voice connection unexpectedly closes or encounters an error while connecting.
-        /// </summary>
-        public event EventHandler<VoiceConnectionErrorEventArgs> OnError;
-        /// <summary>
         /// Called when this voice connection is no longer useable. (eg. disconnected, error, failure to connect).
         /// </summary>
-        public event EventHandler<VoiceConnectionEventArgs> OnInvalidated;
+        public event EventHandler<VoiceConnectionInvalidatedEventArgs> OnInvalidated;
         /// <summary>
         /// Called when another user in the voice channel this connection is connected to changes their speaking state.
         /// </summary>
@@ -42,31 +34,22 @@ namespace Discore.Voice
         /// </summary>
         public Shard Shard { get; }
         /// <summary>
-        /// Gets the guild this voice connection is in.
+        /// Gets the ID of the guild this voice connection is in.
         /// </summary>
-        public DiscordGuild Guild => guildCache.Value;
-        /// <summary>
-        /// Gets the member this connection is communicating through.
-        /// </summary>
-        public DiscordGuildMember Member => memberCache.Value;
+        public Snowflake GuildId => guildId;
 
         /// <summary>
-        /// Gets the current voice channel this connection is in.
+        /// Gets the ID of the current voice channel this connection is in.
         /// </summary>
-        public DiscordGuildVoiceChannel VoiceChannel
+        /// <exception cref="InvalidOperationException">Thrown if used before the connection has been initiated.</exception>
+        public Snowflake VoiceChannelId
         {
-            // Voice state will not be immediately available,
-            // so return the initial voice channel while we are still connecting.
             get
             {
-                if (voiceState != null)
-                {
-                    DiscordGuildVoiceChannel voiceChannel = voiceState.Channel;
-                    if (voiceChannel != null)
-                        return voiceChannel;
-                }
+                if (voiceState == null || !voiceState.ChannelId.HasValue)
+                    throw new InvalidOperationException("Cannot retrieve voice channel ID before connecting!");
 
-                return initialVoiceChannel;
+                return voiceState.ChannelId.Value;
             }
         }
         /// <summary>
@@ -88,19 +71,42 @@ namespace Discore.Voice
         /// <summary>
         /// Gets the number of unsent voice data bytes.
         /// </summary>
-        public int BytesToSend => udpSocket.BytesToSend;
+        /// <exception cref="InvalidOperationException">Thrown if used before being fully connected.</exception>
+        public int BytesToSend
+        {
+            get
+            {
+                if (!isConnected)
+                    throw new InvalidOperationException("Cannot retrieve bytes to send while not fully connected.");
+
+                return udpSocket.BytesToSend;
+            }
+        }
         /// <summary>
         /// Gets or sets whether the sending of voice data is paused.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if used before being fully connected.</exception>
         public bool IsPaused
         {
-            get => udpSocket.IsPaused;
-            set => udpSocket.IsPaused = value;
+            get
+            {
+                if (!isConnected)
+                    throw new InvalidOperationException("Cannot retrieve paused state while not fully connected.");
+
+                return udpSocket.IsPaused;
+            }
+            set
+            {
+                if (!isConnected)
+                    throw new InvalidOperationException("Cannot set paused state while not fully connected.");
+
+                udpSocket.IsPaused = value;
+            }
         }
 
-        DiscoreGuildCache guildCache;
-        DiscoreMemberCache memberCache;
+        Snowflake guildId;
 
+        DiscordShardCache cache;
         Gateway gateway;
 
         VoiceWebSocket webSocket;
@@ -108,7 +114,6 @@ namespace Discore.Voice
 
         DiscordVoiceState voiceState;
         DiscoreLogger log;
-        DiscordGuildVoiceChannel initialVoiceChannel;
 
         string token;
         string endPoint;
@@ -121,90 +126,15 @@ namespace Discore.Voice
 
         bool isSpeaking;
 
-        internal DiscordVoiceConnection(Shard shard, Gateway gateway, DiscoreGuildCache guildCache, DiscoreMemberCache memberCache,
-            DiscordGuildVoiceChannel initialVoiceChannel)
+        internal DiscordVoiceConnection(Shard shard, Snowflake guildId)
         {
             Shard = shard;
+            this.guildId = guildId;
 
-            this.gateway = gateway;
-            this.guildCache = guildCache;
-            this.memberCache = memberCache;
-            this.initialVoiceChannel = initialVoiceChannel;
-
-            log = new DiscoreLogger($"VoiceConnection:{guildCache.Value.Name}");
+            cache = shard.Cache;
+            gateway = (Gateway)shard.Gateway;
 
             isValid = true;
-        }
-
-        private void WebSocket_OnUserSpeaking(object sender, VoiceSpeakingEventArgs e)
-        {
-            if (guildCache.Members.TryGetValue(e.UserId, out DiscoreMemberCache memberCache))
-            {
-                OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(memberCache.Value, e.IsSpeaking, Shard, this));
-            }
-        }
-
-        private async void UdpSocket_OnClosedPrematurely(object sender, EventArgs e)
-        {
-            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                .ConfigureAwait(false);
-
-            DiscoreException ex = new DiscoreException("The UDP connection closed unexpectedly.");
-            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-        }
-
-        private async void WebSocket_OnUnexpectedClose(object sender, EventArgs e)
-        {
-            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                .ConfigureAwait(false);
-
-            DiscoreException ex = new DiscoreException("The WebSocket connection closed unexpectedly.");
-            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-        }
-
-        private async void WebSocket_OnTimedOut(object sender, EventArgs e)
-        {
-            await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Connection timed out.")
-                .ConfigureAwait(false);
-
-            DiscoreException ex = new DiscoreException("The WebSocket connection timed out.");
-            OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-        }
-
-        /// <summary>
-        /// Ensures that: the WebSocket is closed, the UDP socket is closed, the user has left the voice channel,
-        /// and the connection is invalidated.
-        /// </summary>
-        /// <exception cref="OperationCanceledException"></exception>
-        async Task CloseAndInvalidate(WebSocketCloseStatus webSocketCloseCode, string webSocketCloseDescription,
-            CancellationToken? cancellationToken = null)
-        {
-            Task leaveChannelTask = EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None);
-
-            Task webSocketDisconnectTask = EnsureWebSocketIsClosed(webSocketCloseCode, 
-                webSocketCloseDescription, cancellationToken);
-
-            EnsureUdpSocketIsClosed();
-
-            await webSocketDisconnectTask.ConfigureAwait(false);
-            await leaveChannelTask.ConfigureAwait(false);
-
-            Invalidate();
-        }
-
-        /// <summary>
-        /// Initiates this voice connection.
-        /// </summary>
-        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
-        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
-        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
-        /// <exception cref="OperationCanceledException">
-        /// Thrown if the Gateway connection is closed while initiating the voice connection.
-        /// </exception>
-        [Obsolete("Please use the asynchronous counterpart ConnectAsync(bool, bool) instead.")]
-        public void Connect(bool startMute = false, bool startDeaf = false)
-        {
-            ConnectAsync().Wait();
         }
 
         /// <summary>
@@ -214,23 +144,46 @@ namespace Discore.Voice
         /// connection is closed while initiating.
         /// </para>
         /// </summary>
-        /// <param name="startMute">Whether the authenticated user should connect self-muted.</param>
-        /// <param name="startDeaf">Whether the authenticated user should connect self-deafened.</param>
-        /// <exception cref="InvalidOperationException">Thrown if connect is called more than once.</exception>
+        /// <param name="startMute">Whether the current bot should connect self-muted.</param>
+        /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
+        /// <exception cref="DiscordPermissionException">
+        /// Thrown if the current bot does not have permission to connect to the voice channel.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if connect is called more than once, 
+        /// if the voice channel is full and the current bot is not an admin, 
+        /// or if the shard behind this connection isn't running.
+        /// </exception>
         /// <exception cref="OperationCanceledException">
         /// Thrown if the give cancellation token is cancelled or the Gateway connection is closed while initiating the voice connection.
         /// </exception>
-        public async Task ConnectAsync(bool startMute = false, bool startDeaf = false, CancellationToken? cancellationToken = null)
+        public async Task ConnectAsync(Snowflake voiceChannelId, 
+            bool startMute = false, bool startDeaf = false, CancellationToken? cancellationToken = null)
         {
             if (isValid)
             {
                 if (!isConnecting && !IsConnected)
                 {
-                    isConnecting = true;
-                    await gateway.SendVoiceStateUpdatePayload(initialVoiceChannel.GuildId, initialVoiceChannel.Id, 
-                        startMute, startDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
+                    // We need to guarantee that the shard user ID is available,
+                    // so double-check that the shard is running.
+                    if (!Shard.IsRunning)
+                        throw new InvalidOperationException("Voice connection cannot be started while the parent shard is not running!");
 
+                    // Ensure the API user has permission to connect (this is to avoid the 10s timeout (if possible) otherwise).
+                    AssertUserCanJoin(guildId, voiceChannelId);
+
+                    // Set state
+                    voiceState = new DiscordVoiceState(guildId, Shard.UserId.Value, voiceChannelId);
+
+                    // Create the logger
+                    log = new DiscoreLogger($"VoiceConnection:{guildId}");
+
+                    // Initiate the connection
+                    isConnecting = true;
                     connectingCancellationSource = new CancellationTokenSource();
+
+                    await gateway.SendVoiceStateUpdatePayload(guildId, voiceChannelId, 
+                        startMute, startDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
 
                     await ConnectionTimeout().ConfigureAwait(false);
                 }
@@ -249,8 +202,8 @@ namespace Discore.Voice
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake")
-                        .ConfigureAwait(false);
+                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake",
+                        VoiceConnectionInvalidationReason.TimedOut, "Timed out while completing handshake.").ConfigureAwait(false);
                 }
             }
             catch (OperationCanceledException)
@@ -260,14 +213,40 @@ namespace Discore.Voice
         }
 
         /// <summary>
-        /// Closes this voice connection.
+        /// Using the cache, this will attempt to verify that the current bot can
+        /// join the selected voice channel. If the cache does not have the required details,
+        /// this will NOT throw an exception (the handshake timeout will handle invalid permission anyway).
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
-        [Obsolete("Please use the asynchronous counterpart DisconnectAsync(CancellationToken) instead.")]
-        public bool Disconnect()
+        /// <exception cref="DiscordPermissionException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        void AssertUserCanJoin(Snowflake guildId, Snowflake voiceChannelId)
         {
-            return DisconnectAsync(CancellationToken.None).Result;
+            DiscordGuildMember member = cache.GetGuildMember(guildId, Shard.UserId.Value);
+            DiscordGuild guild = cache.GetGuild(guildId);
+            DiscordGuildVoiceChannel voiceChannel = cache.GetGuildVoiceChannel(voiceChannelId);
+
+            if (member != null && guild != null && voiceChannel != null)
+            {
+                // Check if the user has permission to connect.
+                DiscordPermissionHelper.AssertPermission(DiscordPermission.Connect, member, guild, voiceChannel);
+
+                // Check if the voice channel has room
+                bool channelHasRoom = false;
+                if (voiceChannel.UserLimit == 0)
+                    channelHasRoom = true;
+                else if (DiscordPermissionHelper.HasPermission(DiscordPermission.Administrator, member, guild, voiceChannel))
+                    channelHasRoom = true;
+                else
+                {
+                    IReadOnlyList<Snowflake> usersInChannel = Shard.Voice.GetUsersInVoiceChannel(voiceChannelId);
+                    if (usersInChannel.Count < voiceChannel.UserLimit)
+                        channelHasRoom = true;
+                }
+                
+                if (!channelHasRoom)
+                    throw new InvalidOperationException("The voice channel is full, and the current bot " +
+                        "does not have the administrator permission.");
+            }
         }
 
         /// <summary>
@@ -278,27 +257,25 @@ namespace Discore.Voice
         /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
         /// <exception cref="OperationCanceledException"></exception>
-        public async Task<bool> DisconnectAsync(CancellationToken cancellationToken)
+        public async Task DisconnectAsync(CancellationToken? cancellationToken = null)
         {
-            if (isValid)
-            {
-                if (!isConnected)
-                    throw new InvalidOperationException("The voice connection is not connected!");
+            if (!isConnected)
+                throw new InvalidOperationException("The voice connection is not connected!");
 
-                try
-                {
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...", cancellationToken)
-                        .ConfigureAwait(false);
+            await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...", 
+                VoiceConnectionInvalidationReason.Normal, null, cancellationToken).ConfigureAwait(false);
+        }
 
-                    return true;
-                }
-                finally
-                {
-                    OnDisconnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
-                }
-            }
-            else
-                return false;
+        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
+        /// <exception cref="OperationCanceledException"></exception>
+        internal async Task DisconnectWithReasonAsync(VoiceConnectionInvalidationReason reason, 
+            CancellationToken? cancellationToken = null)
+        {
+            if (!isConnected)
+                throw new InvalidOperationException("The voice connection is not connected!");
+
+            await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...",
+                reason, null, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -339,15 +316,6 @@ namespace Discore.Voice
         /// <summary>
         /// Sets the speaking state of this connection.
         /// </summary>
-        [Obsolete("Please use the asynchronous counterpart SetSpeakingAsync(bool) instead.")]
-        public void SetSpeaking(bool speaking)
-        {
-            SetSpeakingAsync(speaking).Wait();
-        }
-
-        /// <summary>
-        /// Sets the speaking state of this connection.
-        /// </summary>
         /// <exception cref="DiscordWebSocketException">Thrown if the state fails to set because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SetSpeakingAsync(bool speaking)
@@ -374,313 +342,9 @@ namespace Discore.Voice
             }
         }
 
-        internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
-        {
-            if (isValid)
-            {
-                this.voiceState = voiceState;
-
-                if (!isConnected && !isConnecting && token != null && endPoint != null)
-                    // Either the token or session id can be received first,
-                    // so we must check if we are ready to start in both cases.
-                    await ConnectWebSocket().ConfigureAwait(false);
-            }
-        }
-
-        internal async Task OnVoiceServerUpdated(string token, string endPoint)
-        {
-            if (isValid)
-            {
-                this.token = token;
-                this.endPoint = endPoint.Split(':')[0]; // TODO: whats the other pieces?
-
-                if (voiceState != null)
-                {
-                    // Server updates can be sent twice, the second time
-                    // is when the voice server changes, so we need to reconnect.
-                    if (isConnected)
-                    {
-                        await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Reconnecting...").ConfigureAwait(false);
-                        EnsureUdpSocketIsClosed();
-                    }
-
-                    // Either the token or session id can be received first,
-                    // so we must check if we are ready to start in both cases.
-                    await ConnectWebSocket().ConfigureAwait(false);
-                }
-            }
-        }
-
-        private async void WebSocket_OnReady(object sender, VoiceReadyEventArgs e)
-        {
-            if (!isValid || !isConnected)
-                return;
-
-            try
-            {
-                // Connect the UDP socket
-                await ConnectUdpSocket(e.Port).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is SocketException socketEx)
-                    log.LogError($"[OnReady] Failed to connect UDP socket: code = {socketEx.SocketErrorCode}, error = {ex}");
-                else
-                    log.LogError($"[OnReady] Failed to connect UDP socket: {ex}");
-
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                    .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-
-                return;
-            }
-
-            // Give the SSRC to the UDP socket
-            udpSocket.SetSsrc(e.Ssrc);
-
-            try
-            {
-                // Start IP discovery
-                await udpSocket.StartIPDiscoveryAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is SocketException socketEx)
-                    log.LogError($"[OnReady] Failed start IP discovery: code = {socketEx.SocketErrorCode}, error = {ex}");
-                else
-                    log.LogError($"[OnReady] Failed start IP discovery: {ex}");
-
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                    .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-
-                return;
-            }
-        }
-
-        private async void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
-        {
-            if (!isValid || !isConnected)
-                return;
-
-            log.LogVerbose($"[IPDiscovery] Discovered EndPoint: {e.IP}:{e.Port}");
-
-            try
-            {
-                // Select protocol
-                await webSocket.SendSelectProtocolPayload(e.IP, e.Port, "xsalsa20_poly1305").ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is DiscordWebSocketException dwex)
-                    log.LogError($"[OnIPDiscovered] Failed to select protocol: code = {dwex.Error}, error = {ex}");
-                else
-                    log.LogError($"[OnIPDiscovered] Failed to select protocol: {ex}");
-
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                    .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-
-                return;
-            }
-        }
-
-        private void WebSocket_OnSessionDescription(object sender, VoiceSessionDescriptionEventArgs e)
-        {
-            if (!isValid || !isConnected)
-                return;
-            
-            // Give the UDP socket the secret key to allow sending data.
-            udpSocket.Start(e.SecretKey);
-        }
-
-        /// <exception cref="ArgumentException">Thrown if the socket host resolved into zero addresses.</exception>
-        /// <exception cref="SocketException">Thrown if the host fails to resolve or the socket fails to connect.</exception>
-        async Task ConnectUdpSocket(int port)
-        {
-            // Create UDP Socket
-            udpSocket = new VoiceUdpSocket($"VoiceUDPSocket:{guildCache.Value.Name}");
-            udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
-            udpSocket.OnClosedPrematurely += UdpSocket_OnClosedPrematurely;
-
-            // Connect UDP socket
-            await udpSocket.ConnectAsync(endPoint, port).ConfigureAwait(false);
-        }
-
-        async Task ConnectWebSocket()
-        {
-            // Create WebSocket
-            webSocket = new VoiceWebSocket($"VoiceWebSocket:{guildCache.Value.Name}");
-            webSocket.OnReady += WebSocket_OnReady;
-            webSocket.OnSessionDescription += WebSocket_OnSessionDescription;
-            webSocket.OnUnexpectedClose += WebSocket_OnUnexpectedClose;
-            webSocket.OnTimedOut += WebSocket_OnTimedOut;
-            webSocket.OnUserSpeaking += WebSocket_OnUserSpeaking;
-
-            // Build WebSocket URI
-            Uri uri = new Uri($"wss://{endPoint}");
-
-            log.LogVerbose($"Connecting WebSocket to {uri}...");
-
-            try
-            {
-                // Connect WebSocket
-                await webSocket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is WebSocketException wsex)
-                    log.LogError($"Failed to connect to {uri}: code = {wsex.WebSocketErrorCode}, error = {wsex}");
-                else
-                    log.LogError($"Failed to connect to {uri}: {ex}");
-
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                    .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-
-                return;
-            }
-
-            log.LogVerbose("Connected WebSocket.");
-
-            try
-            {
-                // Send IDENTIFY payload
-                await webSocket.SendIdentifyPayload(guildCache.DictionaryId, memberCache.DictionaryId,
-                    memberCache.VoiceState.SessionId, token).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is DiscordWebSocketException dwex)
-                    log.LogError($"[ConnectSocket] Failed to send identify payload: code = {dwex.Error}, error = {ex}");
-                else
-                    log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
-
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                    .ConfigureAwait(false);
-
-                OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-
-                return;
-            }
-
-            // We are finished connecting
-            isConnected = true;
-            isConnecting = false;
-            connectingCancellationSource.Cancel();
-
-            if (isSpeaking)
-            {
-                try
-                {
-                    // Set initial speaking state
-                    await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    if (ex is DiscordWebSocketException dwex)
-                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
-                    else
-                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
-
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.")
-                        .ConfigureAwait(false);
-
-                    OnError?.Invoke(this, new VoiceConnectionErrorEventArgs(Shard, this, ex));
-
-                    return;
-                }
-            }
-
-            OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
-        }
-
-        /// <exception cref="OperationCanceledException"></exception>
-        async Task EnsureWebSocketIsClosed(WebSocketCloseStatus webSocketCloseStatus, string webSocketCloseDescription,
-            CancellationToken? cancellationToken = null)
-        {
-            isConnected = false;
-
-            if (webSocket != null)
-            {
-                webSocket.OnReady -= WebSocket_OnReady;
-                webSocket.OnSessionDescription -= WebSocket_OnSessionDescription;
-                webSocket.OnUnexpectedClose -= WebSocket_OnUnexpectedClose;
-                webSocket.OnTimedOut -= WebSocket_OnTimedOut;
-                webSocket.OnUserSpeaking -= WebSocket_OnUserSpeaking;
-
-                if (webSocket.CanBeDisconnected)
-                {
-                    try
-                    {
-                        await webSocket.DisconnectAsync(webSocketCloseStatus, webSocketCloseDescription,
-                            cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
-                    }
-                    catch (OperationCanceledException) { throw; }
-                    catch (Exception ex)
-                    {
-                        log.LogError($"[EnsureWebSocketIsClosed] Unexpected error: {ex}");
-                    }
-                }
-            }
-        }
-
-        void EnsureUdpSocketIsClosed()
-        {
-            if (udpSocket != null)
-            {
-                udpSocket.OnIPDiscovered -= UdpSocket_OnIPDiscovered;
-                udpSocket.OnClosedPrematurely -= UdpSocket_OnClosedPrematurely;
-
-                if (udpSocket.IsConnected)
-                    udpSocket.Shutdown();
-            }
-        }
-
-        async Task EnsureUserLeftVoiceChannel(CancellationToken cancellationToken)
-        {
-            try
-            {
-                await gateway.SendVoiceStateUpdatePayload(Guild.Id, null, false, false, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            catch (OperationCanceledException oex)
-            {
-                if (oex.CancellationToken != cancellationToken)
-                {
-                    // Gateway was disconnected while sending the payload, at this point
-                    // the user will automatically leave.
-                }
-                else
-                    throw;
-            }
-        }
-
-        void Invalidate()
-        {
-            if (isValid)
-            {
-                isValid = false;
-                isConnecting = false;
-                isConnected = false;
-
-                if (!isDisposed)
-                    connectingCancellationSource?.Cancel();
-
-                log.LogVerbose("[Invalidate] Invalidating voice connection...");
-
-                Shard.Voice.RemoveVoiceConnection(Guild.Id);
-
-                OnInvalidated?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
-            }
-        }
-
         /// <summary>
-        /// Invalidates the connection and releases all resources used by this voice connection.
+        /// Releases all resources used by this voice connection.
+        /// <para>Note: this will not invalidate the voice connection.</para>
         /// </summary>
         public void Dispose()
         {
@@ -689,8 +353,6 @@ namespace Discore.Voice
                 isDisposed = true;
 
                 connectingCancellationSource?.Dispose();
-
-                Invalidate();
 
                 webSocket?.Dispose();
                 udpSocket?.Dispose();

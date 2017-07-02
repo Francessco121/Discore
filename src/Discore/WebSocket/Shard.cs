@@ -1,4 +1,6 @@
-﻿using Discore.WebSocket.Net;
+﻿using Discore.Voice;
+using Discore.WebSocket.Net;
+using Nito.AsyncEx;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,45 +10,41 @@ namespace Discore.WebSocket
     public class Shard : IDisposable
     {
         /// <summary>
-        /// Gets the id of this shard.
+        /// Gets the ID of this shard.
         /// </summary>
         public int Id { get; }
-        /// <summary>
-        /// Gets the websocket application this shard was created from.
-        /// </summary>
-        public DiscordWebSocketApplication Application { get; }
         /// <summary>
         /// Gets whether this shard is currently running.
         /// </summary>
         public bool IsRunning => isRunning;
 
         /// <summary>
-        /// Called when this shard first connects to the Discord gateway.
+        /// Called when this shard first connects to the Discord Gateway.
         /// </summary>
         public event EventHandler<ShardEventArgs> OnConnected;
         /// <summary>
-        /// Called when the internal connection of this shard reconnected to the Discord gateway.
+        /// Called when the internal connection of this shard reconnected to the Discord Gateway.
         /// <para>
         /// This can be used to reset things such as the user status,
-        /// which are reset when reconnecting.
+        /// which is cleared when a new session has been created.
         /// </para>
         /// </summary>
-        public event EventHandler<ShardEventArgs> OnReconnected;
-        /// <summary>
-        /// Called when this shard fails and cannot reconnect due to the error.
-        /// </summary>
+        public event EventHandler<ShardReconnectedEventArgs> OnReconnected;
+        /// <summary> 
+        /// Called when this shard fails and cannot reconnect due to the error. 
+        /// </summary> 
         public event EventHandler<ShardFailureEventArgs> OnFailure;
 
         /// <summary>
         /// Gets the local memory cache of data from the Discord API.
         /// </summary>
-        public DiscoreCache Cache { get; }
+        public DiscordShardCache Cache { get; }
 
         /// <summary>
-        /// Gets the user used to authenticate this shard connection.
+        /// Gets the ID of the user used to authenticate this shard connection.
         /// Or null if the gateway is not currently connected.
         /// </summary>
-        public DiscordUser User { get; internal set; }
+        public Snowflake? UserId { get; internal set; }
 
         /// <summary>
         /// Gets the gateway manager for this shard.
@@ -63,57 +61,38 @@ namespace Discore.WebSocket
         bool isDisposed;
         DiscoreLogger log;
 
-        internal Shard(DiscordWebSocketApplication app, int shardId)
+        AsyncManualResetEvent stoppedResetEvent;
+
+        public Shard(string botToken, int shardId, int totalShards)
         {
-            Application = app;
             Id = shardId;
 
             log = new DiscoreLogger($"Shard#{shardId}");
 
-            Cache = new DiscoreCache();
+            stoppedResetEvent = new AsyncManualResetEvent(true);
 
-            gateway = new Gateway(app, this);
-            gateway.OnFatalDisconnection += Gateway_OnFatalDisconnection;
+            Cache = new DiscordShardCache();
+
+            gateway = new Gateway(botToken, this, totalShards);
+            gateway.OnFailure += Gateway_OnFailure;
             gateway.OnReconnected += Gateway_OnReconnected;
-            gateway.OnReadyEvent += Gateway_OnReadyEvent;
 
             Voice = new ShardVoiceManager(this, gateway);
         }
 
-        private void Gateway_OnReadyEvent(object sender, EventArgs e)
+        private void Gateway_OnReconnected(object sender, GatewayReconnectedEventArgs e)
         {
-            Cache.Clear();
+            OnReconnected?.Invoke(this, new ShardReconnectedEventArgs(this, e.IsNewSession));
         }
 
-        private void Gateway_OnReconnected(object sender, EventArgs e)
+        private void Gateway_OnFailure(object sender, GatewayFailureData e)
         {
-            OnReconnected?.Invoke(this, new ShardEventArgs(this));
-        }
-
-        private void Gateway_OnFatalDisconnection(object sender, GatewayCloseCode e)
-        {
-            ShardFailureReason reason = ShardFailureReason.Unknown;
-            if (e == GatewayCloseCode.InvalidShard)
-                reason = ShardFailureReason.ShardInvalid;
-            else if (e == GatewayCloseCode.AuthenticationFailed)
-                reason = ShardFailureReason.AuthenticationFailed;
-            else if (e == GatewayCloseCode.ShardingRequired)
-                reason = ShardFailureReason.ShardingRequired;
-
             isRunning = false;
             CleanUp();
-            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, reason));
-        }
 
-        /// <summary>
-        /// Starts this shard.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
-        [Obsolete("Please use the asynchronous counterpart StartAsync(CancellationToken) instead.")]
-        public void Start()
-        {
-            StartAsync(CancellationToken.None).Wait();
+            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, e.Message, e.Reason, e.Exception));
+
+            stoppedResetEvent.Set();
         }
 
         /// <summary>
@@ -124,6 +103,7 @@ namespace Discore.WebSocket
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
         /// <exception cref="OperationCanceledException"></exception>
+        /// <exception cref="ShardStartException">Thrown if the shard fails to start.</exception>
         public Task StartAsync(CancellationToken? cancellationToken = null)
         {
             return StartAsync(new ShardStartConfig(), cancellationToken);
@@ -139,6 +119,7 @@ namespace Discore.WebSocket
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
         /// <exception cref="OperationCanceledException"></exception>
+        /// <exception cref="ShardStartException">Thrown if the shard fails to start.</exception>
         public async Task StartAsync(ShardStartConfig config, CancellationToken? cancellationToken = null)
         {
             if (isDisposed)
@@ -153,24 +134,39 @@ namespace Discore.WebSocket
                 CleanUp();
 
                 CancellationToken ct = cancellationToken ?? CancellationToken.None;
-                await gateway.ConnectAsync(config, ct).ConfigureAwait(false);
+
+                try
+                {
+                    await gateway.ConnectAsync(config, ct).ConfigureAwait(false);
+                }
+                catch (GatewayHandshakeException ex)
+                {
+                    isRunning = false;
+                    CleanUp();
+
+                    stoppedResetEvent.Set();
+
+                    GatewayFailureData failureData = ex.FailureData;
+                    throw new ShardStartException(failureData.Message, this, failureData.Reason, failureData.Exception);
+                }
+                catch
+                {
+                    isRunning = false;
+                    CleanUp();
+
+                    stoppedResetEvent.Set();
+
+                    throw;
+                }
 
                 log.LogInfo("Successfully connected to the Gateway.");
+
+                stoppedResetEvent.Reset();
+
                 OnConnected?.Invoke(this, new ShardEventArgs(this));
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been started!");
-        }
-
-        /// <summary>
-        /// Stop this shard.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this shard is not running.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
-        [Obsolete("Please use the asynchronous counterpart StopAsync() instead.")]
-        public void Stop()
-        {
-            StopAsync().Wait();
         }
 
         /// <summary>
@@ -191,13 +187,27 @@ namespace Discore.WebSocket
                 await gateway.DisconnectAsync().ConfigureAwait(false);
 
                 log.LogInfo("Successfully disconnected from the Gateway.");
+
+                stoppedResetEvent.Set();
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
         }
 
+        /// <summary>
+        /// Returns a task that completes when this shard is stopped either normally or from an error.
+        /// </summary>
+        /// <param name="cancellationToken">A token to cancel the wait. Will not close the shard on cancellation.</param>
+        /// <exception cref="OperationCanceledException">Thrown if the passed cancellation token is cancelled.</exception>
+        public Task WaitUntilStoppedAsync(CancellationToken? cancellationToken = null)
+        {
+            return stoppedResetEvent.WaitAsync(cancellationToken ?? CancellationToken.None);
+        }
+
         void CleanUp()
         {
+            UserId = null;
+
             Cache.Clear();
             Voice.Clear();
         }

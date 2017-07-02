@@ -7,7 +7,7 @@ namespace Discore
     /// <summary>
     /// A permission overwrite for a <see cref="DiscordRole"/> or <see cref="DiscordGuildMember"/>.
     /// </summary>
-    public sealed class DiscordOverwrite : DiscordIdObject
+    public sealed class DiscordOverwrite : DiscordIdEntity
     {
         public Snowflake ChannelId { get; }
 
@@ -24,12 +24,12 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        DiscordHttpChannelEndpoint channelsHttp;
+        DiscordHttpClient http;
 
-        internal DiscordOverwrite(IDiscordApplication app, Snowflake channelId, DiscordApiData data)
+        internal DiscordOverwrite(DiscordHttpClient http, Snowflake channelId, DiscordApiData data)
             : base(data)
         {
-            channelsHttp = app.HttpApi.Channels;
+            this.http = http;
 
             ChannelId = channelId;
 
@@ -48,23 +48,23 @@ namespace Discore
         /// <summary>
         /// Edits the permissions of this overwrite.
         /// If successful, changes will be immediately reflected for this instance.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Edit(DiscordPermission allow, DiscordPermission deny)
+        public Task Edit(DiscordPermission allow, DiscordPermission deny)
         {
-            return channelsHttp.EditPermissions(ChannelId, Id, allow, deny, Type);
+            return http.EditChannelPermissions(ChannelId, Id, allow, deny, Type);
         }
 
         /// <summary>
         /// Deletes this overwrite.
         /// If successful, changes will be immediately reflected for the channel this overwrite was in.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
-            return channelsHttp.DeletePermission(ChannelId, Id);
+            return http.DeleteChannelPermission(ChannelId, Id);
         }
 
         public override string ToString()

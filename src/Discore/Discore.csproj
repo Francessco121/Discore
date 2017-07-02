@@ -3,47 +3,40 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <Copyright>Bundled Sticks Inkorporated 2017</Copyright>
-    <Version>2.4.0</Version>
-    <AssemblyVersion>2.4.0.0</AssemblyVersion>
-    <FileVersion>2.4.0.0</FileVersion>
+    <Version>3.0.0</Version>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>Discord;Discord API</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
-    <Description>Discore provides a .NET Standard interface with Discord's HTTP, WebSocket, and voice APIs.
+    <Description>Discore provides a .NET Standard interface with Discord's HTTP, WebSocket, and voice APIs, and is designed for creating bots.
 Please note: Discore is not an official Discord API interface!</Description>
     <PackageLicenseUrl>https://github.com/BundledSticksInkorperated/Discore/blob/master/LICENSE.md</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
-    <PackageReleaseNotes>- Removed DiscordHttpErrorCode.BadRequest.
-
-- Fixed rate limited routes not taking major parameters into account.
-- Fixed CreateInvite's maxAge argument causing a bad request.
-- Fixed CreateGuildChannelParameters not treating all parameters as optional.
-- Fixed DiscoreCacheTable.GetEnumerator throwing a NotImplementedException in some cases.
-
-- Added ability to create guilds.
-- Added missing DiscordPermission enum values.
-- Added ability to set topic when creating text channels.
-- Added missing Id property to OverwriteParameters.
-- Added DiscoreTypeCache.Id.
-- Added implicit Snowflake &lt;-&gt; ulong operator.
-- Added DiscordHttpErrorCode enum value for error 50021.
-
-And more...</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <NoWarn>1591;1573</NoWarn>
     <DocumentationFile>bin\Release\netstandard1.6\.xml</DocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <NoWarn>1591;1573</NoWarn>
     <DocumentationFile>bin\Debug\netstandard1.6\.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,11 +44,13 @@ And more...</PackageReleaseNotes>
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
+    <PackageReference Include="ConcurrentHashSet" Version="1.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.2" />
     <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
     <PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
-    <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.0" />
+    <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.1" />
+    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
 
 </Project>

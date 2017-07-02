@@ -7,7 +7,7 @@ namespace Discore
     /// <summary>
     /// A guild integration.
     /// </summary>
-    public sealed class DiscordIntegration : DiscordIdObject
+    public sealed class DiscordIntegration : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this integration.
@@ -26,7 +26,7 @@ namespace Discore
         /// </summary>
         public bool? IsSyncing { get; }
         /// <summary>
-        /// Gets the id of the associated role with this integration.
+        /// Gets the ID of the associated role with this integration.
         /// </summary>
         public Snowflake? RoleId { get; }
         /// <summary>
@@ -50,22 +50,22 @@ namespace Discore
         /// </summary>
         public DateTime? SyncedAt { get; }
         /// <summary>
-        /// Gets the id of the associated guild with this integration.
+        /// Gets the ID of the associated guild with this integration.
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpClient http;
 
-        internal DiscordIntegration(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
-            : this(app, data)
+        internal DiscordIntegration(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
+            : this(http, data)
         {
             GuildId = guildId;
         }
 
-        internal DiscordIntegration(IDiscordApplication app, DiscordApiData data)
+        internal DiscordIntegration(DiscordHttpClient http, DiscordApiData data)
             : base(data)
         {
-            guildsHttp = app.HttpApi.Guilds;
+            this.http = http;
 
             Name = data.GetString("name");
             Type = data.GetString("type");
@@ -78,7 +78,7 @@ namespace Discore
 
             DiscordApiData userData = data.Get("user");
             if (userData != null)
-                User = new DiscordUser(userData);
+                User = new DiscordUser(false, userData);
 
             DiscordApiData accountData = data.Get("account");
             if (accountData != null)
@@ -88,47 +88,47 @@ namespace Discore
         /// <summary>
         /// Changes the attributes of this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task<bool> Modify(ModifyIntegrationParameters parameters)
+        public Task Modify(ModifyIntegrationOptions options)
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return guildsHttp.ModifyIntegration(GuildId.Value, Id, parameters);
+            return http.ModifyGuildIntegration(GuildId.Value, Id, options);
         }
 
         /// <summary>
         /// Deletes this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task<bool> Delete()
+        public Task Delete()
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return guildsHttp.DeleteIntegration(GuildId.Value, Id);
+            return http.DeleteGuildIntegration(GuildId.Value, Id);
         }
 
         /// <summary>
         /// Synchronizes this integration, if this is a guild integration.
         /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task<bool> Sync()
+        public Task Sync()
         {
             if (!GuildId.HasValue)
                 throw new InvalidOperationException("This integration does not represent a guild integration");
 
-            return guildsHttp.SyncIntegration(GuildId.Value, Id);
+            return http.SyncGuildIntegration(GuildId.Value, Id);
         }
 
         public override string ToString()

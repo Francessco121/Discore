@@ -445,13 +445,13 @@ namespace Discore
             return null;
         }
 
-        public DiscordAvatarData GetAvatar(string key)
+        public DiscordImageData GetAvatar(string key)
         {
             AssertContainer();
 
             string nestedData = GetString(key);
             if (!string.IsNullOrWhiteSpace(nestedData))
-                return DiscordAvatarData.FromDataUriScheme(nestedData);
+                return DiscordImageData.FromDataUriScheme(nestedData);
 
             return null;
         }
@@ -544,7 +544,7 @@ namespace Discore
             return apiData;
         }
 
-        public DiscordApiData Set(string key, DiscordAvatarData avatar)
+        public DiscordApiData Set(string key, DiscordImageData avatar)
         {
             AssertContainer();
 

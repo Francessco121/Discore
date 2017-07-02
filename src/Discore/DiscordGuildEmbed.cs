@@ -10,19 +10,19 @@ namespace Discore
         /// </summary>
         public bool Enabled { get; }
         /// <summary>
-        /// Gets the embed channel id.
+        /// Gets the embed channel ID.
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
-        /// Gets the id of the guild this embed is for.
+        /// Gets the ID of the guild this embed is for.
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
+        DiscordHttpClient http;
 
-        internal DiscordGuildEmbed(IDiscordApplication app, Snowflake guildId, DiscordApiData data)
+        internal DiscordGuildEmbed(DiscordHttpClient http, Snowflake guildId, DiscordApiData data)
         {
-            guildsHttp = app.HttpApi.Guilds;
+            this.http = http;
 
             GuildId = guildId;
 
@@ -32,11 +32,12 @@ namespace Discore
 
         /// <summary>
         /// Modifies the properties of this guild embed.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedParameters parameters)
+        public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedOptions options)
         {
-            return guildsHttp.ModifyEmbed(GuildId, parameters);
+            return http.ModifyGuildEmbed(GuildId, options);
         }
     }
 }

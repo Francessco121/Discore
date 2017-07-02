@@ -3,7 +3,7 @@
     public sealed class DiscordInviteChannel
     {
         /// <summary>
-        /// Gets the id of the channel this invite is for.
+        /// Gets the ID of the channel this invite is for.
         /// </summary>
         public Snowflake ChannelId { get; }
 

@@ -4,46 +4,49 @@ namespace Discore
 {
     public class DiscoreLogEventArgs : EventArgs
     {
-        public readonly DiscoreLogLine Line;
+        /// <summary>
+        /// Gets the message that was logged.
+        /// </summary>
+        public DiscoreLogMessage Message { get; }
 
-        internal DiscoreLogEventArgs(DiscoreLogLine line)
+        internal DiscoreLogEventArgs(DiscoreLogMessage message)
         {
-            Line = line;
+            Message = message;
         }
     }
 
     /// <summary>
     /// Represents a single logged line.
     /// </summary>
-    public class DiscoreLogLine
+    public class DiscoreLogMessage
     {
         /// <summary>
-        /// The contents of this line.
+        /// Gets the contents of this message.
         /// </summary>
-        public readonly string Message;
+        public string Content { get; }
         /// <summary>
-        /// The type of line.
+        /// Gets the severity of this message.
         /// </summary>
-        public readonly DiscoreLogType Type;
+        public DiscoreLogLevel Type { get; }
         /// <summary>
-        /// The date/time the line was logged.
+        /// Gets the date/time this message was logged.
         /// </summary>
-        public readonly DateTime Timestamp;
+        public DateTime Timestamp { get; }
 
-        internal DiscoreLogLine(string msg, DiscoreLogType type, DateTime timestamp)
+        internal DiscoreLogMessage(string content, DiscoreLogLevel type, DateTime timestamp)
         {
-            Message = msg;
+            Content = content;
             Type = type;
             Timestamp = timestamp;
         }
     }
 
     /// <summary>
-    /// The type of a <see cref="DiscoreLogLine"/>.
+    /// The severity level of a log message.
     /// </summary>
-    public enum DiscoreLogType
+    public enum DiscoreLogLevel
     {
-        Verbose,
+        Debug,
         Info,
         Warning,
         Error
@@ -55,27 +58,23 @@ namespace Discore
     public class DiscoreLogger
     {
         /// <summary>
-        /// Called when a line is logged from any <see cref="DiscoreLogger"/>.
+        /// Fired when a message is logged from Discore.
         /// </summary>
         public static event EventHandler<DiscoreLogEventArgs> OnLog;
 
-        /// <summary>
-        /// Gets the default <see cref="DiscoreLogger"/>.
-        /// </summary>
-        public static DiscoreLogger Default { get; }
+        internal static DiscoreLogger Global { get; }
 
         /// <summary>
         /// Gets or sets the minimum log level to be sent through the <see cref="OnLog"/> event.
         /// <para>
-        /// For example: A log level of <see cref="DiscoreLogType.Info"/> will log 
-        /// everything except <see cref="DiscoreLogType.Verbose"/>.
+        /// For example: A log level of <see cref="DiscoreLogLevel.Info"/> will log 
+        /// everything except <see cref="DiscoreLogLevel.Debug"/>.
         /// </para>
         /// <para>
-        /// This defaults to <see cref="DiscoreLogType.Verbose"/> when compiled with the DEBUG preprocessor,
-        /// otherwise defaults to <see cref="DiscoreLogType.Info"/>.
+        /// This defaults to <see cref="DiscoreLogLevel.Info"/>.
         /// </para>
         /// </summary>
-        public static DiscoreLogType MinimumLevel { get; set; }
+        public static DiscoreLogLevel MinimumLevel { get; set; }
 
         /// <summary>
         /// Gets or sets the prefix for this <see cref="DiscoreLogger"/>.
@@ -84,20 +83,15 @@ namespace Discore
 
         static DiscoreLogger()
         {
-            Default = new DiscoreLogger("");
-
-#if DEBUG
-            MinimumLevel = DiscoreLogType.Verbose;
-#else
-            MinimumLevel = DiscoreLogType.Info;
-#endif
+            Global = new DiscoreLogger("Global");
+            MinimumLevel = DiscoreLogLevel.Info;
         }
 
         /// <summary>
         /// Creates a new <see cref="DiscoreLogger"/> instance.
         /// </summary>
         /// <param name="prefix">The prefix of this logger.</param>
-        public DiscoreLogger(string prefix)
+        internal DiscoreLogger(string prefix)
         {
             Prefix = prefix;
         }
@@ -107,7 +101,7 @@ namespace Discore
         /// </summary>
         /// <param name="msg">The contents of this log.</param>
         /// <param name="type">The type of log.</param>
-        public void Log(string msg, DiscoreLogType type)
+        public void Log(string msg, DiscoreLogLevel type)
         {
             if (type >= MinimumLevel)
             {
@@ -115,7 +109,7 @@ namespace Discore
                     // Prefix
                     msg = $"[{Prefix}] {msg}";
 
-                try { OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogLine(msg, type, DateTime.Now))); }
+                try { OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogMessage(msg, type, DateTime.Now))); }
                 // Log methods need to be guaranteed to never throw exceptions.
                 catch { }
             }
@@ -127,7 +121,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogVerbose(string msg)
         {
-            Log(msg, DiscoreLogType.Verbose);
+            Log(msg, DiscoreLogLevel.Debug);
         }
 
         /// <summary>
@@ -136,7 +130,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogInfo(string msg)
         {
-            Log(msg, DiscoreLogType.Info);
+            Log(msg, DiscoreLogLevel.Info);
         }
 
         /// <summary>
@@ -145,7 +139,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogWarning(string msg)
         {
-            Log(msg, DiscoreLogType.Warning);
+            Log(msg, DiscoreLogLevel.Warning);
         }
 
         /// <summary>
@@ -154,7 +148,7 @@ namespace Discore
         /// <param name="msg">The contents of this log.</param>
         public void LogError(string msg)
         {
-            Log(msg, DiscoreLogType.Error);
+            Log(msg, DiscoreLogLevel.Error);
         }
 
         /// <summary>
@@ -163,7 +157,7 @@ namespace Discore
         /// <param name="ex">The exception to log.</param>
         public void LogError(Exception ex)
         {
-            Log(ex.ToString(), DiscoreLogType.Error);
+            Log(ex.ToString(), DiscoreLogLevel.Error);
         }
     }
 }

@@ -3,7 +3,7 @@
     public sealed class DiscordInviteGuild
     {
         /// <summary>
-        /// Gets the id of the guild this invite is for.
+        /// Gets the ID of the guild this invite is for.
         /// </summary>
         public Snowflake GuildId { get; }
 

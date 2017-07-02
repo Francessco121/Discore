@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Text;
 
 namespace Discore.Http
@@ -6,7 +7,7 @@ namespace Discore.Http
     /// <summary>
     /// An exception representing an error sent by the Discord HTTP API.
     /// </summary>
-    public class DiscordHttpApiException : DiscoreException
+    public class DiscordHttpApiException : Exception
     {
         /// <summary>
         /// Gets the custom Discord HTTP error code.

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -74,7 +73,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when the integrations of a guild are updated.
         /// </summary>
-        event EventHandler<GuildEventArgs> OnGuildIntegrationsUpdated;
+        event EventHandler<GuildIntegrationsEventArgs> OnGuildIntegrationsUpdated;
 
         /// <summary>
         /// Called when a user joins a guild.
@@ -141,9 +140,14 @@ namespace Discore.WebSocket
         event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
 
         /// <summary>
+        /// Called when a webhook is updated.
+        /// </summary>
+        event EventHandler<WebhooksUpdateEventArgs> OnWebhookUpdated;
+
+        /// <summary>
         /// Called when the presence of a member in a guild is updated.
         /// </summary>
-        event EventHandler<GuildMemberEventArgs> OnPresenceUpdated;
+        event EventHandler<PresenceEventArgs> OnPresenceUpdated;
 
         /// <summary>
         /// Called when a user starts typing.
@@ -191,7 +195,7 @@ namespace Discore.WebSocket
         /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
         /// </para>
         /// </summary>
-        /// <param name="guildId">The id of the guild to retrieve members from.</param>
+        /// <param name="guildId">The ID of the guild to retrieve members from.</param>
         /// <param name="query">Case-insensitive string that the username starts with, or an empty string to request all members.</param>
         /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
         /// <param name="cancellationToken">A token used to cancel the request.</param>
@@ -205,61 +209,5 @@ namespace Discore.WebSocket
         /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
         /// </remarks>
         Task RequestGuildMembersAsync(Snowflake guildId, string query = "", int limit = 0, CancellationToken? cancellationToken = null);
-
-        #region Deprecated API
-        /// <summary>
-        /// Updates the status of the bot user.
-        /// <para>
-        /// Note: If this method is called more than 5 times per minute, 
-        /// it will block until the remaining time has passed!!
-        /// </para>
-        /// </summary>
-        /// <param name="game">Either null, or an object with one key "name", representing the name of the game being played.</param>
-        /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
-        /// <exception cref="OperationCanceledException">Thrown if the Gateway's shard is stopped while sending.</exception>
-        [Obsolete("Please use the asynchronous counterpart UpdateStatusAsync() instead.")]
-        void UpdateStatus(string game = null, int? idleSince = null);
-
-        /// <summary>
-        /// Requests guild members from the Discord API, this can be used to retrieve
-        /// offline members in a guild that is considered "large". "Large" guilds
-        /// will not automatically have the offline members available.
-        /// <para>
-        /// Members requested here will be returned via the callback and available in the cache.
-        /// </para>
-        /// </summary>
-        /// <param name="callback">Action to be invoked if the members are successfully retrieved.</param>
-        /// <param name="guildId">The id of the guild to retrieve members from.</param>
-        /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
-        /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
-        /// <exception cref="OperationCanceledException">Thrown if the Gateway's shard is stopped while sending.</exception>
-        [Obsolete("Please use the asynchronous counterpart RequestGuildMembersAsync() without a callback instead. " +
-            "The callback approach is error-prone.")]
-        void RequestGuildMembers(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
-            string query = "", int limit = 0);
-
-        /// <summary>
-        /// Requests guild members from the Discord API, this can be used to retrieve
-        /// offline members in a guild that is considered "large". "Large" guilds
-        /// will not automatically have the offline members available.
-        /// <para>
-        /// Members requested here will be returned via the callback and available in the cache.
-        /// </para>
-        /// </summary>
-        /// <param name="callback">Action to be invoked if the members are successfully retrieved.</param>
-        /// <param name="guildId">The id of the guild to retrieve members from.</param>
-        /// <param name="query">String that the username starts with, or an empty string to return all members.</param>
-        /// <param name="limit">Maximum number of members to retrieve or 0 to request all members matched.</param>
-        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
-        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
-        /// <exception cref="OperationCanceledException">Thrown if the Gateway's shard is stopped while sending.</exception>
-        [Obsolete("Please use RequestGuildMembersAsync() without a callback instead. The callback approach is error-prone.")]
-        Task RequestGuildMembersAsync(Action<IReadOnlyList<DiscordGuildMember>> callback, Snowflake guildId,
-            string query = "", int limit = 0);
-        #endregion
     }
 }

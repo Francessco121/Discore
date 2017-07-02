@@ -1,5 +1,5 @@
-﻿using Nito.AsyncEx;
-using System;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -16,31 +16,25 @@ namespace Discore.Http.Net
 
         public bool RetryOnRateLimit { get; set; } = true;
 
+        const string DISCORE_URL = "https://github.com/BundledSticksInkorperated/Discore";
         static readonly string discoreVersion;
 
-        IDiscordAuthenticator authenticator;
+        string botToken;
         DiscoreLogger log;
 
-        RateLimitHandlingMethod rateLimitMethod;
-        Dictionary<string, RateLimitHandler> rateLimitedRoutes;
-        AsyncManualResetEvent globalRateLimitResetEvent;
+        static RateLimitLock globalRateLimitLock;
+        static ConcurrentDictionary<string, RateLimitLock> routeRateLimitLocks;
 
         HttpClient globalHttpClient;
 
-        public RestClient(IDiscordAuthenticator authenticator, InitialHttpApiSettings settings)
+        public RestClient(string botToken)
         {
-            this.authenticator = authenticator;
-
-            RetryOnRateLimit = settings.RetryWhenRateLimited;
-            rateLimitMethod = settings.RateLimitHandlingMethod;
+            this.botToken = botToken;
 
             log = new DiscoreLogger("RestClient");
 
-            if (settings.UseSingleHttpClient)
+            if (DiscordHttpClient.UseSingleHttpClient)
                 globalHttpClient = CreateHttpClient();
-
-            rateLimitedRoutes = new Dictionary<string, RateLimitHandler>();
-            globalRateLimitResetEvent = new AsyncManualResetEvent(true);
         }
 
         static RestClient()
@@ -48,6 +42,9 @@ namespace Discore.Http.Net
             Version version = Assembly.Load(new AssemblyName("Discore")).GetName().Version;
             // Don't include revision since Discore uses the Major.Minor.Patch semantic.
             discoreVersion = $"{version.Major}.{version.Minor}.{version.Build}";
+
+            globalRateLimitLock = new RateLimitLock();
+            routeRateLimitLocks = new ConcurrentDictionary<string, RateLimitLock>();
         }
 
         HttpClient CreateHttpClient()
@@ -55,8 +52,8 @@ namespace Discore.Http.Net
             HttpClient http = new HttpClient();
             http.DefaultRequestHeaders.Add("Accept", "*/*");
             http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
-            http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot (Discore, {discoreVersion})");
-            http.DefaultRequestHeaders.Add("Authorization", $"{authenticator.GetTokenHttpType()} {authenticator.GetToken()}");
+            http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
+            http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
 
             return http;
         }
@@ -163,124 +160,136 @@ namespace Discore.Http.Net
                 DiscordHttpErrorCode.None, response.StatusCode);
         }
 
-        Task WaitRateLimit(string limiterAction)
-        {
-            RateLimitHandler routeHandler;
-            if (rateLimitedRoutes.TryGetValue(limiterAction, out routeHandler))
-                return routeHandler.Wait();
-
-            // Do nothing if no section has been created.
-            return Task.CompletedTask;
-        }
-
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordApiData> Send(Func<HttpRequestMessage> requestCreate, string limiterAction, 
+        public async Task<DiscordApiData> Send(Func<HttpRequestMessage> requestCreate, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
-            HttpResponseMessage response;
-            RateLimitHeaders rateLimitHeaders;
+            CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
-            do
+            // Get or create the rate limit lock for the specified route
+            RateLimitLock routeLock;
+            if (!routeRateLimitLocks.TryGetValue(rateLimitRoute, out routeLock))
             {
-                // Wait for global rate limit
-                await globalRateLimitResetEvent.WaitAsync().ConfigureAwait(false);
-                // Wait for route specific rate limit
-                await WaitRateLimit(limiterAction).ConfigureAwait(false);
-
-                // Set to null to make sure the loop doesn't exit with headers from a previous response.
-                rateLimitHeaders = null;
-
-                // Send request
-                if (globalHttpClient != null)
-                {
-                    response = await globalHttpClient.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
-                        .ConfigureAwait(false);
-                }
-                else
-                {
-                    using (HttpClient http = CreateHttpClient())
-                    {
-                        response = await http.SendAsync(requestCreate(), cancellationToken ?? CancellationToken.None)
-                            .ConfigureAwait(false);
-                    }
-                }
-
-                // Check rate limit values in response if they exist.
-                rateLimitHeaders = RateLimitHeaders.ParseOrNull(response.Headers);
-                if (rateLimitHeaders != null)
-                {
-                    if (rateLimitHeaders.IsGlobal)
-                    {
-                        int retryAfter = rateLimitHeaders.RetryAfter.Value;
-
-                        log.LogWarning($"[{limiterAction}] Hit global rate limit! Blocking all HTTP requests for {retryAfter}ms.");
-
-                        // For global ratelimiting, block all routes.
-                        globalRateLimitResetEvent.Reset();
-
-                        await Task.Delay(retryAfter).ConfigureAwait(false);
-
-                        globalRateLimitResetEvent.Set();
-                    }
-                    else
-                    {
-                        // Create or get a rate limit handler for this route.
-                        RateLimitHandler routeHandler;
-                        if (!rateLimitedRoutes.TryGetValue(limiterAction, out routeHandler))
-                            rateLimitedRoutes.Add(limiterAction, routeHandler = CreateRateLimitHandler());
-
-                        // Update handler
-                        await routeHandler.UpdateValues(rateLimitHeaders).ConfigureAwait(false);
-
-                        // Tell the handler it exceeded rate limits if the status is TooManyRequests.
-                        if ((int)response.StatusCode == 429)
-                        {
-                            routeHandler.ExceededRateLimit(rateLimitHeaders);
-                        }
-                    }
-                }
+                routeLock = new RateLimitLock();
+                routeRateLimitLocks[rateLimitRoute] = routeLock;
             }
-            // Retry only if the response was 429 and we are allowed to retry.
-            while ((int)response.StatusCode == 429 && RetryOnRateLimit);
 
-            return await ParseResponse(response, rateLimitHeaders).ConfigureAwait(false);
-        }
-
-        RateLimitHandler CreateRateLimitHandler()
-        {
-            switch (rateLimitMethod)
+            // Acquire route-specific lock
+            using (await routeLock.LockAsync(ct).ConfigureAwait(false))
             {
-                case RateLimitHandlingMethod.Minimal:
-                    return new MinimalRateLimitHandler();
-                case RateLimitHandlingMethod.Throttle:
-                    return new ThrottleRateLimitHandler();
-                default:
-                    throw new NotImplementedException($"Rate limit handling method: {rateLimitMethod} is not implemented!");
+                HttpResponseMessage response;
+                RateLimitHeaders rateLimitHeaders;
+
+                bool retry = false;
+                int attempts = 0;
+
+                IDisposable globalLock = null;
+
+                do
+                {
+                    retry = false;
+                    attempts++;
+
+                    // If the route-specific lock requires a wait, delay before continuing
+                    await routeLock.WaitAsync(ct).ConfigureAwait(false);
+                    
+                    // If we don't already have the global lock and the global rate limit is active, acquire it.
+                    if (globalLock == null && globalRateLimitLock.RequiresWait)
+                        globalLock = await globalRateLimitLock.LockAsync(ct).ConfigureAwait(false);
+
+                    bool keepGlobalLock = false;
+
+                    try
+                    {
+                        // If we have the global lock, delay if it requires a wait
+                        if (globalLock != null)
+                            await globalRateLimitLock.WaitAsync(ct).ConfigureAwait(false);
+
+                        // Send request
+                        if (globalHttpClient != null)
+                        {
+                            response = await globalHttpClient.SendAsync(requestCreate(), ct).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            using (HttpClient http = CreateHttpClient())
+                            {
+                                response = await http.SendAsync(requestCreate(), ct).ConfigureAwait(false);
+                            }
+                        }
+
+                        // Check rate limit headers
+                        rateLimitHeaders = RateLimitHeaders.ParseOrNull(response.Headers);
+                        if (rateLimitHeaders != null)
+                        {
+                            if ((int)response.StatusCode == 429)
+                            {
+                                // Tell the appropriate lock to wait
+                                if (rateLimitHeaders.IsGlobal)
+                                    globalRateLimitLock.ResetAfter(rateLimitHeaders.RetryAfter.Value);
+                                else
+                                    routeLock.ResetAfter(rateLimitHeaders.RetryAfter.Value);
+
+                                retry = RetryOnRateLimit && attempts < 20;
+
+                                // If we are retrying from a global rate limit, don't release the lock
+                                // so this request doesn't go to the back of the queue.
+                                keepGlobalLock = retry && rateLimitHeaders.IsGlobal;
+                            }
+                            else
+                            {
+                                // If the request succeeded but we are out of calls, set the route lock
+                                // to wait until the reset time.
+                                if (rateLimitHeaders.Remaining == 0)
+                                    routeLock.ResetAt(rateLimitHeaders.Reset);
+                            }
+                        }
+
+                        // Check if the request received a bad gateway
+                        if (response.StatusCode == HttpStatusCode.BadGateway)
+                            retry = attempts < 10;
+
+                        // Release the global lock if necessary
+                        if (globalLock != null && !keepGlobalLock)
+                            globalLock.Dispose();
+                    }
+                    catch
+                    {
+                        // Always release the global lock if we ran into an exception
+                        globalLock?.Dispose();
+
+                        // Don't suppress the exception
+                        throw;
+                    }
+                }
+                while (retry);
+
+                return await ParseResponse(response, rateLimitHeaders).ConfigureAwait(false);
             }
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Get(string action, string limiterAction, 
+        public Task<DiscordApiData> Get(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Get, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Post(string action, string limiterAction, 
+        public Task<DiscordApiData> Post(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Post(string action, DiscordApiData data, string limiterAction, 
+        public Task<DiscordApiData> Post(string action, DiscordApiData data, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -289,21 +298,21 @@ namespace Discore.Http.Net
                 request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
                 return request;
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Put(string action, string limiterAction, 
+        public Task<DiscordApiData> Put(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Put(string action, DiscordApiData data, string limiterAction, 
+        public Task<DiscordApiData> Put(string action, DiscordApiData data, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -312,11 +321,11 @@ namespace Discore.Http.Net
                 request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
                 return request;
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Patch(string action, DiscordApiData data, string limiterAction, 
+        public Task<DiscordApiData> Patch(string action, DiscordApiData data, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -325,25 +334,22 @@ namespace Discore.Http.Net
                 request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
 
                 return request;
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Delete(string action, string limiterAction, 
+        public Task<DiscordApiData> Delete(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
                 return new HttpRequestMessage(HttpMethod.Delete, $"{BASE_URL}/{action}");
-            }, limiterAction, cancellationToken);
+            }, rateLimitRoute, cancellationToken);
         }
 
         public void Dispose()
         {
             globalHttpClient?.Dispose();
-
-            foreach (RateLimitHandler handler in rateLimitedRoutes.Values)
-                handler.Dispose();
         }
     }
 }

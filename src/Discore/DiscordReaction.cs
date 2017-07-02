@@ -8,7 +8,7 @@
         public int Count { get; }
 
         /// <summary>
-        /// Gets whether the current authenticated user reacted using this emoji.
+        /// Gets whether the current bot reacted using this emoji.
         /// </summary>
         public bool Me { get; }
 

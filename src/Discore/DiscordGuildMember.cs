@@ -1,31 +1,32 @@
 ﻿using Discore.Http;
+using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Discore
 {
-    public sealed class DiscordGuildMember : DiscordIdObject
+    public sealed class DiscordGuildMember : DiscordIdEntity
     {
         /// <summary>
-        /// Gets the id of the guild this member is in.
+        /// Gets the ID of the guild this member is in.
         /// </summary>
         public Snowflake GuildId { get; }
 
         /// <summary>
-        /// Gets the actual user data for this member.
+        /// Gets the user data for this member.
         /// </summary>
-        public DiscordUser User => cache != null ? cache.Users[Id] : user;
+        public DiscordUser User { get; }
 
         /// <summary>
         /// Gets the guild-wide nickname of the user.
         /// </summary>
-        public string Nickname { get; private set; }
+        public string Nickname { get; }
 
         /// <summary>
-        /// Gets the ids of all of the roles this member has.
+        /// Gets the IDs of all of the roles this member has.
         /// </summary>
-        public IReadOnlyList<Snowflake> RoleIds { get; private set; }
+        public IReadOnlyList<Snowflake> RoleIds { get; }
 
         /// <summary>
         /// Gets the time this member joined the guild.
@@ -42,118 +43,100 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        DiscordHttpGuildEndpoint guildsHttp;
-        DiscoreCache cache;
-        DiscordUser user;
+        DiscordHttpClient http;
 
-        internal DiscordGuildMember(IDiscordApplication app, DiscoreCache cache, DiscordApiData data, Snowflake guildId)
-            : this(app, data, guildId, true)
+        internal DiscordGuildMember(DiscordHttpClient http, MutableGuildMember member)
         {
-            this.cache = cache;
+            this.http = http;
+
+            GuildId = member.GuildId;
+
+            User = member.User.ImmutableEntity;
+
+            Nickname = member.Nickname;
+            JoinedAt = member.JoinedAt;
+            IsDeaf = member.IsDeaf;
+            IsMute = member.IsMute;
+
+            RoleIds = new List<Snowflake>(member.RoleIds);
         }
 
-        internal DiscordGuildMember(IDiscordApplication app, DiscordApiData data, Snowflake guildId)
-            : this(app, data, guildId, false)
-        { }
-
-        private DiscordGuildMember(IDiscordApplication app, DiscordApiData data, Snowflake guildId, bool isWebSocket)
+        internal DiscordGuildMember(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
             // We do not specify the base constructor here because the member ID must be
-            // manually retrieved, as it is actually the user id rather than a unique one.
+            // manually retrieved, as it is actually the user ID rather than a unique one.
         {
-            guildsHttp = app.HttpApi.Guilds;
+            this.http = http;
 
-            GuildId = guildId;
+            GuildId = GuildId;
 
             Nickname = data.GetString("nick");
             JoinedAt = data.GetDateTime("joined_at").Value;
-            IsDeaf = data.GetBoolean("deaf").Value;
-            IsMute = data.GetBoolean("mute").Value;
+            IsDeaf = data.GetBoolean("deaf") ?? false;
+            IsMute = data.GetBoolean("mute") ?? false;
 
-            // Get roles
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
-            RoleIds = DeserializeRoleIds(rolesArray);
-
-            if (!isWebSocket)
-            {
-                // Get user
-                DiscordApiData userData = data.Get("user");
-                user = new DiscordUser(userData);
-
-                Id = User.Id;
-            }
-            else
-                Id = data.LocateSnowflake("user.id").Value;
-        }
-
-        static Snowflake[] DeserializeRoleIds(IList<DiscordApiData> rolesArray)
-        {
             Snowflake[] roleIds = new Snowflake[rolesArray.Count];
 
             for (int i = 0; i < rolesArray.Count; i++)
                 roleIds[i] = rolesArray[i].ToSnowflake().Value;
 
-            return roleIds;
-        }
+            RoleIds = roleIds;
 
-        internal DiscordGuildMember PartialUpdate(DiscordApiData updateData)
-        {
-            DiscordGuildMember newMember = (DiscordGuildMember)MemberwiseClone();
-            newMember.RoleIds = DeserializeRoleIds(updateData.GetArray("roles"));
-            newMember.Nickname = updateData.GetString("nick");
+            DiscordApiData userData = data.Get("user");
+            User = new DiscordUser(false, userData);
 
-            return newMember;
+            Id = User.Id;
         }
 
         /// <summary>
         /// Modifies the attributes of this member.
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Modify(ModifyGuildMemberParameters parameters)
+        public Task Modify(ModifyGuildMemberOptions options)
         {
-            return guildsHttp.ModifyMember(GuildId, Id, parameters);
+            return http.ModifyGuildMember(GuildId, Id, options);
         }
 
         /// <summary>
         /// Removes this user from the guild they are a member of.
+        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Kick()
+        public Task Kick()
         {
-            return guildsHttp.RemoveMember(GuildId, Id);
+            return http.RemoveGuildMember(GuildId, Id);
         }
 
         /// <summary>
         /// Bans this user from the guild they are a member of.
+        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> Ban(int? deleteMessageDays = null)
+        public Task Ban(int? deleteMessageDays = null)
         {
-            return guildsHttp.CreateBan(GuildId, Id, deleteMessageDays);
+            return http.CreateGuildBan(GuildId, Id, deleteMessageDays);
         }
 
         /// <summary>
         /// Adds a role to this member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> AddRole(Snowflake roleId)
+        public Task AddRole(Snowflake roleId)
         {
-            return guildsHttp.AddMemberRole(GuildId, Id, roleId);
+            return http.AddGuildMemberRole(GuildId, Id, roleId);
         }
 
         /// <summary>
         /// Removes a role from this member.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
-        /// <returns>Returns whether the operation was successful.</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<bool> RemoveRole(Snowflake roleId)
+        public Task RemoveRole(Snowflake roleId)
         {
-            return guildsHttp.RemoveMemberRole(GuildId, Id, roleId);
+            return http.RemoveGuildMemberRole(GuildId, Id, roleId);
         }
 
         public override string ToString()

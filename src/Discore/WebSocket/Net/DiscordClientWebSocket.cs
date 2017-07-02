@@ -72,7 +72,7 @@ namespace Discore.WebSocket.Net
         /// <summary>
         /// Called when a payload has been received successfully.
         /// </summary>
-        protected abstract void OnPayloadReceived(DiscordApiData payload);
+        protected abstract Task OnPayloadReceived(DiscordApiData payload);
         /// <summary>
         /// Called when a close message has been received. 
         /// The socket will be gracefully closed automatically before this call.
@@ -396,7 +396,7 @@ namespace Discore.WebSocket.Net
                                 try
                                 {
                                     // Notify inheriting object that a payload has been received.
-                                    OnPayloadReceived(data);
+                                    await OnPayloadReceived(data);
                                 }
                                 // Payload handlers can send other payloads which can result in two
                                 // valid exceptions that we do not want to bubble up.

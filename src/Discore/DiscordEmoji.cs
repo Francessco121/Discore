@@ -2,14 +2,14 @@
 
 namespace Discore
 {
-    public sealed class DiscordEmoji : DiscordIdObject
+    public sealed class DiscordEmoji : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this emoji.
         /// </summary>
         public string Name { get; }
         /// <summary>
-        /// Gets the ids of associated roles with this emoji.
+        /// Gets the IDs of associated roles with this emoji.
         /// </summary>
         public IReadOnlyList<Snowflake> RoleIds { get; }
         /// <summary>

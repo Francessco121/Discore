@@ -4,14 +4,25 @@ namespace Discore.Voice
 {
     public class MemberSpeakingEventArgs : VoiceConnectionEventArgs
     {
-        public DiscordGuildMember Member { get; }
+        /// <summary>
+        /// Gets the ID of the guild that the user is speaking in.
+        /// </summary>
+        public Snowflake GuildId { get; }
+        /// <summary>
+        /// Gets the ID of the user who started/stopped speaking.
+        /// </summary>
+        public Snowflake UserId { get; }
+        /// <summary>
+        /// Gets whether the user is currently speaking.
+        /// </summary>
         public bool IsSpeaking { get; }
 
-        internal MemberSpeakingEventArgs(DiscordGuildMember member, bool isSpeaking, Shard shard, 
+        internal MemberSpeakingEventArgs(Snowflake guildId, Snowflake userId, bool isSpeaking, Shard shard, 
             DiscordVoiceConnection connection) 
             : base(shard, connection)
         {
-            Member = member;
+            GuildId = guildId;
+            UserId = userId;
             IsSpeaking = isSpeaking;
         }
     }

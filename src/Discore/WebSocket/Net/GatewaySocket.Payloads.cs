@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,36 +8,6 @@ namespace Discore.WebSocket.Net
 {
     partial class GatewaySocket
     {
-        delegate void PayloadCallback(DiscordApiData payload, DiscordApiData data);
-
-        [AttributeUsage(AttributeTargets.Method)]
-        class PayloadAttribute : Attribute
-        {
-            public GatewayOPCode OPCode { get; }
-
-            public PayloadAttribute(GatewayOPCode opCode)
-            {
-                OPCode = opCode;
-            }
-        }
-
-        Dictionary<GatewayOPCode, PayloadCallback> payloadHandlers;
-
-        void InitializePayloadHandlers()
-        {
-            payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
-
-            Type gatewayType = typeof(GatewaySocket);
-            Type payloadType = typeof(PayloadCallback);
-
-            foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
-            {
-                PayloadAttribute attr = method.GetCustomAttribute<PayloadAttribute>();
-                if (attr != null)
-                    payloadHandlers[attr.OPCode] = (PayloadCallback)method.CreateDelegate(payloadType, this);
-            }
-        }
-
         #region Receiving
         [Payload(GatewayOPCode.Dispatch)]
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
@@ -51,7 +19,7 @@ namespace Discore.WebSocket.Net
         }
 
         [Payload(GatewayOPCode.Hello)]
-        void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
+        async Task HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
         {
             if (!receivedHello)
             {
@@ -66,7 +34,7 @@ namespace Discore.WebSocket.Net
                 heartbeatTask = HeartbeatLoop();
 
                 // Notify so the IDENTIFY or RESUME payloads are sent
-                OnHello?.Invoke(this, EventArgs.Empty);
+                await OnHello?.Invoke();
             }
             else
                 log.LogWarning("Received more than one HELLO payload.");
@@ -131,7 +99,7 @@ namespace Discore.WebSocket.Net
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public Task SendIdentifyPayload(string token, int largeThreshold, int shardId, int totalShards)
+        public async Task SendIdentifyPayload(string token, int largeThreshold, int shardId, int totalShards)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("token", token);
@@ -155,7 +123,10 @@ namespace Discore.WebSocket.Net
 
             log.LogVerbose("[Identify] Sending payload...");
 
-            return SendPayload(GatewayOPCode.Identify, data);
+            // Make sure we don't send IDENTIFY's too quickly
+            await identifyRateLimiter.Invoke(CancellationToken.None).ConfigureAwait(false);
+            // Send IDENTIFY
+            await SendPayload(GatewayOPCode.Identify, data).ConfigureAwait(false);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
