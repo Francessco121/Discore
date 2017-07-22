@@ -147,8 +147,12 @@ namespace Discore.WebSocket.Net
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public async Task SendStatusUpdate(string game = null, int? idleSince = null)
         {
+            bool afk = idleSince.HasValue && idleSince.Value > 0;
+
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("idle_since", idleSince);
+            data.Set("since", idleSince);
+            data.Set("afk", afk);
+            data.Set("status", afk ? "idle" : "online");
 
             if (game != null)
             {
