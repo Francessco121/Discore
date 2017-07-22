@@ -33,21 +33,18 @@ namespace Discore.Http
 
         DiscordChannel DeserializeChannelData(DiscordApiData data)
         {
-            bool isPrivate = data.GetBoolean("is_private") ?? false;
+            InternalChannelType type = (InternalChannelType)data.GetInteger("type").Value;
 
-            if (isPrivate) // if dm channel
+            // TODO: Support all channel types
+
+            if (type == InternalChannelType.DM)
                 return new DiscordDMChannel(this, data);
+            else if (type == InternalChannelType.GuildText)
+                return new DiscordGuildTextChannel(this, data);
+            else if (type == InternalChannelType.GuildVoice)
+                return new DiscordGuildVoiceChannel(this, data);
             else
-            {
-                string channelType = data.GetString("type");
-
-                if (channelType == "voice") // if voice channel
-                    return new DiscordGuildVoiceChannel(this, data);
-                else if (channelType == "text") // if text channel
-                    return new DiscordGuildTextChannel(this, data);
-            }
-
-            throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
+                throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
         }
 
         public void Dispose()

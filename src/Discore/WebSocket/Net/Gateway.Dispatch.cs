@@ -2,6 +2,7 @@
 using Discore.Voice;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -122,8 +123,13 @@ namespace Discore.WebSocket.Net
             // Get DM channels
             foreach (DiscordApiData dmChannelData in data.GetArray("private_channels"))
             {
+                InternalChannelType type = (InternalChannelType)dmChannelData.GetInteger("type").Value;
+                if (type != InternalChannelType.DM)
+                    // TODO: Support group DMs
+                    continue;
+
                 Snowflake channelId = dmChannelData.GetSnowflake("id").Value;
-                DiscordApiData recipientData = dmChannelData.Get("recipient");
+                DiscordApiData recipientData = dmChannelData.GetArray("recipients").First();
                 Snowflake recipientId = recipientData.GetSnowflake("id").Value;
 
                 MutableUser recipient;
@@ -221,15 +227,18 @@ namespace Discore.WebSocket.Net
             for (int i = 0; i < channelsArray.Count; i++)
             {
                 DiscordApiData channelData = channelsArray[i];
-                string channelType = channelData.GetString("type");
+                InternalChannelType channelType = (InternalChannelType)channelData.GetInteger("type");
+
+                // TODO: Support all channel types
 
                 DiscordGuildChannel channel = null;
-                if (channelType == "text")
+                if (channelType == InternalChannelType.GuildText)
                     channel = new DiscordGuildTextChannel(http, channelData, guildId);
-                else if (channelType == "voice")
+                else if (channelType == InternalChannelType.GuildVoice)
                     channel = new DiscordGuildVoiceChannel(http, channelData, guildId);
 
-                cache.AddGuildChannel(channel);
+                if (channel != null)
+                    cache.AddGuildChannel(channel);
             }
 
             // Deserialize voice states
@@ -611,12 +620,14 @@ namespace Discore.WebSocket.Net
         void HandleChannelCreateEvent(DiscordApiData data)
         {
             Snowflake id = data.GetSnowflake("id").Value;
-            bool isPrivate = data.GetBoolean("is_private") ?? false;
+            InternalChannelType type = (InternalChannelType)data.GetInteger("type").Value;
 
-            if (isPrivate)
+            // TODO: Support all channel types
+
+            if (type == InternalChannelType.DM)
             {
                 // DM channel
-                DiscordApiData recipientData = data.Get("recipient");
+                DiscordApiData recipientData = data.GetArray("recipients").First();
                 Snowflake recipientId = recipientData.GetSnowflake("id").Value;
 
                 MutableUser recipient;
@@ -637,17 +648,16 @@ namespace Discore.WebSocket.Net
 
                 OnDMChannelCreated?.Invoke(this, new DMChannelEventArgs(shard, mutableDMChannel.ImmutableEntity));
             }
-            else
+            else if (type == InternalChannelType.GuildText || type == InternalChannelType.GuildVoice)
             {
                 // Guild channel
-                string type = data.GetString("type");
                 Snowflake guildId = data.GetSnowflake("guild_id").Value;
 
                 DiscordGuildChannel channel;
 
-                if (type == "text")
+                if (type == InternalChannelType.GuildText)
                     channel = new DiscordGuildTextChannel(http, data, guildId);
-                else if (type == "voice")
+                else if (type == InternalChannelType.GuildVoice)
                     channel = new DiscordGuildVoiceChannel(http, data, guildId);
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
@@ -662,14 +672,16 @@ namespace Discore.WebSocket.Net
         void HandleChannelUpdateEvent(DiscordApiData data)
         {
             Snowflake id = data.GetSnowflake("id").Value;
-            string type = data.GetString("type");
+            InternalChannelType type = (InternalChannelType)data.GetInteger("type");
             Snowflake guildId = data.GetSnowflake("guild_id").Value;
+
+            // TODO: Support all channel types
 
             DiscordGuildChannel channel;
 
-            if (type == "text")
+            if (type == InternalChannelType.GuildText)
                 channel = new DiscordGuildTextChannel(http, data, guildId);
-            else if (type == "voice")
+            else if (type == InternalChannelType.GuildVoice)
                 channel = new DiscordGuildVoiceChannel(http, data, guildId);
             else
                 throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
@@ -683,9 +695,11 @@ namespace Discore.WebSocket.Net
         void HandleChannelDeleteEvent(DiscordApiData data)
         {
             Snowflake id = data.GetSnowflake("id").Value;
-            bool isPrivate = data.GetBoolean("is_private") ?? false;
+            InternalChannelType type = (InternalChannelType)data.GetInteger("type").Value;
 
-            if (isPrivate)
+            // TODO: Support all channel types
+
+            if (type == InternalChannelType.DM)
             {
                 // DM channel
                 DiscordDMChannel dm;
@@ -700,20 +714,19 @@ namespace Discore.WebSocket.Net
 
                 OnDMChannelRemoved?.Invoke(this, new DMChannelEventArgs(shard, dm));
             }
-            else
+            else if (type == InternalChannelType.GuildText || type == InternalChannelType.GuildVoice)
             {
                 // Guild channel
-                string type = data.GetString("type");
                 Snowflake guildId = data.GetSnowflake("guild_id").Value;
 
                 DiscordGuildChannel channel;
 
-                if (type == "text")
+                if (type == InternalChannelType.GuildText)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
                         channel = new DiscordGuildTextChannel(http, data, guildId);
                 }
-                else if (type == "voice")
+                else if (type == InternalChannelType.GuildVoice)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
                         channel = new DiscordGuildVoiceChannel(http, data, guildId);
