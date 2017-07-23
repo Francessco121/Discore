@@ -120,8 +120,6 @@ namespace Discore.WebSocket.Net
             props.Set("$os", RuntimeInformation.OSDescription);
             props.Set("$browser", "discore");
             props.Set("$device", "discore");
-            props.Set("$referrer", "");
-            props.Set("$referring_domain", "");
 
             log.LogVerbose("[Identify] Sending payload...");
 
