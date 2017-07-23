@@ -22,7 +22,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler OnReconnected;
         public event EventHandler<GatewayCloseCode> OnFatalDisconnection;
 
-        const int GATEWAY_VERSION = 5;
+        const int GATEWAY_VERSION = 6;
 
         DiscordWebSocketApplication app;
         Shard shard;
