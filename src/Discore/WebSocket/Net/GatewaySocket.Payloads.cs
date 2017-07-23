@@ -8,6 +8,8 @@ namespace Discore.WebSocket.Net
 {
     partial class GatewaySocket
     {
+        static readonly Random rnd = new Random();
+
         #region Receiving
         [Payload(GatewayOPCode.Dispatch)]
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
@@ -69,7 +71,7 @@ namespace Discore.WebSocket.Net
             {
                 // Start new session
                 log.LogInfo("[InvalidSession] Starting new session...");
-                OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true, 5000));
+                OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true, rnd.Next(1000, 5001)));
             }
         }
         #endregion
@@ -118,8 +120,6 @@ namespace Discore.WebSocket.Net
             props.Set("$os", RuntimeInformation.OSDescription);
             props.Set("$browser", "discore");
             props.Set("$device", "discore");
-            props.Set("$referrer", "");
-            props.Set("$referring_domain", "");
 
             log.LogVerbose("[Identify] Sending payload...");
 
@@ -147,8 +147,12 @@ namespace Discore.WebSocket.Net
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public async Task SendStatusUpdate(string game = null, int? idleSince = null)
         {
+            bool afk = idleSince.HasValue && idleSince.Value > 0;
+
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("idle_since", idleSince);
+            data.Set("since", idleSince);
+            data.Set("afk", afk);
+            data.Set("status", afk ? "idle" : "online");
 
             if (game != null)
             {

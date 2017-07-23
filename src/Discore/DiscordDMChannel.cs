@@ -3,6 +3,7 @@ using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -37,7 +38,9 @@ namespace Discore
 
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
 
-            DiscordApiData recipientData = data.Get("recipient");
+            // Normal DM should only ever have exactly one recipient
+            // TODO: Check this ^
+            DiscordApiData recipientData = data.GetArray("recipients").First();
             Recipient = new DiscordUser(false, recipientData);
         }
 

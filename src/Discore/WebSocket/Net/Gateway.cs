@@ -21,7 +21,7 @@ namespace Discore.WebSocket.Net
         public event EventHandler<GatewayReconnectedEventArgs> OnReconnected;
         public event EventHandler<GatewayFailureData> OnFailure;
 
-        const int GATEWAY_VERSION = 5;
+        const int GATEWAY_VERSION = 6;
 
         string botToken;
         DiscordHttpClient http;
