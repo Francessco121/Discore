@@ -16,21 +16,16 @@ namespace Discore.Http
 
         internal DiscordChannel DeserializeChannelData(DiscordApiData data)
         {
-            bool isPrivate = data.GetBoolean("is_private") ?? false;
+            InternalChannelType type = (InternalChannelType)data.GetInteger("type").Value;
 
-            if (isPrivate) // if dm channel
+            if (type == InternalChannelType.DM)
                 return new DiscordDMChannel(App, data);
+            else if (type == InternalChannelType.GuildText)
+                return new DiscordGuildTextChannel(App, data);
+            else if (type == InternalChannelType.GuildVoice)
+                return new DiscordGuildVoiceChannel(App, data);
             else
-            {
-                string channelType = data.GetString("type");
-
-                if (channelType == "voice") // if voice channel
-                    return new DiscordGuildVoiceChannel(App, data);
-                else if (channelType == "text") // if text channel
-                    return new DiscordGuildTextChannel(App, data);
-            }
-
-            throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
+                throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
         }
     }
 }

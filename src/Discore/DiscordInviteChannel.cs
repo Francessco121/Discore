@@ -23,10 +23,10 @@
 
             Name = data.GetString("name");
 
-            string type = data.GetString("type");
-            if (type == "text")
+            InternalChannelType type = (InternalChannelType)data.GetInteger("type");
+            if (type == InternalChannelType.GuildText)
                 Type = DiscordGuildChannelType.Text;
-            else if (type == "voice")
+            else if (type == InternalChannelType.GuildVoice)
                 Type = DiscordGuildChannelType.Voice;
         }
     }

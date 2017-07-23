@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -42,13 +43,12 @@ namespace Discore
 
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
 
+            DiscordApiData recipientData = data.GetArray("recipients").First();
+
             if (!isWebSocket)
-            {
-                DiscordApiData recipientData = data.Get("recipient");
                 recipient = new DiscordUser(recipientData);
-            }
             else
-                recipientId = data.LocateSnowflake("recipient.id").Value;
+                recipientId = recipientData.GetSnowflake("id").Value;
         }
 
         /// <summary>
