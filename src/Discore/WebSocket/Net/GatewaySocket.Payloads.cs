@@ -8,6 +8,8 @@ namespace Discore.WebSocket.Net
 {
     partial class GatewaySocket
     {
+        static readonly Random rnd = new Random();
+
         #region Receiving
         [Payload(GatewayOPCode.Dispatch)]
         void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
@@ -69,7 +71,7 @@ namespace Discore.WebSocket.Net
             {
                 // Start new session
                 log.LogInfo("[InvalidSession] Starting new session...");
-                OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true, 5000));
+                OnReconnectionRequired?.Invoke(this, new ReconnectionEventArgs(true, rnd.Next(1000, 5001)));
             }
         }
         #endregion
