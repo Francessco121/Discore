@@ -76,6 +76,22 @@ namespace Discore
         public GuildMfaLevel MfaLevel { get; }
 
         /// <summary>
+        /// Gets the application ID of the bot who created this guild.
+        /// Returns null if this guild was not created by a bot.
+        /// </summary>
+        public Snowflake? ApplicationId { get; }
+
+        /// <summary>
+        /// Gets whether this guild has the widget enabled.
+        /// </summary>
+        public bool IsWidgetEnabled { get; }
+
+        /// <summary>
+        /// Gets the ID of the channel used by the guild's widget.
+        /// </summary>
+        public Snowflake? WidgetChannelId { get; }
+
+        /// <summary>
         /// Gets a dictionary of all roles in this guild.
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordRole> Roles { get; }
@@ -99,6 +115,9 @@ namespace Discore
             IsEmbedEnabled = guild.IsEmbedEnabled;
             VerificationLevel = guild.VerificationLevel;
             MfaLevel = guild.MfaLevel;
+            ApplicationId = guild.ApplicationId;
+            IsWidgetEnabled = guild.IsWidgetEnabled;
+            WidgetChannelId = guild.WidgetChannelId;
             DefaultMessageNotifications = guild.DefaultMessageNotifications;
             OwnerId = guild.OwnerId;
             AfkChannelId = guild.AfkChannelId;
@@ -128,6 +147,9 @@ namespace Discore
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
+            ApplicationId               = data.GetSnowflake("application_id");
+            IsWidgetEnabled             = data.GetBoolean("widget_enabled") ?? false;
+            WidgetChannelId             = data.GetSnowflake("widget_channel_id");
 
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
             DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
