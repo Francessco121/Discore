@@ -66,6 +66,11 @@ namespace Discore
         public GuildNotificationOption DefaultMessageNotifications { get; }
 
         /// <summary>
+        /// Gets the level of explicit content filtering used by this server.
+        /// </summary>
+        public GuildExplicitContentFilterLevel ExplicitContentFilter { get; }
+
+        /// <summary>
         /// Gets a list of guild features.
         /// </summary>
         public IReadOnlyList<string> Features { get; }
@@ -119,6 +124,7 @@ namespace Discore
             IsWidgetEnabled = guild.IsWidgetEnabled;
             WidgetChannelId = guild.WidgetChannelId;
             DefaultMessageNotifications = guild.DefaultMessageNotifications;
+            ExplicitContentFilter = guild.ExplicitContentFilter;
             OwnerId = guild.OwnerId;
             AfkChannelId = guild.AfkChannelId;
             EmbedChannelId = guild.EmbedChannelId;
@@ -151,6 +157,7 @@ namespace Discore
             IsWidgetEnabled             = data.GetBoolean("widget_enabled") ?? false;
             WidgetChannelId             = data.GetSnowflake("widget_channel_id");
 
+            ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
             DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
             MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
