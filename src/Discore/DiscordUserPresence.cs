@@ -33,7 +33,7 @@
             string statusStr = data.GetString("status");
             if (statusStr != null)
             {
-                DiscordUserStatus? status = ParseStatus(statusStr);
+                DiscordUserStatus? status = Utils.ParseUserStatus(statusStr);
 
                 if (!status.HasValue)
                 {
@@ -47,23 +47,6 @@
                 }
                 else
                     Status = status.Value;
-            }
-        }
-
-        DiscordUserStatus? ParseStatus(string str)
-        {
-            switch (str)
-            {
-                case "offline":
-                    return DiscordUserStatus.Offline;
-                case "dnd":
-                    return DiscordUserStatus.DoNotDisturb;
-                case "idle":
-                    return DiscordUserStatus.Idle;
-                case "online":
-                    return DiscordUserStatus.Online;
-                default:
-                    return null;
             }
         }
     }
