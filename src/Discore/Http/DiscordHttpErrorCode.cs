@@ -111,6 +111,7 @@
         /// Reason: A message provided was too old to bulk delete.
         /// </summary>
         InvalidBulkDeleteMessageAge = 50034,
+        InvalidFormBody = 50035,
         ReactionBlocked = 90001
     }
 }
