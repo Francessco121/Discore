@@ -324,7 +324,7 @@ namespace Discore.Voice
             webSocket.OnUserSpeaking += WebSocket_OnUserSpeaking;
 
             // Build WebSocket URI
-            Uri uri = new Uri($"wss://{endPoint}");
+            Uri uri = new Uri($"wss://{endPoint}?v={GATEWAY_VERSION}");
 
             log.LogVerbose($"Connecting WebSocket to {uri}...");
 

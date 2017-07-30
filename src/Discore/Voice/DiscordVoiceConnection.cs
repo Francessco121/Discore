@@ -104,6 +104,8 @@ namespace Discore.Voice
             }
         }
 
+        const int GATEWAY_VERSION = 3;
+
         Snowflake guildId;
 
         DiscordShardCache cache;
@@ -285,7 +287,8 @@ namespace Discore.Voice
         /// </summary>
         public bool CanSendVoiceData(int size)
         {
-            return isValid && IsConnected && udpSocket.CanSendData(size);
+            return isValid && IsConnected 
+                && (udpSocket != null && udpSocket.CanSendData(size));
         }
 
         /// <summary>

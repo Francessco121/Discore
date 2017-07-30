@@ -20,19 +20,25 @@ namespace Discore.Voice.Net
             for (int i = 0; i < modes.Length; i++)
                 modes[i] = modesArray[i].ToString();
 
-            heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
-
             log.LogVerbose($"[Ready] ssrc = {ssrc}, port = {port}");
-
-			// Start heartbeat loop
-            heartbeatCancellationSource = new CancellationTokenSource();
-            heartbeatTask = HeartbeatLoop();
 
 			// Notify
             OnReady?.Invoke(this, new VoiceReadyEventArgs(port, ssrc, modes));
         }
 
-		[Payload(VoiceOPCode.SessionDescription)]
+        [Payload(VoiceOPCode.Hello)]
+        void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
+        {
+            heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
+
+            log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
+
+            // Start heartbeat loop
+            heartbeatCancellationSource = new CancellationTokenSource();
+            heartbeatTask = HeartbeatLoop();
+        }
+
+        [Payload(VoiceOPCode.SessionDescription)]
 		void HandleSessionDescription(DiscordApiData payload, DiscordApiData data)
         {
             IList<DiscordApiData> secretKey = data.GetArray("secret_key");
@@ -47,7 +53,7 @@ namespace Discore.Voice.Net
             OnSessionDescription?.Invoke(this, new VoiceSessionDescriptionEventArgs(key, mode));
         }
 
-        [Payload(VoiceOPCode.Heartbeat)]
+        [Payload(VoiceOPCode.HeartbeatAck)]
         void HandleHeartbeatAck(DiscordApiData payload, DiscordApiData data)
         {
             receivedHeartbeatAck = true;
