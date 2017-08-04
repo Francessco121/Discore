@@ -328,7 +328,7 @@ namespace Discore.Voice
                 isSpeaking = speaking;
 
                 if (IsConnected)
-                    return webSocket.SendSpeakingPayload(speaking);
+                    return webSocket.SendSpeakingPayload(speaking, udpSocket.Ssrc);
             }
 
             return Task.CompletedTask;

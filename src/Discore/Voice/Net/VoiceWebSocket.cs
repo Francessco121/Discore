@@ -39,6 +39,7 @@ namespace Discore.Voice.Net
 
         int heartbeatInterval;
         bool receivedHeartbeatAck;
+        uint heartbeatNonce;
 
         public VoiceWebSocket(string loggingName) 
             : base(loggingName)

@@ -23,6 +23,8 @@ namespace Discore.Voice.Net
         public event EventHandler<IPDiscoveryEventArgs> OnIPDiscovered;
         public event EventHandler OnClosedPrematurely;
 
+        public int Ssrc => ssrc;
+
         DiscoreLogger log;
 
         bool isDisposed;

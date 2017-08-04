@@ -56,7 +56,15 @@ namespace Discore.Voice.Net
         [Payload(VoiceOPCode.HeartbeatAck)]
         void HandleHeartbeatAck(DiscordApiData payload, DiscordApiData data)
         {
-            receivedHeartbeatAck = true;
+            if (data.Value is string returnedNonceStr)
+            {
+                uint returnedNonce = uint.Parse(returnedNonceStr);
+                if (returnedNonce == heartbeatNonce)
+                {
+                    heartbeatNonce++;
+                    receivedHeartbeatAck = true;
+                }
+            }
         }
 
         [Payload(VoiceOPCode.Speaking)]
@@ -85,7 +93,7 @@ namespace Discore.Voice.Net
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         Task SendHeartbeatPayload()
         {
-            return SendPayload(VoiceOPCode.Heartbeat, null);
+            return SendPayload(VoiceOPCode.Heartbeat, new DiscordApiData(value: heartbeatNonce));
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
@@ -119,11 +127,12 @@ namespace Discore.Voice.Net
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public Task SendSpeakingPayload(bool speaking)
+        public Task SendSpeakingPayload(bool speaking, int ssrc)
         {
             DiscordApiData data = new DiscordApiData();
             data.Set("speaking", speaking);
             data.Set("delay", 0); // TODO: is this needed?
+            data.Set("ssrc", ssrc);
 
             return SendPayload(VoiceOPCode.Speaking, data);
         }
