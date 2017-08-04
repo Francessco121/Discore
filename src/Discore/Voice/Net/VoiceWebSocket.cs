@@ -63,10 +63,16 @@ namespace Discore.Voice.Net
 
         protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
         {
-            // TODO: may need to do some extra work depending on the close status,
-            // but none are documented...
+            VoiceCloseCode voiceCloseCode = (VoiceCloseCode)closeStatus;
+            switch (voiceCloseCode)
+            {
+                // TODO: voice resuming...
 
-            OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
+                default:
+                    log.LogVerbose($"Fatal close code: {voiceCloseCode} ({(int)voiceCloseCode})");
+                    OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
+                    break;
+            }
         }
 
         protected override void OnClosedPrematurely()
