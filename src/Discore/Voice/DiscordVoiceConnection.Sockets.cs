@@ -161,7 +161,7 @@ namespace Discore.Voice
         {
             try
             {
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                     VoiceConnectionInvalidationReason.Error, "The UDP connection closed unexpectedly.")
                     .ConfigureAwait(false);
             }
@@ -175,7 +175,7 @@ namespace Discore.Voice
         {
             try
             {
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                     VoiceConnectionInvalidationReason.Error, "The WebSocket connection closed unexpectedly.")
                     .ConfigureAwait(false);
             }
@@ -189,7 +189,7 @@ namespace Discore.Voice
         {
             try
             {
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Connection timed out.",
+                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Connection timed out.",
                     VoiceConnectionInvalidationReason.TimedOut, "The WebSocket connection timed out.")
                     .ConfigureAwait(false);
             }
@@ -218,7 +218,7 @@ namespace Discore.Voice
 
                 try
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                         VoiceConnectionInvalidationReason.Error, "Failed to connect the UDP socket.")
                         .ConfigureAwait(false);
                 }
@@ -246,7 +246,7 @@ namespace Discore.Voice
                     log.LogError($"[OnReady] Failed start IP discovery: {ex}");
                 try
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                         VoiceConnectionInvalidationReason.Error, "Failed to start IP discovery.")
                         .ConfigureAwait(false);
                 }
@@ -280,7 +280,7 @@ namespace Discore.Voice
 
                 try
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                         VoiceConnectionInvalidationReason.Error, "Failed to select voice protocol.")
                         .ConfigureAwait(false);
                 }
@@ -340,7 +340,7 @@ namespace Discore.Voice
                 else
                     log.LogError($"Failed to connect to {uri}: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                     VoiceConnectionInvalidationReason.Error, "Failed to connect WebSocket.")
                     .ConfigureAwait(false);
 
@@ -361,7 +361,7 @@ namespace Discore.Voice
                 else
                     log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
 
-                await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                     VoiceConnectionInvalidationReason.Error, "Failed to send IDENTIFY.")
                     .ConfigureAwait(false);
 
@@ -388,7 +388,7 @@ namespace Discore.Voice
                     else
                         log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
 
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "An internal client error occured.",
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
                         VoiceConnectionInvalidationReason.Error, "Failed to set initial speaking state.")
                         .ConfigureAwait(false);
 

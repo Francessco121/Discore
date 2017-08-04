@@ -204,7 +204,7 @@ namespace Discore.Voice
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake",
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Timed out while completing handshake",
                         VoiceConnectionInvalidationReason.TimedOut, "Timed out while completing handshake.").ConfigureAwait(false);
                 }
             }
