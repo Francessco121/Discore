@@ -16,7 +16,18 @@ Please note: Discore is not an official Discord API interface!</Description>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageReleaseNotes>This release includes bug fixes for breaking changes introduced in the Discord API v6, as well as all additions from v6 that could be included in Discore without breaking changes.
+
+Bug Fixes:
+- "Modify Guild Channel Positions" no longer returns a list of channels.
+- "Get Guild Bans" now returns a list of DiscordGuildBan objects.
+
+Additions:
+- DiscordGuild.ApplicationId
+- DiscordGuild.IsWidgetEnabled
+- DiscordGuild.WidgetChannelId
+- DiscordGuild.ExplicitContentFilter
+</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
