@@ -257,12 +257,14 @@ namespace Discore
         }
 
         /// <summary>
-        /// Changes the sorting positions of the channels in this guild.
+        /// Changes the positions of channels in the specified guild. The list of
+        /// positions does not need to include every channel, it just needs the 
+        /// channels that are being moved.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionOptions> positions)
+        public Task ModifyChannelPositions(IEnumerable<PositionOptions> positions)
         {
             return http.ModifyGuildChannelPositions(Id, positions);
         }

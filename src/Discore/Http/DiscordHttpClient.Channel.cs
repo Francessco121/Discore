@@ -168,12 +168,14 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Changes the settings of a channel in a guild.
+        /// Changes the positions of channels in the specified guild. The list of
+        /// positions does not need to include every channel, it just needs the 
+        /// channels that are being moved.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<IReadOnlyList<DiscordGuildChannel>> ModifyGuildChannelPositions(Snowflake guildId,
+        public async Task ModifyGuildChannelPositions(Snowflake guildId,
             IEnumerable<PositionOptions> positions)
         {
             if (positions == null)
@@ -183,14 +185,8 @@ namespace Discore.Http
             foreach (PositionOptions positionParam in positions)
                 requestData.Values.Add(positionParam.Build());
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/channels", requestData,
+            await rest.Patch($"guilds/{guildId}/channels", requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
-
-            DiscordGuildChannel[] channels = new DiscordGuildChannel[returnData.Values.Count];
-            for (int i = 0; i < channels.Length; i++)
-                channels[i] = (DiscordGuildChannel)DeserializeChannelData(returnData.Values[i]);
-
-            return channels;
         }
     }
 }
