@@ -66,6 +66,11 @@ namespace Discore
         public GuildNotificationOption DefaultMessageNotifications { get; }
 
         /// <summary>
+        /// Gets the level of explicit content filtering used by this server.
+        /// </summary>
+        public GuildExplicitContentFilterLevel ExplicitContentFilter { get; }
+
+        /// <summary>
         /// Gets a list of guild features.
         /// </summary>
         public IReadOnlyList<string> Features { get; }
@@ -74,6 +79,22 @@ namespace Discore
         /// Gets the level of multi-factor authentication for this guild.
         /// </summary>
         public GuildMfaLevel MfaLevel { get; }
+
+        /// <summary>
+        /// Gets the application ID of the bot who created this guild.
+        /// Returns null if this guild was not created by a bot.
+        /// </summary>
+        public Snowflake? ApplicationId { get; }
+
+        /// <summary>
+        /// Gets whether this guild has the widget enabled.
+        /// </summary>
+        public bool IsWidgetEnabled { get; }
+
+        /// <summary>
+        /// Gets the ID of the channel used by the guild's widget.
+        /// </summary>
+        public Snowflake? WidgetChannelId { get; }
 
         /// <summary>
         /// Gets a dictionary of all roles in this guild.
@@ -99,7 +120,11 @@ namespace Discore
             IsEmbedEnabled = guild.IsEmbedEnabled;
             VerificationLevel = guild.VerificationLevel;
             MfaLevel = guild.MfaLevel;
+            ApplicationId = guild.ApplicationId;
+            IsWidgetEnabled = guild.IsWidgetEnabled;
+            WidgetChannelId = guild.WidgetChannelId;
             DefaultMessageNotifications = guild.DefaultMessageNotifications;
+            ExplicitContentFilter = guild.ExplicitContentFilter;
             OwnerId = guild.OwnerId;
             AfkChannelId = guild.AfkChannelId;
             EmbedChannelId = guild.EmbedChannelId;
@@ -128,7 +153,11 @@ namespace Discore
             OwnerId                     = data.GetSnowflake("owner_id").Value;
             AfkChannelId                = data.GetSnowflake("afk_channel_id");
             EmbedChannelId              = data.GetSnowflake("embed_channel_id");
+            ApplicationId               = data.GetSnowflake("application_id");
+            IsWidgetEnabled             = data.GetBoolean("widget_enabled") ?? false;
+            WidgetChannelId             = data.GetSnowflake("widget_channel_id");
 
+            ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
             DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
             MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
@@ -228,12 +257,14 @@ namespace Discore
         }
 
         /// <summary>
-        /// Changes the sorting positions of the channels in this guild.
+        /// Changes the positions of channels in the specified guild. The list of
+        /// positions does not need to include every channel, it just needs the 
+        /// channels that are being moved.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordGuildChannel>> ModifyChannelPositions(IEnumerable<PositionOptions> positions)
+        public Task ModifyChannelPositions(IEnumerable<PositionOptions> positions)
         {
             return http.ModifyGuildChannelPositions(Id, positions);
         }
@@ -264,7 +295,7 @@ namespace Discore
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordUser>> GetBans()
+        public Task<IReadOnlyList<DiscordGuildBan>> GetBans()
         {
             return http.GetGuildBans(Id);
         }

@@ -18,7 +18,11 @@ namespace Discore.WebSocket
         public Snowflake? EmbedChannelId { get; private set; }
         public GuildVerificationLevel VerificationLevel { get; private set; }
         public GuildNotificationOption DefaultMessageNotifications { get; private set; }
+        public GuildExplicitContentFilterLevel ExplicitContentFilter { get; private set; }
         public GuildMfaLevel MfaLevel { get; private set; }
+        public Snowflake? ApplicationId { get; private set; }
+        public bool IsWidgetEnabled { get; private set; }
+        public Snowflake? WidgetChannelId { get; private set; }
 
         public IReadOnlyList<string> Features { get; private set; }
 
@@ -47,7 +51,11 @@ namespace Discore.WebSocket
             OwnerId = data.GetSnowflake("owner_id").Value;
             AfkChannelId = data.GetSnowflake("afk_channel_id");
             EmbedChannelId = data.GetSnowflake("embed_channel_id");
+            ApplicationId = data.GetSnowflake("application_id");
+            IsWidgetEnabled = data.GetBoolean("widget_enabled") ?? false;
+            WidgetChannelId = data.GetSnowflake("widget_channel_id");
 
+            ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
             DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
             MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;

@@ -10,7 +10,7 @@
         /// </summary>
         public Snowflake Id { get; set; }
         /// <summary>
-        /// Gets or sets the sorting position of the item.
+        /// Gets or sets the sorting position of the item. Note: Positions start at 1 not 0.
         /// </summary>
         public int Position { get; set; }
 
@@ -24,7 +24,7 @@
         }
 
         /// <summary>
-        /// Sets the sorting position of the item.
+        /// Sets the sorting position of the item. Note: Positions start at 1 not 0.
         /// </summary>
         public PositionOptions SetPosition(int position)
         {
