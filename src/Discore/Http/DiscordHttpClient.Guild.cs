@@ -65,14 +65,14 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<IReadOnlyList<DiscordUser>> GetGuildBans(Snowflake guildId)
+        public async Task<IReadOnlyList<DiscordGuildBan>> GetGuildBans(Snowflake guildId)
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/bans",
                 $"guilds/{guildId}/bans").ConfigureAwait(false);
 
-            DiscordUser[] users = new DiscordUser[data.Values.Count];
+            DiscordGuildBan[] users = new DiscordGuildBan[data.Values.Count];
             for (int i = 0; i < users.Length; i++)
-                users[i] = new DiscordUser(false, data.Values[i]);
+                users[i] = new DiscordGuildBan(data.Values[i]);
 
             return users;
         }

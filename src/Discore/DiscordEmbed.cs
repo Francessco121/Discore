@@ -31,7 +31,7 @@ namespace Discore
         /// <summary>
         /// Gets the color code of this embed.
         /// </summary>
-        public int? Color { get; private set; }
+        public int? Color { get; }
         /// <summary>
         /// Gets the footer information.
         /// </summary>

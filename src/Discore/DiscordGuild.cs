@@ -295,7 +295,7 @@ namespace Discore
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordUser>> GetBans()
+        public Task<IReadOnlyList<DiscordGuildBan>> GetBans()
         {
             return http.GetGuildBans(Id);
         }
