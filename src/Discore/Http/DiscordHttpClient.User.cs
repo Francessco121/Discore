@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using Discore.Http.Net;
+using System.Threading.Tasks;
 
 namespace Discore.Http
 {
@@ -48,10 +49,15 @@ namespace Discore.Http
         public async Task<DiscordUserGuild[]> GetCurrentUserGuilds(int? limit = null,
             Snowflake? baseGuildId = null, GuildGetStrategy getStrategy = GuildGetStrategy.After)
         {
-            string strat = getStrategy.ToString().ToLower();
-            string limitStr = limit.HasValue ? $"&limit={limit.Value}" : "";
+            UrlParametersBuilder paramBuilder = new UrlParametersBuilder();
 
-            DiscordApiData data = await rest.Get($"users/@me/guilds?{strat}={baseGuildId}{limitStr}", 
+            if (baseGuildId.HasValue)
+                paramBuilder.Add(getStrategy.ToString().ToLower(), baseGuildId.ToString());
+
+            if (limit.HasValue)
+                paramBuilder.Add("limit", limit.Value.ToString());
+
+            DiscordApiData data = await rest.Get($"users/@me/guilds{paramBuilder.ToQueryString()}", 
                 "users/@me/guilds").ConfigureAwait(false);
             DiscordUserGuild[] guilds = new DiscordUserGuild[data.Values.Count];
 
