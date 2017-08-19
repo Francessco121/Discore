@@ -84,5 +84,5 @@ namespace DiscorePingPong
 
 ## Alternatives
 Don't like our approach? Try some other great options:
-- [Discord.Net](https://github.com/RogueException/Discord.Net)
 - [DSharpPlus](https://github.com/NaamloosDT/DSharpPlus)
+- [Discord.Net](https://github.com/RogueException/Discord.Net)

@@ -50,8 +50,7 @@ namespace Discore.Http.Net
         HttpClient CreateHttpClient()
         {
             HttpClient http = new HttpClient();
-            http.DefaultRequestHeaders.Add("Accept", "*/*");
-            http.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate");
+            http.DefaultRequestHeaders.Add("Accept", "application/json");
             http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
             http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
 
