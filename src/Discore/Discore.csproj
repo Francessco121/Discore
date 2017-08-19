@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.6</TargetFramework>
     <Copyright>Bundled Sticks Inkorporated 2017</Copyright>
-    <Version>3.1.1</Version>
-    <AssemblyVersion>3.1.1.0</AssemblyVersion>
-    <FileVersion>3.1.1.0</FileVersion>
+    <Version>4.0.0</Version>
+    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <FileVersion>4.0.0.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>Discord;Discord API</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
@@ -16,10 +16,7 @@ Please note: Discore is not an official Discord API interface!</Description>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
-    <PackageReleaseNotes>Bug Fixes:
-- Fix GetCurrentUserGuilds failing when baseGuildId was null.
-- Fix DiscordGuildMember.Id not being set when retrieved from cache.
-- Fix DiscordHttpClient not working correctly with .NET Core 2.0.</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
