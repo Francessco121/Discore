@@ -5,7 +5,7 @@
     /// </summary>
     public enum GuildMfaLevel
     {
-        Disabled = 0,
-        Enabled = 1
+        None = 0,
+        Elevated = 1
     }
 }
