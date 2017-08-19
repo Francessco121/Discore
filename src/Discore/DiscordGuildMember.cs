@@ -59,6 +59,8 @@ namespace Discore
             IsMute = member.IsMute;
 
             RoleIds = new List<Snowflake>(member.RoleIds);
+
+            Id = member.User.Id;
         }
 
         internal DiscordGuildMember(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
