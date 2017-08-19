@@ -6,7 +6,7 @@ Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/artic
 **Please note:** Discore is **not** an official Discord API library!
 
 ## Compatibility
-See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support) for compatible runtimes. **Discore currently targets .NET Standard 1.6**.
+See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support) for compatible runtimes. **Discore currently targets .NET Standard 2.0**.
 
 ## Downloading
 Official releases are available through [NuGet](https://www.nuget.org/packages/Discore/). These are published alongside a [GitHub release](https://github.com/BundledSticksInkorperated/Discore/releases), which contains the full change log.
@@ -15,7 +15,7 @@ Official releases are available through [NuGet](https://www.nuget.org/packages/D
 For more information on how to use Discore, see our [documentation right here on GitHub](https://github.com/BundledSticksInkorperated/Discore/wiki).
 
 ## Compiling
-The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) (e.g. via the ".NET Core 1.0 - 1.1 development tools").
+The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) (e.g. via the ".NET Core cross-platform development" workload).
 
 ## Example Bot: Ping Pong
 ```csharp
