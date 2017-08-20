@@ -8,11 +8,6 @@ namespace Discore
     public abstract class DiscordGuildChannel : DiscordChannel
     {
         /// <summary>
-        /// Gets the type of guild channel (text or voice).
-        /// </summary>
-        public DiscordGuildChannelType GuildChannelType { get; }
-
-        /// <summary>
         /// Gets the name of this channel.
         /// </summary>
         public string Name { get; }
@@ -34,13 +29,11 @@ namespace Discore
 
         DiscordHttpClient http;
 
-        internal DiscordGuildChannel(DiscordHttpClient http, DiscordApiData data, DiscordGuildChannelType type, 
+        internal DiscordGuildChannel(DiscordHttpClient http, DiscordApiData data, DiscordChannelType type, 
             Snowflake? guildId) 
-            : base(http, data, DiscordChannelType.Guild)
+            : base(http, data, type)
         {
             this.http = http;
-
-            GuildChannelType = type;
 
             GuildId = guildId ?? data.GetSnowflake("guild_id").Value;
             Name = data.GetString("name");
@@ -186,7 +179,7 @@ namespace Discore
 
         public override string ToString()
         {
-            return $"{GuildChannelType} Channel: {Name}";
+            return $"{ChannelType} Channel: {Name}";
         }
     }
 }

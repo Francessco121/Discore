@@ -1,17 +1,13 @@
 ﻿namespace Discore
 {
     /// <summary>
-    /// The type of a channel.
+    /// The type of a Discord channel.
     /// </summary>
     public enum DiscordChannelType
     {
-        /// <summary>
-        /// Specifies the channel is a direct message (DM) channel.
-        /// </summary>
-        DirectMessage,
-        /// <summary>
-        /// Specifies the channel is a (text or voice) guild channel.
-        /// </summary>
-        Guild
+        GuildText = 0,
+        DirectMessage = 1,
+        GuildVoice = 2,
+        GuildCategory = 4
     }
 }

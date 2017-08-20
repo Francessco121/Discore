@@ -1,5 +1,4 @@
 ﻿using Discore.Http;
-using System;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -19,7 +18,7 @@ namespace Discore
         DiscordHttpClient http;
 
         internal DiscordGuildVoiceChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
-            : base(http, data, DiscordGuildChannelType.Voice, guildId)
+            : base(http, data, DiscordChannelType.GuildVoice, guildId)
         {
             this.http = http;
 

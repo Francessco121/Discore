@@ -13,6 +13,14 @@ namespace Discore
         /// </summary>
         public DiscordChannelType ChannelType { get; }
 
+        /// <summary>
+        /// Gets whether this channel is a guild channel.
+        /// </summary>
+        public bool IsGuildChannel => 
+               ChannelType == DiscordChannelType.GuildText
+            || ChannelType == DiscordChannelType.GuildVoice
+            || ChannelType == DiscordChannelType.GuildCategory;
+
         DiscordHttpClient http;
 
         internal DiscordChannel(DiscordHttpClient http, DiscordChannelType type)
@@ -36,6 +44,11 @@ namespace Discore
         public Task<DiscordChannel> Delete()
         {
             return http.DeleteChannel(Id);
+        }
+
+        public override string ToString()
+        {
+            return $"{ChannelType} Channel: {Id}";
         }
     }
 }

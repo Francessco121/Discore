@@ -15,7 +15,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets the type of guild channel.
         /// </summary>
-        public DiscordGuildChannelType Type { get; }
+        public DiscordChannelType Type { get; }
 
         /// <summary>
         /// Gets or sets the voice bitrate (if a voice channel).
@@ -26,7 +26,7 @@ namespace Discore.Http
             get => bitrate;
             set
             {
-                if (Type != DiscordGuildChannelType.Voice)
+                if (Type != DiscordChannelType.GuildVoice)
                     throw new InvalidOperationException("Cannot set bitrate for non-voice channel.");
 
                 bitrate = value;
@@ -42,7 +42,7 @@ namespace Discore.Http
             get => userlimit;
             set
             {
-                if (Type != DiscordGuildChannelType.Voice)
+                if (Type != DiscordChannelType.GuildVoice)
                     throw new InvalidOperationException("Cannot set user limit for non-voice channel.");
 
                 userlimit = value;
@@ -58,7 +58,7 @@ namespace Discore.Http
             get => topic;
             set
             {
-                if (Type != DiscordGuildChannelType.Text)
+                if (Type != DiscordChannelType.GuildText)
                     throw new InvalidOperationException("Cannot set topic for non-text channel.");
 
                 topic = value;
@@ -74,8 +74,13 @@ namespace Discore.Http
         int? userlimit;
         string topic;
 
-        public CreateGuildChannelOptions(DiscordGuildChannelType type)
+        /// <exception cref="ArgumentException">Thrown if <paramref name="type"/> is not a guild channel type.</exception>
+        public CreateGuildChannelOptions(DiscordChannelType type)
         {
+            if (type != DiscordChannelType.GuildText && type != DiscordChannelType.GuildVoice
+                && type != DiscordChannelType.GuildCategory)
+                throw new ArgumentException($"{type} is not a guild channel type!");
+
             Type = type;
         }
 
@@ -136,14 +141,14 @@ namespace Discore.Http
             data.Set("name", Name);
             data.Set("type", Type.ToString().ToLower());
             
-            if (Type == DiscordGuildChannelType.Voice)
+            if (Type == DiscordChannelType.GuildVoice)
             {
                 if (bitrate.HasValue)
                     data.Set("bitrate", bitrate.Value);
                 if (userlimit.HasValue)
                     data.Set("userlimit", userlimit.Value);
             }
-            else if (Type == DiscordGuildChannelType.Text)
+            else if (Type == DiscordChannelType.GuildText)
             {
                 if (topic != null)
                     data.Set("topic", topic);

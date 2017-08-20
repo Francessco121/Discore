@@ -17,7 +17,7 @@ namespace Discore
         Snowflake lastMessageId;
 
         internal DiscordGuildTextChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
-            : base(http, data, DiscordGuildChannelType.Text, guildId)
+            : base(http, data, DiscordChannelType.GuildText, guildId)
         {
             this.http = http;
 
