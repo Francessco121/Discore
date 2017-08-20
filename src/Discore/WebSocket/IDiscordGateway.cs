@@ -171,8 +171,7 @@ namespace Discore.WebSocket
         /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
         /// </para>
         /// </summary>
-        /// <param name="game">Either null (if not playing a game), or the name of the game being played.</param>
-        /// <param name="idleSince">Unix time (in milliseconds) of when the client went idle, or null if the client is not idle.</param>
+        /// <param name="options">Options for the new status.</param>
         /// <param name="cancellationToken">A token used to cancel the update.</param>
         /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
@@ -183,7 +182,7 @@ namespace Discore.WebSocket
         /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
         /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
         /// </remarks>
-        Task UpdateStatusAsync(string game = null, int? idleSince = null, CancellationToken? cancellationToken = null);
+        Task UpdateStatusAsync(StatusOptions options, CancellationToken? cancellationToken = null);
 
         /// <summary>
         /// Requests guild members from the Discord API, this can be used to retrieve offline members in a guild that is considered 

@@ -107,7 +107,7 @@ namespace Discore.WebSocket.Net
         /// <exception cref="OperationCanceledException">
         /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
         /// </exception>
-        public async Task UpdateStatusAsync(string game = null, int? idleSince = null, 
+        public async Task UpdateStatusAsync(StatusOptions options, 
             CancellationToken? cancellationToken = null)
         {
             if (isDisposed)
@@ -120,7 +120,7 @@ namespace Discore.WebSocket.Net
             await RepeatTrySendPayload(ct, "UpdateStatus", async () =>
             {
                 // Try to send the status update
-                await socket.SendStatusUpdate(game, idleSince).ConfigureAwait(false);
+                await socket.SendStatusUpdate(options).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
 

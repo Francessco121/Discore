@@ -145,21 +145,21 @@ namespace Discore.WebSocket.Net
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public async Task SendStatusUpdate(string game = null, int? idleSince = null)
+        public async Task SendStatusUpdate(StatusOptions options)
         {
-            bool afk = idleSince.HasValue && idleSince.Value > 0;
-
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("since", idleSince);
-            data.Set("afk", afk);
-            data.Set("status", afk ? "idle" : "online");
+            data.Set("since", options.AfkSince);
+            data.Set("afk", options.Afk);
+            data.Set("status", options.GetStatusString());
 
-            if (game != null)
+            if (options.Game != null)
             {
                 DiscordApiData gameData = new DiscordApiData(DiscordApiDataType.Container);
                 data.Set("game", gameData);
 
-                gameData.Set("name", game);
+                gameData.Set("name", options.Game.Name);
+                gameData.Set("type", (int)options.Game.Type);
+                gameData.Set("url", options.Game.Url);
             }
 
             // Check with the game status update limiter
