@@ -39,7 +39,6 @@ namespace Discore
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
 
             // Normal DM should only ever have exactly one recipient
-            // TODO: Check this ^
             DiscordApiData recipientData = data.GetArray("recipients").First();
             Recipient = new DiscordUser(false, recipientData);
         }

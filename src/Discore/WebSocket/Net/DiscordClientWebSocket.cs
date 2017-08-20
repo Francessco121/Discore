@@ -352,8 +352,6 @@ namespace Discore.WebSocket.Net
                                     log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
 
                                     // Complete the closing handshake
-                                    // TODO: Check that a 'Normal closure' here won't ALWAYS force us to create a new gateway session,
-                                    // it is only documented that this happens when we INITIATE the closing handshake.
                                     await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
                                         .ConfigureAwait(false);
 

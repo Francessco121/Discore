@@ -29,7 +29,8 @@ namespace Discore.Voice
             if (isValid)
             {
                 this.token = token;
-                this.endPoint = endPoint.Split(':')[0]; // TODO: whats the other pieces?
+                // Strip off the port
+                this.endPoint = endPoint.Split(':')[0];
 
                 if (voiceState != null)
                 {
