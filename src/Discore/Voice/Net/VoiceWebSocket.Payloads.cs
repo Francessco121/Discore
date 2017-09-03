@@ -31,6 +31,9 @@ namespace Discore.Voice.Net
         {
             heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
 
+            // TODO: Remove when Discord's heartbeat_interval bug is fixed
+            heartbeatInterval = (int)Math.Floor(heartbeatInterval * 0.75f);
+
             log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
 
             // Start heartbeat loop
