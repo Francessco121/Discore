@@ -401,6 +401,9 @@ namespace Discore.WebSocket.Net
                                 catch (InvalidOperationException)
                                 {
                                     // Socket was closed between receiving a payload and handling it
+                                    log.LogVerbose("Received InvalidOperationException from OnPayloadReceived, " +
+                                        "stopping receive loop...");
+
                                     break;
                                 }
                                 catch (DiscordWebSocketException dwex)

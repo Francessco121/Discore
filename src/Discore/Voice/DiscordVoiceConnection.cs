@@ -104,6 +104,8 @@ namespace Discore.Voice
             }
         }
 
+        const int GATEWAY_VERSION = 3;
+
         Snowflake guildId;
 
         DiscordShardCache cache;
@@ -202,7 +204,7 @@ namespace Discore.Voice
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
                 {
-                    await CloseAndInvalidate(DiscordClientWebSocket.INTERNAL_CLIENT_ERROR, "Timed out while completing handshake",
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Timed out while completing handshake",
                         VoiceConnectionInvalidationReason.TimedOut, "Timed out while completing handshake.").ConfigureAwait(false);
                 }
             }
@@ -285,7 +287,8 @@ namespace Discore.Voice
         /// </summary>
         public bool CanSendVoiceData(int size)
         {
-            return isValid && IsConnected && udpSocket.CanSendData(size);
+            return isValid && IsConnected 
+                && (udpSocket != null && udpSocket.CanSendData(size));
         }
 
         /// <summary>
@@ -325,7 +328,7 @@ namespace Discore.Voice
                 isSpeaking = speaking;
 
                 if (IsConnected)
-                    return webSocket.SendSpeakingPayload(speaking);
+                    return webSocket.SendSpeakingPayload(speaking, udpSocket.Ssrc);
             }
 
             return Task.CompletedTask;

@@ -25,6 +25,11 @@
         /// <summary>
         /// Used to indicate which users are speaking.
         /// </summary>
-        Speaking = 5
+        Speaking = 5,
+        HeartbeatAck = 6,
+        Resume = 7,
+        Hello = 8,
+        Resumed = 9,
+        ClientDisconnect = 13
     }
 }
