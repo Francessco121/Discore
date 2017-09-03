@@ -313,6 +313,11 @@ namespace Discore.WebSocket.Net
                                 // This call only throws WebSocketExceptions.
                                 result = await socket.ReceiveAsync(buffer, abortCancellationSource.Token).ConfigureAwait(false);
                             }
+                            catch (OperationCanceledException)
+                            {
+                                log.LogVerbose($"[ReceiveLoop] Socket aborted while receiving.");
+                                break;
+                            }
                             catch (WebSocketException wsex)
                             {
                                 // Only two errors here should be InvalidState (if socket is aborted),
@@ -356,6 +361,10 @@ namespace Discore.WebSocket.Net
                                         .ConfigureAwait(false);
 
                                     log.LogVerbose("[ReceiveLoop] Completed close handshake.");
+                                }
+                                catch (OperationCanceledException)
+                                {
+                                    log.LogVerbose($"[ReceiveLoop] Socket aborted while closing.");
                                 }
                                 catch (Exception ex)
                                 {
