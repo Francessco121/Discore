@@ -403,7 +403,7 @@ namespace Discore.WebSocket.Net
                                 try
                                 {
                                     // Notify inheriting object that a payload has been received.
-                                    await OnPayloadReceived(data);
+                                    await OnPayloadReceived(data).ConfigureAwait(false);
                                 }
                                 // Payload handlers can send other payloads which can result in two
                                 // valid exceptions that we do not want to bubble up.
