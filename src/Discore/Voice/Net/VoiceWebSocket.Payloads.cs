@@ -1,6 +1,7 @@
 ﻿using Discore.WebSocket;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,11 @@ namespace Discore.Voice.Net
 {
     partial class VoiceWebSocket
     {
+        public BlockingCollection<int> HelloQueue { get; } =
+            new BlockingCollection<int>();
+        public BlockingCollection<VoiceReadyEventArgs> ReadyQueue { get; } =
+            new BlockingCollection<VoiceReadyEventArgs>();
+
 		[Payload(VoiceOPCode.Ready)]
 		void HandleReadyPayload(DiscordApiData payload, DiscordApiData data)
         {
@@ -22,8 +28,9 @@ namespace Discore.Voice.Net
 
             log.LogVerbose($"[Ready] ssrc = {ssrc}, port = {port}");
 
-			// Notify
-            OnReady?.Invoke(this, new VoiceReadyEventArgs(port, ssrc, modes));
+            // Notify
+            ReadyQueue.Add(new VoiceReadyEventArgs(port, ssrc, modes));
+            //OnReady?.Invoke(this, new VoiceReadyEventArgs(port, ssrc, modes));
         }
 
         [Payload(VoiceOPCode.Hello)]
@@ -36,9 +43,11 @@ namespace Discore.Voice.Net
 
             log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
 
+            HelloQueue.Add(heartbeatInterval);
+
             // Start heartbeat loop
             heartbeatCancellationSource = new CancellationTokenSource();
-            heartbeatTask = HeartbeatLoop();
+            //heartbeatTask = HeartbeatLoop();
         }
 
         [Payload(VoiceOPCode.SessionDescription)]
@@ -53,7 +62,7 @@ namespace Discore.Voice.Net
 
             log.LogVerbose($"[SessionDescription] mode = {mode}");
 
-            OnSessionDescription?.Invoke(this, new VoiceSessionDescriptionEventArgs(key, mode));
+            //OnSessionDescription?.Invoke(this, new VoiceSessionDescriptionEventArgs(key, mode));
         }
 
         [Payload(VoiceOPCode.HeartbeatAck)]

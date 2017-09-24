@@ -104,8 +104,6 @@ namespace Discore.Voice
             }
         }
 
-        const int GATEWAY_VERSION = 3;
-
         Snowflake guildId;
 
         DiscordShardCache cache;
@@ -135,6 +133,12 @@ namespace Discore.Voice
 
             cache = shard.Cache;
             gateway = (Gateway)shard.Gateway;
+
+            state = new Handshake.VoiceConnectionState()
+            {
+                Shard = shard,
+                GuildId = guildId
+            };
 
             isValid = true;
         }
@@ -176,6 +180,7 @@ namespace Discore.Voice
 
                     // Set state
                     voiceState = new DiscordVoiceState(guildId, Shard.UserId.Value, voiceChannelId);
+                    state.VoiceState = voiceState;
 
                     // Create the logger
                     log = new DiscoreLogger($"VoiceConnection:{guildId}");

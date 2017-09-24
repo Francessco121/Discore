@@ -30,6 +30,8 @@ namespace Discore.Voice.Net
         /// </summary>
         public event EventHandler<VoiceSpeakingEventArgs> OnUserSpeaking;
 
+        public const int GATEWAY_VERSION = 3;
+
         Task heartbeatTask;
         CancellationTokenSource heartbeatCancellationSource;
 

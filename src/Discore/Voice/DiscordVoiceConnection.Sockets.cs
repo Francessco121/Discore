@@ -1,6 +1,7 @@
 ﻿using Discore.Voice.Net;
 using Discore.WebSocket;
 using Discore.WebSocket.Net;
+using Discore.Voice.Handshake;
 using System;
 using System.Net.Sockets;
 using System.Net.WebSockets;
@@ -11,16 +12,29 @@ namespace Discore.Voice
 {
     partial class DiscordVoiceConnection
     {
+        static HandshakeProcess<VoiceConnectionState> FullConnect =
+            new HandshakeProcess<VoiceConnectionState>(new HandshakeStep<VoiceConnectionState>[]{
+                VoiceWebSocketSteps.CreateVoiceWebSocket,
+                VoiceWebSocketSteps.ConnectVoiceWebSocket,
+                VoiceWebSocketSteps.ReceiveVoiceHello,
+                VoiceWebSocketSteps.SendVoiceIdentify
+            });
+
+        VoiceConnectionState state;
+
         internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
         {
             if (isValid)
             {
                 this.voiceState = voiceState;
 
+                state.VoiceState = voiceState;
+
                 if (!isConnected && !isConnecting && token != null && endPoint != null)
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
-                    await ConnectWebSocket().ConfigureAwait(false);
+                    //await ConnectWebSocket().ConfigureAwait(false);
+                    await FullConnect.Execute(state, log);
             }
         }
 
@@ -31,6 +45,9 @@ namespace Discore.Voice
                 this.token = token;
                 // Strip off the port
                 this.endPoint = endPoint.Split(':')[0];
+
+                state.Token = token;
+                state.EndPoint = this.endPoint;
 
                 if (voiceState != null)
                 {
@@ -44,7 +61,8 @@ namespace Discore.Voice
 
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
-                    await ConnectWebSocket().ConfigureAwait(false);
+                    //await ConnectWebSocket().ConfigureAwait(false);
+                    await FullConnect.Execute(state, log);
                 }
             }
         }
@@ -325,7 +343,7 @@ namespace Discore.Voice
             webSocket.OnUserSpeaking += WebSocket_OnUserSpeaking;
 
             // Build WebSocket URI
-            Uri uri = new Uri($"wss://{endPoint}?v={GATEWAY_VERSION}");
+            Uri uri = new Uri($"wss://{endPoint}?v={VoiceWebSocket.GATEWAY_VERSION}");
 
             log.LogVerbose($"Connecting WebSocket to {uri}...");
 
