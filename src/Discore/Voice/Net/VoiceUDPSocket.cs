@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -20,8 +21,10 @@ namespace Discore.Voice.Net
         public int BytesToSend => sendBuffer.Count;
         public bool IsPaused { get; set; }
 
-        public event EventHandler<IPDiscoveryEventArgs> OnIPDiscovered;
         public event EventHandler OnClosedPrematurely;
+
+        public BlockingCollection<IPDiscoveryEventArgs> IPDiscoveryQueue { get; } =
+            new BlockingCollection<IPDiscoveryEventArgs>();
 
         public int Ssrc => ssrc;
 
@@ -43,10 +46,21 @@ namespace Discore.Voice.Net
         int ssrc;
         byte[] secretKey;
 
+        [Obsolete]
         public VoiceUdpSocket(string loggingName)
         {
             log = new DiscoreLogger(loggingName);
 
+            encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
+
+            CreateSendBuffer();
+        }
+
+        public VoiceUdpSocket(string loggingName, int ssrc)
+        {
+            log = new DiscoreLogger(loggingName);
+
+            this.ssrc = ssrc;
             encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
 
             CreateSendBuffer();
@@ -110,6 +124,7 @@ namespace Discore.Voice.Net
         /// <summary>
         /// Sets the SSRC the UDP socket will use.
         /// </summary>
+        [Obsolete]
         public void SetSsrc(int ssrc)
         {
             this.ssrc = ssrc;
@@ -164,7 +179,8 @@ namespace Discore.Voice.Net
             // Read port
             int port = (ushort)(data[68] | data[69] << 8);
 
-            OnIPDiscovered?.Invoke(this, new IPDiscoveryEventArgs(ip, port));
+            //OnIPDiscovered?.Invoke(this, new IPDiscoveryEventArgs(ip, port));
+            IPDiscoveryQueue.Add(new IPDiscoveryEventArgs(ip, port));
         }
 
         async Task ReceiveLoop()

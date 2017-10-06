@@ -32,7 +32,7 @@ namespace Discore.Voice
         /// <summary>
         /// Gets the shard this connection is managed by.
         /// </summary>
-        public Shard Shard { get; }
+        public Shard Shard => shard;
         /// <summary>
         /// Gets the ID of the guild this voice connection is in.
         /// </summary>
@@ -104,19 +104,15 @@ namespace Discore.Voice
             }
         }
 
-        Snowflake guildId;
+        readonly Shard shard;
+        readonly Snowflake guildId;
 
-        DiscordShardCache cache;
-        Gateway gateway;
-
-        VoiceWebSocket webSocket;
-        VoiceUdpSocket udpSocket;
+        readonly DiscordShardCache cache;
+        readonly Gateway gateway;
 
         DiscordVoiceState voiceState;
         DiscoreLogger log;
 
-        string token;
-        string endPoint;
         bool isDisposed;
         bool isValid;
         bool isConnected;
@@ -128,17 +124,11 @@ namespace Discore.Voice
 
         internal DiscordVoiceConnection(Shard shard, Snowflake guildId)
         {
-            Shard = shard;
+            this.shard = shard;
             this.guildId = guildId;
 
             cache = shard.Cache;
             gateway = (Gateway)shard.Gateway;
-
-            state = new Handshake.VoiceConnectionState()
-            {
-                Shard = shard,
-                GuildId = guildId
-            };
 
             isValid = true;
         }
@@ -180,7 +170,6 @@ namespace Discore.Voice
 
                     // Set state
                     voiceState = new DiscordVoiceState(guildId, Shard.UserId.Value, voiceChannelId);
-                    state.VoiceState = voiceState;
 
                     // Create the logger
                     log = new DiscoreLogger($"VoiceConnection:{guildId}");

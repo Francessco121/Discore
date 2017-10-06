@@ -1,26 +1,27 @@
 ﻿using Discore.Voice.Net;
 using Discore.WebSocket;
-using Discore.WebSocket.Net;
-using Discore.Voice.Handshake;
 using System;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Discore.Voice
 {
     partial class DiscordVoiceConnection
     {
-        static HandshakeProcess<VoiceConnectionState> FullConnect =
-            new HandshakeProcess<VoiceConnectionState>(new HandshakeStep<VoiceConnectionState>[]{
-                VoiceWebSocketSteps.CreateVoiceWebSocket,
-                VoiceWebSocketSteps.ConnectVoiceWebSocket,
-                VoiceWebSocketSteps.ReceiveVoiceHello,
-                VoiceWebSocketSteps.SendVoiceIdentify
-            });
-
-        VoiceConnectionState state;
+        VoiceWebSocket webSocket;
+        string endPoint;
+        string token;
+        int? heartbeatInterval;
+        int? port;
+        int? ssrc;
+        string[] encryptionModes;
+        Task heartbeatLoopTask;
+        VoiceUdpSocket udpSocket;
+        string discoveredIP;
+        int? discoveredPort;
 
         internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
         {
@@ -28,13 +29,11 @@ namespace Discore.Voice
             {
                 this.voiceState = voiceState;
 
-                state.VoiceState = voiceState;
-
                 if (!isConnected && !isConnecting && token != null && endPoint != null)
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
                     //await ConnectWebSocket().ConfigureAwait(false);
-                    await FullConnect.Execute(state, log);
+                    await DoFullConnect();
             }
         }
 
@@ -45,9 +44,6 @@ namespace Discore.Voice
                 this.token = token;
                 // Strip off the port
                 this.endPoint = endPoint.Split(':')[0];
-
-                state.Token = token;
-                state.EndPoint = this.endPoint;
 
                 if (voiceState != null)
                 {
@@ -62,7 +58,58 @@ namespace Discore.Voice
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
                     //await ConnectWebSocket().ConfigureAwait(false);
-                    await FullConnect.Execute(state, log);
+                    await DoFullConnect();
+                }
+            }
+        }
+
+        async Task DoFullConnect()
+        {
+            try
+            {
+                Func<Task>[] functions = new Func<Task>[]
+                {
+                    CreateVoiceWebSocket,
+                    ConnectVoiceWebSocket,
+                    ReceiveVoiceHello,
+                    SendVoiceIdentify,
+                    ReceiveVoiceReady,
+                    BeginHeartbeatLoop,
+                    CreateVoiceUdpSocket,
+                    ConnectVoiceUdpSocket,
+                    StartIPDiscovery,
+                    ReceiveIPDiscovery,
+                    SendSelectProtocol,
+                    ReceiveSessionDescription
+                };
+
+                foreach (Func<Task> function in functions)
+                {
+                    if (!isValid)
+                        throw new TaskCanceledException("Connection was invalidated before completion.");
+
+                    await function();
+                }
+
+                isConnected = true;
+                isConnecting = false;
+                connectingCancellationSource.Cancel();
+
+                OnConnected?.Invoke(this, new VoiceConnectionEventArgs(shard, this));
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"[DoFullConnect] Failed to connect: {ex}");
+
+                try
+                {
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
+                        VoiceConnectionInvalidationReason.Error, "Failed to connect.")
+                        .ConfigureAwait(false);
+                }
+                catch (Exception closeEx)
+                {
+                    log.LogError($"[DoFullConnect:CloseAndInvalidate] {closeEx}");
                 }
             }
         }
@@ -118,8 +165,6 @@ namespace Discore.Voice
 
             if (webSocket != null)
             {
-                webSocket.OnReady -= WebSocket_OnReady;
-                webSocket.OnSessionDescription -= WebSocket_OnSessionDescription;
                 webSocket.OnUnexpectedClose -= WebSocket_OnUnexpectedClose;
                 webSocket.OnTimedOut -= WebSocket_OnTimedOut;
                 webSocket.OnUserSpeaking -= WebSocket_OnUserSpeaking;
@@ -144,7 +189,6 @@ namespace Discore.Voice
         {
             if (udpSocket != null)
             {
-                udpSocket.OnIPDiscovered -= UdpSocket_OnIPDiscovered;
                 udpSocket.OnClosedPrematurely -= UdpSocket_OnClosedPrematurely;
 
                 if (udpSocket.IsConnected)
@@ -218,204 +262,225 @@ namespace Discore.Voice
             }
         }
 
-        private async void WebSocket_OnReady(object sender, VoiceReadyEventArgs e)
+        Task CreateVoiceWebSocket()
         {
-            if (!isValid || !isConnected)
-                return;
+            if (webSocket != null)
+                throw new InvalidOperationException("[CreateVoiceWebSocket] webSocket must be null!");
+            if (guildId == Snowflake.None)
+                throw new InvalidOperationException("[CreateVoiceWebSocket] guildId must be set!");
 
-            try
-            {
-                // Connect the UDP socket
-                await ConnectUdpSocket(e.Port).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is SocketException socketEx)
-                    log.LogError($"[OnReady] Failed to connect UDP socket: code = {socketEx.SocketErrorCode}, error = {ex}");
-                else
-                    log.LogError($"[OnReady] Failed to connect UDP socket: {ex}");
-
-                try
-                {
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                        VoiceConnectionInvalidationReason.Error, "Failed to connect the UDP socket.")
-                        .ConfigureAwait(false);
-                }
-                catch (Exception closeEx)
-                {
-                    log.LogError($"[WebSocket_OnReady:UDPConnect:CloseAndInvalidate] {closeEx}");
-                }
-
-                return;
-            }
-
-            // Give the SSRC to the UDP socket
-            udpSocket.SetSsrc(e.Ssrc);
-
-            try
-            {
-                // Start IP discovery
-                await udpSocket.StartIPDiscoveryAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is SocketException socketEx)
-                    log.LogError($"[OnReady] Failed start IP discovery: code = {socketEx.SocketErrorCode}, error = {ex}");
-                else
-                    log.LogError($"[OnReady] Failed start IP discovery: {ex}");
-                try
-                {
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                        VoiceConnectionInvalidationReason.Error, "Failed to start IP discovery.")
-                        .ConfigureAwait(false);
-                }
-                catch (Exception closeEx)
-                {
-                    log.LogError($"[WebSocket_OnReady:IPDiscovery:CloseAndInvalidate] {closeEx}");
-                }
-
-                return;
-            }
-        }
-
-        private async void UdpSocket_OnIPDiscovered(object sender, IPDiscoveryEventArgs e)
-        {
-            if (!isValid || !isConnected)
-                return;
-
-            log.LogVerbose($"[IPDiscovery] Discovered EndPoint: {e.IP}:{e.Port}");
-
-            try
-            {
-                // Select protocol
-                await webSocket.SendSelectProtocolPayload(e.IP, e.Port, "xsalsa20_poly1305").ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                if (ex is DiscordWebSocketException dwex)
-                    log.LogError($"[OnIPDiscovered] Failed to select protocol: code = {dwex.Error}, error = {ex}");
-                else
-                    log.LogError($"[OnIPDiscovered] Failed to select protocol: {ex}");
-
-                try
-                {
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                        VoiceConnectionInvalidationReason.Error, "Failed to select voice protocol.")
-                        .ConfigureAwait(false);
-                }
-                catch (Exception closeEx)
-                {
-                    log.LogError($"[UdpSocket_OnIPDiscovered:CloseAndInvalidate] {closeEx}");
-                }
-            }
-        }
-
-        private void WebSocket_OnSessionDescription(object sender, VoiceSessionDescriptionEventArgs e)
-        {
-            if (!isValid || !isConnected)
-                return;
-
-            // Give the UDP socket the secret key to allow sending data.
-            udpSocket.Start(e.SecretKey);
-        }
-
-        /// <exception cref="ArgumentException">Thrown if the socket host resolved into zero addresses.</exception>
-        /// <exception cref="SocketException">Thrown if the host fails to resolve or the socket fails to connect.</exception>
-        async Task ConnectUdpSocket(int port)
-        {
-            // Create UDP Socket
-            udpSocket = new VoiceUdpSocket($"VoiceUDPSocket:{guildId}");
-            udpSocket.OnIPDiscovered += UdpSocket_OnIPDiscovered;
-            udpSocket.OnClosedPrematurely += UdpSocket_OnClosedPrematurely;
-
-            // Connect UDP socket
-            await udpSocket.ConnectAsync(endPoint, port).ConfigureAwait(false);
-        }
-
-        async Task ConnectWebSocket()
-        {
-            // Create WebSocket
             webSocket = new VoiceWebSocket($"VoiceWebSocket:{guildId}");
-            webSocket.OnReady += WebSocket_OnReady;
-            webSocket.OnSessionDescription += WebSocket_OnSessionDescription;
             webSocket.OnUnexpectedClose += WebSocket_OnUnexpectedClose;
             webSocket.OnTimedOut += WebSocket_OnTimedOut;
             webSocket.OnUserSpeaking += WebSocket_OnUserSpeaking;
 
+            log.LogVerbose("[CreateVoiceWebSocket] Created VoiceWebSocket.");
+
+            return Task.CompletedTask;
+        }
+
+        async Task ConnectVoiceWebSocket()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[ConnectVoiceWebSocket] webSocket must not be null!");
+            if (endPoint == null)
+                throw new InvalidOperationException("[ConnectVoiceWebSocket] endPoint must not be null!");
+
             // Build WebSocket URI
             Uri uri = new Uri($"wss://{endPoint}?v={VoiceWebSocket.GATEWAY_VERSION}");
 
-            log.LogVerbose($"Connecting WebSocket to {uri}...");
+            log.LogVerbose($"[ConnectVoiceWebSocket] Connecting WebSocket to {uri}...");
+
+            // Connect
+            try
+            {
+                await webSocket.ConnectAsync(uri, CancellationToken.None)
+                    .ConfigureAwait(false);
+            }
+            catch (WebSocketException ex)
+            {
+                log.LogError($"[ConnectVoiceWebSocket] Failed to connect to {uri}: " +
+                    $"code = {ex.WebSocketErrorCode}, error = {ex}");
+                throw;
+            }
+
+            log.LogVerbose("[ConnectVoiceWebSocket] Connected WebSocket.");
+        }
+
+        Task ReceiveVoiceHello()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[ReceiveVoiceHello] webSocket must not be null!");
+
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.CancelAfter(10 * 1000);
+
+            return Task.Run(() =>
+            {
+                heartbeatInterval = webSocket.HelloQueue.Take(tokenSource.Token);
+            });
+        }
+
+        async Task SendVoiceIdentify()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] webSocket must not be null!");
+            if (!shard.UserId.HasValue)
+                throw new InvalidOperationException("[SendVoiceIdentify] shard.UserId must not be null!");
+            if (voiceState == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] voiceState must not be null!");
+            if (voiceState.SessionId == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] voiceState.SessionId must not be null!");
+            if (token == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] token must not be null!");
+
+            await webSocket.SendIdentifyPayload(guildId, shard.UserId.Value, voiceState.SessionId, token)
+                .ConfigureAwait(false);
+        }
+
+        Task ReceiveVoiceReady()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[ReceiveVoiceReady] webSocket must not be null!");
+
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.CancelAfter(10 * 1000);
+
+            return Task.Run(() =>
+            {
+                VoiceReadyEventArgs readyData = webSocket.ReadyQueue.Take(tokenSource.Token);
+
+                log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, port = {readyData.Port}");
+
+                encryptionModes = readyData.EncryptionModes;
+                port = readyData.Port;
+                ssrc = readyData.Ssrc;
+            });
+        }
+
+        Task BeginHeartbeatLoop()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[BeginHeartbeatLoop] webSocket must not be null!");
+            if (!heartbeatInterval.HasValue)
+                throw new InvalidOperationException("[BeginHeartbeatLoop] heartbeatInterval must not be null!");
+
+            heartbeatLoopTask = webSocket.HeartbeatLoop(heartbeatInterval.Value);
+            return Task.CompletedTask;
+        }
+
+        Task CreateVoiceUdpSocket()
+        {
+            if (udpSocket != null)
+                throw new InvalidOperationException("[CreateVoiceUdpSocket] udpSocket must be null!");
+            if (!ssrc.HasValue)
+                throw new InvalidOperationException("[CreateVoiceUdpSocket] ssrc must not be null!");
+
+            udpSocket = new VoiceUdpSocket($"VoiceUDPSocket:{guildId}", ssrc.Value);
+            udpSocket.OnClosedPrematurely += UdpSocket_OnClosedPrematurely;
+
+            log.LogVerbose("[CreateVoiceUdpSocket] Created VoiceUdpSocket.");
+
+            return Task.CompletedTask;
+        }
+
+        async Task ConnectVoiceUdpSocket()
+        {
+            if (udpSocket == null)
+                throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpSocket must not be null!");
+            if (string.IsNullOrWhiteSpace(endPoint))
+                throw new InvalidOperationException("[ConnectVoiceUdpSocket] endPoint must be set!");
+            if (!port.HasValue)
+                throw new InvalidOperationException("[ConnectVoiceUdpSocket] port must not be null!");
+
+            log.LogVerbose($"[ConnectVoiceUdpSocket] Connecting UdpSocket to {endPoint}:{port}...");
 
             try
             {
-                // Connect WebSocket
-                await webSocket.ConnectAsync(uri, CancellationToken.None).ConfigureAwait(false);
+                await udpSocket.ConnectAsync(endPoint, port.Value).ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (SocketException ex)
             {
-                if (ex is WebSocketException wsex)
-                    log.LogError($"Failed to connect to {uri}: code = {wsex.WebSocketErrorCode}, error = {wsex}");
-                else
-                    log.LogError($"Failed to connect to {uri}: {ex}");
-
-                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                    VoiceConnectionInvalidationReason.Error, "Failed to connect WebSocket.")
-                    .ConfigureAwait(false);
-
-                return;
+                log.LogError("[ConnectVoiceUdpSocket] Failed to connect UDP socket: " +
+                    $"code = {ex.SocketErrorCode}, error = {ex}");
+                throw;
             }
+        }
 
-            log.LogVerbose("Connected WebSocket.");
+        async Task StartIPDiscovery()
+        {
+            if (udpSocket == null)
+                throw new InvalidOperationException("[StartIPDiscovery] udpSocket must not be null!");
 
             try
             {
-                // Send IDENTIFY payload
-                await webSocket.SendIdentifyPayload(guildId, Shard.UserId.Value, voiceState.SessionId, token).ConfigureAwait(false);
+                await udpSocket.StartIPDiscoveryAsync().ConfigureAwait(false);
             }
-            catch (Exception ex)
+            catch (SocketException ex)
             {
-                if (ex is DiscordWebSocketException dwex)
-                    log.LogError($"[ConnectSocket] Failed to send identify payload: code = {dwex.Error}, error = {ex}");
-                else
-                    log.LogError($"[ConnectSocket] Failed to send identify payload: {ex}");
-
-                await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                    VoiceConnectionInvalidationReason.Error, "Failed to send IDENTIFY.")
-                    .ConfigureAwait(false);
-
-                return;
+                log.LogError("[StartIPDiscovery] Failed start IP discovery: " +
+                    $"code = {ex.SocketErrorCode}, error = {ex}");
             }
+        }
 
-            // We are finished connecting
-            isConnected = true;
-            isConnecting = false;
-            connectingCancellationSource.Cancel();
+        Task ReceiveIPDiscovery()
+        {
+            if (udpSocket == null)
+                throw new InvalidOperationException("[ReceiveIPDiscovery] udpSocket must not be null!");
 
-            // Ensure speaking is set
-            if (isSpeaking)
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.CancelAfter(10 * 1000);
+
+            return Task.Run(() =>
             {
-                try
-                {
-                    // Set initial speaking state
-                    await SetSpeakingAsync(isSpeaking).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    if (ex is DiscordWebSocketException dwex)
-                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: code = {dwex.Error}, error = {dwex}");
-                    else
-                        log.LogError($"[ConnectSocket] Failed to set initial speaking state: {ex}");
+                IPDiscoveryEventArgs ipData = udpSocket.IPDiscoveryQueue.Take(tokenSource.Token);
 
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                        VoiceConnectionInvalidationReason.Error, "Failed to set initial speaking state.")
-                        .ConfigureAwait(false);
+                log.LogVerbose($"[ReceiveIPDiscovery] Discovered end-point: {ipData.IP}:{ipData.Port}");
 
-                    return;
-                }
+                discoveredIP = ipData.IP;
+                discoveredPort = ipData.Port;
+            });
+        }
+
+        async Task SendSelectProtocol()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[SendSelectProtocol] webSocket must not be null!");
+            if (string.IsNullOrWhiteSpace(discoveredIP))
+                throw new InvalidOperationException("[SendSelectProtocol] discoveredIP must be set!");
+            if (!discoveredPort.HasValue)
+                throw new InvalidOperationException("[SendSelectProtocol] discoveredPort must not be null!");
+
+            try
+            {
+                await webSocket.SendSelectProtocolPayload(discoveredIP, discoveredPort.Value,
+                    "xsalsa20_poly1305").ConfigureAwait(false);
             }
+            catch (DiscordWebSocketException ex)
+            {
+                log.LogError($"[OnIPDiscovered] Failed to select protocol: code = {ex.Error}, error = {ex}");
+            }
+        }
 
-            OnConnected?.Invoke(this, new VoiceConnectionEventArgs(Shard, this));
+        Task ReceiveSessionDescription()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[ReceiveSessionDescription] webSocket must not be null!");
+            if (udpSocket == null)
+                throw new InvalidOperationException("[ReceiveSessionDescription] udpSocket must not be null!");
+
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.CancelAfter(10 * 1000);
+
+            return Task.Run(() =>
+            {
+                VoiceSessionDescriptionEventArgs sessionDescription =
+                    webSocket.SessionDescriptionQueue.Take(tokenSource.Token);
+
+                Debug.Assert(sessionDescription.Mode == "xsalsa20_poly1305");
+
+                udpSocket.Start(sessionDescription.SecretKey);
+            });
         }
     }
 }

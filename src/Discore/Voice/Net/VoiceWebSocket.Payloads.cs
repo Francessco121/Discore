@@ -14,6 +14,8 @@ namespace Discore.Voice.Net
             new BlockingCollection<int>();
         public BlockingCollection<VoiceReadyEventArgs> ReadyQueue { get; } =
             new BlockingCollection<VoiceReadyEventArgs>();
+        public BlockingCollection<VoiceSessionDescriptionEventArgs> SessionDescriptionQueue { get; } =
+            new BlockingCollection<VoiceSessionDescriptionEventArgs>();
 
 		[Payload(VoiceOPCode.Ready)]
 		void HandleReadyPayload(DiscordApiData payload, DiscordApiData data)
@@ -36,7 +38,7 @@ namespace Discore.Voice.Net
         [Payload(VoiceOPCode.Hello)]
         void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
         {
-            heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
+            int heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
 
             // TODO: Remove when Discord's heartbeat_interval bug is fixed
             heartbeatInterval = (int)Math.Floor(heartbeatInterval * 0.75f);
@@ -63,6 +65,7 @@ namespace Discore.Voice.Net
             log.LogVerbose($"[SessionDescription] mode = {mode}");
 
             //OnSessionDescription?.Invoke(this, new VoiceSessionDescriptionEventArgs(key, mode));
+            SessionDescriptionQueue.Add(new VoiceSessionDescriptionEventArgs(key, mode));
         }
 
         [Payload(VoiceOPCode.HeartbeatAck)]

@@ -10,14 +10,6 @@ namespace Discore.Voice.Net
     partial class VoiceWebSocket : DiscordClientWebSocket, IDisposable
     {
         /// <summary>
-        /// Called when the socket receives the READY payload.
-        /// </summary>
-        public event EventHandler<VoiceReadyEventArgs> OnReady;
-        /// <summary>
-        /// Called when the socket receives the SESSION_DESCRIPTION payload.
-        /// </summary>
-        public event EventHandler<VoiceSessionDescriptionEventArgs> OnSessionDescription;
-        /// <summary>
         /// Called when the socket is closed unexpectedly (meaing our side did not initiate it).
         /// </summary>
         public event EventHandler OnUnexpectedClose;
@@ -32,14 +24,12 @@ namespace Discore.Voice.Net
 
         public const int GATEWAY_VERSION = 3;
 
-        Task heartbeatTask;
         CancellationTokenSource heartbeatCancellationSource;
 
         DiscoreLogger log;
 
         bool isDisposed;
 
-        int heartbeatInterval;
         bool receivedHeartbeatAck;
         uint heartbeatNonce;
 
@@ -97,7 +87,7 @@ namespace Discore.Voice.Net
             return Task.CompletedTask;
         }
 
-        async Task HeartbeatLoop()
+        public async Task HeartbeatLoop(int heartbeatInterval)
         {
             receivedHeartbeatAck = true;
 
