@@ -51,6 +51,10 @@
         /// </summary>
         MaximumGuildRolesReached = 30005,
         TooManyReactions = 30010,
+        /// <summary>
+        /// Maximum guild channels: 500
+        /// </summary>
+        MaximumGuildChannelsReached = 30013,
         Unauthorized = 40001,
         MissingAccess = 50001,
         InvalidAccountType,
