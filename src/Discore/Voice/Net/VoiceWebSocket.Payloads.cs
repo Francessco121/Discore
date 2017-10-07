@@ -1,6 +1,4 @@
-﻿using Discore.WebSocket;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -12,10 +10,15 @@ namespace Discore.Voice.Net
     {
         public BlockingCollection<int> HelloQueue { get; } =
             new BlockingCollection<int>();
+
         public BlockingCollection<VoiceReadyEventArgs> ReadyQueue { get; } =
             new BlockingCollection<VoiceReadyEventArgs>();
+
         public BlockingCollection<VoiceSessionDescriptionEventArgs> SessionDescriptionQueue { get; } =
             new BlockingCollection<VoiceSessionDescriptionEventArgs>();
+
+        public BlockingCollection<object> ResumedQueue { get; } =
+            new BlockingCollection<object>();
 
 		[Payload(VoiceOPCode.Ready)]
 		void HandleReadyPayload(DiscordApiData payload, DiscordApiData data)
@@ -32,7 +35,14 @@ namespace Discore.Voice.Net
 
             // Notify
             ReadyQueue.Add(new VoiceReadyEventArgs(port, ssrc, modes));
-            //OnReady?.Invoke(this, new VoiceReadyEventArgs(port, ssrc, modes));
+        }
+
+        [Payload(VoiceOPCode.Resumed)]
+        void HandleResumedPayload(DiscordApiData payload, DiscordApiData data)
+        {
+            log.LogVerbose("[Resumed] Resume successful.");
+
+            ResumedQueue.Add(null);
         }
 
         [Payload(VoiceOPCode.Hello)]
@@ -49,7 +59,6 @@ namespace Discore.Voice.Net
 
             // Start heartbeat loop
             heartbeatCancellationSource = new CancellationTokenSource();
-            //heartbeatTask = HeartbeatLoop();
         }
 
         [Payload(VoiceOPCode.SessionDescription)]
@@ -64,7 +73,6 @@ namespace Discore.Voice.Net
 
             log.LogVerbose($"[SessionDescription] mode = {mode}");
 
-            //OnSessionDescription?.Invoke(this, new VoiceSessionDescriptionEventArgs(key, mode));
             SessionDescriptionQueue.Add(new VoiceSessionDescriptionEventArgs(key, mode));
         }
 
@@ -123,6 +131,19 @@ namespace Discore.Voice.Net
 
             log.LogVerbose("[Identify] Sending payload...");
             return SendPayload(VoiceOPCode.Identify, data);
+        }
+
+        /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
+        public Task SendResumePayload(Snowflake serverId, string sessionId, string token)
+        {
+            DiscordApiData data = new DiscordApiData();
+            data.Set("server_id", serverId);
+            data.Set("session_id", sessionId);
+            data.Set("token", token);
+
+            log.LogVerbose("[Resume] Sending payload...");
+            return SendPayload(VoiceOPCode.Resume, data);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>

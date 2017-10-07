@@ -1,11 +1,11 @@
 ﻿using Discore.Voice.Net;
 using Discore.WebSocket;
 using System;
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics;
 
 namespace Discore.Voice
 {
@@ -23,6 +23,9 @@ namespace Discore.Voice
         string discoveredIP;
         int? discoveredPort;
 
+        Task resumeTask;
+        CancellationTokenSource resumeCancellationTokenSource;
+
         internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
         {
             if (isValid)
@@ -32,7 +35,6 @@ namespace Discore.Voice
                 if (!isConnected && !isConnecting && token != null && endPoint != null)
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
-                    //await ConnectWebSocket().ConfigureAwait(false);
                     await DoFullConnect();
             }
         }
@@ -57,14 +59,20 @@ namespace Discore.Voice
 
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
-                    //await ConnectWebSocket().ConfigureAwait(false);
                     await DoFullConnect();
+
+                    // Ensure we send a speaking payload so that moving between voice servers
+                    // updates the ssrc correctly.
+                    await webSocket.SendSpeakingPayload(isSpeaking, ssrc.Value)
+                        .ConfigureAwait(false);
                 }
             }
         }
 
         async Task DoFullConnect()
         {
+            isConnecting = true;
+
             try
             {
                 Func<Task>[] functions = new Func<Task>[]
@@ -91,11 +99,14 @@ namespace Discore.Voice
                     await function();
                 }
 
-                isConnected = true;
-                isConnecting = false;
-                connectingCancellationSource.Cancel();
+                if (!isConnected)
+                {
+                    isConnected = true;
+                    isConnecting = false;
+                    connectingCancellationSource.Cancel();
 
-                OnConnected?.Invoke(this, new VoiceConnectionEventArgs(shard, this));
+                    OnConnected?.Invoke(this, new VoiceConnectionEventArgs(shard, this));
+                }
             }
             catch (Exception ex)
             {
@@ -111,6 +122,69 @@ namespace Discore.Voice
                 {
                     log.LogError($"[DoFullConnect:CloseAndInvalidate] {closeEx}");
                 }
+            }
+            finally
+            {
+                if (isConnected)
+                    // If this isn't the first full connect, we just need
+                    // to make sure isConnecting goes back to false.
+                    isConnecting = false;
+            }
+        }
+
+        async Task DoResume()
+        {
+            isConnecting = true;
+            resumeCancellationTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                Func<Task>[] functions = new Func<Task>[]
+                {
+                    CreateVoiceWebSocket,
+                    ConnectVoiceWebSocket,
+                    SendVoiceResume,
+                    ReceiveResumed,
+                    ReceiveVoiceHello,
+                    BeginHeartbeatLoop,
+                };
+
+                foreach (Func<Task> function in functions)
+                {
+                    if (!isValid || resumeCancellationTokenSource.IsCancellationRequested)
+                        throw new TaskCanceledException("Connection was invalidated before completion.");
+
+                    await function();
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is OperationCanceledException && resumeCancellationTokenSource.IsCancellationRequested)
+                {
+                    // If the resume was cancelled, this means a new session is occurring as a follow-up.
+                    // In this case we do not want to close the sockets.
+                    log.LogVerbose("[DoResume] Successfully cancelled.");
+                    return;
+                }
+
+                log.LogError($"[DoResume] Failed to connect: {ex}");
+
+                try
+                {
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
+                        VoiceConnectionInvalidationReason.Error, "Failed to connect.")
+                        .ConfigureAwait(false);
+                }
+                catch (Exception closeEx)
+                {
+                    log.LogError($"[DoResume:CloseAndInvalidate] {closeEx}");
+                }
+            }
+            finally
+            {
+                // Don't flip to false if this was cancelled in favor of a full-connect.
+                if (!resumeCancellationTokenSource.IsCancellationRequested)
+                    isConnecting = false;
             }
         }
 
@@ -262,10 +336,106 @@ namespace Discore.Voice
             }
         }
 
+        private async void WebSocket_OnNewSessionRequested(object sender, EventArgs e)
+        {
+            if (isConnected)
+            {
+                log.LogVerbose("Attempting new session...");
+
+                // Ensure sockets are disconnected
+                if (webSocket != null && webSocket.CanBeDisconnected)
+                    await webSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                if (udpSocket != null && udpSocket.IsConnected)
+                    udpSocket.Shutdown();
+
+                if (heartbeatLoopTask != null)
+                {
+                    try
+                    {
+                        // The task is cancelled, but we need to make sure
+                        // it's completely finished before continuing.
+                        await heartbeatLoopTask;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError($"Uncaught exception in heartbeat loop: {ex}");
+                    }
+                }
+
+                // Finish resume if one was in progress
+                resumeCancellationTokenSource?.Cancel();
+                if (resumeTask != null && !resumeTask.IsCompleted)
+                    await resumeTask.ConfigureAwait(false);
+
+                await DoFullConnect().ConfigureAwait(false);
+            }
+            else
+            {
+                log.LogVerbose("Received resume request before initial connect. Invalidating...");
+
+                try
+                {
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
+                        VoiceConnectionInvalidationReason.Error, "The WebSocket connection closed unexpectedly.")
+                        .ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError($"[WebSocket_OnUnexpectedClose] {ex}");
+                }
+            }
+        }
+
+        private async void WebSocket_OnResumeRequested(object sender, EventArgs e)
+        {
+            if (isConnected)
+            {
+                log.LogVerbose("Attempting resume...");
+
+                if (webSocket != null && webSocket.CanBeDisconnected)
+                    await webSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
+                        .ConfigureAwait(false);
+
+                if (heartbeatLoopTask != null)
+                {
+                    try
+                    {
+                        // The task is cancelled, but we need to make sure
+                        // it's completely finished before continuing.
+                        await heartbeatLoopTask.ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.LogError($"Uncaught exception in heartbeat loop: {ex}");
+                    }
+                }
+
+                resumeTask = DoResume();
+                await resumeTask.ConfigureAwait(false);
+            }
+            else
+            {
+                log.LogVerbose("Received resume request before initial connect. Invalidating...");
+
+                try
+                {
+                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
+                        VoiceConnectionInvalidationReason.Error, "The WebSocket connection closed unexpectedly.")
+                        .ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    log.LogError($"[WebSocket_OnUnexpectedClose] {ex}");
+                }
+            }
+        }
+
         Task CreateVoiceWebSocket()
         {
-            if (webSocket != null)
-                throw new InvalidOperationException("[CreateVoiceWebSocket] webSocket must be null!");
+            if (webSocket != null && webSocket.IsConnected)
+                throw new InvalidOperationException("[CreateVoiceWebSocket] webSocket must be null or disconnected!");
             if (guildId == Snowflake.None)
                 throw new InvalidOperationException("[CreateVoiceWebSocket] guildId must be set!");
 
@@ -273,6 +443,8 @@ namespace Discore.Voice
             webSocket.OnUnexpectedClose += WebSocket_OnUnexpectedClose;
             webSocket.OnTimedOut += WebSocket_OnTimedOut;
             webSocket.OnUserSpeaking += WebSocket_OnUserSpeaking;
+            webSocket.OnNewSessionRequested += WebSocket_OnNewSessionRequested;
+            webSocket.OnResumeRequested += WebSocket_OnResumeRequested;
 
             log.LogVerbose("[CreateVoiceWebSocket] Created VoiceWebSocket.");
 
@@ -307,13 +479,43 @@ namespace Discore.Voice
             log.LogVerbose("[ConnectVoiceWebSocket] Connected WebSocket.");
         }
 
+        async Task SendVoiceResume()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] webSocket must not be null!");
+            if (voiceState == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] voiceState must not be null!");
+            if (voiceState.SessionId == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] voiceState.SessionId must not be null!");
+            if (token == null)
+                throw new InvalidOperationException("[SendVoiceIdentify] token must not be null!");
+
+            await webSocket.SendResumePayload(guildId, voiceState.SessionId, token)
+                .ConfigureAwait(false);
+        }
+
+        Task ReceiveResumed()
+        {
+            if (webSocket == null)
+                throw new InvalidOperationException("[ReceiveResumed] webSocket must not be null!");
+
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            tokenSource.CancelAfter(5 * 1000);
+
+            return Task.Run(() =>
+            {
+                webSocket.ResumedQueue.Take(tokenSource.Token);
+                log.LogVerbose("[ReceiveResumed] Resume successful!");
+            });
+        }
+
         Task ReceiveVoiceHello()
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceHello] webSocket must not be null!");
 
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(10 * 1000);
+            tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
             {
@@ -344,7 +546,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[ReceiveVoiceReady] webSocket must not be null!");
 
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(10 * 1000);
+            tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
             {
@@ -371,8 +573,8 @@ namespace Discore.Voice
 
         Task CreateVoiceUdpSocket()
         {
-            if (udpSocket != null)
-                throw new InvalidOperationException("[CreateVoiceUdpSocket] udpSocket must be null!");
+            if (udpSocket != null && udpSocket.IsConnected)
+                throw new InvalidOperationException("[CreateVoiceUdpSocket] udpSocket must be null or disconnected!");
             if (!ssrc.HasValue)
                 throw new InvalidOperationException("[CreateVoiceUdpSocket] ssrc must not be null!");
 
@@ -429,7 +631,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[ReceiveIPDiscovery] udpSocket must not be null!");
 
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(10 * 1000);
+            tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
             {
@@ -470,7 +672,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[ReceiveSessionDescription] udpSocket must not be null!");
 
             CancellationTokenSource tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(10 * 1000);
+            tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
             {

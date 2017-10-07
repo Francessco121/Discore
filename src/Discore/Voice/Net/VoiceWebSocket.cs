@@ -21,6 +21,14 @@ namespace Discore.Voice.Net
         /// Called when the speaking state of another user in the voice channel changes.
         /// </summary>
         public event EventHandler<VoiceSpeakingEventArgs> OnUserSpeaking;
+        /// <summary>
+        /// Called when the socket encountered an event requiring a new session.
+        /// </summary>
+        public event EventHandler OnNewSessionRequested;
+        /// <summary>
+        /// Called when the socket encountered an event requiring a resume.
+        /// </summary>
+        public event EventHandler OnResumeRequested;
 
         public const int GATEWAY_VERSION = 3;
 
@@ -59,8 +67,16 @@ namespace Discore.Voice.Net
             VoiceCloseCode voiceCloseCode = (VoiceCloseCode)closeStatus;
             switch (voiceCloseCode)
             {
-                // TODO: voice resuming...
-
+                case VoiceCloseCode.Disconnected:
+                case VoiceCloseCode.VoiceServerCrashed:
+                    heartbeatCancellationSource?.Cancel();
+                    OnResumeRequested?.Invoke(this, EventArgs.Empty);
+                    break;
+                case VoiceCloseCode.InvalidSession:
+                case VoiceCloseCode.SessionTimeout:
+                    heartbeatCancellationSource?.Cancel();
+                    OnNewSessionRequested?.Invoke(this, EventArgs.Empty);
+                    break;
                 default:
                     log.LogVerbose($"Fatal close code: {voiceCloseCode} ({(int)voiceCloseCode})");
                     OnUnexpectedClose?.Invoke(this, EventArgs.Empty);

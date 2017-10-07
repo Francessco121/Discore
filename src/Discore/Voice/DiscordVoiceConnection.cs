@@ -1,5 +1,4 @@
-﻿using Discore.Voice.Net;
-using Discore.WebSocket;
+﻿using Discore.WebSocket;
 using Discore.WebSocket.Net;
 using System;
 using System.Collections.Generic;
@@ -281,7 +280,7 @@ namespace Discore.Voice
         /// </summary>
         public bool CanSendVoiceData(int size)
         {
-            return isValid && IsConnected 
+            return isValid && isConnected && !isConnecting
                 && (udpSocket != null && udpSocket.CanSendData(size));
         }
 
@@ -321,7 +320,7 @@ namespace Discore.Voice
             {
                 isSpeaking = speaking;
 
-                if (IsConnected)
+                if (isConnected && !isConnecting)
                     return webSocket.SendSpeakingPayload(speaking, udpSocket.Ssrc);
             }
 

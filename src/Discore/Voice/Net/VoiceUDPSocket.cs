@@ -46,16 +46,6 @@ namespace Discore.Voice.Net
         int ssrc;
         byte[] secretKey;
 
-        [Obsolete]
-        public VoiceUdpSocket(string loggingName)
-        {
-            log = new DiscoreLogger(loggingName);
-
-            encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
-
-            CreateSendBuffer();
-        }
-
         public VoiceUdpSocket(string loggingName, int ssrc)
         {
             log = new DiscoreLogger(loggingName);
@@ -122,15 +112,6 @@ namespace Discore.Voice.Net
         }
 
         /// <summary>
-        /// Sets the SSRC the UDP socket will use.
-        /// </summary>
-        [Obsolete]
-        public void SetSsrc(int ssrc)
-        {
-            this.ssrc = ssrc;
-        }
-
-        /// <summary>
         /// Initializes the UDP send loop.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
@@ -179,7 +160,6 @@ namespace Discore.Voice.Net
             // Read port
             int port = (ushort)(data[68] | data[69] << 8);
 
-            //OnIPDiscovered?.Invoke(this, new IPDiscoveryEventArgs(ip, port));
             IPDiscoveryQueue.Add(new IPDiscoveryEventArgs(ip, port));
         }
 
@@ -261,7 +241,6 @@ namespace Discore.Voice.Net
 
         async Task SendLoop()
         {
-            //const int TICKS_PER_S = 1000;
             const int TICKS_PER_MS = 1;
             const int MAX_OPUS_SIZE = 4000;
 
@@ -277,7 +256,6 @@ namespace Discore.Voice.Net
 
             byte[] nonce = new byte[24];
             byte[] voicePacket = new byte[MAX_OPUS_SIZE + 12 + 16];
-            byte[] pingPacket = new byte[8];
 
             int rtpPacketLength = 0;
 
@@ -293,7 +271,6 @@ namespace Discore.Voice.Net
             Buffer.BlockCopy(voicePacket, 0, nonce, 0, 12);
 
             int nextTicks = Environment.TickCount;
-            int nextPingTicks = Environment.TickCount;
 
             // Begin send loop
             bool hasFrame = false;
@@ -388,23 +365,6 @@ namespace Discore.Voice.Net
 
                         // Calculate the time for next frame
                         nextTicks += ticksPerFrame;
-
-                        // Is it time to ping?
-                        //if (currentTicks > nextPingTicks)
-                        //{
-                        //    // Increment the ping packet
-                        //    for (int i = 0; i < 8; i++)
-                        //    {
-                        //        unchecked
-                        //        {
-                        //            pingPacket[i] = (byte)(pingPacket[i] + 1);
-                        //        }
-                        //    }
-
-                        //    // Send the ping packet across UDP
-                        //    udpSocket.Send(pingPacket, pingPacket.Length).Wait();
-                        //    nextPingTicks = currentTicks + 5 * TICKS_PER_S;
-                        //}
                     }
                     else
                     {
