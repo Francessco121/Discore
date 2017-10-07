@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Http.Net;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -81,14 +82,14 @@ namespace Discore.Http
         /// Bans a users from the specified guild.
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
-        /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
+        /// <param name="deleteMessageDays">Number of days to delete messages for (0-7) or null to delete none.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task CreateGuildBan(Snowflake guildId, Snowflake userId, int? deleteMessageDays = null)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("delete-message-days", deleteMessageDays);
+            UrlParametersBuilder parameters = new UrlParametersBuilder();
+            parameters["delete-message-days"] = deleteMessageDays?.ToString();
 
-            await rest.Put($"guilds/{guildId}/bans/{userId}", requestData,
+            await rest.Put($"guilds/{guildId}/bans/{userId}{parameters.ToQueryString()}",
                 $"guilds/{guildId}/bans/user").ConfigureAwait(false);
         }
 

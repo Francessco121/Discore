@@ -114,7 +114,7 @@ namespace Discore
         /// Bans this user from the guild they are a member of.
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
-        /// <param name="deleteMessageDays">Number of days to delete messages for (0-7).</param>
+        /// <param name="deleteMessageDays">Number of days to delete messages for (0-7) or null to delete none.</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Ban(int? deleteMessageDays = null)
         {
