@@ -170,6 +170,7 @@ namespace Discore.Voice.Net
             data.Set("delay", 0); // TODO: is this needed?
             data.Set("ssrc", ssrc);
 
+            log.LogVerbose($"[Speaking] Sending: speaking = {speaking}, ssrc = {ssrc}");
             return SendPayload(VoiceOPCode.Speaking, data);
         }
     }

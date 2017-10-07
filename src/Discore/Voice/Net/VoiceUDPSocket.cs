@@ -28,7 +28,7 @@ namespace Discore.Voice.Net
 
         public int Ssrc => ssrc;
 
-        DiscoreLogger log;
+        readonly DiscoreLogger log;
 
         bool isDisposed;
 
@@ -40,10 +40,10 @@ namespace Discore.Voice.Net
 
         bool discoveringIP;
 
-        OpusEncoder encoder;
-        CircularBuffer sendBuffer;
+        readonly OpusEncoder encoder;
+        readonly CircularBuffer sendBuffer;
 
-        int ssrc;
+        readonly int ssrc;
         byte[] secretKey;
 
         public VoiceUdpSocket(string loggingName, int ssrc)
@@ -53,11 +53,7 @@ namespace Discore.Voice.Net
             this.ssrc = ssrc;
             encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
 
-            CreateSendBuffer();
-        }
-
-        void CreateSendBuffer()
-        {
+            // Create send buffer
             const int FRAME_LENGTH = 20;
             const int BITS_PER_SAMPLE = 16;
             const int BUFFER_LENGTH = 1000;
@@ -284,9 +280,6 @@ namespace Discore.Voice.Net
                         // Read frame from buffer
                         sendBuffer.Read(frame, 0, frame.Length);
 
-                        // Increase the sequence number, use unchecked because wrapping is valid
-                        unchecked { sequence++; };
-
                         // Set sequence number in RTP packet
                         voicePacket[2] = (byte)(sequence >> 8);
                         voicePacket[3] = (byte)(sequence >> 0);
@@ -295,6 +288,9 @@ namespace Discore.Voice.Net
                         voicePacket[5] = (byte)(timestamp >> 16);
                         voicePacket[6] = (byte)(timestamp >> 8);
                         voicePacket[7] = (byte)(timestamp >> 0);
+
+                        // Increase the sequence number, use unchecked because wrapping is valid
+                        unchecked { sequence++; };
 
                         // Encode the frame
                         int encodedLength = encoder.EncodeFrame(frame, 0, encodedFrame);

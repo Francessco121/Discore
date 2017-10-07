@@ -47,24 +47,30 @@ namespace Discore.Voice
                 // Strip off the port
                 this.endPoint = endPoint.Split(':')[0];
 
+                // Either the token or session ID can be received first,
+                // so we must check if we are ready to start in both cases.
                 if (voiceState != null)
                 {
                     // Server updates can be sent twice, the second time
                     // is when the voice server changes, so we need to reconnect.
-                    if (isConnected)
+                    bool isServerSwap = isConnected;
+
+                    if (isServerSwap)
                     {
                         await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Reconnecting...").ConfigureAwait(false);
                         EnsureUdpSocketIsClosed();
                     }
-
-                    // Either the token or session ID can be received first,
-                    // so we must check if we are ready to start in both cases.
+                    
+                    // Start a new session
                     await DoFullConnect();
 
-                    // Ensure we send a speaking payload so that moving between voice servers
-                    // updates the ssrc correctly.
-                    await webSocket.SendSpeakingPayload(isSpeaking, ssrc.Value)
-                        .ConfigureAwait(false);
+                    if (isServerSwap)
+                    {
+                        // Ensure we send a speaking payload so that moving between voice servers
+                        // updates the ssrc correctly.
+                        await webSocket.SendSpeakingPayload(isSpeaking, ssrc.Value)
+                            .ConfigureAwait(false);
+                    }
                 }
             }
         }
