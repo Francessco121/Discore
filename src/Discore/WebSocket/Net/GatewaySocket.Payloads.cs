@@ -42,8 +42,17 @@ namespace Discore.WebSocket.Net
                 log.LogWarning("Received more than one HELLO payload.");
         }
 
+        [Payload(GatewayOPCode.Heartbeat)]
+        async Task HandleHeartbeatPayload(DiscordApiData payload, DiscordApiData data)
+        {
+            // The gateway can request a heartbeat in certain (unlisted) scenarios.
+            log.LogVerbose("[Heartbeat] Gateway requested heartbeat.");
+
+            await SendHeartbeatPayload();
+        }
+
         [Payload(GatewayOPCode.HeartbeatAck)]
-        void HandleheartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleHeartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
         {
             receivedHeartbeatAck = true;
         }
