@@ -130,10 +130,10 @@ namespace Discore
             EmbedChannelId = guild.EmbedChannelId;
 
             if (guild.Icon != null)
-                Icon = new DiscordCdnUrl(DiscordCdnUrlType.Icon, guild.Id, guild.Icon);
+                Icon = DiscordCdnUrl.ForGuildIcon(guild.Id, guild.Icon);
 
             if (guild.Splash != null)
-                Splash = new DiscordCdnUrl(DiscordCdnUrlType.Splash, guild.Id, guild.Splash);
+                Splash = DiscordCdnUrl.ForGuildSplash(guild.Id, guild.Splash);
 
             Features = new List<string>(guild.Features);
 
@@ -165,11 +165,11 @@ namespace Discore
             // Get image hashes
             string iconHash = data.GetString("icon");
             if (iconHash != null)
-                Icon = new DiscordCdnUrl(DiscordCdnUrlType.Icon, Id, iconHash);
+                Icon = DiscordCdnUrl.ForGuildIcon(Id, iconHash);
 
             string splashHash = data.GetString("splash");
             if (splashHash != null)
-                Splash = new DiscordCdnUrl(DiscordCdnUrlType.Splash, Id, splashHash);
+                Splash = DiscordCdnUrl.ForGuildSplash(Id, splashHash);
 
             // Get features
             IList<DiscordApiData> featuresData = data.GetArray("features");

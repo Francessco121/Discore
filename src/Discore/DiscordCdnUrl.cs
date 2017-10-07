@@ -17,58 +17,113 @@ namespace Discore
         /// </summary>
         public DiscordCdnUrlType Type { get; }
         /// <summary>
-        /// Gets the ID of the resource this URL is for (e.g. user ID, guild ID, etc.).
+        /// Gets the ID of the resource this URL is for (e.g. user ID, guild ID, etc.)
+        /// or null if there is no resource ID (e.g. a default user avatar).
         /// </summary>
-        public Snowflake ResourceId { get; }
+        public Snowflake? ResourceId { get; }
         /// <summary>
-        /// Gets the original resource hash provided by the API.
+        /// Gets the original file name provided by the API. This is usually
+        /// a hash of the resource.
         /// </summary>
-        public string Hash { get; }
+        public string FileName { get; }
 
-        string typeStr;
+        readonly string baseUrl;
 
-        /// <summary>
-        /// Creates a URL builder for any given resource for Discord's CDN.
-        /// </summary>
-        /// <param name="type">The type of resource.</param>
-        /// <param name="resourceId">The ID of the resource.</param>
-        /// <param name="hash">The hash of the resource (this is normally provided by the API).</param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="hash"/> is null.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="type"/> is invalid.</exception>
-        public DiscordCdnUrl(DiscordCdnUrlType type, Snowflake resourceId, string hash)
+        private DiscordCdnUrl(DiscordCdnUrlType type, Snowflake? resourceId, string fileName,
+            string baseUrl)
         {
             Type = type;
             ResourceId = resourceId;
-            Hash = hash;
+            FileName = fileName;
 
-            switch (type)
-            {
-                case DiscordCdnUrlType.Avatar:
-                    typeStr = "avatars";
-                    break;
-                case DiscordCdnUrlType.Icon:
-                    typeStr = "icons";
-                    break;
-                case DiscordCdnUrlType.Splash:
-                    typeStr = "splashes";
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type));
-            }
+            this.baseUrl = baseUrl;
         }
 
         /// <summary>
-        /// Gets the complete URL.
+        /// Creates a CDN URL builder for custom emojis.
+        /// </summary>
+        /// <param name="emojiId">The ID of the custom emoji.</param>
+        public static DiscordCdnUrl ForCustomEmoji(Snowflake emojiId)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.CustomEmoji, emojiId, emojiId.ToString(),
+                $"{CdnBaseUrl}/emojis/{emojiId}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for guild icons.
+        /// </summary>
+        /// <param name="guildId">The ID of the guild.</param>
+        /// <param name="iconHash">The icon hash for the guild.</param>
+        public static DiscordCdnUrl ForGuildIcon(Snowflake guildId, string iconHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.GuildIcon, guildId, iconHash,
+                $"{CdnBaseUrl}/icons/{guildId}/{iconHash}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for guild splashes.
+        /// </summary>
+        /// <param name="guildId">The ID of the guild.</param>
+        /// <param name="splashHash">The hash of the splash image for the guild.</param>
+        public static DiscordCdnUrl ForGuildSplash(Snowflake guildId, string splashHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.GuildSplash, guildId, splashHash,
+                $"{CdnBaseUrl}/splashes/{guildId}/{splashHash}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for a default user avatar.
+        /// </summary>
+        /// <param name="userDiscriminator">The original user discriminator.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="userDiscriminator"/> is null.</exception>
+        /// <exception cref="FormatException">Thrown if <paramref name="userDiscriminator"/> is not a valid integer.</exception>
+        /// <exception cref="OverflowException">
+        /// Thrown if <paramref name="userDiscriminator"/> represents a number less than <see cref="int.MinValue"/>
+        /// or greater than <see cref="int.MaxValue"/>.
+        /// </exception>
+        public static DiscordCdnUrl ForDefaultUserAvatar(string userDiscriminator)
+        {
+            // The actual file name is the original discriminator modulo 5.
+            int discriminatorNum = int.Parse(userDiscriminator);
+            string fileName = (discriminatorNum % 5).ToString();
+
+            return new DiscordCdnUrl(DiscordCdnUrlType.DefaultUserAvatar, null, fileName,
+                $"{CdnBaseUrl}/embed/avatars/{fileName}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for a user avatar.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="avatarHash">The avatar hash for the user.</param>
+        public static DiscordCdnUrl ForUserAvatar(Snowflake userId, string avatarHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.UserAvatar, userId, avatarHash,
+                $"{CdnBaseUrl}/avatars/{userId}/{avatarHash}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for an application icon.
+        /// </summary>
+        /// <param name="applicationId">The ID of the application.</param>
+        /// <param name="iconHash">The icon hash for the application.</param>
+        public static DiscordCdnUrl ForApplicationIcon(Snowflake applicationId, string iconHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.ApplicationIcon, applicationId, iconHash,
+                $"{CdnBaseUrl}/app-icons/{applicationId}/{iconHash}");
+        }
+
+        /// <summary>
+        /// Gets the complete URL with the specified extension and size.
         /// </summary>
         /// <param name="ext">The resource file extension (e.g. png, webp, etc.).</param>
         /// <param name="size">An optional pixel size of the resource to return (sets both width and height).</param>
-        /// <returns></returns>
         public string BuildUrl(string ext = "png", int? size = null)
         {
             if (size.HasValue)
-                return $"{CdnBaseUrl}/{typeStr}/{ResourceId}/{Hash}.{ext}?size={size.Value}";
+                return $"{baseUrl}.{ext}?size={size.Value}";
             else
-                return $"{CdnBaseUrl}/{typeStr}/{ResourceId}/{Hash}.{ext}";
+                return $"{baseUrl}.{ext}";
         }
     }
 }

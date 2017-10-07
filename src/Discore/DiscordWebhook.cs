@@ -58,7 +58,7 @@ namespace Discore
 
             string avatarHash = data.GetString("avatar");
             if (avatarHash != null)
-                Avatar = new DiscordCdnUrl(DiscordCdnUrlType.Avatar, Id, avatarHash);
+                Avatar = DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
         }
 
         /// <summary>

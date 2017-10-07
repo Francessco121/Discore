@@ -30,7 +30,7 @@
 
             string iconHash = data.GetString("icon");
             if (iconHash != null)
-                Icon = new DiscordCdnUrl(DiscordCdnUrlType.Icon, Id, iconHash);
+                Icon = DiscordCdnUrl.ForGuildIcon(Id, iconHash);
 
             long permissions = data.GetInt64("permissions").Value;
             Permissions = (DiscordPermission)permissions;

@@ -5,8 +5,11 @@
     /// </summary>
     public enum DiscordCdnUrlType
     {
-        Avatar,
-        Icon,
-        Splash
+        CustomEmoji,
+        GuildIcon,
+        GuildSplash,
+        DefaultUserAvatar,
+        UserAvatar,
+        ApplicationIcon
     }
 }

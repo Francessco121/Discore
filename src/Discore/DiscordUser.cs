@@ -57,7 +57,7 @@ namespace Discore
             Email = user.Email;
 
             if (user.Avatar != null)
-                Avatar = new DiscordCdnUrl(DiscordCdnUrlType.Avatar, user.Id, user.Avatar);
+                Avatar = DiscordCdnUrl.ForUserAvatar(user.Id, user.Avatar);
         }
 
         internal DiscordUser(bool isWebhookUser, DiscordApiData data)
@@ -74,7 +74,7 @@ namespace Discore
 
             string avatarHash = data.GetString("avatar");
             if (avatarHash != null)
-                Avatar = new DiscordCdnUrl(DiscordCdnUrlType.Avatar, Id, avatarHash);
+                Avatar = DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
         }
 
         public override string ToString()
