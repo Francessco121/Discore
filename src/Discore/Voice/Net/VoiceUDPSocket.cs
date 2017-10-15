@@ -83,7 +83,7 @@ namespace Discore.Voice.Net
             endPoint = new IPEndPoint(addresses[0], port);
 
             // Connect the socket
-            socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
             socket.SendTimeout = 1000 * 10;
             socket.ReceiveTimeout = 1000 * 10;
             
