@@ -159,7 +159,7 @@ namespace Discore.Http
         public async Task CreateGuildIntegration(Snowflake guildId, Snowflake integrationId, string type)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("id", integrationId);
+            requestData.SetSnowflake("id", integrationId);
             requestData.Set("type", type);
 
             await rest.Post($"guilds/{guildId}/integrations",

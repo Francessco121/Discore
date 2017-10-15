@@ -124,8 +124,8 @@ namespace Discore.Voice.Net
         public Task SendIdentifyPayload(Snowflake serverId, Snowflake userId, string sessionId, string token)
         {
             DiscordApiData data = new DiscordApiData();
-            data.Set("server_id", serverId);
-            data.Set("user_id", userId);
+            data.SetSnowflake("server_id", serverId);
+            data.SetSnowflake("user_id", userId);
             data.Set("session_id", sessionId);
             data.Set("token", token);
 
@@ -138,7 +138,7 @@ namespace Discore.Voice.Net
         public Task SendResumePayload(Snowflake serverId, string sessionId, string token)
         {
             DiscordApiData data = new DiscordApiData();
-            data.Set("server_id", serverId);
+            data.SetSnowflake("server_id", serverId);
             data.Set("session_id", sessionId);
             data.Set("token", token);
 

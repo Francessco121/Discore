@@ -35,7 +35,7 @@
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("id", Id);
+            data.SetSnowflake("id", Id);
             data.Set("position", Position);
 
             return data;

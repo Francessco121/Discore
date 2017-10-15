@@ -475,7 +475,7 @@ namespace Discore
         /// Sets a snowflake value in this api data container.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData Set(string key, Snowflake snowflake)
+        public DiscordApiData SetSnowflake(string key, Snowflake snowflake)
         {
             AssertContainer();
 
@@ -488,7 +488,7 @@ namespace Discore
         /// Sets a snowflake value in this api data container.
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this data is not a container.</exception>
-        public DiscordApiData Set(string key, Snowflake? snowflake)
+        public DiscordApiData SetSnowflake(string key, Snowflake? snowflake)
         {
             AssertContainer();
 

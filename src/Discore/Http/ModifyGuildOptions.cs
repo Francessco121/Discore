@@ -144,13 +144,13 @@
             if (DefaultMessageNotifications.HasValue)
                 data.Set("default_message_notifications", DefaultMessageNotifications);
             if (AfkChannelId.HasValue)
-                data.Set("afk_channel_id", AfkChannelId);
+                data.SetSnowflake("afk_channel_id", AfkChannelId);
             if (AfkTimeout.HasValue)
                 data.Set("afk_timeout", AfkTimeout);
             if (Icon != null)
                 data.Set("icon", Icon.ToDataUriScheme());
             if (OwnerId.HasValue)
-                data.Set("owner_id", OwnerId);
+                data.SetSnowflake("owner_id", OwnerId);
             if (Splash != null)
                 data.Set("splash", Splash.ToDataUriScheme());
 
