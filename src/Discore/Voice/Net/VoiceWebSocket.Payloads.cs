@@ -167,7 +167,7 @@ namespace Discore.Voice.Net
         {
             DiscordApiData data = new DiscordApiData();
             data.Set("speaking", speaking);
-            data.Set("delay", 0); // TODO: is this needed?
+            data.Set("delay", 0);
             data.Set("ssrc", ssrc);
 
             log.LogVerbose($"[Speaking] Sending: speaking = {speaking}, ssrc = {ssrc}");
