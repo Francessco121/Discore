@@ -98,7 +98,7 @@ namespace Discore.Http
         public async Task<DiscordDMChannel> CreateDM(Snowflake recipientId)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("recipient_id", recipientId);
+            requestData.SetSnowflake("recipient_id", recipientId);
 
             DiscordApiData returnData = await rest.Post("users/@me/channels", requestData,
                 "users/@me/channels").ConfigureAwait(false);

@@ -36,7 +36,7 @@
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("enabled", Enabled);
-            data.Set("channel_id", ChannelId);
+            data.SetSnowflake("channel_id", ChannelId);
 
             return data;
         }

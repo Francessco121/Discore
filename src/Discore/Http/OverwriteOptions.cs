@@ -49,7 +49,7 @@
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("id", Id);
+            data.SetSnowflake("id", Id);
             data.Set("type", Type.ToString().ToLower());
             data.Set("allow", (int)Allow);
             data.Set("deny", (int)Deny);

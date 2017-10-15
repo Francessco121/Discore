@@ -173,7 +173,7 @@ namespace Discore.WebSocket.Net
         public Task SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("guild_id", guildId);
+            data.SetSnowflake("guild_id", guildId);
             data.Set("query", query);
             data.Set("limit", limit);
 
@@ -185,8 +185,8 @@ namespace Discore.WebSocket.Net
         public Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("guild_id", guildId);
-            data.Set("channel_id", channelId);
+            data.SetSnowflake("guild_id", guildId);
+            data.SetSnowflake("channel_id", channelId);
             data.Set("self_mute", isMute);
             data.Set("self_deaf", isDeaf);
 

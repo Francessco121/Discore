@@ -97,7 +97,7 @@ namespace Discore.Http
             if (IsServerDeaf.HasValue)
                 data.Set("deaf", IsServerDeaf);
             if (ChannelId.HasValue)
-                data.Set("channel_id", ChannelId);
+                data.SetSnowflake("channel_id", ChannelId);
 
             if (RoleIds != null)
             {

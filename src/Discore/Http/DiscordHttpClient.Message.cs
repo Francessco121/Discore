@@ -73,7 +73,7 @@ namespace Discore.Http
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
             requestData.Set("content", options.Content);
             requestData.Set("tts", options.TextToSpeech);
-            requestData.Set("nonce", options.Nonce);
+            requestData.SetSnowflake("nonce", options.Nonce);
 
             if (options.Embed != null)
                 requestData.Set("embed", options.Embed.Build());
@@ -140,7 +140,7 @@ namespace Discore.Http
                     DiscordApiData payloadJson = new DiscordApiData();
                     payloadJson.Set("content", options.Content);
                     payloadJson.Set("tts", options.TextToSpeech);
-                    payloadJson.Set("nonce", options.Nonce);
+                    payloadJson.SetSnowflake("nonce", options.Nonce);
 
                     if (options.Embed != null)
                         payloadJson.Set("embed", options.Embed.Build());

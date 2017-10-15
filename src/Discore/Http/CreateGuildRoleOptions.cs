@@ -68,7 +68,7 @@
         internal override DiscordApiData Build()
         {
             DiscordApiData data = base.Build();
-            data.Set("id", TemporaryId);
+            data.SetSnowflake("id", TemporaryId);
 
             return data;
         }
