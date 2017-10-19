@@ -13,6 +13,11 @@ namespace Discore
         /// </summary>
         public string Topic { get; }
 
+        /// <summary>
+        /// Gets whether this text channel is NSFW (not-safe-for-work).
+        /// </summary>
+        public bool Nsfw { get; }
+
         DiscordHttpClient http;
         Snowflake lastMessageId;
 
@@ -22,6 +27,7 @@ namespace Discore
             this.http = http;
 
             Topic = data.GetString("topic");
+            Nsfw = data.GetBoolean("nsfw") ?? false;
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
         }
 

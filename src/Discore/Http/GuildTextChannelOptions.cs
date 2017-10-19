@@ -21,6 +21,11 @@
         public string Topic { get; set; }
 
         /// <summary>
+        /// Gets or sets whether this text channel is NSFW (not-safe-for-work) (or null to leave unchanged).
+        /// </summary>
+        public bool? Nsfw { get; set; }
+
+        /// <summary>
         /// Sets the name of the channel.
         /// </summary>
         public GuildTextChannelOptions SetName(string name)
@@ -47,6 +52,15 @@
             return this;
         }
 
+        /// <summary>
+        /// Sets whether this text channel is NSFW (not-safe-for-work).
+        /// </summary>
+        public GuildTextChannelOptions SetNsfw(bool nsfw)
+        {
+            Nsfw = nsfw;
+            return this;
+        }
+
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -57,6 +71,8 @@
                 data.Set("position", Position.Value);
             if (Topic != null)
                 data.Set("topic", Topic);
+            if (Nsfw.HasValue)
+                data.Set("nsfw", Nsfw.Value);
 
             return data;
         }

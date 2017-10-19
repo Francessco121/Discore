@@ -150,7 +150,7 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Creates a new text or voice channel for a guild.
+        /// Creates a new text channel, voice channel, or channel category for a guild.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>

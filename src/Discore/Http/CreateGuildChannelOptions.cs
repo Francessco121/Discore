@@ -20,7 +20,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the voice bitrate (if a voice channel).
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel.</exception>
         public int? Bitrate
         {
             get => bitrate;
@@ -36,7 +36,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the user limit (if a voice channel).
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel.</exception>
         public int? UserLimit
         {
             get => userlimit;
@@ -52,7 +52,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the topic (if a text channel).
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel.</exception>
         public string Topic
         {
             get => topic;
@@ -66,6 +66,22 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Gets or sets whether this channel is NSFW (not-safe-for-work) (if a text channel).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel.</exception>
+        public bool? Nsfw
+        {
+            get => nsfw;
+            set
+            {
+                if (Type != DiscordChannelType.GuildText)
+                    throw new InvalidOperationException("Cannot set nsfw for non-text channel.");
+
+                nsfw = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a list of permission overwrites.
         /// </summary>
         public IList<OverwriteOptions> PermissionOverwrites { get; set; }
@@ -73,6 +89,7 @@ namespace Discore.Http
         int? bitrate;
         int? userlimit;
         string topic;
+        bool? nsfw;
 
         /// <exception cref="ArgumentException">Thrown if <paramref name="type"/> is not a guild channel type.</exception>
         public CreateGuildChannelOptions(DiscordChannelType type)
@@ -96,7 +113,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the voice bitrate (if a voice channel).
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel.</exception>
         public CreateGuildChannelOptions SetBitrate(int bitrate)
         {
             Bitrate = bitrate;
@@ -106,7 +123,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the user limit (if a voice channel).
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel.</exception>
         public CreateGuildChannelOptions SetUserLimit(int userLimit)
         {
             UserLimit = userLimit;
@@ -116,10 +133,20 @@ namespace Discore.Http
         /// <summary>
         /// Sets the topic (if a text channel).
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel</exception>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel.</exception>
         public CreateGuildChannelOptions SetTopic(string topic)
         {
             Topic = topic;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets whether this channel is NSFW (not-safe-for-work) (if a text channel).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel.</exception>
+        public CreateGuildChannelOptions SetNsfw(bool nsfw)
+        {
+            Nsfw = nsfw;
             return this;
         }
 
@@ -152,6 +179,8 @@ namespace Discore.Http
             {
                 if (topic != null)
                     data.Set("topic", topic);
+                if (nsfw.HasValue)
+                    data.Set("nsfw", nsfw.Value);
             }
 
             if (PermissionOverwrites != null)
