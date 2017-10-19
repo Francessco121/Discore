@@ -16,7 +16,7 @@ namespace Discore.Http
         /// <param name="channelId">The ID of the channel the webhook will post to.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> or <paramref name="avatar"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> CreateWebook(string name, DiscordImageData avatar, Snowflake channelId)
+        public async Task<DiscordWebhook> CreateWebhook(string name, DiscordImageData avatar, Snowflake channelId)
         {
             if (name == null)
                 throw new ArgumentNullException(nameof(name));
@@ -37,7 +37,7 @@ namespace Discore.Http
         /// Gets a webhook via its ID.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> GetWebook(Snowflake webhookId)
+        public async Task<DiscordWebhook> GetWebhook(Snowflake webhookId)
         {
             DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}",
                 "webhooks/webhook").ConfigureAwait(false);
@@ -52,7 +52,7 @@ namespace Discore.Http
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> GetWebookWithToken(Snowflake webhookId, string token)
+        public async Task<DiscordWebhook> GetWebhookWithToken(Snowflake webhookId, string token)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
@@ -106,7 +106,7 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> ModifyWebook(Snowflake webhookId, string name = null, DiscordImageData avatar = null)
+        public async Task<DiscordWebhook> ModifyWebhook(Snowflake webhookId, string name = null, DiscordImageData avatar = null)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
             if (!string.IsNullOrWhiteSpace(name))
@@ -125,7 +125,7 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task DeleteWebook(Snowflake webhookId)
+        public async Task DeleteWebhook(Snowflake webhookId)
         {
             await rest.Delete($"webhooks/{webhookId}",
                 "webhooks/webhook").ConfigureAwait(false);
@@ -137,7 +137,7 @@ namespace Discore.Http
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task DeleteWebookWithToken(Snowflake webhookId, string token)
+        public async Task DeleteWebhookWithToken(Snowflake webhookId, string token)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
@@ -159,7 +159,7 @@ namespace Discore.Http
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, ExecuteWebhookOptions options,
+        public async Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
             if (token == null)
@@ -190,13 +190,13 @@ namespace Discore.Http
         /// or <paramref name="fileData"/> is null,
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, Stream fileData, string fileName,
+        public Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, Stream fileData, string fileName,
             ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
             if (fileData == null)
                 throw new ArgumentNullException(nameof(fileData));
 
-            return ExecuteWebook(webhookId, token, new StreamContent(fileData), fileName, options, waitAndReturnMessage);
+            return ExecuteWebhook(webhookId, token, new StreamContent(fileData), fileName, options, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -211,17 +211,17 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException">Thrown if the token is null 
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
+        public Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
-            return ExecuteWebook(webhookId, token, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName,
+            return ExecuteWebhook(webhookId, token, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName,
                 options, waitAndReturnMessage);
         }
 
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        async Task<DiscordMessage> ExecuteWebook(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
+        async Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
             ExecuteWebhookOptions options, bool waitAndReturnMessage)
         {
             if (token == null)

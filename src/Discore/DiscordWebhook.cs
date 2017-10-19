@@ -68,7 +68,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null)
         {
-            return http.ModifyWebook(Id, name, avatar);
+            return http.ModifyWebhook(Id, name, avatar);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task Delete()
         {
-            return http.DeleteWebook(Id);
+            return http.DeleteWebhook(Id);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteWithToken(string token)
         {
-            return http.DeleteWebookWithToken(Id, token);
+            return http.DeleteWebhookWithToken(Id, token);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace Discore
         public Task<DiscordMessage> Execute(string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
-            return http.ExecuteWebook(Id, token, options, waitAndReturnMessage);
+            return http.ExecuteWebhook(Id, token, options, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Discore
         public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
             ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
-            return http.ExecuteWebook(Id, token, fileData, fileName, options, waitAndReturnMessage);
+            return http.ExecuteWebhook(Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace Discore
         public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
         {
-            return http.ExecuteWebook(Id, token, fileData, fileName, options, waitAndReturnMessage);
+            return http.ExecuteWebhook(Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
     }
 }
