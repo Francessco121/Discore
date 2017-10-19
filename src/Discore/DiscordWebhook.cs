@@ -69,6 +69,16 @@ namespace Discore
         public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null)
         {
             return http.ModifyWebhook(Id, name, avatar);
+
+        /// <summary>
+        /// Modifies the settings of this webhook.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task ModifyWithToken(string token, string name = null, DiscordImageData avatar = null)
+        {
+            return http.ModifyWebhookWithToken(Id, token, name, avatar);
         }
 
         /// <summary>
@@ -86,7 +96,7 @@ namespace Discore
         /// Deletes this webhook permanently.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteWithToken(string token)
         {

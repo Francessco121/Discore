@@ -50,7 +50,7 @@ namespace Discore.Http
         /// <para>This call does not require authentication and returns no user in the webhook object.</para>
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> GetWebhookWithToken(Snowflake webhookId, string token)
         {
@@ -121,6 +121,30 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Modifies an existing webhook.
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task ModifyWebhookWithToken(Snowflake webhookId, string token,
+            string name = null, DiscordImageData avatar = null)
+        {
+            if (token == null)
+                throw new ArgumentNullException(nameof(token));
+            if (string.IsNullOrWhiteSpace(token))
+                throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
+
+            DiscordApiData postData = DiscordApiData.CreateContainer();
+            if (name != null)
+                postData.Set("name", name);
+            if (avatar != null)
+                postData.Set("avatar", avatar);
+
+            await rest.Patch($"webhooks/{webhookId}/{token}", postData,
+                $"webhooks/{webhookId}/token").ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Deletes a webhook permanently. The current bot must be the owner.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
@@ -135,7 +159,7 @@ namespace Discore.Http
         /// Deletes a webhook permanently.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteWebhookWithToken(Snowflake webhookId, string token)
         {
