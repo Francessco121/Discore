@@ -65,10 +65,13 @@ namespace Discore
         /// Modifies the settings of this webhook.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
+        /// <param name="channelId">The ID of the text channel to move this webhook to (or null to not move).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null)
+        public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null,
+            Snowflake? channelId = null)
         {
-            return http.ModifyWebhook(Id, name, avatar);
+            return http.ModifyWebhook(Id, name, avatar, channelId);
+        }
 
         /// <summary>
         /// Modifies the settings of this webhook.

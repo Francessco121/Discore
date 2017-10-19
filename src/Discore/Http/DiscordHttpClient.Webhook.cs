@@ -102,17 +102,21 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Modifies an exsting webhook.
+        /// Modifies an existing webhook.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
+        /// <param name="channelId">The ID of the text channel to move the webhook to (or null to not move).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordWebhook> ModifyWebhook(Snowflake webhookId, string name = null, DiscordImageData avatar = null)
+        public async Task<DiscordWebhook> ModifyWebhook(Snowflake webhookId,
+            string name = null, DiscordImageData avatar = null, Snowflake? channelId = null)
         {
             DiscordApiData postData = DiscordApiData.CreateContainer();
-            if (!string.IsNullOrWhiteSpace(name))
+            if (name != null)
                 postData.Set("name", name);
             if (avatar != null)
                 postData.Set("avatar", avatar);
+            if (channelId.HasValue)
+                postData.SetSnowflake("channel_id", channelId.Value);
 
             DiscordApiData apiData = await rest.Patch($"webhooks/{webhookId}", postData,
                 $"webhooks/{webhookId}").ConfigureAwait(false);
