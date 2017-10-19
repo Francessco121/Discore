@@ -40,7 +40,7 @@ namespace Discore.Http
         public async Task<DiscordWebhook> GetWebhook(Snowflake webhookId)
         {
             DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}",
-                "webhooks/webhook").ConfigureAwait(false);
+                $"webhooks/{webhookId}").ConfigureAwait(false);
 
             return new DiscordWebhook(this, apiData);
         }
@@ -60,7 +60,7 @@ namespace Discore.Http
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
             DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}/{token}",
-                "webhooks/webhook/token").ConfigureAwait(false);
+                $"webhooks/{webhookId}/token").ConfigureAwait(false);
 
             return new DiscordWebhook(this, apiData);
         }
@@ -115,7 +115,7 @@ namespace Discore.Http
                 postData.Set("avatar", avatar);
 
             DiscordApiData apiData = await rest.Patch($"webhooks/{webhookId}", postData,
-                "webhooks/webhook").ConfigureAwait(false);
+                $"webhooks/{webhookId}").ConfigureAwait(false);
 
             return new DiscordWebhook(this, apiData);
         }
@@ -128,7 +128,7 @@ namespace Discore.Http
         public async Task DeleteWebhook(Snowflake webhookId)
         {
             await rest.Delete($"webhooks/{webhookId}",
-                "webhooks/webhook").ConfigureAwait(false);
+                $"webhooks/{webhookId}").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace Discore.Http
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
             await rest.Delete($"webhooks/{webhookId}/{token}",
-                "webhooks/webhook/token").ConfigureAwait(false);
+                $"webhooks/{webhookId}/token").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace Discore.Http
             DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", requestData,
-                "webhooks/webhook/token").ConfigureAwait(false);
+                $"webhooks/{webhookId}/token").ConfigureAwait(false);
 
             return waitAndReturnMessage ? new DiscordMessage(this, returnData) : null;
         }
@@ -249,7 +249,7 @@ namespace Discore.Http
                 request.Content = data;
 
                 return request;
-            }, "webhooks/webhook/token").ConfigureAwait(false);
+            }, $"webhooks/{webhookId}/token").ConfigureAwait(false);
 
             return waitAndReturnMessage ? new DiscordMessage(this, returnData) : null;
         }
