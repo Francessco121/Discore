@@ -1,7 +1,7 @@
 ﻿namespace Discore.Http
 {
     /// <summary>
-    /// Represents a strategy used when retrieving messages from the Discord API.
+    /// Represents a pagination strategy used when retrieving messages from the Discord API.
     /// </summary>
     public enum MessageGetStrategy
     {

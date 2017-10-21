@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Http.Net;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -52,16 +53,28 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Gets a list of all users who reacted to the specified message with the specified emoji.
+        /// Gets a paginated list of users who reacted to the specified message with the specified emoji.
         /// </summary>
+        /// <param name="baseUserId">The user ID to start at when retrieving reactions.</param>
+        /// <param name="limit">The maximum number of reactions to return or null to use the default.</param>
+        /// <param name="getStrategy">The pagination strategy to use based on <paramref name="baseUserId"/>.</param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<IReadOnlyList<DiscordUser>> GetReactions(Snowflake channelId, Snowflake messageId, DiscordReactionEmoji emoji)
+        public async Task<IReadOnlyList<DiscordUser>> GetReactions(Snowflake channelId, Snowflake messageId, 
+            DiscordReactionEmoji emoji, Snowflake? baseUserId = null, int? limit = null,
+            ReactionGetStrategy getStrategy = ReactionGetStrategy.Before)
         {
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            DiscordApiData data = await rest.Get($"channels/{channelId}/messages/{messageId}/reactions/{emoji}",
+            UrlParametersBuilder builder = new UrlParametersBuilder();
+            if (baseUserId.HasValue)
+                builder.Add(getStrategy.ToString().ToLower(), baseUserId.Value.ToString());
+            if (limit.HasValue)
+                builder.Add("limit", limit.Value.ToString());
+
+            DiscordApiData data = await rest.Get(
+                $"channels/{channelId}/messages/{messageId}/reactions/{emoji}{builder.ToQueryString()}",
                 $"channels/{channelId}/messages/message/reactions/emoji").ConfigureAwait(false);
 
             DiscordUser[] users = new DiscordUser[data.Values.Count];
