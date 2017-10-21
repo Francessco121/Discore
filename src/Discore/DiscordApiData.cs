@@ -471,6 +471,18 @@ namespace Discore
             return apiValue;
         }
 
+        [Obsolete("Use SetSnowflake instead.", true)]
+        public DiscordApiData Set(string key, Snowflake snowflake)
+        {
+            throw new NotSupportedException();
+        }
+
+        [Obsolete("Use SetSnowflake instead.", true)]
+        public DiscordApiData Set(string key, Snowflake? snowflake)
+        {
+            throw new NotSupportedException();
+        }
+
         /// <summary>
         /// Sets a snowflake value in this api data container.
         /// </summary>
