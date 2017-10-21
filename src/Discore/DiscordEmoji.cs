@@ -13,6 +13,10 @@ namespace Discore
         /// </summary>
         public IReadOnlyList<Snowflake> RoleIds { get; }
         /// <summary>
+        /// Gets the ID of the user that created this emoji.
+        /// </summary>
+        public Snowflake? UserId { get; }
+        /// <summary>
         /// Gets whether or not colons are required around the emoji name to use it.
         /// </summary>
         public bool RequireColons { get; }
@@ -25,6 +29,7 @@ namespace Discore
             : base(data)
         {
             Name = data.GetString("name");
+            UserId = data.LocateSnowflake("user.id");
             RequireColons = data.GetBoolean("require_colons").Value;
             IsManaged = data.GetBoolean("managed").Value;
 
