@@ -64,6 +64,9 @@ namespace Discore.Voice.Net
 
         protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
         {
+            if (closeStatus == WebSocketCloseStatus.NormalClosure)
+                return;
+
             VoiceCloseCode voiceCloseCode = (VoiceCloseCode)closeStatus;
             switch (voiceCloseCode)
             {
@@ -78,7 +81,11 @@ namespace Discore.Voice.Net
                     OnNewSessionRequested?.Invoke(this, EventArgs.Empty);
                     break;
                 default:
-                    log.LogVerbose($"Fatal close code: {voiceCloseCode} ({(int)voiceCloseCode})");
+                    if ((int)voiceCloseCode >= 4000)
+                        log.LogVerbose($"Fatal close code: {voiceCloseCode} ({(int)voiceCloseCode}), {closeDescription}");
+                    else
+                        log.LogVerbose($"Fatal close code: {closeStatus} ({(int)closeStatus}), {closeDescription}");
+
                     OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
                     break;
             }
