@@ -82,6 +82,22 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Gets or sets the parent category channel ID (if a text or voice channel).
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text or voice channel.</exception>
+        public Snowflake? ParentId
+        {
+            get => parentId;
+            set
+            {
+                if (Type != DiscordChannelType.GuildText && Type != DiscordChannelType.GuildVoice)
+                    throw new InvalidOperationException("Cannot set parent ID for non-text and non-voice channels.");
+
+                parentId = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a list of permission overwrites.
         /// </summary>
         public IList<OverwriteOptions> PermissionOverwrites { get; set; }
@@ -90,6 +106,7 @@ namespace Discore.Http
         int? userlimit;
         string topic;
         bool? nsfw;
+        Snowflake? parentId;
 
         /// <exception cref="ArgumentException">Thrown if <paramref name="type"/> is not a guild channel type.</exception>
         public CreateGuildChannelOptions(DiscordChannelType type)
@@ -167,6 +184,9 @@ namespace Discore.Http
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("name", Name);
             data.Set("type", Type.ToString().ToLower());
+
+            if (parentId.HasValue)
+                data.SetSnowflake("parent_id", parentId.Value);
             
             if (Type == DiscordChannelType.GuildVoice)
             {
