@@ -71,6 +71,28 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Updates the settings of a guild category channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="categoryChannelId">The ID of the guild category channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild category channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildCategoryChannel> ModifyCategoryChannel(Snowflake categoryChannelId,
+            GuildCategoryChannelOptions options)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            DiscordApiData requestData = options.Build();
+
+            DiscordApiData returnData = await rest.Patch($"channels/{categoryChannelId}", requestData,
+                $"channels/{categoryChannelId}").ConfigureAwait(false);
+            return (DiscordGuildCategoryChannel)DeserializeChannelData(returnData);
+        }
+
+        /// <summary>
         /// Deletes a guild channel, or closes a DM.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>

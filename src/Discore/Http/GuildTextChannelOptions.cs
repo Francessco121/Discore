@@ -26,6 +26,12 @@
         public bool? Nsfw { get; set; }
 
         /// <summary>
+        /// Gets or sets the ID of the parent category channel (or null to leave unchanged).
+        /// <para>Note: Set to <see cref="Snowflake.None"/> to clear the parent ID.</para>
+        /// </summary>
+        public Snowflake? ParentId { get; set; }
+
+        /// <summary>
         /// Sets the name of the channel.
         /// </summary>
         public GuildTextChannelOptions SetName(string name)
@@ -61,6 +67,18 @@
             return this;
         }
 
+        /// <summary>
+        /// Sets the ID of the parent category channel.
+        /// </summary>
+        /// <param name="parentId">
+        /// The ID of the category to use as a parent or <see cref="Snowflake.None"/> to clear the parent ID.
+        /// </param>
+        public GuildTextChannelOptions SetParentId(Snowflake parentId)
+        {
+            ParentId = parentId;
+            return this;
+        }
+
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -73,6 +91,14 @@
                 data.Set("topic", Topic);
             if (Nsfw.HasValue)
                 data.Set("nsfw", Nsfw.Value);
+
+            if (ParentId.HasValue)
+            {
+                if (ParentId.Value == Snowflake.None)
+                    data.SetSnowflake("parent_id", null);
+                else
+                    data.SetSnowflake("parent_id", ParentId.Value);
+            }
 
             return data;
         }

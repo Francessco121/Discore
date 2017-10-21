@@ -234,6 +234,8 @@ namespace Discore.WebSocket.Net
                     channel = new DiscordGuildTextChannel(http, channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildVoice)
                     channel = new DiscordGuildVoiceChannel(http, channelData, guildId);
+                else if (channelType == DiscordChannelType.GuildCategory)
+                    channel = new DiscordGuildCategoryChannel(http, channelData, guildId);
 
                 if (channel != null)
                     cache.AddGuildChannel(channel);
@@ -655,6 +657,8 @@ namespace Discore.WebSocket.Net
                     channel = new DiscordGuildTextChannel(http, data, guildId);
                 else if (type == DiscordChannelType.GuildVoice)
                     channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                else if (type == DiscordChannelType.GuildCategory)
+                    channel = new DiscordGuildCategoryChannel(http, data, guildId);
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
 
@@ -677,6 +681,8 @@ namespace Discore.WebSocket.Net
                 channel = new DiscordGuildTextChannel(http, data, guildId);
             else if (type == DiscordChannelType.GuildVoice)
                 channel = new DiscordGuildVoiceChannel(http, data, guildId);
+            else if (type == DiscordChannelType.GuildCategory)
+                channel = new DiscordGuildCategoryChannel(http, data, guildId);
 
             if (channel != null)
             {
@@ -709,7 +715,8 @@ namespace Discore.WebSocket.Net
 
                 OnDMChannelRemoved?.Invoke(this, new DMChannelEventArgs(shard, dm));
             }
-            else if (type == DiscordChannelType.GuildText || type == DiscordChannelType.GuildVoice)
+            else if (type == DiscordChannelType.GuildText || type == DiscordChannelType.GuildVoice
+                || type == DiscordChannelType.GuildCategory)
             {
                 // Guild channel
                 Snowflake guildId = data.GetSnowflake("guild_id").Value;
@@ -725,6 +732,11 @@ namespace Discore.WebSocket.Net
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
                         channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                }
+                else if (type == DiscordChannelType.GuildCategory)
+                {
+                    if (!cache.GuildChannels.TryRemove(id, out channel))
+                        channel = new DiscordGuildCategoryChannel(http, data, guildId);
                 }
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");

@@ -212,6 +212,15 @@ namespace Discore.WebSocket
         }
 
         /// <summary>
+        /// Returns the specified guild category channel or, 
+        /// null if it is not currently cached or is not a guild category channel.
+        /// </summary>
+        public DiscordGuildCategoryChannel GetGuildCategoryChannel(Snowflake guildCategoryChannelId)
+        {
+            return GuildChannels[guildCategoryChannelId] as DiscordGuildCategoryChannel;
+        }
+
+        /// <summary>
         /// Returns the specified guild member or,
         /// null if the member is not currently cached or the guild is not currently cached.
         /// </summary>

@@ -16,6 +16,11 @@ namespace Discore
         /// </summary>
         public int UserLimit { get; }
 
+        /// <summary>
+        /// Gets the ID of the parent category channel or null if the channel is not in a category.
+        /// </summary>
+        public Snowflake? ParentId { get; }
+
         DiscordHttpClient http;
 
         internal DiscordGuildVoiceChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
@@ -25,6 +30,7 @@ namespace Discore
 
             Bitrate = data.GetInteger("bitrate").Value;
             UserLimit = data.GetInteger("user_limit").Value;
+            ParentId = data.GetSnowflake("parent_id");
         }
 
         /// <summary>

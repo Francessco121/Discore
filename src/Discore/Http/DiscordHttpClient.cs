@@ -41,6 +41,8 @@ namespace Discore.Http
                 return new DiscordGuildTextChannel(this, data);
             else if (type == DiscordChannelType.GuildVoice)
                 return new DiscordGuildVoiceChannel(this, data);
+            else if (type == DiscordChannelType.GuildCategory)
+                return new DiscordGuildCategoryChannel(this, data);
             else
                 throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
         }

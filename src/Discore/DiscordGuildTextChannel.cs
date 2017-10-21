@@ -18,6 +18,11 @@ namespace Discore
         /// </summary>
         public bool Nsfw { get; }
 
+        /// <summary>
+        /// Gets the ID of the parent category channel or null if the channel is not in a category.
+        /// </summary>
+        public Snowflake? ParentId { get; }
+
         DiscordHttpClient http;
         Snowflake lastMessageId;
 
@@ -28,6 +33,8 @@ namespace Discore
 
             Topic = data.GetString("topic");
             Nsfw = data.GetBoolean("nsfw") ?? false;
+            ParentId = data.GetSnowflake("parent_id");
+
             lastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
         }
 
