@@ -116,8 +116,11 @@ namespace Discore
         /// <summary>
         /// Gets the complete URL with the specified extension and size.
         /// </summary>
-        /// <param name="ext">The resource file extension (e.g. png, webp, etc.).</param>
-        /// <param name="size">An optional pixel size of the resource to return (sets both width and height).</param>
+        /// <param name="ext">The resource file extension (e.g. png, webp, gif, etc.).</param>
+        /// <param name="size">
+        /// <para>An optional pixel size of the resource to return (sets both width and height).</para>
+        /// <para>Note: Must be a power of 2 and be between 16 and 2048.</para>
+        /// </param>
         public string BuildUrl(string ext = "png", int? size = null)
         {
             if (size.HasValue)

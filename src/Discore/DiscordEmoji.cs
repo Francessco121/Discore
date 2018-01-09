@@ -24,14 +24,19 @@ namespace Discore
         /// Gets whether or not this emoji is managed.
         /// </summary>
         public bool IsManaged { get; }
+        /// <summary>
+        /// Gets whether or not this emoji is animated.
+        /// </summary>
+        public bool IsAnimated { get; }
 
         internal DiscordEmoji(DiscordApiData data)
             : base(data)
         {
             Name = data.GetString("name");
             UserId = data.LocateSnowflake("user.id");
-            RequireColons = data.GetBoolean("require_colons").Value;
-            IsManaged = data.GetBoolean("managed").Value;
+            RequireColons = data.GetBoolean("require_colons") ?? false;
+            IsManaged = data.GetBoolean("managed") ?? false;
+            IsAnimated = data.GetBoolean("animated") ?? false;
 
             IList<DiscordApiData> roles = data.GetArray("roles");
             Snowflake[] roleIds = new Snowflake[roles.Count];
