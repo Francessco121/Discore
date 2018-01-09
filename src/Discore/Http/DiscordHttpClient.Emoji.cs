@@ -39,6 +39,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Creates and returns a new guild emoji.
+        /// <para>Requires <see cref="DiscordPermission.ManageEmojis"/>.</para>
         /// </summary>
         /// <param name="guildId">The ID of the guild to give the new emoji to.</param>
         /// <param name="options">Options describing the properties of the new emoji.</param>
@@ -60,6 +61,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Updates an existing guild emoji.
+        /// <para>Requires <see cref="DiscordPermission.ManageEmojis"/>.</para>
         /// </summary>
         /// <param name="guildId">The ID of the guild the emoji is in.</param>
         /// <param name="emojiId">The ID of the emoji.</param>
@@ -83,6 +85,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Deletes a guild's emoji.
+        /// <para>Requires <see cref="DiscordPermission.ManageEmojis"/>.</para>
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="emojiId">The ID of the emoji in the guild.</param>
