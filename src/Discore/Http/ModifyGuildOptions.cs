@@ -47,6 +47,11 @@
         /// <para>Set to <see cref="DiscordImageData.None"/> to remove the splash.</para>
         /// </summary>
         public DiscordImageData Splash { get; set; }
+        /// <summary>
+        /// Gets or sets the ID of the text channel which system messages are sent to (or null to leave unchanged).
+        /// <para>Set to <see cref="Snowflake.None"/> to remove the system channel.</para>
+        /// </summary>
+        public Snowflake? SystemChannelId { get; set; }
 
         /// <summary>
         /// Sets the name of the guild.
@@ -132,6 +137,16 @@
             return this;
         }
 
+        /// <summary>
+        /// Sets the ID of the text channel which system messages are sent to.
+        /// </summary>
+        /// <param name="systemChannelId">The ID of the system channel or <see cref="Snowflake.None"/> to remove the system channel.</param>
+        public ModifyGuildOptions SetSystemChannel(Snowflake systemChannelId)
+        {
+            SystemChannelId = systemChannelId;
+            return this;
+        }
+
         internal DiscordApiData Build()
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
@@ -153,6 +168,8 @@
                 data.SetSnowflake("owner_id", OwnerId);
             if (Splash != null)
                 data.Set("splash", Splash.ToDataUriScheme());
+            if (SystemChannelId.HasValue)
+                data.SetSnowflake("system_channel_id", SystemChannelId);
 
             return data;
         }

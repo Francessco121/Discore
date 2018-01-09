@@ -23,6 +23,7 @@ namespace Discore.WebSocket
         public Snowflake? ApplicationId { get; private set; }
         public bool IsWidgetEnabled { get; private set; }
         public Snowflake? WidgetChannelId { get; private set; }
+        public Snowflake? SystemChannelId { get; private set; }
 
         public IReadOnlyList<string> Features { get; private set; }
 
@@ -54,6 +55,7 @@ namespace Discore.WebSocket
             ApplicationId = data.GetSnowflake("application_id");
             IsWidgetEnabled = data.GetBoolean("widget_enabled") ?? false;
             WidgetChannelId = data.GetSnowflake("widget_channel_id");
+            SystemChannelId = data.GetSnowflake("system_channel_id");
 
             ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;

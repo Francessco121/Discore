@@ -97,6 +97,11 @@ namespace Discore
         public Snowflake? WidgetChannelId { get; }
 
         /// <summary>
+        /// Gets the ID of the text channel which system messages are sent to.
+        /// </summary>
+        public Snowflake? SystemChannelId { get; }
+
+        /// <summary>
         /// Gets a dictionary of all roles in this guild.
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordRole> Roles { get; }
@@ -123,6 +128,7 @@ namespace Discore
             ApplicationId = guild.ApplicationId;
             IsWidgetEnabled = guild.IsWidgetEnabled;
             WidgetChannelId = guild.WidgetChannelId;
+            SystemChannelId = guild.SystemChannelId;
             DefaultMessageNotifications = guild.DefaultMessageNotifications;
             ExplicitContentFilter = guild.ExplicitContentFilter;
             OwnerId = guild.OwnerId;
@@ -156,6 +162,7 @@ namespace Discore
             ApplicationId               = data.GetSnowflake("application_id");
             IsWidgetEnabled             = data.GetBoolean("widget_enabled") ?? false;
             WidgetChannelId             = data.GetSnowflake("widget_channel_id");
+            SystemChannelId             = data.GetSnowflake("system_channel_id");
 
             ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
