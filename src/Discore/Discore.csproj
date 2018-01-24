@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
-    <Copyright>Bundled Sticks Inkorporated 2017</Copyright>
-    <Version>4.1.0</Version>
-    <AssemblyVersion>4.1.0.0</AssemblyVersion>
-    <FileVersion>4.1.0.0</FileVersion>
+    <Copyright>Bundled Sticks Inkorporated 2018</Copyright>
+    <Version>4.1.1</Version>
+    <AssemblyVersion>4.1.1.0</AssemblyVersion>
+    <FileVersion>4.1.1.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>discord;discord-api;discord-library;dotnet-standard</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
@@ -17,10 +17,7 @@ Please note: Discore is not an official Discord API interface!</Description>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
-    <PackageReleaseNotes>- Fixed erroneous "shard IO failure" when Discore failed to locate the Gateway URL due to network connectivity issues.
-- Added DiscordEmoji.IsAnimated.
-- Added DiscordGuild.SystemChannelId.
-- Document required permissions for emoji HTTP methods.</PackageReleaseNotes>
+    <PackageReleaseNotes>- Fixed voice connections not working on certain OS/OS versions due to differences in how UDP sockets are treated at the OS level.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
