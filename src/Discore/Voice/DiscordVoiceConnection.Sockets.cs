@@ -626,8 +626,9 @@ namespace Discore.Voice
             }
             catch (SocketException ex)
             {
-                log.LogError("[StartIPDiscovery] Failed start IP discovery: " +
+                log.LogError("[StartIPDiscovery] Failed to start IP discovery: " +
                     $"code = {ex.SocketErrorCode}, error = {ex}");
+                throw;
             }
         }
 
@@ -667,6 +668,7 @@ namespace Discore.Voice
             catch (DiscordWebSocketException ex)
             {
                 log.LogError($"[OnIPDiscovered] Failed to select protocol: code = {ex.Error}, error = {ex}");
+                throw;
             }
         }
 
