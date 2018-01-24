@@ -219,7 +219,7 @@ namespace Discore.Voice.Net
         #region Sending
         Task SendAsync(ArraySegment<byte> data)
         {
-            return socket.SendToAsync(data, SocketFlags.None, endPoint);
+            return socket.SendAsync(data, SocketFlags.None);
         }
 
         /// <exception cref="SocketException">Thrown if the socket encounters an error while sending data.</exception>
