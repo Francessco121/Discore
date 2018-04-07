@@ -33,7 +33,7 @@ Shard shard = new Shard(token, shardId, totalShards);
 
 Each of these can now be created and destroyed as needed, without being tied to the original application wrapper classes.
 
-For more information on using these two classes in 3.x, see the [shard](./Shards) and [HTTP client](./HTTP-Clients) wiki pages.
+For more information on using these two classes in 3.x, see the [shard](./Shards.md) and [HTTP client](./HTTP-Clients.md) wiki pages.
 
 ### The shard cache has been completely rewritten
 `DiscoreCache` has been rewritten and renamed to `DiscordShardCache`. Along with this, structural changes have been made. 
@@ -65,7 +65,7 @@ Now looks like:
 DiscordGuild guild = cache.GetGuild(guildId);
 ```
 
-For more information on using the new 3.x cache, see the [shard cache](./Shard-Caches) wiki page.
+For more information on using the new 3.x cache, see the [shard cache](./Shard-Caches.md) wiki page.
 
 #### Cache side-note
 It is highly recommended that applications avoid using the cache unless an entity's state is required. For example, you don't need an `ITextChannel` instance to send a message. The HTTP API should be favored when possible for simplicity.

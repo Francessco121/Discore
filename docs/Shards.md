@@ -56,4 +56,4 @@ The `OnReconnected` event is especially useful for maintaining a bot's user stat
 If the `Shard` runs into an error it cannot safely reconnect from, the shard will enter the stopped state and the `OnFailure` event will be fired with the reason for the failure.
 
 ## Continuation
-See [the Gateway interface documentation](./Gateway-Interface) for more information on interacting with Discord's WebSocket API.
+See [the Gateway interface documentation](./Gateway-Interface.md) for more information on interacting with Discord's WebSocket API.

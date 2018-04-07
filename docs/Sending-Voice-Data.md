@@ -71,4 +71,4 @@ while (sendingVoiceData && voice.IsValid)
 }
 ```
 
-See the [connecting documentation](./Connecting-to-a-Voice-Channel) for information on how to create the `DiscordVoiceConnection`.
+See the [connecting documentation](./Connecting-to-a-Voice-Channel.md) for information on how to create the `DiscordVoiceConnection`.

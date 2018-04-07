@@ -1,7 +1,7 @@
 [[← back]](./README.md)
 
 # Getting Started
-**Note:** If you are migrating from Discore 2.x, please [see the migration guide here](./2x-to-3x-Migration-Guide).
+**Note:** If you are migrating from Discore 2.x, please [see the migration guide here](./2x-to-3x-migration-guide.md).
 
 ## 1. Check .NET Compatibility
 **Discore 3.x targets .NET Standard 1.6.**
@@ -90,5 +90,5 @@ Discore has a repository dedicated to sample bots, which [can be found here](htt
 All that's left now is to build your bot!
 
 See the following major sections to learn more:
-- [HTTP Clients](./HTTP-Clients)
-- [Shards](./Shards)
+- [HTTP Clients](./HTTP-Clients.md)
+- [Shards](./Shards.md)

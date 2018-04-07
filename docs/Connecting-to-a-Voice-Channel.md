@@ -38,4 +38,4 @@ Invalidation occurs during the following scenarios:
 
 ## Continuation
 For information on how to sendvoice data see:
-- [Sending Voice Data](./Sending-Voice-Data)
+- [Sending Voice Data](./Sending-Voice-Data.md)

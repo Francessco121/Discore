@@ -15,4 +15,4 @@ Assuming this is a .NET Core project, the binaries need to be dropped in the sam
 If your application is targeting Windows, the Discore repository contains tested pre-compiled 32 and 64-bit binaries [which can be downloaded here](https://github.com/BundledSticksInkorperated/Discore/tree/master/lib/windows).
 
 ## Using the Discore Voice API
-Once everything is all setup, please see [the documentation on how to use the voice API here](./Connecting-to-a-Voice-Channel).
+Once everything is all setup, please see [the documentation on how to use the voice API here](./Connecting-to-a-Voice-Channel.md).
