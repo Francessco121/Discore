@@ -1,23 +1,25 @@
-# Discore
-[![NuGet](https://img.shields.io/nuget/v/Discore.svg?style=flat-square)](https://www.nuget.org/packages/Discore/)
+[[← back]](./README.md)
 
-Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) interface with [Discord's](https://discordapp.com/) HTTP, WebSocket, and voice APIs.
+# Getting Started
+## 1. Acquire Discore
 
-**Please note:** Discore is **not** an official Discord API interface!
+### Pre-built Downloads
+[Pre-built releases can be downloaded via NuGet here.](https://www.nuget.org/packages/Discore/)
 
-## Compatibility
-See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support) for compatible runtimes. **Discore currently targets .NET Standard 1.6**.
-
-## Downloading
-Official releases are available through [NuGet](https://www.nuget.org/packages/Discore/). These are published alongside a [GitHub release](https://github.com/BundledSticksInkorperated/Discore/releases), which contains the full change log.
-
-## Documentation
-For more information on how to use Discore, see our [documentation here in this repository](./docs/README.md).
-
-## Compiling
+### Compile from Source
 The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) (e.g. via the ".NET Core 1.0 - 1.1 development tools").
 
+## 2. Choose your type of Discord application
+Applications using Discore are not required to use all three of the APIs. Instead, applcations only need to use the APIs they need as well as the dependencies of those APIs. For example: applications that just need the HTTP API require nothing else, while applications using the voice API require a Gateway connection, and a Gateway connection requires the HTTP API:
+
+HTTP < Gateway < Voice
+
+- [Voice or Gateway usage](./WebSocket-Applications.md).
+- [HTTP only](./HTTP-Applications.md).
+
 ## Example Bot: Ping Pong
+If you wish to test your Discore installation, try this example bot. Just enter your bot's user token for the `token` variable and fire away!
+
 ```csharp
 using Discore;
 using Discore.Http;
@@ -79,8 +81,3 @@ namespace DiscorePingPong
     }
 }
 ```
-
-## Alternatives
-Don't like our approach? Try some other great options:
-- [Discord.Net](https://github.com/RogueException/Discord.Net)
-- [DSharpPlus](https://github.com/NaamloosDT/DSharpPlus)
