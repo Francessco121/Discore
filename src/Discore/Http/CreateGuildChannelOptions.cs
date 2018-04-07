@@ -39,13 +39,13 @@ namespace Discore.Http
         /// <exception cref="InvalidOperationException">Thrown if this builder is not for a voice channel.</exception>
         public int? UserLimit
         {
-            get => userlimit;
+            get => userLimit;
             set
             {
                 if (Type != DiscordChannelType.GuildVoice)
                     throw new InvalidOperationException("Cannot set user limit for non-voice channel.");
 
-                userlimit = value;
+                userLimit = value;
             }
         }
 
@@ -103,7 +103,7 @@ namespace Discore.Http
         public IList<OverwriteOptions> PermissionOverwrites { get; set; }
 
         int? bitrate;
-        int? userlimit;
+        int? userLimit;
         string topic;
         bool? nsfw;
         Snowflake? parentId;
@@ -183,7 +183,7 @@ namespace Discore.Http
         {
             DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
             data.Set("name", Name);
-            data.Set("type", Type.ToString().ToLower());
+            data.Set("type", (int)Type);
 
             if (parentId.HasValue)
                 data.SetSnowflake("parent_id", parentId.Value);
@@ -192,8 +192,8 @@ namespace Discore.Http
             {
                 if (bitrate.HasValue)
                     data.Set("bitrate", bitrate.Value);
-                if (userlimit.HasValue)
-                    data.Set("userlimit", userlimit.Value);
+                if (userLimit.HasValue)
+                    data.Set("user_limit", userLimit.Value);
             }
             else if (Type == DiscordChannelType.GuildText)
             {

@@ -184,7 +184,7 @@ namespace Discore.Http
 
             DiscordApiData requestData = options.Build();
 
-            DiscordApiData returnData = await rest.Post($"guilds/{guildId}/channels",
+            DiscordApiData returnData = await rest.Post($"guilds/{guildId}/channels", requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
             return (DiscordGuildChannel)DeserializeChannelData(returnData);
         }
