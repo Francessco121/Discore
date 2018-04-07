@@ -94,6 +94,7 @@ namespace Discore
         /// <exception cref="DiscordHttpApiException"></exception>
         /// <exception cref="PathTooLongException"></exception>
         /// <exception cref="IOException"></exception>
+        /// <exception cref="OperationCanceledException"></exception>
         /// <exception cref="UnauthorizedAccessException"></exception>
         public async Task<string> GetGatewayUrlAsync(DiscordHttpClient http, bool useCached = true)
         {

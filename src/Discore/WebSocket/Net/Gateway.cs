@@ -417,7 +417,7 @@ namespace Discore.WebSocket.Net
                     localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
                     gatewayUrl = await localStorage.GetGatewayUrlAsync(http).ConfigureAwait(false);
                 }
-                catch (Exception ex) when (ex is DiscordHttpApiException || ex is HttpRequestException)
+                catch (Exception ex) when (ex is DiscordHttpApiException || ex is HttpRequestException || ex is OperationCanceledException)
                 {
                     log.LogError($"[ConnectLoop:GetGatewayUrl] {ex}");
                     log.LogError("[ConnectLoop] No gateway URL to connect with, trying again in 10s...");
