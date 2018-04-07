@@ -1,23 +1,24 @@
-# Discore
-[![NuGet](https://img.shields.io/nuget/v/Discore.svg?style=flat-square)](https://www.nuget.org/packages/Discore/)
+[[← back]](./README.md)
 
-Discore provides a [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) interface with [Discord's](https://discordapp.com/) HTTP, WebSocket, and voice APIs, and is designed for creating bots.
+# Getting Started
+**Note:** If you are migrating from Discore 2.x, please [see the migration guide here](./2x-to-3x-Migration-Guide).
 
-**Please note:** Discore is **not** an official Discord API library!
+## 1. Check .NET Compatibility
+**Discore 3.x targets .NET Standard 1.6.**
 
-## Compatibility
-See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/articles/standard/library#net-platforms-support) for compatible runtimes. **Discore currently targets .NET Standard 1.6**.
+See the [.NET Standard documentation](https://docs.microsoft.com/en-us/dotnet/standard/net-standard#net-implementation-support) for compatible .NET implementations.
 
-## Downloading
-Official releases are available through [NuGet](https://www.nuget.org/packages/Discore/). These are published alongside a [GitHub release](https://github.com/BundledSticksInkorperated/Discore/releases), which contains the full change log.
+## 2. Acquire Discore
 
-## Documentation
-For more information on how to use Discore, see our [documentation here inside of the repository](./docs/README.md).
+### Download from NuGet
+[Releases can be downloaded via NuGet here.](https://www.nuget.org/packages/Discore/)
 
-## Compiling
-The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) (e.g. via the ".NET Core 1.0 - 1.1 development tools").
+### Compile from Source
+The project can be built with [Visual Studio 2017](https://www.visualstudio.com/downloads/) (e.g. via the ".NET Core cross-platform development" workload).
 
-## Example Bot: Ping Pong
+## 3. (Optional) Try the Example Bot
+If you wish to test your Discore installation, try this example bot. Just enter your bot's user token for the `TOKEN` constant and fire away!
+
 ```csharp
 using Discore;
 using Discore.Http;
@@ -82,7 +83,12 @@ namespace DiscorePingPong
 }
 ```
 
-## Alternatives
-Don't like our approach? Try some other great options:
-- [DSharpPlus](https://github.com/NaamloosDT/DSharpPlus)
-- [Discord.Net](https://github.com/RogueException/Discord.Net)
+## 4. (Optional) Check out other examples
+Discore has a repository dedicated to sample bots, which [can be found here](https://github.com/BundledSticksInkorperated/Discore.Samples).
+
+## 5. Start building your own bot
+All that's left now is to build your bot!
+
+See the following major sections to learn more:
+- [HTTP Clients](./HTTP-Clients)
+- [Shards](./Shards)
