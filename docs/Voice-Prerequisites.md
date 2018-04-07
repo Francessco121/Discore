@@ -12,7 +12,7 @@ Discore expects the libsodium and opus binaries to be named `libsodium` and `opu
 Assuming this is a .NET Core project, the binaries need to be dropped in the same directory as the `.csproj`. When publishing the project, the binaries need to be in the same directory as the application binary.
 
 ## Pre-Compiled Windows Binaries
-If your application is targeting Windows, the Discore repository contains tested pre-compiled 32 and 64-bit binaries [which can be downloaded here](https://github.com/BundledSticksInkorperated/Discore/tree/v3/lib/windows).
+If your application is targeting Windows, the Discore repository contains tested pre-compiled 32 and 64-bit binaries [which can be downloaded here](https://github.com/BundledSticksInkorperated/Discore/tree/v2/lib/windows).
 
 ## Using the Discore Voice API
 Once everything is all setup, please see [the documentation on how to use the voice API here](./Connecting-to-a-Voice-Channel.md).
