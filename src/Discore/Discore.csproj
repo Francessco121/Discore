@@ -16,7 +16,7 @@ Please note: Discore is not an official Discord API interface!</Description>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://bundledsticksinkorperated.github.io/Discore/</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/BundledSticksInkorperated/Discore</PackageProjectUrl>
     <PackageReleaseNotes>- Fixed guild channel creation.
 - Fixed an erreoneous shard failure that occurred when retrieving the Gateway URL timed out.</PackageReleaseNotes>
   </PropertyGroup>
