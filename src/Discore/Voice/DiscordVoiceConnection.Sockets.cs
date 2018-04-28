@@ -379,7 +379,7 @@ namespace Discore.Voice
             }
             else
             {
-                log.LogVerbose("Received resume request before initial connect. Invalidating...");
+                log.LogVerbose("Received new session request before initial connect. Invalidating...");
 
                 try
                 {
@@ -389,7 +389,7 @@ namespace Discore.Voice
                 }
                 catch (Exception ex)
                 {
-                    log.LogError($"[WebSocket_OnUnexpectedClose] {ex}");
+                    log.LogError($"[WebSocket_OnNewSessionRequested] {ex}");
                 }
             }
         }
@@ -433,7 +433,7 @@ namespace Discore.Voice
                 }
                 catch (Exception ex)
                 {
-                    log.LogError($"[WebSocket_OnUnexpectedClose] {ex}");
+                    log.LogError($"[WebSocket_OnResumeRequested] {ex}");
                 }
             }
         }
