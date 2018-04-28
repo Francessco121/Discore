@@ -560,7 +560,7 @@ namespace Discore.Voice
             {
                 VoiceReadyEventArgs readyData = webSocket.ReadyQueue.Take(tokenSource.Token);
 
-                log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, port = {readyData.Port}");
+                log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, ip = {readyData.IP}, port = {readyData.Port}");
 
                 udpIP = readyData.IP;
                 udpPort = readyData.Port;
