@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,6 +26,7 @@ namespace Discore.Voice.Net
 		[Payload(VoiceOPCode.Ready)]
 		void HandleReadyPayload(DiscordApiData payload, DiscordApiData data)
         {
+            IPAddress ip = IPAddress.Parse(data.GetString("ip"));
             int port = data.GetInteger("port").Value;
             int ssrc = data.GetInteger("ssrc").Value;
 
@@ -36,7 +38,7 @@ namespace Discore.Voice.Net
             log.LogVerbose($"[Ready] ssrc = {ssrc}, port = {port}");
 
             // Notify
-            ReadyQueue.Add(new VoiceReadyEventArgs(port, ssrc, modes));
+            ReadyQueue.Add(new VoiceReadyEventArgs(ip, port, ssrc, modes));
         }
 
         [Payload(VoiceOPCode.Resumed)]

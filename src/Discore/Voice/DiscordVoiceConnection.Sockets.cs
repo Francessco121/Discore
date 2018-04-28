@@ -2,6 +2,7 @@
 using Discore.WebSocket;
 using System;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Threading;
@@ -15,7 +16,8 @@ namespace Discore.Voice
         string endPoint;
         string token;
         int? heartbeatInterval;
-        int? port;
+        IPAddress udpIp;
+        int? udpPort;
         int? ssrc;
         string[] encryptionModes;
         Task heartbeatLoopTask;
@@ -560,9 +562,10 @@ namespace Discore.Voice
 
                 log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, port = {readyData.Port}");
 
-                encryptionModes = readyData.EncryptionModes;
-                port = readyData.Port;
+                udpIp = readyData.Ip;
+                udpPort = readyData.Port;
                 ssrc = readyData.Ssrc;
+                encryptionModes = readyData.EncryptionModes;
             });
         }
 
@@ -596,16 +599,16 @@ namespace Discore.Voice
         {
             if (udpSocket == null)
                 throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpSocket must not be null!");
-            if (string.IsNullOrWhiteSpace(endPoint))
-                throw new InvalidOperationException("[ConnectVoiceUdpSocket] endPoint must be set!");
-            if (!port.HasValue)
+            if (udpIp == null)
+                throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpIp must not be null!");
+            if (!udpPort.HasValue)
                 throw new InvalidOperationException("[ConnectVoiceUdpSocket] port must not be null!");
 
-            log.LogVerbose($"[ConnectVoiceUdpSocket] Connecting UdpSocket to {endPoint}:{port}...");
+            log.LogVerbose($"[ConnectVoiceUdpSocket] Connecting UdpSocket to {udpIp}:{udpPort}...");
 
             try
             {
-                await udpSocket.ConnectAsync(endPoint, port.Value).ConfigureAwait(false);
+                await udpSocket.ConnectAsync(udpIp, udpPort.Value).ConfigureAwait(false);
             }
             catch (SocketException ex)
             {

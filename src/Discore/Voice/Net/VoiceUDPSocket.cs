@@ -65,22 +65,14 @@ namespace Discore.Voice.Net
             sendBuffer = new CircularBuffer((int)Math.Ceiling(BUFFER_LENGTH / (double)FRAME_LENGTH) * frameSize);
         }
 
-        /// <exception cref="ArgumentException">Thrown if the host resolved into zero addresses.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is already connected.</exception>
-        /// <exception cref="SocketException">Thrown if the host fails to resolve or the socket fails to connect.</exception>
-        public async Task ConnectAsync(string hostName, int port)
+        /// <exception cref="SocketException">Thrown if the socket fails to connect.</exception>
+        public async Task ConnectAsync(IPAddress ip, int port)
         {
             if (socket != null && socket.Connected)
                 throw new InvalidOperationException("The UDP socket is already connected!");
 
-            // Resolve the hostname into an IP
-            IPAddress[] addresses = await Dns.GetHostAddressesAsync(hostName)
-                .ConfigureAwait(false);
-
-            if (addresses.Length == 0)
-                throw new ArgumentException("The specified host name could not be resolved.");
-
-            endPoint = new IPEndPoint(addresses[0], port);
+            endPoint = new IPEndPoint(ip, port);
 
             // Connect the socket
             socket = new Socket(SocketType.Dgram, ProtocolType.Udp);
