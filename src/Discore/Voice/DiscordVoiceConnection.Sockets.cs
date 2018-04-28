@@ -16,7 +16,7 @@ namespace Discore.Voice
         string endPoint;
         string token;
         int? heartbeatInterval;
-        IPAddress udpIp;
+        IPAddress udpIP;
         int? udpPort;
         int? ssrc;
         string[] encryptionModes;
@@ -562,7 +562,7 @@ namespace Discore.Voice
 
                 log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, port = {readyData.Port}");
 
-                udpIp = readyData.Ip;
+                udpIP = readyData.IP;
                 udpPort = readyData.Port;
                 ssrc = readyData.Ssrc;
                 encryptionModes = readyData.EncryptionModes;
@@ -599,16 +599,16 @@ namespace Discore.Voice
         {
             if (udpSocket == null)
                 throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpSocket must not be null!");
-            if (udpIp == null)
-                throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpIp must not be null!");
+            if (udpIP == null)
+                throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpIP must not be null!");
             if (!udpPort.HasValue)
-                throw new InvalidOperationException("[ConnectVoiceUdpSocket] port must not be null!");
+                throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpPort must not be null!");
 
-            log.LogVerbose($"[ConnectVoiceUdpSocket] Connecting UdpSocket to {udpIp}:{udpPort}...");
+            log.LogVerbose($"[ConnectVoiceUdpSocket] Connecting UdpSocket to {udpIP}:{udpPort}...");
 
             try
             {
-                await udpSocket.ConnectAsync(udpIp, udpPort.Value).ConfigureAwait(false);
+                await udpSocket.ConnectAsync(udpIP, udpPort.Value).ConfigureAwait(false);
             }
             catch (SocketException ex)
             {

@@ -5,14 +5,14 @@ namespace Discore.Voice.Net
 {
     class VoiceReadyEventArgs : EventArgs
     {
-        public IPAddress Ip { get; }
+        public IPAddress IP { get; }
         public int Port { get; }
         public int Ssrc { get; }
         public string[] EncryptionModes { get; }
 
         public VoiceReadyEventArgs(IPAddress ip, int port, int ssrc, string[] encryptionModes)
         {
-            Ip = ip;
+            IP = ip;
             Port = port;
             Ssrc = ssrc;
             EncryptionModes = encryptionModes;
