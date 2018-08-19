@@ -26,12 +26,6 @@ namespace Discore.WebSocket.Net
     abstract class DiscordClientWebSocket : IDisposable
     {
         /// <summary>
-        /// Custom error (not specified by Discord or WebSocket spec) to use when the client needs to disconnect
-        /// due to an error on our end.
-        /// </summary>
-        public const WebSocketCloseStatus INTERNAL_CLIENT_ERROR = (WebSocketCloseStatus)4100; // TODO: check for side-effects of usage
-
-        /// <summary>
         /// Gets whether the socket is currently connected.
         /// </summary>
         public virtual bool IsConnected => State == WebSocketState.Open;
