@@ -1,7 +1,6 @@
 ﻿using Discore.Http;
 using Nito.AsyncEx;
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading;
@@ -409,53 +408,47 @@ namespace Discore.WebSocket.Net
 
                 SubscribeSocketEvents();
 
-                // Get the gateway URL
-                DiscoreLocalStorage localStorage;
-                string gatewayUrl;
-                try
+                // Get the gateway URL if we don't have one
+                string gatewayUrl = GatewayUrlMemoryCache.GatewayUrl;
+
+                if (gatewayUrl == null)
                 {
-                    localStorage = await DiscoreLocalStorage.GetInstanceAsync().ConfigureAwait(false);
-                    gatewayUrl = await localStorage.GetGatewayUrlAsync(http).ConfigureAwait(false);
-                }
-                catch (Exception ex) when (ex is DiscordHttpApiException || ex is HttpRequestException || ex is OperationCanceledException)
-                {
-                    log.LogError($"[ConnectLoop:GetGatewayUrl] {ex}");
-                    log.LogError("[ConnectLoop] No gateway URL to connect with, trying again in 10s...");
-                    await Task.Delay(10 * 1000, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        log.LogVerbose("[ConnectLoop] Retrieving Gateway URL...");
 
-                    continue;
-                }
-                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
-                {
-                    log.LogError(ex);
-                    log.LogError("IO Error occured while getting/storing gateway URL, setting state to Disconnected.");
-                    state = GatewayState.Disconnected;
+                        gatewayUrl = await http.GetGateway().ConfigureAwait(false);
 
-                    gatewayFailureData = new GatewayFailureData(
-                        "Failed to retrieve/store the Gateway URL because of an IO error.",
-                        ShardFailureReason.IOError, ex);
-                    handshakeCompleteEvent.Set();
+                        GatewayUrlMemoryCache.UpdateUrl(gatewayUrl);
+                    }
+                    catch (Exception ex) when (ex is DiscordHttpApiException || ex is HttpRequestException || ex is OperationCanceledException)
+                    {
+                        log.LogError($"[ConnectLoop:GetGateway] {ex}");
+                        log.LogError("[ConnectLoop] No gateway URL to connect with, trying again in 10s...");
 
-                    OnFailure?.Invoke(this, gatewayFailureData);
+                        await Task.Delay(10 * 1000, cancellationToken).ConfigureAwait(false);
 
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    // This should never-ever happen, but we need to handle it just in-case.
+                        continue;
+                    }
+                    catch (Exception ex)
+                    {
+                        // This should never-ever happen, but we need to handle it just in-case.
 
-                    log.LogError(ex);
-                    log.LogError("Uncaught error occured while getting/storing gateway URL, setting state to Disconnected.");
-                    state = GatewayState.Disconnected;
+                        log.LogError(ex);
+                        log.LogError("[ConnectLoop] Uncaught severe error occured while getting the Gateway URL, setting state to Disconnected.");
 
-                    gatewayFailureData = new GatewayFailureData(
-                        "Failed to retrieve/store the Gateway URL because of an unknown error.",
-                        ShardFailureReason.Unknown, ex);
-                    handshakeCompleteEvent.Set();
+                        state = GatewayState.Disconnected;
 
-                    OnFailure?.Invoke(this, gatewayFailureData);
+                        gatewayFailureData = new GatewayFailureData(
+                            "Failed to retrieve the Gateway URL because of an unknown error.",
+                            ShardFailureReason.Unknown, ex);
 
-                    break;
+                        handshakeCompleteEvent.Set();
+
+                        OnFailure?.Invoke(this, gatewayFailureData);
+
+                        break;
+                    }
                 }
 
                 log.LogVerbose($"[ConnectLoop] gatewayUrl = {gatewayUrl}");
@@ -487,26 +480,9 @@ namespace Discore.WebSocket.Net
                     log.LogError("[ConnectLoop] Failed to connect: " +
                         $"{wsex.WebSocketErrorCode} ({(int)wsex.WebSocketErrorCode}), {wsex.Message}");
 
-                    try
-                    {
-                        // Invalidate the cached URL since we failed to connect the socket
-                        await localStorage.InvalidateGatewayUrlAsync();
-                    }
-                    catch (Exception ex)
-                    {
-                        log.LogError(ex);
-                        log.LogVerbose("IO Error occured while invalidating gateway URL, setting state to Disconnected.");
-                        state = GatewayState.Disconnected;
-
-                        gatewayFailureData = new GatewayFailureData(
-                            "Failed to update the Gateway URL because of an IO error.",
-                            ShardFailureReason.IOError, ex);
-                        handshakeCompleteEvent.Set();
-
-                        OnFailure?.Invoke(this, gatewayFailureData);
-
-                        break;
-                    }
+                    // Invalidate the cached URL since we failed to connect the socket
+                    log.LogVerbose("[ConnectLoop] Invalidating Gateway URL...");
+                    GatewayUrlMemoryCache.InvalidateUrl();
 
                     // Wait 5s then retry
                     log.LogVerbose("[ConnectLoop] Waiting 5s before retrying...");

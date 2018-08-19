@@ -22,12 +22,12 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> GetBotRequiredShards()
         {
-            GatewayBotResponse response = await GetBot().ConfigureAwait(false);
+            GatewayBotResponse response = await GetGatewayBot().ConfigureAwait(false);
             return response.Shards;
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        internal async Task<string> Get()
+        internal async Task<string> GetGateway()
         {
             DiscordApiData data = await rest.Get("gateway",
                 "gateway").ConfigureAwait(false);
@@ -35,7 +35,7 @@ namespace Discore.Http
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        internal async Task<GatewayBotResponse> GetBot()
+        internal async Task<GatewayBotResponse> GetGatewayBot()
         {
             DiscordApiData data = await rest.Get("gateway/bot",
                 "gateway/bot").ConfigureAwait(false);
