@@ -1,4 +1,6 @@
-﻿namespace Discore.WebSocket
+﻿using System;
+
+namespace Discore.WebSocket
 {
     public enum ShardFailureReason
     {
@@ -6,6 +8,9 @@
         /// Should be reported to the Discore developers if received.
         /// </summary>
         Unknown,
+
+        [Obsolete("This failure reason can no longer happen, any code handling it can be removed.")]
+        IOError,
         /// <summary>
         /// The shard was invalid, given the sharding settings for the application.
         /// </summary>
