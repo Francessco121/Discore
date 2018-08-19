@@ -1,4 +1,4 @@
-﻿using Discore.Http.Net;
+﻿using Discore.Http.Internal;
 using System.Net;
 
 namespace Discore.Http

@@ -1,4 +1,4 @@
-﻿using Discore.Voice.Net;
+﻿using Discore.Voice.Internal;
 using Discore.WebSocket;
 using System;
 using System.Diagnostics;

@@ -45,10 +45,6 @@ Please note: Discore is not an official Discord API interface!</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Voice\Net\VoiceWebSocket.Payloads.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="ConcurrentHashSet" Version="1.0.2" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Nito.AsyncEx.Coordination" Version="1.0.2" />

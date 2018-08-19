@@ -1,5 +1,5 @@
 ﻿using Discore.Voice;
-using Discore.WebSocket.Net;
+using Discore.WebSocket.Internal;
 using Nito.AsyncEx;
 using System;
 using System.Threading;
