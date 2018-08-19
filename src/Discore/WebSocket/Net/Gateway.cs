@@ -502,9 +502,9 @@ namespace Discore.WebSocket.Net
             if (state == GatewayState.Connected)
             {
                 if (resume)
-                    log.LogInfo("[ConnectLoop:Reconnection] Successfully resumed.");
+                    log.LogInfo("[ConnectLoop:Reconnection] Successfully started a resume.");
                 else
-                    log.LogInfo("[ConnectLoop:Reconnection] Successfully created new session.");
+                    log.LogInfo("[ConnectLoop:Reconnection] Successfully started creating a new session.");
 
                 OnReconnected?.Invoke(this, new GatewayReconnectedEventArgs(!resume));
             }
