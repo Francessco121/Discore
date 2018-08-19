@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <Copyright>Bundled Sticks Inkorporated 2018</Copyright>
-    <Version>4.1.3</Version>
-    <AssemblyVersion>4.1.3.0</AssemblyVersion>
-    <FileVersion>4.1.3.0</FileVersion>
+    <Version>4.2.0</Version>
+    <AssemblyVersion>4.2.0.0</AssemblyVersion>
+    <FileVersion>4.2.0.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>discord;discord-api;discord-library;dotnet-standard</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
@@ -17,7 +17,9 @@ Please note: Discore is not an official Discord API interface!</Description>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/BundledSticksInkorperated/Discore</PackageProjectUrl>
-    <PackageReleaseNotes>- Tweak to bring UDP voice connections more inline with new API documentation.</PackageReleaseNotes>
+    <PackageReleaseNotes>- Discore no longer creates/uses the discore-local-storage.json file. This file can be removed from any projects using Discore.
+- ShardFailureReason.IOError has been deprecated as it can no longer occur.
+- Internal fixes/tweaks to improve stability.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
