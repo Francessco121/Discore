@@ -393,7 +393,18 @@ namespace Discore.Voice.Internal
                     {
                         // Nothing to do, so sleep for a bit to avoid burning cpu cycles
                         //await Task.Delay(1).ConfigureAwait(false);
+
+                        int beforeYield = Environment.TickCount;
+
                         await Task.Yield();
+
+                        int afterYield = Environment.TickCount;
+                        int yieldTimeMs = afterYield - beforeYield;
+
+                        if (yieldTimeMs >= encoder.FrameLength)
+                        {
+                            log.LogWarning($"Yield took {yieldTimeMs}ms!");
+                        }
                     }
                 }
                 catch (Exception ex)
