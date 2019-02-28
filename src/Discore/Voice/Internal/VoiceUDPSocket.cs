@@ -374,7 +374,8 @@ namespace Discore.Voice.Internal
                     else
                     {
                         // Nothing to do, so sleep for a bit to avoid burning cpu cycles
-                        await Task.Delay(1).ConfigureAwait(false);
+                        //await Task.Delay(1).ConfigureAwait(false);
+                        await Task.Yield();
                     }
                 }
                 catch (Exception ex)
