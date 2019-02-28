@@ -20,6 +20,7 @@ namespace Discore.Voice.Internal
         public bool IsConnected => socket.Connected;
         public int BytesToSend => sendBuffer.Count;
         public bool IsPaused { get; set; }
+        public bool IsSpeaking { get; set; }
 
         public event EventHandler OnClosedPrematurely;
 
@@ -365,6 +366,23 @@ namespace Discore.Voice.Internal
                                     OnClosedPrematurely?.Invoke(this, EventArgs.Empty);
                                     break;
                                 }
+                            }
+                        }
+                        else
+                        {
+                            if (IsSpeaking)
+                            {
+                                log.LogWarning("Skipped frame!");
+                            }
+                        }
+
+                        if (IsSpeaking)
+                        {
+                            int ticksBehind = ticksToNextFrame * -1;
+
+                            if (ticksBehind >= encoder.FrameLength)
+                            {
+                                log.LogWarning($"Behind {ticksBehind}ms!");
                             }
                         }
 
