@@ -39,6 +39,7 @@ namespace Discore.Voice.Internal
         Task receiveTask;
 
         bool discoveringIP;
+        bool flushing;
 
         readonly OpusEncoder encoder;
         readonly CircularBuffer sendBuffer;
@@ -135,6 +136,11 @@ namespace Discore.Voice.Internal
         public void ClearVoiceBuffer()
         {
             sendBuffer.Reset();
+        }
+
+        public void Flush()
+        {
+            flushing = true;
         }
 
         #region Receiving
@@ -267,10 +273,21 @@ namespace Discore.Voice.Internal
                 try
                 {
                     // If we don't have a frame to send and we have a full frame buffered
-                    if (!hasFrame && sendBuffer.Count > 0)
+                    if (!hasFrame && (flushing ? sendBuffer.Count > 0 : sendBuffer.Count >= frame.Length))
                     {
                         // Read frame from buffer
-                        sendBuffer.Read(frame, 0, frame.Length);
+                        int read = sendBuffer.Read(frame, 0, frame.Length);
+
+                        // Handle flush
+                        if (flushing)
+                        {
+                            if (sendBuffer.Count <= 0)
+                                flushing = false;
+
+                            // Clear end of frame
+                            if (read < frame.Length)
+                                Array.Clear(frame, read, frame.Length - read);
+                        }
 
                         // Set sequence number in RTP packet
                         voicePacket[2] = (byte)(sequence >> 8);

@@ -273,6 +273,13 @@ namespace Discore.Voice
                 reason, null, cancellationToken).ConfigureAwait(false);
         }
 
+        public void FlushVoiceData()
+        {
+            if (isValid)
+            {
+                udpSocket.Flush();
+            }
+        }
         /// <summary>
         /// Gets whether the specified number of bytes can currently 
         /// be sent to this voice connection.
