@@ -21,7 +21,6 @@ namespace Discore.Voice.Internal
         public bool IsConnected => socket.Connected;
         public int BytesToSend => sendBuffer.Count;
         public bool IsPaused { get; set; }
-        public bool IsSpeaking { get; set; }
 
         public event EventHandler OnClosedPrematurely;
 
@@ -38,11 +37,9 @@ namespace Discore.Voice.Internal
         IPEndPoint endPoint;
 
         Thread sendThread;
-        //Task sendTask;
         Task receiveTask;
 
         bool discoveringIP;
-        bool flushing;
 
         readonly OpusEncoder encoder;
         readonly CircularBuffer sendBuffer;
@@ -109,15 +106,11 @@ namespace Discore.Voice.Internal
         /// <exception cref="InvalidOperationException"></exception>
         public void Start(byte[] secretKey)
         {
-            //if (sendTask != null && !sendTask.IsCompleted)
-            //    throw new InvalidOperationException("The UDP socket send loop is already running!");
-
             if (sendThread != null && sendThread.ThreadState.HasFlag(ThreadState.Running))
                 throw new InvalidOperationException("The UDP socket send loop is already running!");
 
             this.secretKey = secretKey;
 
-            //sendTask = SendLoop();
             sendThread = new Thread(SendLoop);
             sendThread.Name = $"[{log.Prefix}] Send Thread";
             sendThread.IsBackground = true;
@@ -146,11 +139,6 @@ namespace Discore.Voice.Internal
         public void ClearVoiceBuffer()
         {
             sendBuffer.Reset();
-        }
-
-        public void Flush()
-        {
-            flushing = true;
         }
 
         #region Receiving
@@ -248,7 +236,6 @@ namespace Discore.Voice.Internal
             return SendAsync(new ArraySegment<byte>(packet));
         }
 
-        //async Task SendLoop()
         void SendLoop()
         {
             const int TICKS_PER_MS = 1;
@@ -288,22 +275,11 @@ namespace Discore.Voice.Internal
             {
                 try
                 {
-                    // If we don't have a frame to send and we have a full frame buffered
-                    if (!hasFrame && (flushing ? sendBuffer.Count > 0 : sendBuffer.Count >= frame.Length))
+                    // If we don't have a frame to send and we have a frame buffered
+                    if (!hasFrame && sendBuffer.Count > 0)
                     {
                         // Read frame from buffer
-                        int read = sendBuffer.Read(frame, 0, frame.Length);
-
-                        // Handle flush
-                        if (flushing)
-                        {
-                            if (sendBuffer.Count <= 0)
-                                flushing = false;
-
-                            // Clear end of frame
-                            if (read < frame.Length)
-                                Array.Clear(frame, read, frame.Length - read);
-                        }
+                        sendBuffer.Read(frame, 0, frame.Length);
 
                         // Set sequence number in RTP packet
                         voicePacket[2] = (byte)(sequence >> 8);
@@ -348,9 +324,8 @@ namespace Discore.Voice.Internal
                     {
                         if (IsPaused)
                         {
-                            // If we are paused, do nothing.
+                            // If we are paused, do nothing
                             Thread.Sleep(0);
-                            //await Task.Delay(1).ConfigureAwait(false);
                         }
                         // If we have a frame to send
                         else if (hasFrame)
@@ -360,9 +335,6 @@ namespace Discore.Voice.Internal
                             try
                             {
                                 // Send the frame across UDP
-                                //await SendAsync(new ArraySegment<byte>(voicePacket, 0, rtpPacketLength))
-                                //    .ConfigureAwait(false);
-
                                 Send(new ArraySegment<byte>(voicePacket, 0, rtpPacketLength));
                             }
                             catch (ObjectDisposedException)
@@ -386,44 +358,14 @@ namespace Discore.Voice.Internal
                                 }
                             }
                         }
-                        else
-                        {
-                            if (IsSpeaking)
-                            {
-                                log.LogWarning("Skipped frame!");
-                            }
-                        }
-
-                        if (IsSpeaking)
-                        {
-                            int ticksBehind = ticksToNextFrame * -1;
-
-                            if (ticksBehind >= encoder.FrameLength)
-                            {
-                                log.LogWarning($"Behind {ticksBehind}ms!");
-                            }
-                        }
 
                         // Calculate the time for next frame
                         nextTicks += ticksPerFrame;
                     }
                     else
                     {
-                        // Nothing to do, so sleep for a bit to avoid burning cpu cycles
-                        //await Task.Delay(1).ConfigureAwait(false);
-
-                        int beforeYield = Environment.TickCount;
-
+                        // Nothing to do, so sleep
                         Thread.Sleep(0);
-                        //await Task.Yield();
-
-                        int afterYield = Environment.TickCount;
-                        int yieldTimeMs = afterYield - beforeYield;
-
-                        if (yieldTimeMs >= encoder.FrameLength)
-                        {
-                            log.LogWarning($"Sleep took {yieldTimeMs}ms!");
-                        }
                     }
                 }
                 catch (Exception ex)

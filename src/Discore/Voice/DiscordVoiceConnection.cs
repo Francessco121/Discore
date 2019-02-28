@@ -273,14 +273,6 @@ namespace Discore.Voice
                 reason, null, cancellationToken).ConfigureAwait(false);
         }
 
-        public void FlushVoiceData()
-        {
-            if (isValid)
-            {
-                udpSocket.Flush();
-            }
-        }
-
         /// <summary>
         /// Gets whether the specified number of bytes can currently 
         /// be sent to this voice connection.
@@ -327,8 +319,6 @@ namespace Discore.Voice
             if (isValid)
             {
                 isSpeaking = speaking;
-
-                udpSocket.IsSpeaking = speaking;
 
                 if (isConnected && !isConnecting)
                     return webSocket.SendSpeakingPayload(speaking, udpSocket.Ssrc);
