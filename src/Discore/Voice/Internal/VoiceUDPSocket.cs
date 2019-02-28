@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Voice.Internal
@@ -36,7 +37,8 @@ namespace Discore.Voice.Internal
         Socket socket;
         IPEndPoint endPoint;
 
-        Task sendTask;
+        Thread sendThread;
+        //Task sendTask;
         Task receiveTask;
 
         bool discoveringIP;
@@ -107,12 +109,19 @@ namespace Discore.Voice.Internal
         /// <exception cref="InvalidOperationException"></exception>
         public void Start(byte[] secretKey)
         {
-            if (sendTask != null && !sendTask.IsCompleted)
+            //if (sendTask != null && !sendTask.IsCompleted)
+            //    throw new InvalidOperationException("The UDP socket send loop is already running!");
+
+            if (sendThread != null && sendThread.ThreadState.HasFlag(ThreadState.Running))
                 throw new InvalidOperationException("The UDP socket send loop is already running!");
 
             this.secretKey = secretKey;
 
-            sendTask = SendLoop();
+            //sendTask = SendLoop();
+            sendThread = new Thread(SendLoop);
+            sendThread.Name = $"[{log.Prefix}] Send Thread";
+            sendThread.IsBackground = true;
+            sendThread.Start();
         }
 
         /// <summary>
@@ -221,6 +230,11 @@ namespace Discore.Voice.Internal
             return socket.SendAsync(data, SocketFlags.None);
         }
 
+        void Send(ArraySegment<byte> data)
+        {
+            socket.Send(data.Array, data.Offset, data.Count, SocketFlags.None);
+        }
+
         /// <exception cref="SocketException">Thrown if the socket encounters an error while sending data.</exception>
         public Task StartIPDiscoveryAsync()
         {
@@ -234,7 +248,8 @@ namespace Discore.Voice.Internal
             return SendAsync(new ArraySegment<byte>(packet));
         }
 
-        async Task SendLoop()
+        //async Task SendLoop()
+        void SendLoop()
         {
             const int TICKS_PER_MS = 1;
             const int MAX_OPUS_SIZE = 4000;
@@ -334,7 +349,8 @@ namespace Discore.Voice.Internal
                         if (IsPaused)
                         {
                             // If we are paused, do nothing.
-                            await Task.Delay(1).ConfigureAwait(false);
+                            Thread.Sleep(0);
+                            //await Task.Delay(1).ConfigureAwait(false);
                         }
                         // If we have a frame to send
                         else if (hasFrame)
@@ -344,8 +360,10 @@ namespace Discore.Voice.Internal
                             try
                             {
                                 // Send the frame across UDP
-                                await SendAsync(new ArraySegment<byte>(voicePacket, 0, rtpPacketLength))
-                                    .ConfigureAwait(false);
+                                //await SendAsync(new ArraySegment<byte>(voicePacket, 0, rtpPacketLength))
+                                //    .ConfigureAwait(false);
+
+                                Send(new ArraySegment<byte>(voicePacket, 0, rtpPacketLength));
                             }
                             catch (ObjectDisposedException)
                             {
@@ -396,14 +414,15 @@ namespace Discore.Voice.Internal
 
                         int beforeYield = Environment.TickCount;
 
-                        await Task.Yield();
+                        Thread.Sleep(0);
+                        //await Task.Yield();
 
                         int afterYield = Environment.TickCount;
                         int yieldTimeMs = afterYield - beforeYield;
 
                         if (yieldTimeMs >= encoder.FrameLength)
                         {
-                            log.LogWarning($"Yield took {yieldTimeMs}ms!");
+                            log.LogWarning($"Sleep took {yieldTimeMs}ms!");
                         }
                     }
                 }
