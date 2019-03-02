@@ -330,7 +330,7 @@ namespace Discore.Voice.Internal
                         if (IsPaused)
                         {
                             // If we are paused, do nothing
-                            Thread.Sleep(0);
+                            Thread.Sleep(100);
                         }
                         // If we have a frame to send
                         else if (hasFrame)
@@ -370,7 +370,7 @@ namespace Discore.Voice.Internal
                     else
                     {
                         // Nothing to do, so sleep
-                        Thread.Sleep(0);
+                        Thread.Sleep(1);
                     }
                 }
                 catch (Exception ex)
