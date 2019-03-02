@@ -285,13 +285,13 @@ namespace Discore.Voice
         }
 
         /// <summary>
-        /// Sends the specified PCM bytes to this voice connection.
+        /// Queues the specified PCM bytes to be sent over this voice connection. 
         /// <para>
-        /// The size of the data sent should be equal to or less than <see cref="PCM_BLOCK_SIZE"/>.
+        /// The size of the data should be equal to or less than <see cref="PCM_BLOCK_SIZE"/>.
+        /// Should be used along-side <see cref="CanSendVoiceData(int)"/> to avoid overflowing the buffer.
         /// </para>
         /// <para>
-        /// Should be used along-side <see cref="CanSendVoiceData(int)"/> to
-        /// avoid overflowing the buffer.
+        /// This call will not block and users do not need to worry about calling this at a certain rate.
         /// </para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
