@@ -2,24 +2,22 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
-    <Copyright>Bundled Sticks Inkorporated 2018</Copyright>
-    <Version>4.2.0</Version>
-    <AssemblyVersion>4.2.0.0</AssemblyVersion>
-    <FileVersion>4.2.0.0</FileVersion>
+    <Copyright>Bundled Sticks Inkorporated 2019</Copyright>
+    <Version>4.2.1</Version>
+    <AssemblyVersion>4.2.1.0</AssemblyVersion>
+    <FileVersion>4.2.1.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>discord;discord-api;discord-library;dotnet-standard</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
     <Description>Discore is a light-weight .NET Standard library designed for creating Discord bots.
 
-Please note: Discore is not an official Discord API interface!</Description>
+Please note: Discore is not an official Discord API library!</Description>
     <PackageLicenseUrl>https://github.com/BundledSticksInkorperated/Discore/blob/master/LICENSE.md</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/BundledSticksInkorperated/Discore</PackageProjectUrl>
-    <PackageReleaseNotes>- Discore no longer creates/uses the discore-local-storage.json file. This file can be removed from any projects using Discore.
-- ShardFailureReason.IOError has been deprecated as it can no longer occur.
-- Internal fixes/tweaks to improve stability.</PackageReleaseNotes>
+    <PackageReleaseNotes>- Voice connections now use a dedicated thread (per connection) instead of async/await internally. This fixes many performance and audio quality issues since these connections are very performance sensitive.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
