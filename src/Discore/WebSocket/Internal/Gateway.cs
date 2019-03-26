@@ -327,8 +327,10 @@ namespace Discore.WebSocket.Internal
 
             // Disconnect the socket if needed
             if (socket.CanBeDisconnected)
+            {
                 await socket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None)
                     .ConfigureAwait(false);
+            }
 
             log.LogVerbose("Disconnected.");
         }

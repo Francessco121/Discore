@@ -55,7 +55,7 @@ namespace Discore.WebSocket.Internal
 
         protected DiscordClientWebSocket(string loggingName)
         {
-            log = new DiscoreLogger($"BaseWebSocket:{loggingName}");
+            log = new DiscoreLogger($"DiscordClientWebSocket:{loggingName}");
 
             socket = new ClientWebSocket();
             // Disable "keep alive" packets, Discord's WebSocket servers do not handle
