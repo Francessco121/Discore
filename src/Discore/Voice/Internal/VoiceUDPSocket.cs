@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Voice.Internal
@@ -17,41 +18,46 @@ namespace Discore.Voice.Internal
 
     class VoiceUdpSocket : IDisposable
     {
-        public bool IsConnected => socket.Connected;
-        public int BytesToSend => sendBuffer.Count;
-        public bool IsPaused { get; set; }
-
         public event EventHandler OnClosedPrematurely;
+
+        public bool IsConnected => socket.Connected;
+
+        public int BytesToSend => sendBuffer.Count;
 
         public BlockingCollection<IPDiscoveryEventArgs> IPDiscoveryQueue { get; } =
             new BlockingCollection<IPDiscoveryEventArgs>();
 
-        public int Ssrc => ssrc;
+        public int Ssrc { get; }
 
-        readonly DiscoreLogger log;
+        public bool IsPaused { get; set; }
 
         bool isDisposed;
 
         Socket socket;
         IPEndPoint endPoint;
 
-        Task sendTask;
+        Thread sendThread;
         Task receiveTask;
 
         bool discoveringIP;
+        byte[] secretKey;
 
         readonly OpusEncoder encoder;
         readonly CircularBuffer sendBuffer;
-
-        readonly int ssrc;
-        byte[] secretKey;
+        readonly DiscoreLogger log;
 
         public VoiceUdpSocket(string loggingName, int ssrc)
         {
             log = new DiscoreLogger(loggingName);
 
-            this.ssrc = ssrc;
-            encoder = new OpusEncoder(48000, 2, 20, null, OpusApplication.MusicOrMixed);
+            Ssrc = ssrc;
+
+            encoder = new OpusEncoder(
+                samplingRate: 48000, 
+                channels: 2, 
+                frameLength: 20, 
+                bitrate: null, 
+                application: OpusApplication.MusicOrMixed);
 
             // Create send buffer
             const int FRAME_LENGTH = 20;
@@ -105,12 +111,15 @@ namespace Discore.Voice.Internal
         /// <exception cref="InvalidOperationException"></exception>
         public void Start(byte[] secretKey)
         {
-            if (sendTask != null && !sendTask.IsCompleted)
+            if (sendThread != null && sendThread.ThreadState.HasFlag(ThreadState.Running))
                 throw new InvalidOperationException("The UDP socket send loop is already running!");
 
             this.secretKey = secretKey;
 
-            sendTask = SendLoop();
+            sendThread = new Thread(SendLoop);
+            sendThread.Name = $"[{log.Prefix}] Send Thread";
+            sendThread.IsBackground = true;
+            sendThread.Start();
         }
 
         /// <summary>
@@ -214,20 +223,25 @@ namespace Discore.Voice.Internal
             return socket.SendAsync(data, SocketFlags.None);
         }
 
+        void Send(byte[] buffer, int offset, int count)
+        {
+            socket.Send(buffer, offset, count, SocketFlags.None);
+        }
+
         /// <exception cref="SocketException">Thrown if the socket encounters an error while sending data.</exception>
         public Task StartIPDiscoveryAsync()
         {
             byte[] packet = new byte[70];
-            packet[0] = (byte)(ssrc >> 24);
-            packet[1] = (byte)(ssrc >> 16);
-            packet[2] = (byte)(ssrc >> 8);
-            packet[3] = (byte)(ssrc >> 0);
+            packet[0] = (byte)(Ssrc >> 24);
+            packet[1] = (byte)(Ssrc >> 16);
+            packet[2] = (byte)(Ssrc >> 8);
+            packet[3] = (byte)(Ssrc >> 0);
 
             discoveringIP = true;
             return SendAsync(new ArraySegment<byte>(packet));
         }
 
-        async Task SendLoop()
+        void SendLoop()
         {
             const int TICKS_PER_MS = 1;
             const int MAX_OPUS_SIZE = 4000;
@@ -250,10 +264,10 @@ namespace Discore.Voice.Internal
             // Setup RTP packet header
             voicePacket[0] = 0x80; // Packet Type
             voicePacket[1] = 0x78; // Packet Version
-            voicePacket[8] = (byte)(ssrc >> 24); // ssrc
-            voicePacket[9] = (byte)(ssrc >> 16);
-            voicePacket[10] = (byte)(ssrc >> 8);
-            voicePacket[11] = (byte)(ssrc >> 0);
+            voicePacket[8] = (byte)(Ssrc >> 24); // ssrc
+            voicePacket[9] = (byte)(Ssrc >> 16);
+            voicePacket[10] = (byte)(Ssrc >> 8);
+            voicePacket[11] = (byte)(Ssrc >> 0);
 
             // Copy RTP packet header into nonce
             Buffer.BlockCopy(voicePacket, 0, nonce, 0, 12);
@@ -266,7 +280,7 @@ namespace Discore.Voice.Internal
             {
                 try
                 {
-                    // If we don't have a frame to send and we have a full frame buffered
+                    // If we don't have a frame to send and we have a frame buffered
                     if (!hasFrame && sendBuffer.Count > 0)
                     {
                         // Read frame from buffer
@@ -315,8 +329,8 @@ namespace Discore.Voice.Internal
                     {
                         if (IsPaused)
                         {
-                            // If we are paused, do nothing.
-                            await Task.Delay(1).ConfigureAwait(false);
+                            // If we are paused, do nothing
+                            Thread.Sleep(100);
                         }
                         // If we have a frame to send
                         else if (hasFrame)
@@ -326,8 +340,7 @@ namespace Discore.Voice.Internal
                             try
                             {
                                 // Send the frame across UDP
-                                await SendAsync(new ArraySegment<byte>(voicePacket, 0, rtpPacketLength))
-                                    .ConfigureAwait(false);
+                                Send(voicePacket, 0, rtpPacketLength);
                             }
                             catch (ObjectDisposedException)
                             {
@@ -356,8 +369,8 @@ namespace Discore.Voice.Internal
                     }
                     else
                     {
-                        // Nothing to do, so sleep for a bit to avoid burning cpu cycles
-                        await Task.Delay(1).ConfigureAwait(false);
+                        // Nothing to do, so sleep
+                        Thread.Sleep(1);
                     }
                 }
                 catch (Exception ex)
