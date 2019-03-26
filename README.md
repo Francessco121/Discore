@@ -13,5 +13,5 @@ Releases are available through [NuGet](https://www.nuget.org/packages/Discore/).
 
 ## Alternatives
 Don't like our approach? Try some other great options:
-- [DSharpPlus](https://github.com/NaamloosDT/DSharpPlus)
-- [Discord.Net](https://github.com/RogueException/Discord.Net)
+- [DSharpPlus](https://github.com/DSharpPlus/DSharpPlus)
+- [Discord.Net](https://github.com/discord-net/Discord.Net)
