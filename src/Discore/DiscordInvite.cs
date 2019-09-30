@@ -20,13 +20,38 @@ namespace Discore
         /// </summary>
         public DiscordInviteChannel Channel { get; }
 
-        DiscordHttpClient http;
+        /// <summary>
+        /// Gets the target user of this invite or null if no specific target exists.
+        /// </summary>
+        public DiscordUser TargetUser { get; }
+
+        /// <summary>
+        /// Gets the type of target user or null if no specific target user exists.
+        /// </summary>
+        /// <seealso cref="TargetUser"/>
+        public DiscordInviteTargetUserType? TargetUserType { get; }
+
+        /// <summary>
+        /// Gets the approximate number of online members in the guild which this invite is for.
+        /// Will be null if no target user exists.
+        /// </summary>
+        public int? ApproximatePresenceCount { get; }
+
+        /// <summary>
+        /// Gets the approximate number of total members in the guild which this invite is for.
+        /// </summary>
+        public int? ApproximateMemberCount { get; }
+
+        readonly DiscordHttpClient http;
 
         internal DiscordInvite(DiscordHttpClient http, DiscordApiData data)
         {
             this.http = http;
 
             Code = data.GetString("code");
+            TargetUserType = (DiscordInviteTargetUserType?)data.GetInteger("target_user_type");
+            ApproximatePresenceCount = data.GetInteger("approximate_presence_count");
+            ApproximateMemberCount = data.GetInteger("approximate_member_count");
 
             DiscordApiData guildData = data.Get("guild");
             if (guildData != null)
@@ -35,6 +60,10 @@ namespace Discore
             DiscordApiData channelData = data.Get("channel");
             if (channelData != null)
                 Channel = new DiscordInviteChannel(channelData);
+
+            DiscordApiData userData = data.Get("target_user");
+            if (userData != null)
+                TargetUser = new DiscordUser(isWebhookUser: false, userData);
         }
 
         /// <summary>
