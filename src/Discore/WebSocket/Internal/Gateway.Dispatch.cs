@@ -88,6 +88,19 @@ namespace Discore.WebSocket.Internal
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
 
+            // Check shard
+            if (shard.Id != 0 || totalShards > 1)
+            {
+                IList<DiscordApiData> shardData = data.GetArray("shard");
+                if (shardData != null)
+                {
+                    if (shardData.Count > 0 && shardData[0].ToInteger() != shard.Id)
+                        log.LogError($"[Ready] Shard ID mismatch! Expected {shard.Id}, got {shardData[0].ToInteger()}");
+                    if (shardData.Count > 1 && shardData[1].ToInteger() != totalShards)
+                        log.LogError($"[Ready] Total shards mismatch! Expected {totalShards}, got {shardData[1].ToInteger()}");
+                }
+            }
+
             // Clear the cache
             cache.Clear();
 
