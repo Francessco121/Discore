@@ -3,6 +3,7 @@ using Discore.Voice;
 using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Discore
@@ -271,6 +272,15 @@ namespace Discore
             }
 
             Emojis = emojis;
+        }
+
+        /// <summary>
+        /// Returns whether this guild has the given <paramref name="feature"/>.
+        /// </summary>
+        /// <seealso cref="DiscordGuildFeature"/>
+        public bool HasFeature(string feature)
+        {
+            return Features.Contains(feature);
         }
 
         /// <summary>
