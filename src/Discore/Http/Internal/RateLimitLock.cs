@@ -17,7 +17,7 @@ namespace Discore.Http.Internal
             mutex = new AsyncLock();
         }
 
-        int GetDelay()
+        public int GetDelay()
         {
             TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
             ulong epochNowMilliseconds = (ulong)t.TotalMilliseconds;

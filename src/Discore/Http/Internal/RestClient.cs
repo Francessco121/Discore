@@ -19,13 +19,15 @@ namespace Discore.Http.Internal
         const string DISCORE_URL = "https://github.com/BundledSticksInkorperated/Discore";
         static readonly string discoreVersion;
 
-        string botToken;
-        DiscoreLogger log;
+        readonly string botToken;
+        readonly DiscoreLogger log;
 
-        static RateLimitLock globalRateLimitLock;
-        static ConcurrentDictionary<string, RateLimitLock> routeRateLimitLocks;
+        static readonly RateLimitLock globalRateLimitLock;
+        static readonly ConcurrentDictionary<string, RateLimitLock> routeRateLimitLocks;
+        static readonly ConcurrentDictionary<string, string> routesToBuckets;
+        static readonly ConcurrentDictionary<string, RateLimitLock> bucketRateLimitLocks;
 
-        HttpClient globalHttpClient;
+        readonly HttpClient globalHttpClient;
 
         public RestClient(string botToken)
         {
@@ -45,6 +47,8 @@ namespace Discore.Http.Internal
 
             globalRateLimitLock = new RateLimitLock();
             routeRateLimitLocks = new ConcurrentDictionary<string, RateLimitLock>();
+            routesToBuckets = new ConcurrentDictionary<string, string>();
+            bucketRateLimitLocks = new ConcurrentDictionary<string, RateLimitLock>();
         }
 
         HttpClient CreateHttpClient()
@@ -165,12 +169,23 @@ namespace Discore.Http.Internal
         {
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
-            // Get or create the rate limit lock for the specified route
-            RateLimitLock routeLock;
-            if (!routeRateLimitLocks.TryGetValue(rateLimitRoute, out routeLock))
+            // Get the rate limit lock for the route
+            RateLimitLock routeLock = null;
+            
+            if (routesToBuckets.TryGetValue(rateLimitRoute, out string rateLimitBucket))
             {
-                routeLock = new RateLimitLock();
-                routeRateLimitLocks[rateLimitRoute] = routeLock;
+                // Use the bucket for the route if it exists
+                routeLock = bucketRateLimitLocks[rateLimitBucket];
+            }
+            
+            if (routeLock == null)
+            {
+                // Get or create the rate limit lock for the specified route
+                if (!routeRateLimitLocks.TryGetValue(rateLimitRoute, out routeLock))
+                {
+                    routeLock = new RateLimitLock();
+                    routeRateLimitLocks[rateLimitRoute] = routeLock;
+                }
             }
 
             // Acquire route-specific lock
@@ -241,6 +256,31 @@ namespace Discore.Http.Internal
                                 // to wait until the reset time.
                                 if (rateLimitHeaders.Remaining == 0)
                                     routeLock.ResetAt(rateLimitHeaders.Reset);
+                            }
+
+                            if (rateLimitHeaders.Bucket != null)
+                            {
+                                // Create the bucket this route is apparently in if not already created
+                                if (!bucketRateLimitLocks.ContainsKey(rateLimitHeaders.Bucket))
+                                {
+                                    var bucketLock = new RateLimitLock();
+                                    bucketLock.ResetAfter(routeLock.GetDelay());
+
+                                    bucketRateLimitLocks.TryAdd(rateLimitHeaders.Bucket, bucketLock);
+                                }
+
+                                // Link the route to the bucket if not already linked
+                                routesToBuckets[rateLimitRoute] = rateLimitHeaders.Bucket;
+                            }
+                            else
+                            {
+                                // If the route was previously in a rate-limit bucket, but isn't anymore, remove the link
+                                if (routesToBuckets.TryRemove(rateLimitRoute, out string bucket))
+                                {
+                                    // Additionally remove the bucket if no routes are linked to it
+                                    if (!routesToBuckets.Values.Contains(bucket))
+                                        bucketRateLimitLocks.TryRemove(bucket, out _);
+                                }
                             }
                         }
 

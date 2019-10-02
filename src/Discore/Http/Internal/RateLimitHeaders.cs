@@ -26,6 +26,10 @@ namespace Discore.Http.Internal
         /// Retry-After. If set, the time in milliseconds that needs to be waited before sending another request.
         /// </summary>
         public int? RetryAfter { get; }
+        /// <summary>
+        /// X-RateLimit-Bucket. If set, a unique string denoting the rate limit being encountered (non-inclusive of major parameters in the route path).
+        /// </summary>
+        public string Bucket { get; }
 
         private RateLimitHeaders(bool isGlobal, int? retryAfter)
         {
@@ -33,13 +37,14 @@ namespace Discore.Http.Internal
             RetryAfter = retryAfter;
         }
 
-        private RateLimitHeaders(bool isGlobal, int limit, int remaining, ulong reset, int? retryAfter)
+        private RateLimitHeaders(bool isGlobal, int limit, int remaining, ulong reset, int? retryAfter, string bucket)
         {
             IsGlobal = isGlobal;
             Limit = limit;
             Remaining = remaining;
             Reset = reset;
             RetryAfter = retryAfter;
+            Bucket = bucket;
         }
 
         /// <summary>
@@ -66,6 +71,7 @@ namespace Discore.Http.Internal
             {
                 int? limitHeader = null, remainingHeader = null;
                 ulong? resetTimeHeader = null;
+                string bucket = null;
 
                 IEnumerable<string> limitValues;
                 if (headers.TryGetValues("X-RateLimit-Limit", out limitValues))
@@ -97,14 +103,26 @@ namespace Discore.Http.Internal
                         resetTimeHeader = resetTime;
                 }
 
+                IEnumerable<string> bucketValues;
+                if (headers.TryGetValues("X-RateLimit-Bucket", out bucketValues))
+                {
+                    bucket = bucketValues.FirstOrDefault();
+                }
+
                 if (limitHeader.HasValue && remainingHeader.HasValue && resetTimeHeader.HasValue)
+                {
                     return new RateLimitHeaders(isGlobal,
-                        limitHeader.Value, remainingHeader.Value, resetTimeHeader.Value, retryAfterHeader);
+                        limitHeader.Value, remainingHeader.Value, resetTimeHeader.Value, retryAfterHeader, bucket);
+                }
                 else
+                {
                     return null;
+                }
             }
             else
+            {
                 return new RateLimitHeaders(isGlobal, retryAfterHeader);
+            }
         }
     }
 }
