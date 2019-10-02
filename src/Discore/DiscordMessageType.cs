@@ -9,6 +9,11 @@
         ChannelNameChange = 4,
         ChannelIconChange = 5,
         ChannelPinnedMessage = 6,
-        GuildMemberJoin = 7
+        GuildMemberJoin = 7,
+        UserPremiumGuildSubscription = 8,
+        UserPremiumGuildSubscriptionTier1 = 9,
+        UserPremiumGuildSubscriptionTier2 = 10,
+        UserPremiumGuildSubscriptionTier3 = 11,
+        ChannelFollowAdd = 12
     }
 }
