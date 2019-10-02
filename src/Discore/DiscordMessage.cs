@@ -21,6 +21,12 @@ namespace Discore
         /// </summary>
         public DiscordUser Author { get; }
         /// <summary>
+        /// If this message originated from a guild, gets the member properties of the author.
+        /// <para/>
+        /// Only available if this message originated from a MessageCreate or MessageUpdate Gateway event.
+        /// </summary>
+        public DiscordMessageMember Member { get; }
+        /// <summary>
         /// Gets the contents of this message.
         /// </summary>
         public string Content { get; }
@@ -49,6 +55,11 @@ namespace Discore
         /// </summary>
         public IReadOnlyList<Snowflake> MentionedRoleIds { get; }
         /// <summary>
+        /// Gets a list of all channels mentioned in this message.
+        /// May be null.
+        /// </summary>
+        public IReadOnlyList<DiscordChannelMention> MentionedChannels { get; }
+        /// <summary>
         /// Gets a list of all attachments in this message.
         /// </summary>
         public IReadOnlyList<DiscordAttachment> Attachments { get; }
@@ -76,9 +87,25 @@ namespace Discore
         /// Gets the type of message.
         /// </summary>
         public DiscordMessageType Type { get; }
+        /// <summary>
+        /// Gets the activity information for a Rich Presence-related chat message.
+        /// </summary>
+        public DiscordMessageActivity Activity { get; }
+        /// <summary>
+        /// Gets the application information for a Rich Persence-related chat message.
+        /// </summary>
+        public DiscordMessageApplication Application { get; }
+        /// <summary>
+        /// Gets the reference data sent with crossposted messages.
+        /// </summary>
+        public DiscordMessageReference MessageReference { get; }
+        /// <summary>
+        /// Flags describing extra features of the message.
+        /// </summary>
+        public DiscordMessageFlags Flags { get; }
 
-        DiscordHttpClient http;
-        DiscordApiData originalData;
+        readonly DiscordHttpClient http;
+        readonly DiscordApiData originalData;
 
         internal DiscordMessage(DiscordHttpClient http, DiscordApiData data)
             : base(data)
@@ -97,11 +124,32 @@ namespace Discore
             ChannelId       = data.GetSnowflake("channel_id").GetValueOrDefault();
             WebhookId       = data.GetSnowflake("webhook_id");
             Type            = (DiscordMessageType)(data.GetInteger("type") ?? 0);
+            Flags           = (DiscordMessageFlags)(data.GetInteger("flags") ?? 0);
 
             // Get author
             DiscordApiData authorData = data.Get("author");
             if (authorData != null)
                 Author = new DiscordUser(WebhookId.HasValue, authorData);
+
+            // Get member
+            DiscordApiData memberData = data.Get("member");
+            if (memberData != null)
+                Member = new DiscordMessageMember(memberData);
+
+            // Get activity
+            DiscordApiData activityData = data.Get("activity");
+            if (activityData != null)
+                Activity = new DiscordMessageActivity(activityData);
+
+            // Get application
+            DiscordApiData applicationData = data.Get("application");
+            if (applicationData != null)
+                Application = new DiscordMessageApplication(applicationData);
+
+            // Get reference
+            DiscordApiData messageReferenceData = data.Get("message_reference");
+            if (messageReferenceData != null)
+                MessageReference = new DiscordMessageReference(messageReferenceData);
 
             // Get mentions
             IList<DiscordApiData> mentionsArray = data.GetArray("mentions");
@@ -125,6 +173,18 @@ namespace Discore
                     mentionedRoles[i] = mentionRolesArray[i].ToSnowflake().Value;
 
                 MentionedRoleIds = mentionedRoles;
+            }
+
+            // Get channel mentions
+            IList<DiscordApiData> channelMentionsArray = data.GetArray("mention_channels");
+            if (channelMentionsArray != null)
+            {
+                DiscordChannelMention[] mentions = new DiscordChannelMention[channelMentionsArray.Count];
+
+                for (int i = 0; i < channelMentionsArray.Count; i++)
+                    mentions[i] = new DiscordChannelMention(channelMentionsArray[i]);
+
+                MentionedChannels = mentions;
             }
 
             // Get attachments

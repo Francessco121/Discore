@@ -43,7 +43,7 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        DiscordHttpClient http;
+        readonly DiscordHttpClient http;
 
         internal DiscordGuildMember(DiscordHttpClient http, MutableGuildMember member)
         {
