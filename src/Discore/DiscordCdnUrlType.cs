@@ -8,6 +8,7 @@
         CustomEmoji,
         GuildIcon,
         GuildSplash,
+        GuildBanner,
         DefaultUserAvatar,
         UserAvatar,
         ApplicationIcon

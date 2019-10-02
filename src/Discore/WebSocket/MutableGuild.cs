@@ -24,6 +24,14 @@ namespace Discore.WebSocket
         public bool IsWidgetEnabled { get; private set; }
         public Snowflake? WidgetChannelId { get; private set; }
         public Snowflake? SystemChannelId { get; private set; }
+        public int? MaxPresences { get; private set; }
+        public int? MaxMembers { get; private set; }
+        public string VanityUrlCode { get; private set; }
+        public string Description { get; private set; }
+        public string Banner { get; private set; }
+        public GuildPremiumTier PremiumTier { get; private set; }
+        public int PremiumSubscriptionCount { get; private set; }
+        public string PreferredLocale { get; private set; }
 
         public IReadOnlyList<string> Features { get; private set; }
 
@@ -56,6 +64,14 @@ namespace Discore.WebSocket
             IsWidgetEnabled = data.GetBoolean("widget_enabled") ?? false;
             WidgetChannelId = data.GetSnowflake("widget_channel_id");
             SystemChannelId = data.GetSnowflake("system_channel_id");
+            MaxPresences = data.GetInteger("max_presences");
+            MaxMembers = data.GetInteger("max_members");
+            VanityUrlCode = data.GetString("vanity_url_code");
+            Description = data.GetString("description");
+            PremiumTier = (GuildPremiumTier)(data.GetInteger("premium_tier") ?? 0);
+            PremiumSubscriptionCount = data.GetInteger("premium_subscription_count") ?? 0;
+            PreferredLocale = data.GetString("preferred_locale");
+            Banner = data.GetString("banner");
 
             ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;

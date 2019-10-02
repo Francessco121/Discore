@@ -72,6 +72,17 @@ namespace Discore
         }
 
         /// <summary>
+        /// Creates a CDN URL builder for guild banners.
+        /// </summary>
+        /// <param name="guildId">The ID of the guild.</param>
+        /// <param name="bannerHash">The hash of the banner image for the guild.</param>
+        public static DiscordCdnUrl ForGuildBanner(Snowflake guildId, string bannerHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.GuildBanner, guildId, bannerHash,
+                $"{CdnBaseUrl}/banners/{guildId}/{bannerHash}");
+        }
+
+        /// <summary>
         /// Creates a CDN URL builder for a default user avatar.
         /// </summary>
         /// <param name="userDiscriminator">The original user discriminator.</param>

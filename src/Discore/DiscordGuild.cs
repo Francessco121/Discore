@@ -102,6 +102,46 @@ namespace Discore
         public Snowflake? SystemChannelId { get; }
 
         /// <summary>
+        /// The maximum number of presences for the guild.
+        /// </summary>
+        public int? MaxPresences { get; }
+
+        /// <summary>
+        /// The maximum number of members for the guild.
+        /// </summary>
+        public int? MaxMembers { get; }
+
+        /// <summary>
+        /// The vanity URL code for the guild or null if the guild does not have a vanity URL.
+        /// </summary>
+        public string VanityUrlCode { get; }
+
+        /// <summary>
+        /// The description of the guild or null if the guild does not have one.
+        /// </summary>
+        public string Description { get; }
+
+        /// <summary>
+        /// Gets the guild's banner or null if the guild does not have one.
+        /// </summary>
+        public DiscordCdnUrl Banner { get; }
+
+        /// <summary>
+        /// Gets the Nitro boosting (premium) tier of the guild.
+        /// </summary>
+        public GuildPremiumTier PremiumTier { get; }
+
+        /// <summary>
+        /// Gets the total number of users currently boosting the guild.
+        /// </summary>
+        public int PremiumSubscriptionCount { get; }
+
+        /// <summary>
+        /// Gets the preferred locale of the guild.
+        /// </summary>
+        public string PreferredLocale { get; }
+
+        /// <summary>
         /// Gets a dictionary of all roles in this guild.
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordRole> Roles { get; }
@@ -111,7 +151,7 @@ namespace Discore
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis { get; }
 
-        DiscordHttpClient http;
+        readonly DiscordHttpClient http;
 
         internal DiscordGuild(DiscordHttpClient http, MutableGuild guild)
         {
@@ -134,12 +174,22 @@ namespace Discore
             OwnerId = guild.OwnerId;
             AfkChannelId = guild.AfkChannelId;
             EmbedChannelId = guild.EmbedChannelId;
+            MaxPresences = guild.MaxPresences;
+            MaxMembers = guild.MaxMembers;
+            VanityUrlCode = guild.VanityUrlCode;
+            Description = guild.Description;
+            PremiumTier = guild.PremiumTier;
+            PremiumSubscriptionCount = guild.PremiumSubscriptionCount;
+            PreferredLocale = guild.PreferredLocale;
 
             if (guild.Icon != null)
                 Icon = DiscordCdnUrl.ForGuildIcon(guild.Id, guild.Icon);
 
             if (guild.Splash != null)
                 Splash = DiscordCdnUrl.ForGuildSplash(guild.Id, guild.Splash);
+
+            if (guild.Banner != null)
+                Splash = DiscordCdnUrl.ForGuildBanner(guild.Id, guild.Banner);
 
             Features = new List<string>(guild.Features);
 
@@ -163,6 +213,13 @@ namespace Discore
             IsWidgetEnabled             = data.GetBoolean("widget_enabled") ?? false;
             WidgetChannelId             = data.GetSnowflake("widget_channel_id");
             SystemChannelId             = data.GetSnowflake("system_channel_id");
+            MaxPresences                = data.GetInteger("max_presences");
+            MaxMembers                  = data.GetInteger("max_members");
+            VanityUrlCode               = data.GetString("vanity_url_code");
+            Description                 = data.GetString("description");
+            PremiumTier                 = (GuildPremiumTier)(data.GetInteger("premium_tier") ?? 0);
+            PremiumSubscriptionCount    = data.GetInteger("premium_subscription_count") ?? 0;
+            PreferredLocale             = data.GetString("preferred_locale");
 
             ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
             VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
@@ -177,6 +234,10 @@ namespace Discore
             string splashHash = data.GetString("splash");
             if (splashHash != null)
                 Splash = DiscordCdnUrl.ForGuildSplash(Id, splashHash);
+
+            string bannerHash = data.GetString("banner");
+            if (bannerHash != null)
+                Banner = DiscordCdnUrl.ForGuildBanner(Id, bannerHash);
 
             // Get features
             IList<DiscordApiData> featuresData = data.GetArray("features");
