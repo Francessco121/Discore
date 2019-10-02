@@ -1,4 +1,7 @@
 ﻿using Discore.WebSocket;
+using System;
+
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace Discore
 {
@@ -27,16 +30,19 @@ namespace Discore
         /// <summary>
         /// Gets whether this account has two-factor authentication enabled.
         /// </summary>
+        [Obsolete("This information is not available to bots.")]
         public bool HasTwoFactorAuth { get; }
 
         /// <summary>
         /// Gets whether the email on this account is verified.
         /// </summary>
+        [Obsolete("This information is not available to bots.")]
         public bool IsVerified { get; }
 
         /// <summary>
         /// Gets the email (if available) of this account.
         /// </summary>
+        [Obsolete("This information is not available to bots.")]
         public string Email { get; }
 
         /// <summary>
@@ -83,3 +89,5 @@ namespace Discore
         }
     }
 }
+
+#pragma warning restore CS0618 // Type or member is obsolete
