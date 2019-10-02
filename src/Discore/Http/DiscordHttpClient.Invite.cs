@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Discore.Http.Internal;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,17 +10,21 @@ namespace Discore.Http
         /// <summary>
         /// Gets an invite by its code.
         /// </summary>
+        /// <param name="withCounts">Whether the returned invite should contain approximate member counts.</param>
         /// <exception cref="ArgumentException">Thrown if the invite code is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordInvite> GetInvite(string inviteCode)
+        public async Task<DiscordInvite> GetInvite(string inviteCode, bool? withCounts = null)
         {
             if (inviteCode == null)
                 throw new ArgumentNullException(nameof(inviteCode));
             if (string.IsNullOrWhiteSpace(inviteCode))
                 throw new ArgumentException("Invite code cannot be empty or only contain whitespace characters.", nameof(inviteCode));
 
-            DiscordApiData data = await rest.Get($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
+            UrlParametersBuilder urlParams = new UrlParametersBuilder();
+            urlParams["with_counts"] = withCounts?.ToString() ?? null;
+
+            DiscordApiData data = await rest.Get($"invites/{inviteCode}{urlParams.ToQueryString()}", "invities/invite").ConfigureAwait(false);
             return new DiscordInvite(this, data);
         }
 
