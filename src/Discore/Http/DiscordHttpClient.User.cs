@@ -1,4 +1,5 @@
 ﻿using Discore.Http.Internal;
+using System;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -80,6 +81,7 @@ namespace Discore.Http
         /// Gets a list of currently opened DM channels for the current bot.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
+        [Obsolete("Bots are no longer able to get a list of open DM channels per a Discord API update. This method will be removed in a future release.")]
         public async Task<DiscordDMChannel[]> GetUserDMs()
         {
             DiscordApiData data = await rest.Get("users/@me/channels", "users/@me/channels").ConfigureAwait(false);

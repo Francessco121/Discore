@@ -120,37 +120,6 @@ namespace Discore.WebSocket.Internal
                 cache.SetGuildAvailability(guildId, false);
             }
 
-            // Get DM channels
-            foreach (DiscordApiData dmChannelData in data.GetArray("private_channels"))
-            {
-                DiscordChannelType type = (DiscordChannelType)dmChannelData.GetInteger("type").Value;
-                if (type != DiscordChannelType.DirectMessage)
-                    // TODO: Support group DMs
-                    continue;
-
-                Snowflake channelId = dmChannelData.GetSnowflake("id").Value;
-                DiscordApiData recipientData = dmChannelData.GetArray("recipients").First();
-                Snowflake recipientId = recipientData.GetSnowflake("id").Value;
-
-                MutableUser recipient;
-                if (!cache.Users.TryGetValue(recipientId, out recipient))
-                {
-                    recipient = new MutableUser(recipientId, false, http);
-                    cache.Users[recipientId] = recipient;
-                }
-
-                recipient.Update(recipientData);
-
-                MutableDMChannel mutableDMChannel;
-                if (!cache.DMChannels.TryGetValue(channelId, out mutableDMChannel))
-                {
-                    mutableDMChannel = new MutableDMChannel(channelId, recipient, http);
-                    cache.DMChannels[channelId] = mutableDMChannel;
-                }
-
-                mutableDMChannel.Update(dmChannelData);
-            }
-
             LogServerTrace("Ready", data);
 
             // Signal that the connection is ready
