@@ -21,7 +21,7 @@ namespace Discore.Http.Internal
         /// <summary>
         /// X-RateLimit-Reset. Epoch time (seconds since 00:00:00 UTC on January 1, 1970) at which the rate limit resets.
         /// </summary>
-        public ulong Reset { get; }
+        public double Reset { get; }
         /// <summary>
         /// Retry-After. If set, the time in milliseconds that needs to be waited before sending another request.
         /// </summary>
@@ -37,7 +37,7 @@ namespace Discore.Http.Internal
             RetryAfter = retryAfter;
         }
 
-        private RateLimitHeaders(bool isGlobal, int limit, int remaining, ulong reset, int? retryAfter, string bucket)
+        private RateLimitHeaders(bool isGlobal, int limit, int remaining, double reset, int? retryAfter, string bucket)
         {
             IsGlobal = isGlobal;
             Limit = limit;
@@ -70,7 +70,7 @@ namespace Discore.Http.Internal
             if (!isGlobal)
             {
                 int? limitHeader = null, remainingHeader = null;
-                ulong? resetTimeHeader = null;
+                double? resetTimeHeader = null;
                 string bucket = null;
 
                 IEnumerable<string> limitValues;
@@ -98,8 +98,8 @@ namespace Discore.Http.Internal
                 {
                     string resetTimeStr = resetValues.FirstOrDefault();
 
-                    ulong resetTime;
-                    if (!string.IsNullOrWhiteSpace(resetTimeStr) && ulong.TryParse(resetTimeStr, out resetTime))
+                    double resetTime;
+                    if (!string.IsNullOrWhiteSpace(resetTimeStr) && double.TryParse(resetTimeStr, out resetTime))
                         resetTimeHeader = resetTime;
                 }
 

@@ -57,6 +57,7 @@ namespace Discore.Http.Internal
             http.DefaultRequestHeaders.Add("Accept", "application/json");
             http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
             http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
+            http.DefaultRequestHeaders.Add("X-RateLimit-Precision", "millisecond");
 
             return http;
         }
@@ -255,19 +256,14 @@ namespace Discore.Http.Internal
                                 // If the request succeeded but we are out of calls, set the route lock
                                 // to wait until the reset time.
                                 if (rateLimitHeaders.Remaining == 0)
-                                    routeLock.ResetAt(rateLimitHeaders.Reset);
+                                    routeLock.ResetAt(rateLimitHeaders.Reset * 1000);
                             }
 
                             if (rateLimitHeaders.Bucket != null)
                             {
                                 // Create the bucket this route is apparently in if not already created
                                 if (!bucketRateLimitLocks.ContainsKey(rateLimitHeaders.Bucket))
-                                {
-                                    var bucketLock = new RateLimitLock();
-                                    bucketLock.ResetAfter(routeLock.GetDelay());
-
-                                    bucketRateLimitLocks.TryAdd(rateLimitHeaders.Bucket, bucketLock);
-                                }
+                                    bucketRateLimitLocks.TryAdd(rateLimitHeaders.Bucket, routeLock.Clone());
 
                                 // Link the route to the bucket if not already linked
                                 routesToBuckets[rateLimitRoute] = rateLimitHeaders.Bucket;
