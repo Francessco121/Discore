@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2019 Bundled Sticks Inkorperated
+Copyright (c) 2019 Ethan Lafrenais
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
