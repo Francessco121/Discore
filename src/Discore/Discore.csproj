@@ -2,22 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
-    <Copyright>Bundled Sticks Inkorporated 2019</Copyright>
-    <Version>4.2.1</Version>
-    <AssemblyVersion>4.2.1.0</AssemblyVersion>
-    <FileVersion>4.2.1.0</FileVersion>
+    <Copyright>Ethan Lafrenais 2019</Copyright>
+    <Version>4.3.0</Version>
+    <AssemblyVersion>4.3.0.0</AssemblyVersion>
+    <FileVersion>4.3.0.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>discord;discord-api;discord-library;dotnet-standard</PackageTags>
     <Company>Bundled Sticks Inkorporated</Company>
     <Description>Discore is a light-weight .NET Standard library designed for creating Discord bots.
 
 Please note: Discore is not an official Discord API library!</Description>
-    <PackageLicenseUrl>https://github.com/BundledSticksInkorperated/Discore/blob/master/LICENSE.md</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <RepositoryUrl>https://github.com/BundledSticksInkorperated/Discore.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Francessco121/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/BundledSticksInkorperated/Discore</PackageProjectUrl>
-    <PackageReleaseNotes>- Voice connections now use a dedicated thread (per connection) instead of async/await internally. This fixes many performance and audio quality issues since these connections are very performance sensitive.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/Francessco121/Discore</PackageProjectUrl>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <PackageLicenseFile></PackageLicenseFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
