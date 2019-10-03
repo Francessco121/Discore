@@ -57,6 +57,8 @@ namespace Discore
         /// <summary>
         /// Gets a list of all channels mentioned in this message.
         /// May be null.
+        /// <para/>
+        /// Note: This will only ever be set for crossposted messages.
         /// </summary>
         public IReadOnlyList<DiscordChannelMention> MentionedChannels { get; }
         /// <summary>
