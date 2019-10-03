@@ -33,12 +33,13 @@ namespace Discore
 
         /// <summary>
         /// Gets the approximate number of online members in the guild which this invite is for.
-        /// Will be null if no target user exists.
+        /// Will be null if not available.
         /// </summary>
         public int? ApproximatePresenceCount { get; }
 
         /// <summary>
         /// Gets the approximate number of total members in the guild which this invite is for.
+        /// Will be null if not available.
         /// </summary>
         public int? ApproximateMemberCount { get; }
 
