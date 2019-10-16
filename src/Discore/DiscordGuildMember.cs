@@ -69,7 +69,7 @@ namespace Discore
         {
             this.http = http;
 
-            GuildId = GuildId;
+            GuildId = guildId;
 
             Nickname = data.GetString("nick");
             JoinedAt = data.GetDateTime("joined_at").Value;
