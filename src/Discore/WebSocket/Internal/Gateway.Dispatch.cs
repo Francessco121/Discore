@@ -632,7 +632,11 @@ namespace Discore.WebSocket.Internal
 
                 OnDMChannelCreated?.Invoke(this, new DMChannelEventArgs(shard, mutableDMChannel.ImmutableEntity));
             }
-            else if (type == DiscordChannelType.GuildText || type == DiscordChannelType.GuildVoice)
+            else if (type == DiscordChannelType.GuildText 
+                || type == DiscordChannelType.GuildVoice
+                || type == DiscordChannelType.GuildCategory
+                || type == DiscordChannelType.GuildNews
+                || type == DiscordChannelType.GuildStore)
             {
                 // Guild channel
                 Snowflake guildId = data.GetSnowflake("guild_id").Value;
