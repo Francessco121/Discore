@@ -24,7 +24,7 @@ namespace Discore.Http
             set => rest.RetryOnRateLimit = value;
         }
 
-        RestClient rest;
+        readonly RestClient rest;
 
         public DiscordHttpClient(string botToken)
         {
@@ -43,8 +43,12 @@ namespace Discore.Http
                 return new DiscordGuildVoiceChannel(this, data);
             else if (type == DiscordChannelType.GuildCategory)
                 return new DiscordGuildCategoryChannel(this, data);
+            else if (type == DiscordChannelType.GuildNews)
+                return new DiscordGuildNewsChannel(this, data);
+            else if (type == DiscordChannelType.GuildStore)
+                return new DiscordGuildStoreChannel(this, data);
             else
-                throw new NotSupportedException($"{nameof(Snowflake)} isn't a known type of {nameof(DiscordChannel)}.");
+                throw new NotSupportedException($"{type} isn't a known type of {nameof(DiscordChannel)}.");
         }
 
         public void Dispose()

@@ -93,6 +93,50 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Updates the settings of a guild news channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="newsChannelId">The ID of the guild news channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild news channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildNewsChannel> ModifyNewsChannel(Snowflake newsChannelId,
+            GuildNewsChannelOptions options)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            DiscordApiData requestData = options.Build();
+
+            DiscordApiData returnData = await rest.Patch($"channels/{newsChannelId}", requestData,
+                $"channels/{newsChannelId}").ConfigureAwait(false);
+            return (DiscordGuildNewsChannel)DeserializeChannelData(returnData);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild store channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="storeChannelId">The ID of the guild store channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild store channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public async Task<DiscordGuildStoreChannel> ModifyStoreChannel(Snowflake storeChannelId,
+            GuildStoreChannelOptions options)
+        {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
+
+            DiscordApiData requestData = options.Build();
+
+            DiscordApiData returnData = await rest.Patch($"channels/{storeChannelId}", requestData,
+                $"channels/{storeChannelId}").ConfigureAwait(false);
+            return (DiscordGuildStoreChannel)DeserializeChannelData(returnData);
+        }
+
+        /// <summary>
         /// Deletes a guild channel, or closes a DM.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>

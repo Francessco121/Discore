@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Discore
 {
-    public sealed class DiscordGuildTextChannel : DiscordGuildChannel, ITextChannel
+    public sealed class DiscordGuildNewsChannel : DiscordGuildChannel, ITextChannel
     {
         /// <summary>
         /// Gets the topic of this channel.
@@ -14,7 +14,7 @@ namespace Discore
         public string Topic { get; }
 
         /// <summary>
-        /// Gets whether this text channel is NSFW (not-safe-for-work).
+        /// Gets whether this news channel is NSFW (not-safe-for-work).
         /// </summary>
         public bool Nsfw { get; }
 
@@ -27,8 +27,8 @@ namespace Discore
 
         readonly DiscordHttpClient http;
 
-        internal DiscordGuildTextChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
-            : base(http, data, DiscordChannelType.GuildText, guildId)
+        internal DiscordGuildNewsChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null) 
+            : base(http, data, DiscordChannelType.GuildNews, guildId)
         {
             this.http = http;
 
@@ -73,16 +73,16 @@ namespace Discore
         }
 
         /// <summary>
-        /// Modifies this text channel's settings.
+        /// Modifies this news channel's settings.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
         /// <param name="options">A set of options to modify the channel with</param>
-        /// <returns>Returns the updated text channel.</returns>
+        /// <returns>Returns the updated news channel.</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildTextChannel> Modify(GuildTextChannelOptions options)
+        public Task<DiscordGuildNewsChannel> Modify(GuildNewsChannelOptions options)
         {
-            return http.ModifyTextChannel(Id, options);
+            return http.ModifyNewsChannel(Id, options);
         }
 
         /// <summary>
