@@ -19,9 +19,11 @@ namespace Discore
         public bool IsGuildChannel => 
                ChannelType == DiscordChannelType.GuildText
             || ChannelType == DiscordChannelType.GuildVoice
-            || ChannelType == DiscordChannelType.GuildCategory;
+            || ChannelType == DiscordChannelType.GuildCategory
+            || ChannelType == DiscordChannelType.GuildNews
+            || ChannelType == DiscordChannelType.GuildStore;
 
-        DiscordHttpClient http;
+        readonly DiscordHttpClient http;
 
         internal DiscordChannel(DiscordHttpClient http, DiscordChannelType type)
         {
