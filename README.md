@@ -1,7 +1,7 @@
 # Discore
 [![NuGet](https://img.shields.io/nuget/v/Discore.svg?style=flat-square)](https://www.nuget.org/packages/Discore/)
 
-Discore is a light-weight [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) library designed for creating [Discord](https://discordapp.com/) bots.
+Discore is a light-weight [.NET Standard](https://docs.microsoft.com/en-us/dotnet/articles/standard/library) library designed for creating [Discord](https://discord.com/) bots.
 
 **Please note:** Discore is **not** an official Discord API library!
 

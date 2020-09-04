@@ -95,7 +95,7 @@ namespace Discore.WebSocket.Internal
             handshakeCompleteEvent = new AsyncManualResetEvent();
             handshakeCompleteCancellationSource = new CancellationTokenSource();
 
-            // Up-to-date rate limit parameters: https://discordapp.com/developers/docs/topics/gateway#rate-limiting
+            // Up-to-date rate limit parameters: https://discord.com/developers/docs/topics/gateway#rate-limiting
             identifyRateLimiter = new GatewayRateLimiter(5, 1); // 1 IDENTIFY per 5 seconds
             outboundPayloadRateLimiter = new GatewayRateLimiter(60, 120); // 120 outbound payloads every 60 seconds
             gameStatusUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute

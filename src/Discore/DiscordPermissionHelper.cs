@@ -1,7 +1,7 @@
 ﻿using System;
 
 // Permission logic here is based off of:
-// https://discordapp.com/developers/docs/topics/permissions#permission-hierarchy
+// https://discord.com/developers/docs/topics/permissions#permission-hierarchy
 
 namespace Discore
 {

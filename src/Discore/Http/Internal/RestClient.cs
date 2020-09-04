@@ -12,11 +12,11 @@ namespace Discore.Http.Internal
 {
     class RestClient : IDisposable
     {
-        public const string BASE_URL = "https://discordapp.com/api/v6";
+        public const string BASE_URL = "https://discord.com/api/v6";
 
         public bool RetryOnRateLimit { get; set; } = true;
 
-        const string DISCORE_URL = "https://github.com/BundledSticksInkorperated/Discore";
+        const string DISCORE_URL = "https://github.com/Francessco121/Discore";
         static readonly string discoreVersion;
 
         readonly string botToken;
