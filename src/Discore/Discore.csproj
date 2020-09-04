@@ -2,13 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
-    <Copyright>Ethan Lafrenais 2019</Copyright>
+    <Copyright>Ethan Lafrenais 2020</Copyright>
     <Version>4.3.1</Version>
     <AssemblyVersion>4.3.1.0</AssemblyVersion>
     <FileVersion>4.3.1.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith</Authors>
     <PackageTags>discord;discord-api;discord-library;dotnet-standard</PackageTags>
-    <Company>Ethan Lafrenais;Tristan Smith</Company>
     <Description>Discore is a light-weight .NET Standard library designed for creating Discord bots.
 
 Please note: Discore is not an official Discord API library!</Description>
