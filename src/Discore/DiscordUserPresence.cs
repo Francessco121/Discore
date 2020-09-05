@@ -1,4 +1,7 @@
-﻿namespace Discore
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace Discore
 {
     public sealed class DiscordUserPresence
     {
@@ -17,10 +20,21 @@
         /// </summary>
         public DiscordUserStatus Status { get; }
 
+        /// <summary>
+        /// Gets the user's current activities.
+        /// </summary>
+        public IReadOnlyList<DiscordGame> Activities;
+
+        /// <summary>
+        /// Gets the user's platform-dependent status.
+        /// </summary>
+        public DiscordClientStatus ClientStatus { get; }
+
         internal DiscordUserPresence(Snowflake userId, DiscordApiData data)
         {
             UserId = userId;
 
+            // Game
             DiscordApiData gameData = data.Get("game");
             if (gameData != null)
             {
@@ -30,6 +44,7 @@
                     Game = new DiscordGame(gameData);
             }
 
+            // Status
             string statusStr = data.GetString("status");
             if (statusStr != null)
             {
@@ -48,6 +63,16 @@
                 else
                     Status = status.Value;
             }
+
+            // Client status
+            DiscordApiData clientStatusData = data.Get("client_status");
+            if (clientStatusData != null)
+                ClientStatus = new DiscordClientStatus(clientStatusData);
+
+            // Activites
+            IList<DiscordApiData> activitiesArray = data.GetArray("activities");
+            if (activitiesArray != null)
+                Activities = activitiesArray.Select(a => new DiscordGame(a)).ToArray();
         }
     }
 }
