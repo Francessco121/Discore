@@ -48,6 +48,11 @@ namespace Discore.WebSocket.Internal
         /// </summary>
         bool receivedHello;
 
+        /// <summary>
+        /// Whether disconnection was initiated on our end.
+        /// </summary>
+        bool areWeDisconnecting;
+        
         bool isDisposed;
 
         DiscoreLogger log;
@@ -70,6 +75,8 @@ namespace Discore.WebSocket.Internal
         public override async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string statusDescription, 
             CancellationToken cancellationToken)
         {
+            areWeDisconnecting = true;
+
             // Disconnect the socket
             await base.DisconnectAsync(closeStatus, statusDescription, cancellationToken)
                 .ConfigureAwait(false);
@@ -97,6 +104,10 @@ namespace Discore.WebSocket.Internal
 
         protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
         {
+            // If we initiated a disconnect, this is just the remote end's acknowledgment
+            // and we should not start reconnecting
+            if (areWeDisconnecting) return;
+
             GatewayCloseCode code = (GatewayCloseCode)closeStatus;
             switch (code)
             {

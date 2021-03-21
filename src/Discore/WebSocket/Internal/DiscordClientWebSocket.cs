@@ -346,23 +346,32 @@ namespace Discore.WebSocket.Internal
                                 log.LogVerbose($"[ReceiveLoop] Received close: {result.CloseStatusDescription} " +
                                     $"{result.CloseStatus} ({(int)result.CloseStatus})");
 
-                                try
+                                if (socket.State == WebSocketState.Open 
+                                    || socket.State == WebSocketState.CloseReceived
+                                    || socket.State == WebSocketState.CloseSent)
                                 {
-                                    log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
+                                    try
+                                    {
+                                        log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
 
-                                    // Complete the closing handshake
-                                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
-                                        .ConfigureAwait(false);
+                                        // Complete the closing handshake
+                                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
+                                            .ConfigureAwait(false);
 
-                                    log.LogVerbose("[ReceiveLoop] Completed close handshake.");
+                                        log.LogVerbose("[ReceiveLoop] Completed close handshake.");
+                                    }
+                                    catch (OperationCanceledException)
+                                    {
+                                        log.LogVerbose($"[ReceiveLoop] Socket aborted while closing.");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        log.LogError($"[ReceiveLoop] Failed to complete closing handshake: {ex}");
+                                    }
                                 }
-                                catch (OperationCanceledException)
+                                else
                                 {
-                                    log.LogVerbose($"[ReceiveLoop] Socket aborted while closing.");
-                                }
-                                catch (Exception ex)
-                                {
-                                    log.LogError($"[ReceiveLoop] Failed to complete closing handshake: {ex}");
+                                    log.LogVerbose("[ReceiveLoop] Close handshake completed by remote end.");
                                 }
 
                                 // Notify inheriting object
