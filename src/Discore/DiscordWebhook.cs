@@ -1,10 +1,4 @@
-﻿using Discore.Http;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-
-namespace Discore
+﻿namespace Discore
 {
     public sealed class DiscordWebhook : DiscordIdEntity
     {
@@ -39,13 +33,9 @@ namespace Discore
         /// </summary>
         public bool HasToken => !string.IsNullOrWhiteSpace(Token);
 
-        DiscordHttpClient http;
-
-        internal DiscordWebhook(DiscordHttpClient http, DiscordApiData data)
+        internal DiscordWebhook(DiscordApiData data)
             : base(data)
         {
-            this.http = http;
-
             GuildId = data.GetSnowflake("guild_id").Value;
             ChannelId = data.GetSnowflake("channel_id").Value;
 
@@ -59,102 +49,6 @@ namespace Discore
             string avatarHash = data.GetString("avatar");
             if (avatarHash != null)
                 Avatar = DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
-        }
-
-        /// <summary>
-        /// Modifies the settings of this webhook.
-        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
-        /// </summary>
-        /// <param name="channelId">The ID of the text channel to move this webhook to (or null to not move).</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordWebhook> Modify(string name = null, DiscordImageData avatar = null,
-            Snowflake? channelId = null)
-        {
-            return http.ModifyWebhook(Id, name, avatar, channelId);
-        }
-
-        /// <summary>
-        /// Modifies the settings of this webhook.
-        /// </summary>
-        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task ModifyWithToken(string token, string name = null, DiscordImageData avatar = null)
-        {
-            return http.ModifyWebhookWithToken(Id, token, name, avatar);
-        }
-
-        /// <summary>
-        /// Deletes this webhook permanently.
-        /// <para>Note: current bot must be the owner.</para>
-        /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Delete()
-        {
-            return http.DeleteWebhook(Id);
-        }
-
-        /// <summary>
-        /// Deletes this webhook permanently.
-        /// </summary>
-        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeleteWithToken(string token)
-        {
-            return http.DeleteWebhookWithToken(Id, token);
-        }
-
-        /// <summary>
-        /// Executes this webhook.
-        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
-        /// </summary>
-        /// <param name="token">The webhook's token.</param>
-        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
-        /// and have it returned from this method.</param>
-        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Execute(string token, ExecuteWebhookOptions options,
-            bool waitAndReturnMessage = false)
-        {
-            return http.ExecuteWebhook(Id, token, options, waitAndReturnMessage);
-        }
-
-        /// <summary>
-        /// Executes this webhook with a file attachment.
-        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
-        /// </summary>
-        /// <param name="token">The webhook's token.</param>
-        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
-        /// and have it returned from this method.</param>
-        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token is null, 
-        /// or <paramref name="fileData"/> is null,
-        /// or the file name is null, empty, or only contains whitespace characters.</exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Execute(string token, Stream fileData, string fileName,
-            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
-        {
-            return http.ExecuteWebhook(Id, token, fileData, fileName, options, waitAndReturnMessage);
-        }
-
-        /// <summary>
-        /// Executes this webhook with a file attachment.
-        /// <para>Note: Returns null unless <paramref name="waitAndReturnMessage"/> is set to true.</para>
-        /// </summary>
-        /// <param name="token">The webhook's token.</param>
-        /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
-        /// and have it returned from this method.</param>
-        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token is null 
-        /// or the file name is null, empty, or only contains whitespace characters.</exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Execute(string token, ArraySegment<byte> fileData, string fileName,
-            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
-        {
-            return http.ExecuteWebhook(Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
     }
 }

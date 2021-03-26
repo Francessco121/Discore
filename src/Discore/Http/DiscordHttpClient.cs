@@ -36,17 +36,17 @@ namespace Discore.Http
             DiscordChannelType type = (DiscordChannelType)data.GetInteger("type").Value;
 
             if (type == DiscordChannelType.DirectMessage)
-                return new DiscordDMChannel(this, data);
+                return DiscordDMChannel.FromJson(data);
             else if (type == DiscordChannelType.GuildText)
-                return new DiscordGuildTextChannel(this, data);
+                return new DiscordGuildTextChannel(data);
             else if (type == DiscordChannelType.GuildVoice)
-                return new DiscordGuildVoiceChannel(this, data);
+                return new DiscordGuildVoiceChannel(data);
             else if (type == DiscordChannelType.GuildCategory)
-                return new DiscordGuildCategoryChannel(this, data);
+                return new DiscordGuildCategoryChannel(data);
             else if (type == DiscordChannelType.GuildNews)
-                return new DiscordGuildNewsChannel(this, data);
+                return new DiscordGuildNewsChannel(data);
             else if (type == DiscordChannelType.GuildStore)
-                return new DiscordGuildStoreChannel(this, data);
+                return new DiscordGuildStoreChannel(data);
             else
                 throw new NotSupportedException($"{type} isn't a known type of {nameof(DiscordChannel)}.");
         }

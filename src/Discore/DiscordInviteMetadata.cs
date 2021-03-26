@@ -1,5 +1,4 @@
-﻿using Discore.Http;
-using System;
+﻿using System;
 
 namespace Discore
 {
@@ -40,8 +39,8 @@ namespace Discore
         /// </summary>
         public bool IsRevoked { get; }
 
-        internal DiscordInviteMetadata(DiscordHttpClient http, DiscordApiData data)
-            : base(http, data)
+        internal DiscordInviteMetadata(DiscordApiData data)
+            : base(data)
         {
             DiscordApiData inviterData = data.Get("inviter");
             if (inviterData != null)

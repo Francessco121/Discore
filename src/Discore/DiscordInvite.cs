@@ -1,7 +1,4 @@
-﻿using Discore.Http;
-using System.Threading.Tasks;
-
-namespace Discore
+﻿namespace Discore
 {
     public class DiscordInvite
     {
@@ -43,12 +40,8 @@ namespace Discore
         /// </summary>
         public int? ApproximateMemberCount { get; }
 
-        readonly DiscordHttpClient http;
-
-        internal DiscordInvite(DiscordHttpClient http, DiscordApiData data)
+        internal DiscordInvite(DiscordApiData data)
         {
-            this.http = http;
-
             Code = data.GetString("code");
             TargetUserType = (DiscordInviteTargetUserType?)data.GetInteger("target_user_type");
             ApproximatePresenceCount = data.GetInteger("approximate_presence_count");
@@ -65,16 +58,6 @@ namespace Discore
             DiscordApiData userData = data.Get("target_user");
             if (userData != null)
                 TargetUser = new DiscordUser(isWebhookUser: false, userData);
-        }
-
-        /// <summary>
-        /// Deletes this invite.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordInvite> Delete()
-        {
-            return http.DeleteInvite(Code);
         }
     }
 }

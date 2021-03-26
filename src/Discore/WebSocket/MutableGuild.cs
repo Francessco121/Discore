@@ -92,7 +92,7 @@ namespace Discore.WebSocket
             IList<DiscordApiData> rolesArray = data.GetArray("roles");
             for (int i = 0; i < rolesArray.Count; i++)
             {
-                DiscordRole role = new DiscordRole(Http, Id, rolesArray[i]);
+                DiscordRole role = new DiscordRole(Id, rolesArray[i]);
                 Roles[role.Id] = role;
             }
 
@@ -110,7 +110,36 @@ namespace Discore.WebSocket
 
         protected override DiscordGuild BuildImmutableEntity()
         {
-            return new DiscordGuild(Http, this);
+            return new DiscordGuild(
+                id: Id,
+                name: Name,
+                icon: Icon != null ? DiscordCdnUrl.ForGuildIcon(Id, Icon) : null,
+                splash: Splash != null ? DiscordCdnUrl.ForGuildSplash(Id, Splash) : null,
+                ownerId: OwnerId,
+                regionId: RegionId,
+                afkChannelId: AfkChannelId,
+                afkTimeout: AfkTimeout,
+                isEmbedEnabled: IsEmbedEnabled,
+                embedChannelId: EmbedChannelId,
+                verificationLevel: VerificationLevel,
+                defaultMessageNotifications: DefaultMessageNotifications,
+                explicitContentFilter: ExplicitContentFilter,
+                features: new List<string>(Features),
+                mfaLevel: MfaLevel,
+                applicationId: ApplicationId,
+                isWidgetEnabled: IsWidgetEnabled,
+                widgetChannelId: WidgetChannelId,
+                systemChannelId: SystemChannelId,
+                maxPresences: MaxPresences,
+                maxMembers: MaxMembers,
+                vanityUrlCode: VanityUrlCode,
+                description: Description,
+                banner: Banner != null ? DiscordCdnUrl.ForGuildBanner(Id, Banner) : null,
+                premiumTier: PremiumTier,
+                premiumSubscriptionCount: PremiumSubscriptionCount,
+                preferredLocale: PreferredLocale,
+                roles: Roles.CreateReadonlyCopy(),
+                emojis: Emojis.CreateReadonlyCopy());
         }
     }
 }

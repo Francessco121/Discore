@@ -8,13 +8,14 @@ namespace Discore.WebSocket
     {
         public bool IsDirty { get; private set; }
 
-        ConcurrentHashSet<MutableEntity> referencedBy;
-        ConcurrentHashSet<MutableEntity> referencing;
+        /// <summary>
+        /// A set of all other mutable entities that contain a reference to this entity.
+        /// </summary>
+        readonly ConcurrentHashSet<MutableEntity> referencedBy;
 
         public MutableEntity()
         {
             referencedBy = new ConcurrentHashSet<MutableEntity>();
-            referencing = new ConcurrentHashSet<MutableEntity>();
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -23,7 +24,6 @@ namespace Discore.WebSocket
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            referencing.Add(entity);
             entity.referencedBy.Add(this);
         }
 
@@ -31,6 +31,7 @@ namespace Discore.WebSocket
         {
             IsDirty = true;
 
+            // Any entity that contains a reference to this entity also needs to be marked as dirty
             foreach (MutableEntity entity in referencedBy)
                 entity.Dirty();
         }
@@ -42,11 +43,7 @@ namespace Discore.WebSocket
 
         public void ClearReferences()
         {
-            foreach (MutableEntity entity in referencedBy)
-                entity.referencing.TryRemove(this);
-
             referencedBy.Clear();
-            referencing.Clear();
         }
     }
 

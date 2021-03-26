@@ -1,6 +1,4 @@
-﻿using Discore.Http;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace Discore
 {
@@ -24,13 +22,9 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        DiscordHttpClient http;
-
-        internal DiscordOverwrite(DiscordHttpClient http, Snowflake channelId, DiscordApiData data)
+        internal DiscordOverwrite(Snowflake channelId, DiscordApiData data)
             : base(data)
         {
-            this.http = http;
-
             ChannelId = channelId;
 
             string typeStr = data.GetString("type");
@@ -43,28 +37,6 @@ namespace Discore
 
             long deny = data.GetInt64("deny").Value;
             Deny = (DiscordPermission)deny;
-        }
-
-        /// <summary>
-        /// Edits the permissions of this overwrite.
-        /// If successful, changes will be immediately reflected for this instance.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Edit(DiscordPermission allow, DiscordPermission deny)
-        {
-            return http.EditChannelPermissions(ChannelId, Id, allow, deny, Type);
-        }
-
-        /// <summary>
-        /// Deletes this overwrite.
-        /// If successful, changes will be immediately reflected for the channel this overwrite was in.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Delete()
-        {
-            return http.DeleteChannelPermission(ChannelId, Id);
         }
 
         public override string ToString()

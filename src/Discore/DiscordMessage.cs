@@ -1,7 +1,5 @@
-﻿using Discore.Http;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Discore
 {
@@ -106,14 +104,11 @@ namespace Discore
         /// </summary>
         public DiscordMessageFlags Flags { get; }
 
-        readonly DiscordHttpClient http;
         readonly DiscordApiData originalData;
 
-        internal DiscordMessage(DiscordHttpClient http, DiscordApiData data)
+        internal DiscordMessage(DiscordApiData data)
             : base(data)
         {
-            this.http = http;
-
             originalData = data;
 
             Content         = data.GetString("content");
@@ -233,7 +228,6 @@ namespace Discore
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the IDs of each message do not match.</exception>
         /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
         public static DiscordMessage Update(DiscordMessage message, DiscordMessage withPartial)
         {
             if (message == null)
@@ -247,131 +241,7 @@ namespace Discore
             DiscordApiData updatedData = message.originalData.Clone();
             updatedData.OverwriteUpdate(withPartial.originalData);
 
-            return new DiscordMessage(message.http, updatedData);
-        }
-
-        /// <summary>
-        /// Adds a reaction to this message.
-        /// <para>Requires <see cref="DiscordPermission.ReadMessageHistory"/>.</para>
-        /// <para>Requires <see cref="DiscordPermission.AddReactions"/> if nobody else has reacted to the message prior.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task CreateReaction(DiscordReactionEmoji emoji)
-        {
-            return http.CreateReaction(ChannelId, Id, emoji);
-        }
-
-        /// <summary>
-        /// Removes a reaction from this message added from the current bot.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeleteOwnReaction(DiscordReactionEmoji reactionEmoji)
-        {
-            return http.DeleteOwnReaction(ChannelId, Id, reactionEmoji);
-        }
-
-        /// <summary>
-        /// Removes a reaction from this message.
-        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
-        /// </summary>
-        /// <param name="user">The user who added the reacted.</param>
-        /// <param name="reactionEmoji"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeleteUserReaction(DiscordUser user, DiscordReactionEmoji reactionEmoji)
-        {
-            if (user == null)
-                throw new ArgumentNullException(nameof(user));
-
-            return http.DeleteUserReaction(ChannelId, Id, user.Id, reactionEmoji);
-        }
-
-        /// <summary>
-        /// Removes a reaction from this message.
-        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
-        /// </summary>
-        /// <param name="userId">The ID of the user who added the reacted.</param>
-        /// <param name="reactionEmoji"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeleteUserReaction(Snowflake userId, DiscordReactionEmoji reactionEmoji)
-        {
-            return http.DeleteUserReaction(ChannelId, Id, userId, reactionEmoji);
-        }
-
-        /// <summary>
-        /// Gets all users who reacted with the specified emoji to this message.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordUser>> GetReactions(DiscordReactionEmoji reactionEmoji)
-        {
-            return http.GetReactions(ChannelId, Id, reactionEmoji);
-        }
-
-        /// <summary>
-        /// Deletes all reactions to this message.
-        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeleteAllReactions()
-        {
-            return http.DeleteAllReactions(ChannelId, Id);
-        }
-
-        /// <summary>
-        /// Pins this message to the channel it was sent in.
-        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Pin()
-        {
-            return http.AddPinnedChannelMessage(ChannelId, Id);
-        }
-
-        /// <summary>
-        /// Unpins this message from the channel it was sent in.
-        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Unpin()
-        {
-            return http.DeletePinnedChannelMessage(ChannelId, Id);
-        }
-
-        /// <summary>
-        /// Changes the contents of this message.
-        /// <para>Note: only messages created by the current bot can be editted.</para>
-        /// </summary>
-        /// <returns>Returns the editted message.</returns>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Edit(string newContent)
-        {
-            return http.EditMessage(ChannelId, Id, newContent);
-        }
-
-        /// <summary>
-        /// Changes the contents of this message.
-        /// <para>Note: only messages created by the current bot can be editted.</para>
-        /// </summary>
-        /// <returns>Returns the editted message.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> Edit(EditMessageOptions options)
-        {
-            return http.EditMessage(ChannelId, Id, options);
-        }
-
-        /// <summary>
-        /// Deletes this message.
-        /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Delete()
-        {
-            return http.DeleteMessage(ChannelId, Id);
+            return new DiscordMessage(updatedData);
         }
     }
 }

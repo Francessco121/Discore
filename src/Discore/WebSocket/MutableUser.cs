@@ -86,7 +86,16 @@ namespace Discore.WebSocket
 
         protected override DiscordUser BuildImmutableEntity()
         {
-            return new DiscordUser(this);
+            return new DiscordUser(
+                id: Id,
+                username: Username,
+                discriminator: Discriminator,
+                avatar: Avatar != null ? DiscordCdnUrl.ForUserAvatar(Id, Avatar) : null,
+                isBot: IsBot,
+                hasTwoFactorAuth: HasTwoFactorAuth,
+                isVerified: IsVerified,
+                email: Email,
+                isWebhookUser: IsWebhookUser);
         }
     }
 }

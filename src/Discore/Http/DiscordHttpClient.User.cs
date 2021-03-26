@@ -78,6 +78,15 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Removes the current bot from the specified guild.
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task LeaveGuild(DiscordGuild guild)
+        {
+            return LeaveGuild(guild.Id);
+        }
+
+        /// <summary>
         /// Gets a list of currently opened DM channels for the current bot.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -88,7 +97,7 @@ namespace Discore.Http
             DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
 
             for (int i = 0; i < dms.Length; i++)
-                dms[i] = new DiscordDMChannel(this, data.Values[i]);
+                dms[i] = DiscordDMChannel.FromJson(data.Values[i]);
 
             return dms;
         }
@@ -104,7 +113,16 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Post("users/@me/channels", requestData,
                 "users/@me/channels").ConfigureAwait(false);
-            return new DiscordDMChannel(this, returnData);
+            return DiscordDMChannel.FromJson(returnData);
+        }
+
+        /// <summary>
+        /// Opens a DM channel with the specified user.
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordDMChannel> CreateDM(DiscordUser recipient)
+        {
+            return CreateDM(recipient.Id);
         }
     }
 }

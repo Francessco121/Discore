@@ -59,7 +59,15 @@ namespace Discore.WebSocket
 
         protected override DiscordGuildMember BuildImmutableEntity()
         {
-            return new DiscordGuildMember(Http, this);
+            return new DiscordGuildMember(
+                id: User.Id,
+                guildId: GuildId,
+                user: User.ImmutableEntity,
+                nickname: Nickname,
+                roleIds: new List<Snowflake>(RoleIds),
+                joinedAt: JoinedAt,
+                isDeaf: IsDeaf,
+                isMute: IsMute);
         }
     }
 }

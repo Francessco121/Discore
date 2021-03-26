@@ -1,5 +1,4 @@
-﻿using Discore.WebSocket;
-using System;
+﻿using System;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -50,20 +49,26 @@ namespace Discore
         /// </summary>
         public bool IsWebhookUser { get; }
 
-        internal DiscordUser(MutableUser user)
+        public DiscordUser(
+            Snowflake id,
+            string username, 
+            string discriminator, 
+            DiscordCdnUrl avatar, 
+            bool isBot, 
+            bool hasTwoFactorAuth, 
+            bool isVerified, 
+            string email, 
+            bool isWebhookUser = false)
+            : base(id)
         {
-            Id = user.Id;
-            IsWebhookUser = user.IsWebhookUser;
-
-            Username = user.Username;
-            Discriminator = user.Discriminator;
-            IsBot = user.IsBot;
-            HasTwoFactorAuth = user.HasTwoFactorAuth;
-            IsVerified = user.IsVerified;
-            Email = user.Email;
-
-            if (user.Avatar != null)
-                Avatar = DiscordCdnUrl.ForUserAvatar(user.Id, user.Avatar);
+            Username = username;
+            Discriminator = discriminator;
+            Avatar = avatar;
+            IsBot = isBot;
+            HasTwoFactorAuth = hasTwoFactorAuth;
+            IsVerified = isVerified;
+            Email = email;
+            IsWebhookUser = isWebhookUser;
         }
 
         internal DiscordUser(bool isWebhookUser, DiscordApiData data)

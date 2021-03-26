@@ -17,16 +17,9 @@ namespace Discore.WebSocket
             Reference(recipient);
         }
 
-        public void Update(DiscordApiData data)
-        {
-            LastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
-
-            Dirty();
-        }
-
         protected override DiscordDMChannel BuildImmutableEntity()
         {
-            return new DiscordDMChannel(Http, this);
+            return new DiscordDMChannel(Id, Recipient.ImmutableEntity, LastMessageId);
         }
     }
 }

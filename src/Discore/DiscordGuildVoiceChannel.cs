@@ -1,8 +1,4 @@
-﻿using Discore.Http;
-using System;
-using System.Threading.Tasks;
-
-namespace Discore
+﻿namespace Discore
 {
     public sealed class DiscordGuildVoiceChannel : DiscordGuildChannel
     {
@@ -21,29 +17,12 @@ namespace Discore
         /// </summary>
         public Snowflake? ParentId { get; }
 
-        DiscordHttpClient http;
-
-        internal DiscordGuildVoiceChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
-            : base(http, data, DiscordChannelType.GuildVoice, guildId)
+        internal DiscordGuildVoiceChannel(DiscordApiData data, Snowflake? guildId = null)
+            : base(data, DiscordChannelType.GuildVoice, guildId)
         {
-            this.http = http;
-
             Bitrate = data.GetInteger("bitrate").Value;
             UserLimit = data.GetInteger("user_limit").Value;
             ParentId = data.GetSnowflake("parent_id");
-        }
-
-        /// <summary>
-        /// Modifies this voice channel's settings.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
-        /// </summary>
-        /// <param name="options">A set of options to modify the channel with</param>
-        /// <returns>Returns the updated voice channel.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildVoiceChannel> Modify(GuildVoiceChannelOptions options)
-        {
-            return http.ModifyVoiceChannel(Id, options);
         }
     }
 }

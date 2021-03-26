@@ -36,5 +36,14 @@ namespace Discore.Http
 
             return regions;
         }
+
+        /// <summary>
+        /// Gets a list of all voice regions available to the specified guild.
+        /// </summary>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<IReadOnlyList<DiscordVoiceRegion>> GetGuildVoiceRegions(DiscordGuild guild)
+        {
+            return GetGuildVoiceRegions(guild.Id);
+        }
     }
 }

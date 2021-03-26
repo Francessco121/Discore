@@ -213,15 +213,15 @@ namespace Discore.WebSocket.Internal
 
                 DiscordGuildChannel channel = null;
                 if (channelType == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(http, channelData, guildId);
+                    channel = new DiscordGuildTextChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(http, channelData, guildId);
+                    channel = new DiscordGuildVoiceChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(http, channelData, guildId);
+                    channel = new DiscordGuildCategoryChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(http, channelData, guildId);
+                    channel = new DiscordGuildNewsChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(http, channelData, guildId);
+                    channel = new DiscordGuildStoreChannel(channelData, guildId);
 
                 if (channel != null)
                     cache.AddGuildChannel(channel);
@@ -552,7 +552,7 @@ namespace Discore.WebSocket.Internal
             if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = new DiscordRole(http, guildId, roleData);
+                DiscordRole role = new DiscordRole(guildId, roleData);
 
                 mutableGuild.Roles[role.Id] = role;
                 mutableGuild.Dirty();
@@ -571,7 +571,7 @@ namespace Discore.WebSocket.Internal
             if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
             {
                 DiscordApiData roleData = data.Get("role");
-                DiscordRole role = new DiscordRole(http, guildId, roleData);
+                DiscordRole role = new DiscordRole(guildId, roleData);
 
                 mutableGuild.Roles[role.Id] = role;
                 mutableGuild.Dirty();
@@ -644,15 +644,15 @@ namespace Discore.WebSocket.Internal
                 DiscordGuildChannel channel;
 
                 if (type == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(http, data, guildId);
+                    channel = new DiscordGuildTextChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                    channel = new DiscordGuildVoiceChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(http, data, guildId);
+                    channel = new DiscordGuildCategoryChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(http, data, guildId);
+                    channel = new DiscordGuildNewsChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(http, data, guildId);
+                    channel = new DiscordGuildStoreChannel(data, guildId);
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
 
@@ -672,15 +672,15 @@ namespace Discore.WebSocket.Internal
             DiscordGuildChannel channel = null;
 
             if (type == DiscordChannelType.GuildText)
-                channel = new DiscordGuildTextChannel(http, data, guildId);
+                channel = new DiscordGuildTextChannel(data, guildId);
             else if (type == DiscordChannelType.GuildVoice)
-                channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                channel = new DiscordGuildVoiceChannel(data, guildId);
             else if (type == DiscordChannelType.GuildCategory)
-                channel = new DiscordGuildCategoryChannel(http, data, guildId);
+                channel = new DiscordGuildCategoryChannel(data, guildId);
             else if (type == DiscordChannelType.GuildNews)
-                channel = new DiscordGuildNewsChannel(http, data, guildId);
+                channel = new DiscordGuildNewsChannel(data, guildId);
             else if (type == DiscordChannelType.GuildStore)
-                channel = new DiscordGuildStoreChannel(http, data, guildId);
+                channel = new DiscordGuildStoreChannel(data, guildId);
 
             if (channel != null)
             {
@@ -709,7 +709,7 @@ namespace Discore.WebSocket.Internal
                     dm = mutableDM.ImmutableEntity;
                 }
                 else
-                    dm = new DiscordDMChannel(http, data);
+                    dm = DiscordDMChannel.FromJson(data);
 
                 OnDMChannelRemoved?.Invoke(this, new DMChannelEventArgs(shard, dm));
             }
@@ -727,27 +727,27 @@ namespace Discore.WebSocket.Internal
                 if (type == DiscordChannelType.GuildText)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildTextChannel(http, data, guildId);
+                        channel = new DiscordGuildTextChannel(data, guildId);
                 }
                 else if (type == DiscordChannelType.GuildVoice)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                        channel = new DiscordGuildVoiceChannel(data, guildId);
                 }
                 else if (type == DiscordChannelType.GuildCategory)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildCategoryChannel(http, data, guildId);
+                        channel = new DiscordGuildCategoryChannel(data, guildId);
                 }
                 else if (type == DiscordChannelType.GuildNews)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildNewsChannel(http, data, guildId);
+                        channel = new DiscordGuildNewsChannel(data, guildId);
                 }
                 else if (type == DiscordChannelType.GuildStore)
                 {
                     if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildStoreChannel(http, data, guildId);
+                        channel = new DiscordGuildStoreChannel(data, guildId);
                 }
                 else
                     throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
@@ -802,7 +802,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Create message
-            DiscordMessage message = new DiscordMessage(http, data);
+            DiscordMessage message = new DiscordMessage(data);
 
             OnMessageCreated?.Invoke(this, new MessageEventArgs(shard, message));
         }
@@ -848,7 +848,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Create message
-            DiscordMessage message = new DiscordMessage(http, data);
+            DiscordMessage message = new DiscordMessage(data);
 
             OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }

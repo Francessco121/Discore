@@ -1,4 +1,6 @@
-﻿namespace Discore
+﻿using System;
+
+namespace Discore
 {
     /// <summary>
     /// The base class for all Discord entities that contain an ID.
@@ -10,7 +12,13 @@
         /// </summary>
         public Snowflake Id { get; protected set; }
 
+        [Obsolete]
         internal DiscordIdEntity() { }
+
+        internal DiscordIdEntity(Snowflake id) 
+        { 
+            Id = id; 
+        }
 
         internal DiscordIdEntity(DiscordApiData data)
         {
