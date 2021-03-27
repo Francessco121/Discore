@@ -1,4 +1,4 @@
-﻿namespace Discore.Http
+namespace Discore.Http
 {
     /// <summary>
     /// A set of options used to modify the properties of a guild embed.

@@ -1,4 +1,4 @@
-﻿namespace Discore.Http
+namespace Discore.Http
 {
     /// <summary>
     /// A set of parameters defining the position of an item such as a channel or role.

@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     /// <summary>
     /// A brief version of a guild object.

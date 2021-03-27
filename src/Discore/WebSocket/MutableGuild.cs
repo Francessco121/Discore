@@ -1,4 +1,4 @@
-﻿using Discore.Http;
+using Discore.Http;
 using System.Collections.Generic;
 
 namespace Discore.WebSocket

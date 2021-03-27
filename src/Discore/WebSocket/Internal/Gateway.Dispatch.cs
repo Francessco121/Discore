@@ -1,4 +1,4 @@
-﻿using ConcurrentCollections;
+using ConcurrentCollections;
 using Discore.Voice;
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     /// <summary>
     /// A <see cref="DiscordDMChannel"/> or a <see cref="DiscordGuildChannel"/>.

@@ -1,4 +1,4 @@
-﻿using Discore.Http;
+using Discore.Http;
 using Nito.AsyncEx;
 using System;
 using System.Net.Http;

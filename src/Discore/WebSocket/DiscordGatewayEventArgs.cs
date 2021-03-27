@@ -1,4 +1,4 @@
-﻿using Discore.Voice;
+using Discore.Voice;
 using System;
 
 namespace Discore.WebSocket

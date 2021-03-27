@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket.Internal
+namespace Discore.WebSocket.Internal
 {
     /// <summary>
     /// A shared memory cache for the Gateway URL to be shared across all Gateway connections in the process.

@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     /// <summary>
     /// The web provider of a <see cref="DiscordEmbed"/>.

@@ -1,4 +1,4 @@
-﻿using Discore.Voice;
+using Discore.Voice;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

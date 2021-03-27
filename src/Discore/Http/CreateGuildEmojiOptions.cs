@@ -1,4 +1,4 @@
-﻿namespace Discore.Http
+namespace Discore.Http
 {
     public class CreateGuildEmojiOptions
     {

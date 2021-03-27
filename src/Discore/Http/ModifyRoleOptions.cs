@@ -1,4 +1,4 @@
-﻿namespace Discore.Http
+namespace Discore.Http
 {
     /// <summary>
     /// An optional set of parameters used for modifying a guild role.

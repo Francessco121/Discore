@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 // Permission logic here is based off of:
 // https://discord.com/developers/docs/topics/permissions#permission-hierarchy

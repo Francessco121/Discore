@@ -1,4 +1,4 @@
-﻿namespace Discore.Http
+namespace Discore.Http
 {
     /// <summary>
     /// Represents a pagination strategy used when retrieving reactions from the Discord API.

@@ -1,4 +1,4 @@
-﻿using ConcurrentCollections;
+using ConcurrentCollections;
 using Discore.WebSocket;
 using Discore.WebSocket.Internal;
 using System.Collections.Concurrent;

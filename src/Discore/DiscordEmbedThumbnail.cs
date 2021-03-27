@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     /// <summary>
     /// A thumbnail of a <see cref="DiscordEmbed"/>.

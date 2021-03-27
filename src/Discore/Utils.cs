@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     static class Utils
     {

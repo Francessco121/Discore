@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     /// <summary>
     /// Member verification levels for Discord guilds.

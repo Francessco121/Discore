@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket
+namespace Discore.WebSocket
 {
     public class StatusOptions
     {

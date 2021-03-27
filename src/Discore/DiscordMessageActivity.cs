@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     public class DiscordMessageActivity
     {

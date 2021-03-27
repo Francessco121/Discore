@@ -1,4 +1,4 @@
-﻿using Discore.WebSocket;
+using Discore.WebSocket;
 using Discore.WebSocket.Internal;
 using System;
 using System.Collections.Generic;

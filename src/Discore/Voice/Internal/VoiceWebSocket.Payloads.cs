@@ -1,4 +1,4 @@
-﻿using Discore.WebSocket;
+using Discore.WebSocket;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;

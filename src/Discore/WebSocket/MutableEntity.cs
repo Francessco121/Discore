@@ -1,4 +1,4 @@
-﻿using ConcurrentCollections;
+using ConcurrentCollections;
 using Discore.Http;
 using System;
 

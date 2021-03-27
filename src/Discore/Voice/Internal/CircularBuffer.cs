@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 // Modified from: http://naudio.codeplex.com/SourceControl/latest#NAudio/Utils/CircularBuffer.cs
 

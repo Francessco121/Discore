@@ -1,4 +1,4 @@
-﻿namespace Discore.Voice.Internal
+namespace Discore.Voice.Internal
 {
     enum VoiceOPCode : int
     {

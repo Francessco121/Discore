@@ -1,4 +1,4 @@
-﻿namespace Discore
+namespace Discore
 {
     public sealed class DiscordWebhook : DiscordIdEntity
     {

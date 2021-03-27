@@ -1,4 +1,4 @@
-﻿using Discore.Voice;
+using Discore.Voice;
 using Discore.WebSocket.Internal;
 using Nito.AsyncEx;
 using System;

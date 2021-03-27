@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket.Internal
+namespace Discore.WebSocket.Internal
 {
     class DispatchEventArgs
     {

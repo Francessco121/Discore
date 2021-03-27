@@ -1,4 +1,4 @@
-﻿namespace Discore.Voice
+namespace Discore.Voice
 {
     /// <summary>
     /// Reasons for voice connections being invalidated.
