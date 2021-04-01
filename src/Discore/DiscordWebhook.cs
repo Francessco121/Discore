@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public sealed class DiscordWebhook : DiscordIdEntity
@@ -5,50 +9,72 @@ namespace Discore
         /// <summary> 
         /// Gets the ID of the guild this webhook belongs to.
         /// </summary> 
-        public Snowflake GuildId { get; }
+        public Snowflake? GuildId { get; }
         /// <summary> 
         /// Gets the ID of the channel this webhook is active for.
         /// </summary> 
         public Snowflake ChannelId { get; }
         /// <summary> 
         /// Gets the user that created this webhook.
+        /// <para/>
+        /// Will be null if this webhook was retrieved via its token.
         /// </summary> 
-        public DiscordUser User { get; }
+        public DiscordUser? User { get; }
         /// <summary> 
-        /// Gets the public name of this webhook.
+        /// Gets the default name of this webhook or null if no name is set.
         /// </summary> 
-        public string Name { get; }
+        public string? Name { get; }
         /// <summary> 
-        /// Gets the avatar of this webhook (or null if the webhook user has no avatar set).
+        /// Gets the default avatar of this webhook or null if no avatar is set.
         /// </summary> 
-        public DiscordCdnUrl Avatar { get; }
+        public DiscordCdnUrl? Avatar { get; }
         /// <summary> 
         /// Gets the token of this webhook. 
         /// <para>This is only populated if the current bot created the webhook, otherwise it's empty/null.</para> 
         /// <para>It's used for executing, updating, and deleting this webhook without the need of authorization.</para> 
         /// </summary> 
-        public string Token { get; }
+        public string? Token { get; }
         /// <summary>
         /// Gets whether this webhook instance contains the webhook token.
         /// </summary>
+        /// <seealso cref="Token"/>
         public bool HasToken => !string.IsNullOrWhiteSpace(Token);
 
-        internal DiscordWebhook(DiscordApiData data)
-            : base(data)
+        // TODO: add type, application_id
+
+        public DiscordWebhook(
+            Snowflake id,
+            Snowflake? guildId, 
+            Snowflake channelId, 
+            DiscordUser? user, 
+            string? name, 
+            DiscordCdnUrl? avatar, 
+            string? token)
+            : base(id)
         {
-            GuildId = data.GetSnowflake("guild_id").Value;
-            ChannelId = data.GetSnowflake("channel_id").Value;
+            GuildId = guildId;
+            ChannelId = channelId;
+            User = user;
+            Name = name;
+            Avatar = avatar;
+            Token = token;
+        }
 
-            DiscordApiData userData = data.Get("user");
-            if (!userData.IsNull)
-                User = new DiscordUser(false, userData);
+        internal DiscordWebhook(JsonElement json)
+            : base(json)
+        {
+            GuildId = json.GetPropertyOrNull("guild_id")?.GetSnowflake();
+            ChannelId = json.GetProperty("channel_id").GetSnowflake();
+            Name = json.GetProperty("name").GetString();
+            Token = json.GetPropertyOrNull("token")?.GetString();
 
-            Name = data.GetString("name");
-            Token = data.GetString("token");
+            JsonElement? userJson = json.GetPropertyOrNull("user");
+            User = userJson == null ? null : new DiscordUser(userJson.Value, isWebhookUser: false);
 
-            string avatarHash = data.GetString("avatar");
-            if (avatarHash != null)
-                Avatar = DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
+            string? avatarHash = json.GetProperty("avatar").GetString();
+            Avatar = avatarHash == null ? null : DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
         }
     }
 }
+
+#nullable restore

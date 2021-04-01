@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public sealed class DiscordAttachment : DiscordIdEntity
@@ -27,15 +31,33 @@ namespace Discore
         /// </summary>
         public int? Height { get; }
 
-        internal DiscordAttachment(DiscordApiData data)
-            : base(data)
+        public DiscordAttachment(
+            Snowflake id,
+            string fileName, 
+            int size, 
+            string url, 
+            string proxyUrl, 
+            int? width, 
+            int? height)
+            : base(id)
         {
-            FileName = data.GetString("filename");
-            Size     = data.GetInteger("size").Value;
-            Url      = data.GetString("url");
-            ProxyUrl = data.GetString("proxy_url");
-            Width    = data.GetInteger("width");
-            Height   = data.GetInteger("height");
+            FileName = fileName;
+            Size = size;
+            Url = url;
+            ProxyUrl = proxyUrl;
+            Width = width;
+            Height = height;
+        }
+
+        internal DiscordAttachment(JsonElement json)
+            : base(json)
+        {
+            FileName = json.GetProperty("filename").GetString()!;
+            Size = json.GetProperty("size").GetInt32();
+            Url = json.GetProperty("url").GetString()!;
+            ProxyUrl = json.GetProperty("proxy_url").GetString()!;
+            Width = json.GetProperty("width").GetInt32OrNull();
+            Height = json.GetProperty("height").GetInt32OrNull();
         }
 
         public override string ToString()
@@ -44,3 +66,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore
 {
@@ -12,6 +15,7 @@ namespace Discore
         /// Gets the IDs of associated roles with this emoji.
         /// </summary>
         public IReadOnlyList<Snowflake> RoleIds { get; }
+        // TODO: Make full DiscordUser object
         /// <summary>
         /// Gets the ID of the user that created this emoji.
         /// </summary>
@@ -29,21 +33,41 @@ namespace Discore
         /// </summary>
         public bool IsAnimated { get; }
 
-        internal DiscordEmoji(DiscordApiData data)
-            : base(data)
-        {
-            Name = data.GetString("name");
-            UserId = data.LocateSnowflake("user.id");
-            RequireColons = data.GetBoolean("require_colons") ?? false;
-            IsManaged = data.GetBoolean("managed") ?? false;
-            IsAnimated = data.GetBoolean("animated") ?? false;
+        // TODO: add available
 
-            IList<DiscordApiData> roles = data.GetArray("roles");
-            Snowflake[] roleIds = new Snowflake[roles.Count];
+        public DiscordEmoji(
+            Snowflake id,
+            string name, 
+            IReadOnlyList<Snowflake> roleIds, 
+            Snowflake? userId, 
+            bool requireColons, 
+            bool isManaged, 
+            bool isAnimated)
+            : base(id)
+        {
+            Name = name;
+            RoleIds = roleIds;
+            UserId = userId;
+            RequireColons = requireColons;
+            IsManaged = isManaged;
+            IsAnimated = isAnimated;
+        }
+
+        internal DiscordEmoji(JsonElement json)
+            : base(json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            UserId = json.GetPropertyOrNull("user")?.GetProperty("id").GetSnowflake();
+            RequireColons = json.GetPropertyOrNull("require_colons")?.GetBoolean() ?? false;
+            IsManaged = json.GetPropertyOrNull("managed")?.GetBoolean() ?? false;
+            IsAnimated = json.GetPropertyOrNull("animated")?.GetBoolean() ?? false;
+
+            JsonElement rolesJson = json.GetProperty("roles");
+            var roleIds = new Snowflake[rolesJson.GetArrayLength()];
 
             for (int i = 0; i < roleIds.Length; i++)
-                roleIds[i] = (roles[i].ToSnowflake().Value);
-            
+                roleIds[i] = rolesJson[i].GetSnowflake();
+
             RoleIds = roleIds;
         }
 
@@ -53,3 +77,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

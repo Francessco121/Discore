@@ -1,24 +1,22 @@
+#nullable enable
+
 namespace Discore
 {
     static class Utils
     {
         public static DiscordUserStatus? ParseUserStatus(string str)
         {
-            switch (str)
+            return str switch
             {
-                case "offline":
-                    return DiscordUserStatus.Offline;
-                case "invisible":
-                    return DiscordUserStatus.Invisible;
-                case "dnd":
-                    return DiscordUserStatus.DoNotDisturb;
-                case "idle":
-                    return DiscordUserStatus.Idle;
-                case "online":
-                    return DiscordUserStatus.Online;
-                default:
-                    return null;
-            }
+                "offline" => DiscordUserStatus.Offline,
+                "invisible" => DiscordUserStatus.Invisible,
+                "dnd" => DiscordUserStatus.DoNotDisturb,
+                "idle" => DiscordUserStatus.Idle,
+                "online" => DiscordUserStatus.Online,
+                _ => null,
+            };
         }
     }
 }
+
+#nullable restore

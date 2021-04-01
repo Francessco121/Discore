@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore
 {
@@ -18,7 +21,7 @@ namespace Discore
         /// <summary>
         /// Gets the guild-wide nickname of the user.
         /// </summary>
-        public string Nickname { get; }
+        public string? Nickname { get; }
 
         /// <summary>
         /// Gets the IDs of all of the roles this member has.
@@ -40,11 +43,13 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
+        // TODO: add premium_since, pending, permissions
+
         public DiscordGuildMember(
             Snowflake id,
             Snowflake guildId, 
             DiscordUser user, 
-            string nickname, 
+            string? nickname, 
             IReadOnlyList<Snowflake> roleIds, 
             DateTime joinedAt, 
             bool isDeaf, 
@@ -60,31 +65,31 @@ namespace Discore
             IsMute = isMute;
         }
 
-        internal static DiscordGuildMember FromJson(DiscordApiData data, Snowflake guildId)
+        internal DiscordGuildMember(JsonElement json, Snowflake guildId)
+            : base(id: json.GetProperty("user").GetProperty("id").GetSnowflake())
         {
-            IList<DiscordApiData> rolesArray = data.GetArray("roles");
-            var roleIds = new Snowflake[rolesArray.Count];
+            GuildId = guildId;
+            Nickname = json.GetPropertyOrNull("nick")?.GetString();
+            JoinedAt = json.GetProperty("joined_at").GetDateTime();
+            IsDeaf = json.GetProperty("deaf").GetBoolean();
+            IsMute = json.GetProperty("mute").GetBoolean();
 
-            for (int i = 0; i < rolesArray.Count; i++)
-                roleIds[i] = rolesArray[i].ToSnowflake().Value;
+            JsonElement rolesJson = json.GetProperty("roles");
+            var roles = new Snowflake[rolesJson.GetArrayLength()];
 
-            DiscordApiData userData = data.Get("user");
-            var user = new DiscordUser(false, userData);
+            for (int i = 0; i < roles.Length; i++)
+                roles[i] = rolesJson[i].GetSnowflake();
 
-            return new DiscordGuildMember(
-                id: user.Id,
-                guildId: guildId,
-                user: user,
-                nickname: data.GetString("nick"),
-                roleIds: roleIds,
-                joinedAt: data.GetDateTime("joined_at").Value,
-                isDeaf: data.GetBoolean("deaf") ?? false,
-                isMute: data.GetBoolean("mute") ?? false);
+            RoleIds = roles;
+
+            User = new DiscordUser(json.GetProperty("user"), isWebhookUser: false);
         }
 
         public override string ToString()
         {
-            return Nickname != null ? $"{User.Username} aka. {Nickname}" : User.Username;
+            return Nickname != null ? $"{User} aka. {Nickname}" : User.ToString();
         }
     }
 }
+
+#nullable restore

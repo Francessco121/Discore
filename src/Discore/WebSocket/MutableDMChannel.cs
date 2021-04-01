@@ -1,4 +1,4 @@
-using Discore.Http;
+#nullable enable
 
 namespace Discore.WebSocket
 {
@@ -6,10 +6,9 @@ namespace Discore.WebSocket
     {
         public Snowflake Id { get; }
         public MutableUser Recipient { get; }
-        public Snowflake LastMessageId { get; set; }
+        public Snowflake? LastMessageId { get; set; }
 
-        public MutableDMChannel(Snowflake id, MutableUser recipient, DiscordHttpClient http) 
-            : base(http)
+        public MutableDMChannel(Snowflake id, MutableUser recipient) 
         {
             Id = id;
 
@@ -23,3 +22,5 @@ namespace Discore.WebSocket
         }
     }
 }
+
+#nullable restore

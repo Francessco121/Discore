@@ -1,3 +1,7 @@
+using System.Text.Json;
+
+#nullable enable
+
 namespace Discore
 {
     public sealed class DiscordReaction
@@ -17,19 +21,25 @@ namespace Discore
         /// </summary>
         public DiscordReactionEmoji Emoji { get; }
 
-        internal DiscordReaction(DiscordApiData data)
+        public DiscordReaction(int count, bool me, DiscordReactionEmoji emoji)
         {
-            Count = data.GetInteger("count").Value;
-            Me = data.GetBoolean("me").Value;
+            Count = count;
+            Me = me;
+            Emoji = emoji;
+        }
 
-            DiscordApiData emojiData = data.Get("emoji");
-            if (emojiData != null)
-                Emoji = new DiscordReactionEmoji(emojiData);
+        internal DiscordReaction(JsonElement json)
+        {
+            Count = json.GetProperty("count").GetInt32();
+            Me = json.GetProperty("me").GetBoolean();
+            Emoji = new DiscordReactionEmoji(json.GetProperty("emoji"));
         }
 
         public override string ToString()
         {
-            return Emoji == null ? base.ToString() : Emoji.Name;
+            return Emoji.Name ?? base.ToString();
         }
     }
 }
+
+#nullable restore

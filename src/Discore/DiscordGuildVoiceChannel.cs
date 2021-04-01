@@ -1,3 +1,8 @@
+using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
+
 namespace Discore
 {
     public sealed class DiscordGuildVoiceChannel : DiscordGuildChannel
@@ -17,12 +22,35 @@ namespace Discore
         /// </summary>
         public Snowflake? ParentId { get; }
 
-        internal DiscordGuildVoiceChannel(DiscordApiData data, Snowflake? guildId = null)
-            : base(data, DiscordChannelType.GuildVoice, guildId)
+        public DiscordGuildVoiceChannel(
+            Snowflake id,
+            string name,
+            int position,
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
+            Snowflake guildId,
+            int bitrate,
+            int userLimit,
+            Snowflake? parentId)
+            : base(id,
+                  DiscordChannelType.GuildVoice,
+                  name,
+                  position,
+                  permissionOverwrites,
+                  guildId)
         {
-            Bitrate = data.GetInteger("bitrate").Value;
-            UserLimit = data.GetInteger("user_limit").Value;
-            ParentId = data.GetSnowflake("parent_id");
+            Bitrate = bitrate;
+            UserLimit = userLimit;
+            ParentId = parentId;
+        }
+
+        internal DiscordGuildVoiceChannel(JsonElement json, Snowflake? guildId = null)
+            : base(json, DiscordChannelType.GuildVoice, guildId)
+        {
+            Bitrate = json.GetProperty("bitrate").GetInt32();
+            UserLimit = json.GetProperty("user_limit").GetInt32();
+            ParentId = json.GetProperty("parent_id").GetSnowflakeOrNull();
         }
     }
 }
+
+#nullable restore

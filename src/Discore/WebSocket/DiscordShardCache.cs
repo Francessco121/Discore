@@ -4,6 +4,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
+#nullable enable
+
 namespace Discore.WebSocket
 {
     /// <summary>
@@ -25,8 +27,8 @@ namespace Discore.WebSocket
 
         internal ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> GuildChannelIds { get; }
 
-        ConcurrentHashSet<Snowflake> guildIds;
-        ConcurrentHashSet<Snowflake> unavailableGuildIds;
+        readonly ConcurrentHashSet<Snowflake> guildIds;
+        readonly ConcurrentHashSet<Snowflake> unavailableGuildIds;
 
         internal DiscordShardCache()
         {
@@ -129,7 +131,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns the shard-specific metdata for the given guild or null if the guild is not currently cached.
         /// </summary>
-        public DiscordGuildMetadata GetGuildMetadata(Snowflake guildId)
+        public DiscordGuildMetadata? GetGuildMetadata(Snowflake guildId)
         {
             return GuildMetadata[guildId];
         }
@@ -137,7 +139,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns the specified guild or null if it is not currently cached.
         /// </summary>
-        public DiscordGuild GetGuild(Snowflake guildId)
+        public DiscordGuild? GetGuild(Snowflake guildId)
         {
             return Guilds[guildId]?.ImmutableEntity;
         }
@@ -145,7 +147,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns the specified user or null if they are not currently cached.
         /// </summary>
-        public DiscordUser GetUser(Snowflake userId)
+        public DiscordUser? GetUser(Snowflake userId)
         {
             return Users[userId]?.ImmutableEntity;
         }
@@ -153,9 +155,9 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns the specified channel or null if it is not currently cached.
         /// </summary>
-        public DiscordChannel GetChannel(Snowflake channelId)
+        public DiscordChannel? GetChannel(Snowflake channelId)
         {
-            DiscordGuildChannel guildChannel = GuildChannels[channelId];
+            DiscordGuildChannel? guildChannel = GuildChannels[channelId];
             if (guildChannel != null)
                 return guildChannel;
             else
@@ -165,7 +167,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns the specified DM channel or, null if it is not currently cached or is not a DM channel.
         /// </summary>
-        public DiscordDMChannel GetDMChannel(Snowflake dmChannelId)
+        public DiscordDMChannel? GetDMChannel(Snowflake dmChannelId)
         {
             return DMChannels[dmChannelId]?.ImmutableEntity;
         }
@@ -173,14 +175,14 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns a list of all channels in the given guild or null if the guild is not currently cached.
         /// </summary>
-        public IReadOnlyList<DiscordGuildChannel> GetGuildChannels(Snowflake guildId)
+        public IReadOnlyList<DiscordGuildChannel>? GetGuildChannels(Snowflake guildId)
         {
             if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
             {
                 List<DiscordGuildChannel> guildChannels = new List<DiscordGuildChannel>();
                 foreach (Snowflake guildChannelId in guildChannelsIdSet)
                 {
-                    DiscordChannel channel = GuildChannels[guildChannelId];
+                    DiscordChannel? channel = GuildChannels[guildChannelId];
 
                     // Channel should always be a guild channel, but in the very unlikely event
                     // that the ID does get mismatched, ensure that we are not inserting null
@@ -192,13 +194,13 @@ namespace Discore.WebSocket
                 return guildChannels;
             }
             else
-                return new DiscordGuildChannel[0];
+                return null;
         }
 
         /// <summary>
         /// Returns the specified guild text channel or, null if it is not currently cached or is not a guild text channel.
         /// </summary>
-        public DiscordGuildTextChannel GetGuildTextChannel(Snowflake guildTextChannelId)
+        public DiscordGuildTextChannel? GetGuildTextChannel(Snowflake guildTextChannelId)
         {
             return GuildChannels[guildTextChannelId] as DiscordGuildTextChannel;
         }
@@ -206,7 +208,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns the specified guild voice channel or, null if it is not currently cached or is not a guild voice channel.
         /// </summary>
-        public DiscordGuildVoiceChannel GetGuildVoiceChannel(Snowflake guildVoiceChannelId)
+        public DiscordGuildVoiceChannel? GetGuildVoiceChannel(Snowflake guildVoiceChannelId)
         {
             return GuildChannels[guildVoiceChannelId] as DiscordGuildVoiceChannel;
         }
@@ -215,7 +217,7 @@ namespace Discore.WebSocket
         /// Returns the specified guild category channel or, 
         /// null if it is not currently cached or is not a guild category channel.
         /// </summary>
-        public DiscordGuildCategoryChannel GetGuildCategoryChannel(Snowflake guildCategoryChannelId)
+        public DiscordGuildCategoryChannel? GetGuildCategoryChannel(Snowflake guildCategoryChannelId)
         {
             return GuildChannels[guildCategoryChannelId] as DiscordGuildCategoryChannel;
         }
@@ -224,7 +226,7 @@ namespace Discore.WebSocket
         /// Returns the specified guild news channel or, 
         /// null if it is not currently cached or is not a guild news channel.
         /// </summary>
-        public DiscordGuildNewsChannel GetGuildNewsChannel(Snowflake guildNewsChannelId)
+        public DiscordGuildNewsChannel? GetGuildNewsChannel(Snowflake guildNewsChannelId)
         {
             return GuildChannels[guildNewsChannelId] as DiscordGuildNewsChannel;
         }
@@ -233,7 +235,7 @@ namespace Discore.WebSocket
         /// Returns the specified guild store channel or, 
         /// null if it is not currently cached or is not a guild store channel.
         /// </summary>
-        public DiscordGuildStoreChannel GetGuildStoreChannel(Snowflake guildStoreChannelId)
+        public DiscordGuildStoreChannel? GetGuildStoreChannel(Snowflake guildStoreChannelId)
         {
             return GuildChannels[guildStoreChannelId] as DiscordGuildStoreChannel;
         }
@@ -242,7 +244,7 @@ namespace Discore.WebSocket
         /// Returns the specified guild member or,
         /// null if the member is not currently cached or the guild is not currently cached.
         /// </summary>
-        public DiscordGuildMember GetGuildMember(Snowflake guildId, Snowflake userId)
+        public DiscordGuildMember? GetGuildMember(Snowflake guildId, Snowflake userId)
         {
             return GuildMembers[guildId, userId]?.ImmutableEntity;
         }
@@ -250,7 +252,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Returns a list of all currently cached members for the given guild, or null if the guild is not currently cached.
         /// </summary>
-        public IReadOnlyList<DiscordGuildMember> GetGuildMembers(Snowflake guildId)
+        public IReadOnlyList<DiscordGuildMember>? GetGuildMembers(Snowflake guildId)
         {
             return GuildMembers.GetValues(guildId)?.Select(x => x.ImmutableEntity).ToList();
         }
@@ -259,7 +261,7 @@ namespace Discore.WebSocket
         /// Returns the presence for the specified user or, 
         /// null if the presence is not currently cached or the guild is not currently cached.
         /// </summary>
-        public DiscordUserPresence GetUserPresence(Snowflake guildId, Snowflake userId)
+        public DiscordUserPresence? GetUserPresence(Snowflake guildId, Snowflake userId)
         {
             return GuildPresences[guildId, userId];
         }
@@ -268,7 +270,7 @@ namespace Discore.WebSocket
         /// Returns a list of all currently cached user presences for the given guild, 
         /// or null if the guild is not currently cached.
         /// </summary>
-        public IReadOnlyList<DiscordUserPresence> GetUserPresences(Snowflake guildId)
+        public IReadOnlyList<DiscordUserPresence>? GetUserPresences(Snowflake guildId)
         {
             return GuildPresences.GetValues(guildId)?.ToList();
         }
@@ -277,7 +279,7 @@ namespace Discore.WebSocket
         /// Returns the voice state for the specified user or, 
         /// null if the voice state is not currently cached or the guild is not currently cached.
         /// </summary>
-        public DiscordVoiceState GetVoiceState(Snowflake guildId, Snowflake userId)
+        public DiscordVoiceState? GetVoiceState(Snowflake guildId, Snowflake userId)
         {
             return GuildVoiceStates[guildId, userId];
         }
@@ -286,7 +288,7 @@ namespace Discore.WebSocket
         /// Returns a list of all currently cached voice states for the given guild, 
         /// or null if the guild is not currently cached.
         /// </summary>
-        public IReadOnlyList<DiscordVoiceState> GetVoiceStates(Snowflake guildId)
+        public IReadOnlyList<DiscordVoiceState>? GetVoiceStates(Snowflake guildId)
         {
             return GuildVoiceStates.GetValues(guildId)?.ToList();
         }
@@ -312,3 +314,5 @@ namespace Discore.WebSocket
         }
     }
 }
+
+#nullable restore

@@ -1,4 +1,6 @@
-using Discore.Http;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.WebSocket
 {
@@ -7,54 +9,51 @@ namespace Discore.WebSocket
         public Snowflake Id { get; }
         public bool IsWebhookUser { get; }
 
-        public string Username { get; private set; }
-        public string Discriminator { get; private set; }
-        public string Avatar { get; private set; }
+        public string? Username { get; private set; }
+        public string? Discriminator { get; private set; }
+        public string? Avatar { get; private set; }
         public bool IsBot { get; private set; }
-        public bool HasTwoFactorAuth { get; private set; }
-        public bool IsVerified { get; private set; }
-        public string Email { get; private set; }
+        public bool? HasTwoFactorAuth { get; private set; }
+        public bool? IsVerified { get; private set; }
+        public string? Email { get; private set; }
 
-        bool initialized;
+        string? lastUsername;
+        string? lastAvatar;
+        bool? lastHasTwoFactorAuth;
+        bool? lastIsVerified;
+        string? lastEmail;
 
-        string lastUsername;
-        string lastAvatar;
-        bool lastHasTwoFactorAuth;
-        bool lastIsVerified;
-        string lastEmail;
-
-        public MutableUser(Snowflake id, bool isWebhookUser, DiscordHttpClient http)
-            : base(http)
+        public MutableUser(Snowflake id, bool isWebhookUser)
         {
             Id = id;
             IsWebhookUser = isWebhookUser;
         }
 
-        public void Update(DiscordApiData data)
+        public void Update(JsonElement json)
         {
-            Username = data.GetString("username");
-            Discriminator = data.GetString("discriminator");
-            Avatar = data.GetString("avatar");
-            IsBot = data.GetBoolean("bot") ?? false;
-            HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? false;
-            IsVerified = data.GetBoolean("verified") ?? false;
-            Email = data.GetString("email");
+            Username = json.GetProperty("username").GetString()!;
+            Discriminator = json.GetProperty("discriminator").GetString()!;
+            Avatar = json.GetProperty("avatar").GetString();
+            IsBot = json.GetPropertyOrNull("bot")?.GetBoolean() ?? false;
+            HasTwoFactorAuth = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean();
+            IsVerified = json.GetPropertyOrNull("verified")?.GetBoolean();
+            Email = json.GetPropertyOrNull("email")?.GetString();
 
             // To avoid causing every entity that references this user to be unncessarily
             // dirtied, check to see if any properties actually changed with this update.
-            if (!initialized || Changed())
+            if (Changed())
                 Dirty();
-
-            initialized = true;
         }
 
-        public void PartialUpdate(DiscordApiData data)
+        public void PartialUpdate(JsonElement json)
         {
-            Username = data.GetString("username") ?? Username;
-            Avatar = data.GetString("avatar") ?? Avatar;
-            HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? HasTwoFactorAuth;
-            IsVerified = data.GetBoolean("verified") ?? IsVerified;
-            Email = data.GetString("email") ?? Email;
+            Username = json.GetPropertyOrNull("username")?.GetString() ?? Username;
+            Discriminator = json.GetPropertyOrNull("discriminator")?.GetString() ?? Discriminator;
+            Avatar = json.GetPropertyOrNull("avatar")?.GetString() ?? Avatar;
+            IsBot = json.GetPropertyOrNull("bot")?.GetBoolean() ?? IsBot;
+            HasTwoFactorAuth = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean() ?? HasTwoFactorAuth;
+            IsVerified = json.GetPropertyOrNull("verified")?.GetBoolean() ?? IsVerified;
+            Email = json.GetPropertyOrNull("email")?.GetString() ?? Email;
 
             // To avoid causing every entity that references this user to be unncessarily
             // dirtied, check to see if any properties actually changed with this update.
@@ -88,8 +87,8 @@ namespace Discore.WebSocket
         {
             return new DiscordUser(
                 id: Id,
-                username: Username,
-                discriminator: Discriminator,
+                username: Username!,
+                discriminator: Discriminator!,
                 avatar: Avatar != null ? DiscordCdnUrl.ForUserAvatar(Id, Avatar) : null,
                 isBot: IsBot,
                 hasTwoFactorAuth: HasTwoFactorAuth,
@@ -99,3 +98,5 @@ namespace Discore.WebSocket
         }
     }
 }
+
+#nullable restore

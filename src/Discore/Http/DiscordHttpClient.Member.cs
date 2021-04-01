@@ -15,7 +15,7 @@ namespace Discore.Http
         {
             DiscordApiData data = await rest.Get($"guilds/{guildId}/members/{userId}",
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);
-            return DiscordGuildMember.FromJson(data, guildId);
+            return new DiscordGuildMember(data, guildId);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Discore.Http
                 $"guilds/{guildId}/members").ConfigureAwait(false);
             DiscordGuildMember[] members = new DiscordGuildMember[data.Values.Count];
             for (int i = 0; i < members.Length; i++)
-                members[i] = DiscordGuildMember.FromJson(data.Values[i], guildId);
+                members[i] = new DiscordGuildMember(data.Values[i], guildId);
 
             return members;
         }

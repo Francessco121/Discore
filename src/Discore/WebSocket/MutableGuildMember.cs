@@ -1,6 +1,8 @@
-using Discore.Http;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.WebSocket
 {
@@ -9,14 +11,13 @@ namespace Discore.WebSocket
         public MutableUser User { get; }
         public Snowflake GuildId { get; }
 
-        public string Nickname { get; private set; }
-        public IReadOnlyList<Snowflake> RoleIds { get; private set; }
+        public string? Nickname { get; private set; }
+        public IReadOnlyList<Snowflake>? RoleIds { get; private set; }
         public DateTime JoinedAt { get; private set; }
         public bool IsDeaf { get; private set; }
         public bool IsMute { get; private set; }
 
-        public MutableGuildMember(MutableUser user, Snowflake guildId, DiscordHttpClient http) 
-            : base(http)
+        public MutableGuildMember(MutableUser user, Snowflake guildId) 
         {
             User = user;
             Reference(user);
@@ -24,37 +25,37 @@ namespace Discore.WebSocket
             GuildId = guildId;
         }
 
-        public void Update(DiscordApiData data)
+        public void Update(JsonElement json)
         {
-            Nickname = data.GetString("nick");
-            JoinedAt = data.GetDateTime("joined_at").Value;
-            IsDeaf = data.GetBoolean("deaf") ?? false;
-            IsMute = data.GetBoolean("mute") ?? false;
+            Nickname = json.GetPropertyOrNull("nick")?.GetString();
+            JoinedAt = json.GetProperty("joined_at").GetDateTime();
+            IsDeaf = json.GetProperty("deaf").GetBoolean();
+            IsMute = json.GetProperty("mute").GetBoolean();
 
-            UpdateRoles(data);
+            RoleIds = GetRoles(json);
 
             Dirty();
         }
 
-        public void PartialUpdate(DiscordApiData data)
+        public void PartialUpdate(JsonElement json)
         {
-            Nickname = data.GetString("nick") ?? Nickname;
+            Nickname = json.GetPropertyOrNull("nick")?.GetString() ?? Nickname;
 
-            if (data.ContainsKey("roles"))
-                UpdateRoles(data);
+            if (json.HasProperty("nick"))
+                RoleIds = GetRoles(json);
 
             Dirty();
         }
 
-        void UpdateRoles(DiscordApiData data)
+        Snowflake[] GetRoles(JsonElement json)
         {
-            IList<DiscordApiData> rolesArray = data.GetArray("roles");
-            Snowflake[] roleIds = new Snowflake[rolesArray.Count];
+            JsonElement rolesJson = json.GetProperty("roles");
+            var roles = new Snowflake[rolesJson.GetArrayLength()];
 
-            for (int i = 0; i < rolesArray.Count; i++)
-                roleIds[i] = rolesArray[i].ToSnowflake().Value;
+            for (int i = 0; i < roles.Length; i++)
+                roles[i] = rolesJson[i].GetSnowflake();
 
-            RoleIds = roleIds;
+            return roles;
         }
 
         protected override DiscordGuildMember BuildImmutableEntity()
@@ -64,10 +65,12 @@ namespace Discore.WebSocket
                 guildId: GuildId,
                 user: User.ImmutableEntity,
                 nickname: Nickname,
-                roleIds: new List<Snowflake>(RoleIds),
+                roleIds: new List<Snowflake>(RoleIds!),
                 joinedAt: JoinedAt,
                 isDeaf: IsDeaf,
                 isMute: IsMute);
         }
     }
 }
+
+#nullable restore

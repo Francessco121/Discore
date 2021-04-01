@@ -97,7 +97,7 @@ namespace Discore.Http
             DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
 
             for (int i = 0; i < dms.Length; i++)
-                dms[i] = DiscordDMChannel.FromJson(data.Values[i]);
+                dms[i] = new DiscordDMChannel(data.Values[i]);
 
             return dms;
         }
@@ -113,7 +113,7 @@ namespace Discore.Http
 
             DiscordApiData returnData = await rest.Post("users/@me/channels", requestData,
                 "users/@me/channels").ConfigureAwait(false);
-            return DiscordDMChannel.FromJson(returnData);
+            return new DiscordDMChannel(returnData);
         }
 
         /// <summary>

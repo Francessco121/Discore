@@ -1,5 +1,7 @@
 using System;
 
+#nullable enable
+
 namespace Discore.WebSocket
 {
     class ShardCacheException : Exception
@@ -9,3 +11,5 @@ namespace Discore.WebSocket
         { }
     }
 }
+
+#nullable restore

@@ -30,6 +30,7 @@ namespace Discore
     /// <summary>
     /// A piece of data in the Discord API.
     /// </summary>
+    [Obsolete]
     class DiscordApiData
     {
         /// <summary>

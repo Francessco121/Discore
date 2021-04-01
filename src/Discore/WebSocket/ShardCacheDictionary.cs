@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
+#nullable enable
+
 namespace Discore.WebSocket
 {
     class ShardCacheDictionary<T>
@@ -10,23 +12,29 @@ namespace Discore.WebSocket
 
         public IEnumerable<T> Values => dictionary.Values;
 
-        ConcurrentDictionary<Snowflake, T> dictionary;
+        readonly ConcurrentDictionary<Snowflake, T> dictionary;
 
         public ShardCacheDictionary()
         {
             dictionary = new ConcurrentDictionary<Snowflake, T>();
         }
 
-        public T this[Snowflake id]
+        public T? this[Snowflake id]
         {
             get
             {
-                if (dictionary.TryGetValue(id, out T value))
+                if (dictionary.TryGetValue(id, out T? value))
                     return value;
                 else
                     return null;
             }
-            set => dictionary[id] = value;
+            set
+            {
+                if (value == null)
+                    dictionary.Remove(id, out _);
+                else
+                    dictionary[id] = value;
+            }
         }
 
         public bool TryGetValue(Snowflake id, out T value)
@@ -50,3 +58,5 @@ namespace Discore.WebSocket
         }
     }
 }
+
+#nullable restore

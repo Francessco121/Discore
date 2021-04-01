@@ -1,3 +1,7 @@
+using System.Text.Json;
+
+#nullable enable
+
 namespace Discore
 {
     public sealed class DiscordGuildEmbed
@@ -9,18 +13,27 @@ namespace Discore
         /// <summary>
         /// Gets the embed channel ID.
         /// </summary>
-        public Snowflake ChannelId { get; }
+        public Snowflake? ChannelId { get; }
         /// <summary>
         /// Gets the ID of the guild this embed is for.
         /// </summary>
         public Snowflake GuildId { get; }
 
-        internal DiscordGuildEmbed(Snowflake guildId, DiscordApiData data)
+        public DiscordGuildEmbed(bool enabled, Snowflake? channelId, Snowflake guildId)
+        {
+            Enabled = enabled;
+            ChannelId = channelId;
+            GuildId = guildId;
+        }
+
+        internal DiscordGuildEmbed(JsonElement json, Snowflake guildId)
         {
             GuildId = guildId;
 
-            Enabled = data.GetBoolean("enabled").Value;
-            ChannelId = data.GetSnowflake("channel_id").Value;
+            Enabled = json.GetProperty("enabled").GetBoolean();
+            ChannelId = json.GetProperty("channel_id").GetSnowflakeOrNull();
         }
     }
 }
+
+#nullable restore

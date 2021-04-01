@@ -1,3 +1,7 @@
+using System.Text.Json;
+
+#nullable enable
+
 namespace Discore
 {
     /// <summary>
@@ -20,16 +24,15 @@ namespace Discore
             || ChannelType == DiscordChannelType.GuildNews
             || ChannelType == DiscordChannelType.GuildStore;
 
-        internal DiscordChannel(Snowflake id, DiscordChannelType type)
+        protected DiscordChannel(Snowflake id, DiscordChannelType type)
             : base(id)
         {
             ChannelType = type;
         }
 
-        internal DiscordChannel(DiscordApiData data, DiscordChannelType type)
-            : base(data)
+        internal DiscordChannel(JsonElement json, DiscordChannelType type)
+            : base(json)
         {
- 
             ChannelType = type;
         }
 
@@ -39,3 +42,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

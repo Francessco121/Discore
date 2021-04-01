@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public class DiscordChannelMention : DiscordIdEntity
@@ -17,12 +21,22 @@ namespace Discore
         /// </summary>
         public string Name { get; }
 
-        internal DiscordChannelMention(DiscordApiData data)
-            : base(data)
+        public DiscordChannelMention(Snowflake id, Snowflake guildId, DiscordChannelType type, string name)
+            : base(id)
         {
-            GuildId = data.GetSnowflake("guild_id").GetValueOrDefault();
-            Type = (DiscordChannelType)(data.GetInteger("type") ?? 0);
-            Name = data.GetString("name");
+            GuildId = guildId;
+            Type = type;
+            Name = name;
+        }
+
+        internal DiscordChannelMention(JsonElement json)
+            : base(json)
+        {
+            GuildId = json.GetProperty("guild_id").GetSnowflake();
+            Type = (DiscordChannelType)json.GetProperty("type").GetInt32();
+            Name = json.GetProperty("name").GetString()!;
         }
     }
 }
+
+#nullable restore

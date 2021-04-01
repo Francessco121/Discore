@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore
 {
@@ -11,23 +14,24 @@ namespace Discore
         /// <summary>
         /// Gets the title of this embed.
         /// </summary>
-        public string Title { get; }
+        public string? Title { get; }
         /// <summary>
         /// Gets the type of this embed.
         /// </summary>
-        public string Type { get; }
+        public string? Type { get; }
         /// <summary>
         /// Gets the description of this embed.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
         /// <summary>
         /// Gets the url of this embed.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
         /// <summary>
         /// Gets the timestamp of this embed.
         /// </summary>
         public DateTime? Timestamp { get; }
+        // TODO: Should this be a DiscordColor?
         /// <summary>
         /// Gets the color code of this embed.
         /// </summary>
@@ -35,71 +39,103 @@ namespace Discore
         /// <summary>
         /// Gets the footer information.
         /// </summary>
-        public DiscordEmbedFooter Footer { get; }
+        public DiscordEmbedFooter? Footer { get; }
         /// <summary>
         /// Gets the image information.
         /// </summary>
-        public DiscordEmbedImage Image { get; }
+        public DiscordEmbedImage? Image { get; }
         /// <summary>
         /// Gets the thumbnail of this embed.
         /// </summary>
-        public DiscordEmbedThumbnail Thumbnail { get; }
+        public DiscordEmbedThumbnail? Thumbnail { get; }
         /// <summary>
         /// Gets the video information.
         /// </summary>
-        public DiscordEmbedVideo Video { get; }
+        public DiscordEmbedVideo? Video { get; }
         /// <summary>
         /// Gets the provider of this embed.
         /// </summary>
-        public DiscordEmbedProvider Provider { get; }
+        public DiscordEmbedProvider? Provider { get; }
         /// <summary>
         /// Gets the author information.
         /// </summary>
-        public DiscordEmbedAuthor Author { get; }
+        public DiscordEmbedAuthor? Author { get; }
         /// <summary>
         /// Gets a list of all fields in this embed.
         /// </summary>
-        public IReadOnlyList<DiscordEmbedField> Fields { get; }
+        public IReadOnlyList<DiscordEmbedField>? Fields { get; }
 
-        internal DiscordEmbed(DiscordApiData data)
+        public DiscordEmbed(
+            string? title, 
+            string? type, 
+            string? description, 
+            string? url, 
+            DateTime? timestamp, 
+            int? color, 
+            DiscordEmbedFooter? footer, 
+            DiscordEmbedImage? image, 
+            DiscordEmbedThumbnail? thumbnail, 
+            DiscordEmbedVideo? video, 
+            DiscordEmbedProvider? provider, 
+            DiscordEmbedAuthor? author, 
+            IReadOnlyList<DiscordEmbedField>? fields)
         {
-            Title       = data.GetString("title");
-            Type        = data.GetString("type");
-            Description = data.GetString("description");
-            Url         = data.GetString("url");
-            Timestamp   = data.GetDateTime("timestamp");
-            Color       = data.GetInteger("color");
+            Title = title;
+            Type = type;
+            Description = description;
+            Url = url;
+            Timestamp = timestamp;
+            Color = color;
+            Footer = footer;
+            Image = image;
+            Thumbnail = thumbnail;
+            Video = video;
+            Provider = provider;
+            Author = author;
+            Fields = fields;
+        }
 
-            DiscordApiData footerData = data.Get("footer");
-            if (footerData != null)
-                Footer = new DiscordEmbedFooter(footerData);
+        internal DiscordEmbed(JsonElement json)
+        {
+            Title = json.GetPropertyOrNull("title")?.GetString();
+            Type = json.GetPropertyOrNull("type")?.GetString();
+            Description = json.GetPropertyOrNull("description")?.GetString();
+            Url = json.GetPropertyOrNull("url")?.GetString();
+            Timestamp = json.GetPropertyOrNull("timestamp")?.GetDateTime();
+            Color = json.GetPropertyOrNull("color")?.GetInt32();
 
-            DiscordApiData imageData = data.Get("image");
-            if (imageData != null)
-                Image = new DiscordEmbedImage(imageData);
+            JsonElement? footerJson = json.GetPropertyOrNull("footer");
+            if (footerJson != null)
+                Footer = new DiscordEmbedFooter(footerJson.Value);
 
-            DiscordApiData thumbnailData = data.Get("thumbnail");
-            if (thumbnailData != null)
-                Thumbnail = new DiscordEmbedThumbnail(thumbnailData);
+            JsonElement? imageJson = json.GetPropertyOrNull("image");
+            if (imageJson != null)
+                Image = new DiscordEmbedImage(imageJson.Value);
 
-            DiscordApiData videoData = data.Get("video");
-            if (videoData != null)
-                Video = new DiscordEmbedVideo(videoData);
+            JsonElement? thumbnailJson = json.GetPropertyOrNull("thumbnail");
+            if (thumbnailJson != null)
+                Thumbnail = new DiscordEmbedThumbnail(thumbnailJson.Value);
 
-            DiscordApiData providerData = data.Get("provider");
-            if (providerData != null)
-                Provider = new DiscordEmbedProvider(providerData);
+            JsonElement? videoJson = json.GetPropertyOrNull("video");
+            if (videoJson != null)
+                Video = new DiscordEmbedVideo(videoJson.Value);
 
-            DiscordApiData authorData = data.Get("author");
-            if (authorData != null)
-                Author = new DiscordEmbedAuthor(authorData);
+            JsonElement? providerJson = json.GetPropertyOrNull("provider");
+            if (providerJson != null)
+                Provider = new DiscordEmbedProvider(providerJson.Value);
 
-            IList<DiscordApiData> fieldArray = data.GetArray("fields");
-            if (fieldArray != null)
+            JsonElement? authorJson = json.GetPropertyOrNull("author");
+            if (authorJson != null)
+                Author = new DiscordEmbedAuthor(authorJson.Value);
+
+            JsonElement? fieldsJson = json.GetPropertyOrNull("fields");
+            if (fieldsJson != null)
             {
-                DiscordEmbedField[] fields = new DiscordEmbedField[fieldArray.Count];
+                JsonElement _fieldsJson = fieldsJson.Value;
+                var fields = new DiscordEmbedField[_fieldsJson.GetArrayLength()];
+
                 for (int i = 0; i < fields.Length; i++)
-                    fields[i] = new DiscordEmbedField(fieldArray[i]);
+                    fields[i] = new DiscordEmbedField(_fieldsJson[i]);
 
                 Fields = fields;
             }
@@ -107,7 +143,9 @@ namespace Discore
 
         public override string ToString()
         {
-            return Title;
+            return Title ?? base.ToString();
         }
     }
 }
+
+#nullable restore

@@ -36,7 +36,7 @@ namespace Discore.Http
             DiscordChannelType type = (DiscordChannelType)data.GetInteger("type").Value;
 
             if (type == DiscordChannelType.DirectMessage)
-                return DiscordDMChannel.FromJson(data);
+                return new DiscordDMChannel(data);
             else if (type == DiscordChannelType.GuildText)
                 return new DiscordGuildTextChannel(data);
             else if (type == DiscordChannelType.GuildVoice)

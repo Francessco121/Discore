@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public sealed class DiscordEmbedField
@@ -17,11 +21,18 @@ namespace Discore
         /// </summary>
         public bool IsInline { get; }
 
-        internal DiscordEmbedField(DiscordApiData data)
+        public DiscordEmbedField(string name, string value, bool isInline)
         {
-            Name = data.GetString("name");
-            Value = data.GetString("value");
-            IsInline = data.GetBoolean("inline").Value;
+            Name = name;
+            Value = value;
+            IsInline = isInline;
+        }
+
+        internal DiscordEmbedField(JsonElement json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            Value = json.GetProperty("value").GetString()!;
+            IsInline = json.GetPropertyOrNull("inline")?.GetBoolean() ?? false;
         }
 
         public override string ToString()
@@ -30,3 +41,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

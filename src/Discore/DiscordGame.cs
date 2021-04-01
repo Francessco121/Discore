@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     /// <summary>
@@ -17,13 +21,23 @@ namespace Discore
         /// Gets the URL of the stream when the type is set to "Streaming" and the URL is valid.
         /// Otherwise, returns null.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
 
-        internal DiscordGame(DiscordApiData data)
+        public DiscordGame(
+            string name, 
+            DiscordGameType type, 
+            string? url)
         {
-            Name = data.GetString("name");
-            Type = (DiscordGameType)(data.GetInteger("type") ?? 0);
-            Url = data.GetString("url");
+            Name = name;
+            Type = type;
+            Url = url;
+        }
+
+        internal DiscordGame(JsonElement json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            Type = (DiscordGameType)json.GetProperty("type").GetInt32();
+            Url = json.GetPropertyOrNull("url")?.GetString();
         }
 
         public override string ToString()
@@ -32,3 +46,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public class DiscordInvite
@@ -10,7 +14,7 @@ namespace Discore
         /// <summary>
         /// Gets the guild this invite is for.
         /// </summary>
-        public DiscordInviteGuild Guild { get; }
+        public DiscordInviteGuild? Guild { get; }
 
         /// <summary>
         /// Gets the channel this invite is for.
@@ -20,7 +24,7 @@ namespace Discore
         /// <summary>
         /// Gets the target user of this invite or null if no specific target exists.
         /// </summary>
-        public DiscordUser TargetUser { get; }
+        public DiscordUser? TargetUser { get; }
 
         /// <summary>
         /// Gets the type of target user or null if no specific target user exists.
@@ -40,24 +44,39 @@ namespace Discore
         /// </summary>
         public int? ApproximateMemberCount { get; }
 
-        internal DiscordInvite(DiscordApiData data)
+        public DiscordInvite(
+            string code, 
+            DiscordInviteGuild? guild, 
+            DiscordInviteChannel channel, 
+            DiscordUser? targetUser, 
+            DiscordInviteTargetUserType? targetUserType, 
+            int? approximatePresenceCount, 
+            int? approximateMemberCount)
         {
-            Code = data.GetString("code");
-            TargetUserType = (DiscordInviteTargetUserType?)data.GetInteger("target_user_type");
-            ApproximatePresenceCount = data.GetInteger("approximate_presence_count");
-            ApproximateMemberCount = data.GetInteger("approximate_member_count");
+            Code = code;
+            Guild = guild;
+            Channel = channel;
+            TargetUser = targetUser;
+            TargetUserType = targetUserType;
+            ApproximatePresenceCount = approximatePresenceCount;
+            ApproximateMemberCount = approximateMemberCount;
+        }
 
-            DiscordApiData guildData = data.Get("guild");
-            if (guildData != null)
-                Guild = new DiscordInviteGuild(guildData);
+        internal DiscordInvite(JsonElement json)
+        {
+            JsonElement? guildJson = json.GetPropertyOrNull("guild");
+            Guild = guildJson == null ? null : new DiscordInviteGuild(guildJson.Value);
 
-            DiscordApiData channelData = data.Get("channel");
-            if (channelData != null)
-                Channel = new DiscordInviteChannel(channelData);
+            JsonElement? targetUserJson = json.GetPropertyOrNull("target_user");
+            TargetUser = targetUserJson == null ? null : new DiscordUser(targetUserJson.Value, isWebhookUser: false);
 
-            DiscordApiData userData = data.Get("target_user");
-            if (userData != null)
-                TargetUser = new DiscordUser(isWebhookUser: false, userData);
+            Code = json.GetProperty("code").GetString()!;
+            Channel = new DiscordInviteChannel(json.GetProperty("channel"));
+            TargetUserType = (DiscordInviteTargetUserType?)json.GetPropertyOrNull("target_user_type")?.GetInt32();
+            ApproximatePresenceCount = json.GetPropertyOrNull("approximate_presence_count")?.GetInt32();
+            ApproximateMemberCount = json.GetPropertyOrNull("approximate_member_count")?.GetInt32();
         }
     }
 }
+
+#nullable restore

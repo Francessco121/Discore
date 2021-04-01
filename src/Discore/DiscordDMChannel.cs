@@ -1,4 +1,6 @@
-using System.Linq;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore
 {
@@ -19,25 +21,23 @@ namespace Discore
         /// <para/>
         /// Use <see cref="Http.DiscordHttpClient.GetChannel{T}(Snowflake)"/> to get an up-to-date ID.
         /// </summary>
-        public Snowflake LastMessageId { get; }
+        public Snowflake? LastMessageId { get; }
 
-        public DiscordDMChannel(Snowflake id, DiscordUser recipient, Snowflake lastMessageId)
+        public DiscordDMChannel(Snowflake id, DiscordUser recipient, Snowflake? lastMessageId)
             : base(id, DiscordChannelType.DirectMessage)
         {
             Recipient = recipient;
             LastMessageId = lastMessageId;
         }
 
-        internal static DiscordDMChannel FromJson(DiscordApiData data)
+        internal DiscordDMChannel(JsonElement json)
+            : base(json, DiscordChannelType.DirectMessage)
         {
-            // Normal DM should only ever have exactly one recipient
-            DiscordApiData recipientData = data.GetArray("recipients").First();
-            var recipient = new DiscordUser(false, recipientData);
+            LastMessageId = json.GetPropertyOrNull("last_message_id")?.GetSnowflakeOrNull();
 
-            return new DiscordDMChannel(
-                data.GetSnowflake("id").Value,
-                recipient,
-                data.GetSnowflake("last_message_id") ?? default(Snowflake));
+            // Normal DM should only ever have exactly one recipient
+            JsonElement recipientJson = json.GetProperty("recipients");
+            Recipient = new DiscordUser(recipientJson[0], isWebhookUser: false);
         }
 
         public override string ToString()
@@ -46,3 +46,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

@@ -1,8 +1,13 @@
 using Newtonsoft.Json;
 using System;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
+#nullable enable
+
+#pragma warning disable IDE0051 // Remove unused private members
 
 namespace Discore.WebSocket.Internal
 {
@@ -12,23 +17,23 @@ namespace Discore.WebSocket.Internal
 
         #region Receiving
         [Payload(GatewayOPCode.Dispatch)]
-        void HandleDispatchPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleDispatchPayload(JsonElement payload, JsonElement data)
         {
-            sequence = payload.GetInteger("s").Value;
-            string eventName = payload.GetString("t");
+            sequence = payload.GetProperty("s").GetInt32();
+            string eventName = payload.GetProperty("t").GetString()!;
 
             OnDispatch?.Invoke(this, new DispatchEventArgs(eventName, data));
         }
 
         [Payload(GatewayOPCode.Hello)]
-        async Task HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
+        async Task HandleHelloPayload(JsonElement payload, JsonElement data)
         {
             if (!receivedHello)
             {
                 receivedHello = true;
 
                 // Set heartbeat interval
-                heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
+                heartbeatInterval = data.GetProperty("heartbeat_interval").GetInt32();
                 log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
 
                 // Begin heartbeat loop
@@ -36,14 +41,15 @@ namespace Discore.WebSocket.Internal
                 heartbeatTask = HeartbeatLoop();
 
                 // Notify so the IDENTIFY or RESUME payloads are sent
-                await OnHello?.Invoke();
+                if (OnHello != null)
+                    await OnHello.Invoke();
             }
             else
                 log.LogWarning("Received more than one HELLO payload.");
         }
 
         [Payload(GatewayOPCode.Heartbeat)]
-        async Task HandleHeartbeatPayload(DiscordApiData payload, DiscordApiData data)
+        async Task HandleHeartbeatPayload(JsonElement payload, JsonElement data)
         {
             // The gateway can request a heartbeat in certain (unlisted) scenarios.
             log.LogVerbose("[Heartbeat] Gateway requested heartbeat.");
@@ -52,13 +58,13 @@ namespace Discore.WebSocket.Internal
         }
 
         [Payload(GatewayOPCode.HeartbeatAck)]
-        void HandleHeartbeatAckPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleHeartbeatAckPayload(JsonElement payload, JsonElement data)
         {
             receivedHeartbeatAck = true;
         }
 
         [Payload(GatewayOPCode.Reconnect)]
-        void HandleReconnectPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleReconnectPayload(JsonElement payload, JsonElement data)
         {
             // Resume
             log.LogInfo("[Reconnect] Performing resume...");
@@ -66,9 +72,9 @@ namespace Discore.WebSocket.Internal
         }
 
         [Payload(GatewayOPCode.InvalidSession)]
-        void HandleInvalidSessionPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleInvalidSessionPayload(JsonElement payload, JsonElement data)
         {
-            bool isResumable = data.ToBoolean().Value;
+            bool isResumable = data.GetBoolean();
 
             if (isResumable)
             {
@@ -204,3 +210,7 @@ namespace Discore.WebSocket.Internal
         #endregion
     }
 }
+
+#pragma warning restore IDE0051 // Remove unused private members
+
+#nullable restore

@@ -1,4 +1,7 @@
 using System;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore
 {
@@ -22,21 +25,30 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        internal DiscordOverwrite(Snowflake channelId, DiscordApiData data)
-            : base(data)
+        public DiscordOverwrite(
+            Snowflake id,
+            Snowflake channelId, 
+            DiscordOverwriteType type, 
+            DiscordPermission allow, 
+            DiscordPermission deny)
+            : base(id)
         {
             ChannelId = channelId;
+            Type = type;
+            Allow = allow;
+            Deny = deny;
+        }
 
-            string typeStr = data.GetString("type");
+        internal DiscordOverwrite(JsonElement json, Snowflake channelId)
+            : base(json)
+        {
+            ChannelId = channelId;
+            Allow = (DiscordPermission)json.GetProperty("allow").GetUInt64();
+            Deny = (DiscordPermission)json.GetProperty("deny").GetUInt64();
+
             DiscordOverwriteType type;
-            if (Enum.TryParse(typeStr, true, out type))
+            if (Enum.TryParse(json.GetProperty("type").GetString()!, out type))
                 Type = type;
-
-            long allow = data.GetInt64("allow").Value;
-            Allow = (DiscordPermission)allow;
-
-            long deny = data.GetInt64("deny").Value;
-            Deny = (DiscordPermission)deny;
         }
 
         public override string ToString()
@@ -45,3 +57,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

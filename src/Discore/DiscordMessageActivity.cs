@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public class DiscordMessageActivity
@@ -11,12 +15,20 @@ namespace Discore
         /// Gets the party ID from a Rich Presence event.
         /// May be null.
         /// </summary>
-        public string PartyId { get; }
+        public string? PartyId { get; }
 
-        internal DiscordMessageActivity(DiscordApiData data)
+        public DiscordMessageActivity(DiscordMessageActivityType type, string? partyId)
         {
-            Type = (DiscordMessageActivityType)(data.GetInteger("type") ?? 0);
-            PartyId = data.GetString("party_id");
+            Type = type;
+            PartyId = partyId;
+        }
+
+        internal DiscordMessageActivity(JsonElement json)
+        {
+            Type = (DiscordMessageActivityType)json.GetProperty("type").GetInt32();
+            PartyId = json.GetPropertyOrNull("party_id")?.GetString();
         }
     }
 }
+
+#nullable restore

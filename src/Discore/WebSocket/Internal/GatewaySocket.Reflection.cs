@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.WebSocket.Internal
 {
     partial class GatewaySocket
     {
-        delegate void PayloadSynchronousCallback(DiscordApiData payload, DiscordApiData data);
-        delegate Task PayloadAsynchronousCallback(DiscordApiData payload, DiscordApiData data);
+        delegate void PayloadSynchronousCallback(JsonElement payload, JsonElement data);
+        delegate Task PayloadAsynchronousCallback(JsonElement payload, JsonElement data);
 
         class PayloadCallback
         {
-            public PayloadSynchronousCallback Synchronous { get; }
-            public PayloadAsynchronousCallback Asynchronous { get; }
+            public PayloadSynchronousCallback? Synchronous { get; }
+            public PayloadAsynchronousCallback? Asynchronous { get; }
 
             public PayloadCallback(PayloadSynchronousCallback synchronous)
             {
@@ -71,3 +74,5 @@ namespace Discore.WebSocket.Internal
         }
     }
 }
+
+#nullable restore

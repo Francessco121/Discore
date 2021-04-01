@@ -1,10 +1,10 @@
-using Newtonsoft.Json;
 using Nito.AsyncEx;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,14 +42,13 @@ namespace Discore.WebSocket.Internal
         const int SEND_BUFFER_SIZE = 4 * 1024;  // 4kb (Discord's max payload size)
         const int RECEIVE_BUFFER_SIZE = 12 * 1024; // 12kb
 
-        ClientWebSocket socket;
+        readonly DiscoreLogger log;
+        readonly ClientWebSocket socket;
 
         CancellationTokenSource abortCancellationSource;
         Task receiveTask;
 
         AsyncLock sendLock;
-
-        DiscoreLogger log;
 
         bool isDisposed;
 
@@ -66,7 +65,8 @@ namespace Discore.WebSocket.Internal
         /// <summary>
         /// Called when a payload has been received successfully.
         /// </summary>
-        protected abstract Task OnPayloadReceived(DiscordApiData payload);
+        /// <param name="payload">NOTE: The lifetime of the payload is bound to this call and will be disposed when this method returns.</param>
+        protected abstract Task OnPayloadReceived(JsonDocument payload);
         /// <summary>
         /// Called when a close message has been received. 
         /// The socket will be gracefully closed automatically before this call.
@@ -185,16 +185,14 @@ namespace Discore.WebSocket.Internal
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>
-        protected async Task SendAsync(DiscordApiData data)
+        /// <exception cref="NotSupportedException">Thrown if the given data cannot be serialized as JSON.</exception>
+        protected async Task SendAsync<T>(T data)
         {
-            if (data == null)
-                throw new ArgumentNullException(nameof(data));
             if (socket.State != WebSocketState.Open)
                 throw new InvalidOperationException("Cannot send data when the socket is not open.");
 
             // Serialize the data as JSON and convert to bytes
-            byte[] bytes = Encoding.UTF8.GetBytes(data.SerializeToJson());
+            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(data);
 
             // Wait for any existing send operations,
             // ClientWebSocket only supports one send operation at a time.
@@ -387,57 +385,47 @@ namespace Discore.WebSocket.Internal
                         if (isClosing || socket.State == WebSocketState.Aborted)
                             break;
 
-                        // Parse the message
-                        string message = null;
-
                         try
                         {
-                            message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
+                            // Parse the message
+                            using JsonDocument message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
+
+                            try
+                            {
+                                // Notify inheriting object that a payload has been received.
+                                await OnPayloadReceived(message).ConfigureAwait(false);
+                            }
+                            // Payload handlers can send other payloads which can result in two
+                            // valid exceptions that we do not want to bubble up.
+                            catch (InvalidOperationException)
+                            {
+                                // Socket was closed between receiving a payload and handling it
+                                log.LogVerbose("Received InvalidOperationException from OnPayloadReceived, " +
+                                    "stopping receive loop...");
+
+                                break;
+                            }
+                            catch (DiscordWebSocketException dwex)
+                            {
+                                if (dwex.Error == DiscordWebSocketError.ConnectionClosed)
+                                    // Socket was closed while a payload handler was sending another payload
+                                    break;
+                                else
+                                {
+                                    // Unexpected error occured, we should only let it bubble up if the socket
+                                    // is not open after the exception.
+                                    if (socket.State == WebSocketState.Open)
+                                        log.LogError("[ReceiveLoop] Unexpected error from OnPayloadReceived: " +
+                                            $"code = {dwex.Error}, error = {dwex}");
+                                    else
+                                        // Don't log since that will be handled below
+                                        throw;
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
                             log.LogError($"[ReceiveLoop] Failed to parse message: {ex}");
-                        }
-
-                        if (message != null)
-                        {
-                            if (DiscordApiData.TryParseJson(message, out DiscordApiData data))
-                            {
-                                try
-                                {
-                                    // Notify inheriting object that a payload has been received.
-                                    await OnPayloadReceived(data).ConfigureAwait(false);
-                                }
-                                // Payload handlers can send other payloads which can result in two
-                                // valid exceptions that we do not want to bubble up.
-                                catch (InvalidOperationException)
-                                {
-                                    // Socket was closed between receiving a payload and handling it
-                                    log.LogVerbose("Received InvalidOperationException from OnPayloadReceived, " +
-                                        "stopping receive loop...");
-
-                                    break;
-                                }
-                                catch (DiscordWebSocketException dwex)
-                                {
-                                    if (dwex.Error == DiscordWebSocketError.ConnectionClosed)
-                                        // Socket was closed while a payload handler was sending another payload
-                                        break;
-                                    else
-                                    {
-                                        // Unexpected error occured, we should only let it bubble up if the socket
-                                        // is not open after the exception.
-                                        if (socket.State == WebSocketState.Open)
-                                            log.LogError("[ReceiveLoop] Unexpected error from OnPayloadReceived: " +
-                                                $"code = {dwex.Error}, error = {dwex}");
-                                        else
-                                            // Don't log since that will be handled below
-                                            throw;
-                                    }
-                                }
-                            }
-                            else
-                                log.LogError($"[ReceiveLoop] Failed to parse JSON: \"{message}\"");
                         }
                     }
                 }
@@ -456,22 +444,13 @@ namespace Discore.WebSocket.Internal
         /// <param name="ms">The stream containing the actual message.</param>
         /// <exception cref="ArgumentException">Thrown if message type is 'Close' or an unknown type.</exception>
         /// <exception cref="IOException">Thrown if the binary message could not be decompressed.</exception>
-        async Task<string> ParseMessage(WebSocketMessageType messageType, MemoryStream ms)
+        /// <exception cref="JsonException">Thrown if the message could not be parsed as JSON.</exception>
+        async Task<JsonDocument> ParseMessage(WebSocketMessageType messageType, MemoryStream ms)
         {
-            string StreamToString(MemoryStream decompressedMemoryStream)
-            {
-                ArraySegment<byte> buffer;
-                if (!decompressedMemoryStream.TryGetBuffer(out buffer))
-                    // The memory stream should be 'exposable' but as a fallback just write the stream to an array.
-                    buffer = new ArraySegment<byte>(decompressedMemoryStream.ToArray());
-
-                return Encoding.UTF8.GetString(buffer.Array, buffer.Offset, buffer.Count);
-            }
-
             if (messageType == WebSocketMessageType.Text)
             {
                 // Message is already decompressed.
-                return StreamToString(ms);
+                return await JsonDocument.ParseAsync(ms).ConfigureAwait(false);
             }
             else if (messageType == WebSocketMessageType.Binary)
             {
@@ -491,8 +470,8 @@ namespace Discore.WebSocket.Internal
                         throw new IOException("Failed to decompress binary message.", ex);
                     }
 
-                    // Message is now compressed, return as string.
-                    return StreamToString(decompressed);
+                    // Message is now decompressed, return as string.
+                    return await JsonDocument.ParseAsync(decompressed).ConfigureAwait(false);
                 }
             }
             else if (messageType == WebSocketMessageType.Close)

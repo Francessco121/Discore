@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.Voice.Internal
 {
     partial class VoiceWebSocket
     {
-        delegate void PayloadCallback(DiscordApiData payload, DiscordApiData data);
+        delegate void PayloadCallback(JsonElement payload, JsonElement data);
 
         [AttributeUsage(AttributeTargets.Method)]
         class PayloadAttribute : Attribute
@@ -37,3 +40,5 @@ namespace Discore.Voice.Internal
         }
     }
 }
+
+#nullable restore

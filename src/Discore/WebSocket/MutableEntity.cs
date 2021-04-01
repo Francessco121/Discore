@@ -1,6 +1,7 @@
 using ConcurrentCollections;
-using Discore.Http;
 using System;
+
+#nullable enable
 
 namespace Discore.WebSocket
 {
@@ -48,15 +49,13 @@ namespace Discore.WebSocket
     }
 
     abstract class MutableEntity<T> : MutableEntity
+        where T : class
     {
-        /// <summary>
-        /// Note: Will return null if the immutable entity has not been built and the entity is not dirty.
-        /// </summary>
         public T ImmutableEntity
         {
             get
             {
-                if (IsDirty)
+                if (IsDirty || immutableEntity == null)
                 {
                     immutableEntity = BuildImmutableEntity();
                     ResetDirty();
@@ -66,15 +65,10 @@ namespace Discore.WebSocket
             }
         }
 
-        protected DiscordHttpClient Http { get; }
-
-        T immutableEntity;
-
-        public MutableEntity(DiscordHttpClient http)
-        {
-            Http = http;
-        }
+        T? immutableEntity;
 
         protected abstract T BuildImmutableEntity();
     }
 }
+
+#nullable restore

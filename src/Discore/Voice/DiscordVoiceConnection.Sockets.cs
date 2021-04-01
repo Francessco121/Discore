@@ -493,7 +493,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[SendVoiceIdentify] webSocket must not be null!");
             if (voiceState == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] voiceState must not be null!");
-            if (voiceState.SessionId == null)
+            if (string.IsNullOrEmpty(voiceState.SessionId))
                 throw new InvalidOperationException("[SendVoiceIdentify] voiceState.SessionId must not be null!");
             if (token == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] token must not be null!");
@@ -539,7 +539,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[SendVoiceIdentify] shard.UserId must not be null!");
             if (voiceState == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] voiceState must not be null!");
-            if (voiceState.SessionId == null)
+            if (string.IsNullOrEmpty(voiceState.SessionId))
                 throw new InvalidOperationException("[SendVoiceIdentify] voiceState.SessionId must not be null!");
             if (token == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] token must not be null!");

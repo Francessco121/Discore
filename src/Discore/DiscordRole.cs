@@ -1,3 +1,7 @@
+using System.Text.Json;
+
+#nullable enable
+
 namespace Discore
 {
     /// <summary>
@@ -38,22 +42,41 @@ namespace Discore
         /// </summary>
         public bool IsMentionable { get; }
 
-        internal DiscordRole(Snowflake guildId, DiscordApiData data)
-            : base(data)
+        // TODO: add tags
+
+        public DiscordRole(
+            Snowflake id,
+            Snowflake guildId, 
+            string name, 
+            DiscordColor color, 
+            bool isHoisted, 
+            int position, 
+            DiscordPermission permissions, 
+            bool isManaged, 
+            bool isMentionable)
+            : base(id)
         {
             GuildId = guildId;
+            Name = name;
+            Color = color;
+            IsHoisted = isHoisted;
+            Position = position;
+            Permissions = permissions;
+            IsManaged = isManaged;
+            IsMentionable = isMentionable;
+        }
 
-            Name = data.GetString("name");
-            IsHoisted = data.GetBoolean("hoist").Value;
-            Position = data.GetInteger("position").Value;
-            IsManaged = data.GetBoolean("managed").Value;
-            IsMentionable = data.GetBoolean("mentionable").Value;
-
-            int color = data.GetInteger("color").Value;
-            Color = DiscordColor.FromHexadecimal(color);
-
-            long permissions = data.GetInt64("permissions").Value;
-            Permissions = (DiscordPermission)permissions;
+        internal DiscordRole(JsonElement json, Snowflake guildId)
+            : base(json)
+        {
+            GuildId = guildId;
+            Name = json.GetProperty("name").GetString()!;
+            Color = DiscordColor.FromHexadecimal(json.GetProperty("color").GetInt32());
+            IsHoisted = json.GetProperty("hoist").GetBoolean();
+            Position = json.GetProperty("position").GetInt32();
+            Permissions = (DiscordPermission)json.GetProperty("permissions").GetUInt64();
+            IsManaged = json.GetProperty("managed").GetBoolean();
+            IsMentionable = json.GetProperty("mentionable").GetBoolean();
         }
 
         public override string ToString()
@@ -62,3 +85,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

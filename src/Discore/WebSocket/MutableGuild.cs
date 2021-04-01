@@ -1,5 +1,7 @@
-using Discore.Http;
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.WebSocket
 {
@@ -7,11 +9,11 @@ namespace Discore.WebSocket
     {
         public Snowflake Id { get; }
 
-        public string Name { get; private set; }
-        public string Icon { get; private set; }
-        public string Splash { get; private set; }
+        public string? Name { get; private set; }
+        public string? Icon { get; private set; }
+        public string? Splash { get; private set; }
         public Snowflake OwnerId { get; private set; }
-        public string RegionId { get; private set; }
+        public string? RegionId { get; private set; }
         public Snowflake? AfkChannelId { get; private set; }
         public int AfkTimeout { get; private set; }
         public bool IsEmbedEnabled { get; private set; }
@@ -26,20 +28,19 @@ namespace Discore.WebSocket
         public Snowflake? SystemChannelId { get; private set; }
         public int? MaxPresences { get; private set; }
         public int? MaxMembers { get; private set; }
-        public string VanityUrlCode { get; private set; }
-        public string Description { get; private set; }
-        public string Banner { get; private set; }
+        public string? VanityUrlCode { get; private set; }
+        public string? Description { get; private set; }
+        public string? Banner { get; private set; }
         public GuildPremiumTier PremiumTier { get; private set; }
-        public int PremiumSubscriptionCount { get; private set; }
-        public string PreferredLocale { get; private set; }
+        public int? PremiumSubscriptionCount { get; private set; }
+        public string? PreferredLocale { get; private set; }
 
         public IReadOnlyList<string> Features { get; private set; }
 
         public ShardCacheDictionary<DiscordEmoji> Emojis { get; }
         public ShardCacheDictionary<DiscordRole> Roles { get; }
 
-        public MutableGuild(Snowflake id, DiscordHttpClient http)
-            : base(http)
+        public MutableGuild(Snowflake id)
         {
             Id = id;
 
@@ -49,59 +50,64 @@ namespace Discore.WebSocket
             Roles = new ShardCacheDictionary<DiscordRole>();
         }
 
-        public void Update(DiscordApiData data)
+        public void Update(JsonElement json)
         {
-            Name = data.GetString("name");
-            Icon = data.GetString("icon");
-            Splash = data.GetString("splash");
-            RegionId = data.GetString("region");
-            AfkTimeout = data.GetInteger("afk_timeout").Value;
-            IsEmbedEnabled = data.GetBoolean("embed_enabled") ?? false;
-            OwnerId = data.GetSnowflake("owner_id").Value;
-            AfkChannelId = data.GetSnowflake("afk_channel_id");
-            EmbedChannelId = data.GetSnowflake("embed_channel_id");
-            ApplicationId = data.GetSnowflake("application_id");
-            IsWidgetEnabled = data.GetBoolean("widget_enabled") ?? false;
-            WidgetChannelId = data.GetSnowflake("widget_channel_id");
-            SystemChannelId = data.GetSnowflake("system_channel_id");
-            MaxPresences = data.GetInteger("max_presences");
-            MaxMembers = data.GetInteger("max_members");
-            VanityUrlCode = data.GetString("vanity_url_code");
-            Description = data.GetString("description");
-            PremiumTier = (GuildPremiumTier)(data.GetInteger("premium_tier") ?? 0);
-            PremiumSubscriptionCount = data.GetInteger("premium_subscription_count") ?? 0;
-            PreferredLocale = data.GetString("preferred_locale");
-            Banner = data.GetString("banner");
+            Name = json.GetProperty("name").GetString()!;
+            RegionId = json.GetProperty("region").GetString()!;
+            AfkTimeout = json.GetProperty("afk_timeout").GetInt32();
+            AfkChannelId = json.GetProperty("afk_channel_id").GetSnowflakeOrNull();
+            IsEmbedEnabled = json.GetPropertyOrNull("embed_enabled")?.GetBoolean() ?? false;
+            EmbedChannelId = json.GetPropertyOrNull("embed_channel_id")?.GetSnowflakeOrNull();
+            OwnerId = json.GetProperty("owner_id").GetSnowflake();
+            ApplicationId = json.GetProperty("application_id").GetSnowflakeOrNull();
+            IsWidgetEnabled = json.GetPropertyOrNull("widget_enabled")?.GetBoolean() ?? false;
+            WidgetChannelId = json.GetPropertyOrNull("widget_channel_id")?.GetSnowflakeOrNull();
+            SystemChannelId = json.GetProperty("system_channel_id").GetSnowflakeOrNull();
+            MaxPresences = json.GetPropertyOrNull("max_presences")?.GetInt32OrNull();
+            MaxMembers = json.GetPropertyOrNull("max_members")?.GetInt32();
+            VanityUrlCode = json.GetProperty("vanity_url_code").GetString();
+            Description = json.GetProperty("description").GetString();
+            PremiumTier = (GuildPremiumTier)json.GetProperty("premium_tier").GetInt32();
+            PremiumSubscriptionCount = json.GetPropertyOrNull("premium_subscription_count")?.GetInt32();
+            PreferredLocale = json.GetProperty("preferred_locale").GetString()!;
+            ExplicitContentFilter = (GuildExplicitContentFilterLevel)json.GetProperty("explicit_content_filter").GetInt32();
+            VerificationLevel = (GuildVerificationLevel)json.GetProperty("verification_level").GetInt32();
+            DefaultMessageNotifications = (GuildNotificationOption)json.GetProperty("default_message_notifications").GetInt32();
+            MfaLevel = (GuildMfaLevel)json.GetProperty("mfa_level").GetInt32();
 
-            ExplicitContentFilter = (GuildExplicitContentFilterLevel)data.GetInteger("explicit_content_filter").Value;
-            VerificationLevel = (GuildVerificationLevel)data.GetInteger("verification_level").Value;
-            DefaultMessageNotifications = (GuildNotificationOption)(data.GetInteger("default_message_notifications") ?? 0);
-            MfaLevel = (GuildMfaLevel)data.GetInteger("mfa_level").Value;
+            // Get image hashes
+            Icon = json.GetProperty("icon").GetString();
+            Splash = json.GetProperty("splash").GetString();
+            Banner = json.GetProperty("banner").GetString();
 
-            // Deserialize features
-            IList<DiscordApiData> featuresArray = data.GetArray("features");
-            List<string> features = new List<string>(featuresArray.Count);
+            // Get features
+            JsonElement featuresJson = json.GetProperty("features");
+            string[] features = new string[featuresJson.GetArrayLength()];
 
-            for (int i = 0; i < features.Count; i++)
-                features[i] = featuresArray[i].ToString();
+            for (int i = 0; i < features.Length; i++)
+                features[i] = featuresJson[i].GetString()!;
 
             Features = features;
 
-            // Deserialize roles
+            // Get roles
             Roles.Clear();
-            IList<DiscordApiData> rolesArray = data.GetArray("roles");
-            for (int i = 0; i < rolesArray.Count; i++)
+            JsonElement rolesJson = json.GetProperty("roles");
+
+            int numRoles = rolesJson.GetArrayLength();
+            for (int i = 0; i < numRoles; i++)
             {
-                DiscordRole role = new DiscordRole(Id, rolesArray[i]);
+                var role = new DiscordRole(rolesJson[i], guildId: Id);
                 Roles[role.Id] = role;
             }
 
-            // Deserialize emojis
+            // Get emojis
             Emojis.Clear();
-            IList<DiscordApiData> emojisArray = data.GetArray("emojis");
-            for (int i = 0; i < emojisArray.Count; i++)
+            JsonElement emojisJson = json.GetProperty("emojis");
+
+            int numEmojis = emojisJson.GetArrayLength();
+            for (int i = 0; i < numEmojis; i++)
             {
-                DiscordEmoji emoji = new DiscordEmoji(emojisArray[i]);
+                var emoji = new DiscordEmoji(emojisJson[i]);
                 Emojis[emoji.Id] = emoji;
             }
 
@@ -112,11 +118,11 @@ namespace Discore.WebSocket
         {
             return new DiscordGuild(
                 id: Id,
-                name: Name,
+                name: Name!,
                 icon: Icon != null ? DiscordCdnUrl.ForGuildIcon(Id, Icon) : null,
                 splash: Splash != null ? DiscordCdnUrl.ForGuildSplash(Id, Splash) : null,
                 ownerId: OwnerId,
-                regionId: RegionId,
+                regionId: RegionId!,
                 afkChannelId: AfkChannelId,
                 afkTimeout: AfkTimeout,
                 isEmbedEnabled: IsEmbedEnabled,
@@ -137,9 +143,11 @@ namespace Discore.WebSocket
                 banner: Banner != null ? DiscordCdnUrl.ForGuildBanner(Id, Banner) : null,
                 premiumTier: PremiumTier,
                 premiumSubscriptionCount: PremiumSubscriptionCount,
-                preferredLocale: PreferredLocale,
+                preferredLocale: PreferredLocale!,
                 roles: Roles.CreateReadonlyCopy(),
                 emojis: Emojis.CreateReadonlyCopy());
         }
     }
 }
+
+#nullable restore

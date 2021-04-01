@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace Discore
 {
     public interface ITextChannel
@@ -18,6 +20,8 @@ namespace Discore
         /// <para/>
         /// Use <see cref="Http.DiscordHttpClient.GetChannel{T}(Snowflake)"/> to get an up-to-date ID.
         /// </summary>
-        Snowflake LastMessageId { get; }
+        Snowflake? LastMessageId { get; }
     }
 }
+
+#nullable restore

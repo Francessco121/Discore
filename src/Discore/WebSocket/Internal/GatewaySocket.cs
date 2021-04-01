@@ -1,5 +1,6 @@
 using System;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -85,18 +86,21 @@ namespace Discore.WebSocket.Internal
             heartbeatCancellationSource?.Cancel();
         }
 
-        protected override async Task OnPayloadReceived(DiscordApiData payload)
+        /// <param name="payload">NOTE: The lifetime of the payload is bound to this call and will be disposed when this method returns.</param>
+        protected override async Task OnPayloadReceived(JsonDocument payload)
         {
-            GatewayOPCode op = (GatewayOPCode)payload.GetInteger("op");
-            DiscordApiData data = payload.Get("d");
+            JsonElement payloadRoot = payload.RootElement;
+
+            GatewayOPCode op = (GatewayOPCode)payloadRoot.GetProperty("op").GetInt32();
+            JsonElement data = payloadRoot.GetProperty("d");
 
             PayloadCallback callback;
             if (payloadHandlers.TryGetValue(op, out callback))
             {
                 if (callback.Synchronous != null)
-                    callback.Synchronous(payload, data);
+                    callback.Synchronous(payloadRoot, data);
                 else
-                    await callback.Asynchronous(payload, data).ConfigureAwait(false);
+                    await callback.Asynchronous(payloadRoot, data).ConfigureAwait(false);
             }
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");

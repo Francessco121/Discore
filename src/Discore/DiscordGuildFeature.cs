@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace Discore
 {
     public static class DiscordGuildFeature
@@ -63,3 +65,5 @@ namespace Discore
         public const string Banner = "BANNER";
     }
 }
+
+#nullable restore

@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore
 {
@@ -24,23 +27,39 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        internal DiscordGuildChannel(DiscordApiData data, DiscordChannelType type, Snowflake? guildId) 
-            : base(data, type)
+        protected DiscordGuildChannel(
+            Snowflake id,
+            DiscordChannelType type,
+            string name,
+            int position,
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
+            Snowflake guildId)
+            : base(id, type)
         {
-            GuildId = guildId ?? data.GetSnowflake("guild_id").Value;
-            Name = data.GetString("name");
-            Position = data.GetInteger("position").Value;
+            Name = name;
+            Position = position;
+            PermissionOverwrites = permissionOverwrites;
+            GuildId = guildId;
+        }
 
-            IList<DiscordApiData> overwrites = data.GetArray("permission_overwrites");
-            Dictionary<Snowflake, DiscordOverwrite> permissionOverwrites = new Dictionary<Snowflake, DiscordOverwrite>();
+        internal DiscordGuildChannel(JsonElement json, DiscordChannelType type, Snowflake? guildId)
+            : base(json, type)
+        {
+            GuildId = guildId ?? json.GetProperty("guild_id").GetSnowflake();
+            Name = json.GetProperty("name").GetString()!;
+            Position = json.GetProperty("position").GetInt32();
 
-            for (int i = 0; i < overwrites.Count; i++)
+            JsonElement overwritesJson = json.GetProperty("permission_overwrites");
+            var overwrites = new Dictionary<Snowflake, DiscordOverwrite>();
+
+            int numOverwrites = overwritesJson.GetArrayLength();
+            for (int i = 0; i < numOverwrites; i++)
             {
-                DiscordOverwrite overwrite = new DiscordOverwrite(Id, overwrites[i]);
-                permissionOverwrites.Add(overwrite.Id, overwrite);
+                var overwrite = new DiscordOverwrite(overwritesJson[i], channelId: Id);
+                overwrites[overwrite.Id] = overwrite;
             }
 
-            PermissionOverwrites = permissionOverwrites;
+            PermissionOverwrites = overwrites;
         }
 
         public override string ToString()
@@ -49,3 +68,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

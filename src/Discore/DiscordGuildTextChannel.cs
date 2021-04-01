@@ -1,3 +1,8 @@
+#nullable enable
+
+using System.Collections.Generic;
+using System.Text.Json;
+
 namespace Discore
 {
     public sealed class DiscordGuildTextChannel : DiscordGuildChannel, ITextChannel
@@ -25,15 +30,40 @@ namespace Discore
         /// <para/>
         /// Use <see cref="Http.DiscordHttpClient.GetChannel{T}(Snowflake)"/> to get an up-to-date ID.
         /// </summary>
-        public Snowflake LastMessageId { get; }
+        public Snowflake? LastMessageId { get; }
 
-        internal DiscordGuildTextChannel(DiscordApiData data, Snowflake? guildId = null)
-            : base(data, DiscordChannelType.GuildText, guildId)
+        public DiscordGuildTextChannel(
+            Snowflake id,
+            string name,
+            int position,
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
+            Snowflake guildId,
+            string topic,
+            bool nsfw,
+            Snowflake? parentId,
+            Snowflake? lastMessageId)
+            : base(id,
+                  DiscordChannelType.GuildText,
+                  name,
+                  position,
+                  permissionOverwrites,
+                  guildId)
         {
-            Topic = data.GetString("topic");
-            Nsfw = data.GetBoolean("nsfw") ?? false;
-            ParentId = data.GetSnowflake("parent_id");
-            LastMessageId = data.GetSnowflake("last_message_id") ?? default(Snowflake);
+            Topic = topic;
+            Nsfw = nsfw;
+            ParentId = parentId;
+            LastMessageId = lastMessageId;
+        }
+
+        internal DiscordGuildTextChannel(JsonElement json, Snowflake? guildId = null)
+            : base(json, DiscordChannelType.GuildText, guildId)
+        {
+            Topic = json.GetProperty("topic").GetString()!;
+            Nsfw = json.GetProperty("nsfw").GetBoolean();
+            ParentId = json.GetProperty("parent_id").GetSnowflakeOrNull();
+            LastMessageId = json.GetProperty("last_message_id").GetSnowflakeOrNull();
         }
     }
 }
+
+#nullable restore

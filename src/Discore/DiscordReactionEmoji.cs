@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     public sealed class DiscordReactionEmoji
@@ -9,8 +13,10 @@ namespace Discore
 
         /// <summary>
         /// Gets the name of the emoji.
+        /// <para/>
+        /// May be null if the emoji was deleted.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
 
         public DiscordReactionEmoji(string name)
         {
@@ -23,15 +29,18 @@ namespace Discore
             Id = id;
         }
 
-        internal DiscordReactionEmoji(DiscordApiData data)
+        internal DiscordReactionEmoji(JsonElement json)
         {
-            Id = data.GetSnowflake("id");
-            Name = data.GetString("name");
+            Id = json.GetProperty("id").GetSnowflakeOrNull();
+            Name = json.GetProperty("name").GetString();
         }
 
         public override string ToString()
         {
-            return Id.HasValue ? $"{Name}:{Id.Value}" : Name;
+            // TODO: This must be URL encoded!
+            return (Id.HasValue ? $"{Name}:{Id.Value}" : Name) ?? base.ToString();
         }
     }
 }
+
+#nullable restore

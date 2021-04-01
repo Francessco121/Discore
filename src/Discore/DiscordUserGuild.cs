@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore
 {
     /// <summary>
@@ -12,7 +16,7 @@ namespace Discore
         /// <summary>
         /// Gets the icon of this guild or null if the guild has no icon set.
         /// </summary>
-        public DiscordCdnUrl Icon { get; }
+        public DiscordCdnUrl? Icon { get; }
         /// <summary>
         /// Gets whether the user is the owner of this guild.
         /// </summary>
@@ -22,18 +26,31 @@ namespace Discore
         /// </summary>
         public DiscordPermission Permissions { get; }
 
-        internal DiscordUserGuild(DiscordApiData data)
-            : base(data)
+        // TODO: add: features
+
+        public DiscordUserGuild(
+            Snowflake id,
+            string name, 
+            DiscordCdnUrl? icon, 
+            bool isOwner, 
+            DiscordPermission permissions)
+            : base(id)
         {
-            Name = data.GetString("name");
-            IsOwner = data.GetBoolean("owner").Value;
+            Name = name;
+            Icon = icon;
+            IsOwner = isOwner;
+            Permissions = permissions;
+        }
 
-            string iconHash = data.GetString("icon");
-            if (iconHash != null)
-                Icon = DiscordCdnUrl.ForGuildIcon(Id, iconHash);
+        internal DiscordUserGuild(JsonElement json)
+            : base(json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            IsOwner = json.GetProperty("owner").GetBoolean();
+            Permissions = (DiscordPermission)json.GetProperty("permissions").GetUInt64();
 
-            long permissions = data.GetInt64("permissions").Value;
-            Permissions = (DiscordPermission)permissions;
+            string? iconStr = json.GetProperty("icon").GetString();
+            Icon = iconStr == null ? null : DiscordCdnUrl.ForGuildIcon(Id, iconStr);
         }
 
         public override string ToString()
@@ -42,3 +59,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

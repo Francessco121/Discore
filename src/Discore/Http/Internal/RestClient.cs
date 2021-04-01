@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 
 namespace Discore.Http.Internal
 {
+    // TODO: rename to ApiClient
+
     class RestClient : IDisposable
     {
         public const string BASE_URL = "https://discord.com/api/v6";

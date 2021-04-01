@@ -4,8 +4,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
+#nullable enable
+
+#pragma warning disable IDE0051 // Remove unused private members
 
 namespace Discore.Voice.Internal
 {
@@ -20,20 +25,20 @@ namespace Discore.Voice.Internal
         public BlockingCollection<VoiceSessionDescriptionEventArgs> SessionDescriptionQueue { get; } =
             new BlockingCollection<VoiceSessionDescriptionEventArgs>();
 
-        public BlockingCollection<object> ResumedQueue { get; } =
-            new BlockingCollection<object>();
+        public BlockingCollection<object?> ResumedQueue { get; } =
+            new BlockingCollection<object?>();
 
 		[Payload(VoiceOPCode.Ready)]
-		void HandleReadyPayload(DiscordApiData payload, DiscordApiData data)
+		void HandleReadyPayload(JsonElement payload, JsonElement data)
         {
-            IPAddress ip = IPAddress.Parse(data.GetString("ip"));
-            int port = data.GetInteger("port").Value;
-            int ssrc = data.GetInteger("ssrc").Value;
+            IPAddress ip = IPAddress.Parse(data.GetProperty("ip").GetString()!);
+            int port = data.GetProperty("port").GetInt32();
+            int ssrc = data.GetProperty("ssrc").GetInt32();
 
-            IList<DiscordApiData> modesArray = data.GetArray("modes");
-            string[] modes = new string[modesArray.Count];
+            JsonElement modesArray = data.GetProperty("modes");
+            string[] modes = new string[modesArray.GetArrayLength()];
             for (int i = 0; i < modes.Length; i++)
-                modes[i] = modesArray[i].ToString();
+                modes[i] = modesArray[i].ToString()!;
 
             log.LogVerbose($"[Ready] ssrc = {ssrc}, port = {port}");
 
@@ -42,7 +47,7 @@ namespace Discore.Voice.Internal
         }
 
         [Payload(VoiceOPCode.Resumed)]
-        void HandleResumedPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleResumedPayload(JsonElement payload, JsonElement data)
         {
             log.LogVerbose("[Resumed] Resume successful.");
 
@@ -50,9 +55,9 @@ namespace Discore.Voice.Internal
         }
 
         [Payload(VoiceOPCode.Hello)]
-        void HandleHelloPayload(DiscordApiData payload, DiscordApiData data)
+        void HandleHelloPayload(JsonElement payload, JsonElement data)
         {
-            int heartbeatInterval = data.GetInteger("heartbeat_interval").Value;
+            int heartbeatInterval = data.GetProperty("heartbeat_interval").GetInt32();
 
             // TODO: Remove when Discord's heartbeat_interval bug is fixed
             heartbeatInterval = (int)Math.Floor(heartbeatInterval * 0.75f);
@@ -66,14 +71,14 @@ namespace Discore.Voice.Internal
         }
 
         [Payload(VoiceOPCode.SessionDescription)]
-		void HandleSessionDescription(DiscordApiData payload, DiscordApiData data)
+		void HandleSessionDescription(JsonElement payload, JsonElement data)
         {
-            IList<DiscordApiData> secretKey = data.GetArray("secret_key");
-            byte[] key = new byte[secretKey.Count];
+            JsonElement secretKey = data.GetProperty("secret_key");
+            byte[] key = new byte[secretKey.GetArrayLength()];
             for (int i = 0; i < key.Length; i++)
-                key[i] = (byte)secretKey[i].ToInteger();
+                key[i] = secretKey[i].GetByte();
 
-            string mode = data.GetString("mode");
+            string mode = data.GetProperty("mode").GetString()!;
 
             log.LogVerbose($"[SessionDescription] mode = {mode}");
 
@@ -81,9 +86,9 @@ namespace Discore.Voice.Internal
         }
 
         [Payload(VoiceOPCode.HeartbeatAck)]
-        void HandleHeartbeatAck(DiscordApiData payload, DiscordApiData data)
+        void HandleHeartbeatAck(JsonElement payload, JsonElement data)
         {
-            if (data.Value is string returnedNonceStr)
+            if (data.GetString() is string returnedNonceStr)
             {
                 uint returnedNonce = uint.Parse(returnedNonceStr);
                 if (returnedNonce == heartbeatNonce)
@@ -95,11 +100,11 @@ namespace Discore.Voice.Internal
         }
 
         [Payload(VoiceOPCode.Speaking)]
-        void HandleSpeaking(DiscordApiData payload, DiscordApiData data)
+        void HandleSpeaking(JsonElement payload, JsonElement data)
         {
-            Snowflake userId = data.GetSnowflake("user_id").Value;
-            int ssrc = data.GetInteger("ssrc").Value;
-            bool isSpeaking = data.GetBoolean("speaking").Value;
+            Snowflake userId = data.GetProperty("user_id").GetSnowflake();
+            int ssrc = data.GetProperty("ssrc").GetInt32();
+            bool isSpeaking = data.GetProperty("speaking").GetBoolean();
 
             OnUserSpeaking?.Invoke(this, new VoiceSpeakingEventArgs(userId, ssrc, isSpeaking));
         }
@@ -178,3 +183,7 @@ namespace Discore.Voice.Internal
         }
     }
 }
+
+#pragma warning restore IDE0051 // Remove unused private members
+
+#nullable restore

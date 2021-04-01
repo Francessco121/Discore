@@ -1,6 +1,9 @@
 using System;
+using System.Text.Json;
 
 #pragma warning disable CS0618 // Type or member is obsolete
+
+#nullable enable
 
 namespace Discore
 {
@@ -19,45 +22,54 @@ namespace Discore
         /// <summary>
         /// Gets the user's avatar or null if the user does not have an avatar.
         /// </summary>
-        public DiscordCdnUrl Avatar { get; }
+        public DiscordCdnUrl? Avatar { get; }
 
         /// <summary>
         /// Gets whether this account belongs to an OAuth application.
         /// </summary>
         public bool IsBot { get; }
 
+        // TODO: Rename to MfaEnabled
         /// <summary>
         /// Gets whether this account has two-factor authentication enabled.
+        /// <para/>
+        /// Will be null if this user was retrieved by an account without access to this information.
         /// </summary>
         [Obsolete("This information is not available to bots.")]
-        public bool HasTwoFactorAuth { get; }
+        public bool? HasTwoFactorAuth { get; }
 
         /// <summary>
         /// Gets whether the email on this account is verified.
+        /// <para/>
+        /// Will be null if this user was retrieved by an account without access to this information.
         /// </summary>
         [Obsolete("This information is not available to bots.")]
-        public bool IsVerified { get; }
+        public bool? IsVerified { get; }
 
         /// <summary>
         /// Gets the email (if available) of this account.
+        /// <para/>
+        /// Will be null if this user was retrieved by an account without access to this information.
         /// </summary>
         [Obsolete("This information is not available to bots.")]
-        public string Email { get; }
+        public string? Email { get; }
 
         /// <summary>
         /// Gets whether this is a webhook user.
         /// </summary>
         public bool IsWebhookUser { get; }
 
+        // TODO: Add system, locale, flags, premium_type, public_flags
+
         public DiscordUser(
             Snowflake id,
             string username, 
             string discriminator, 
-            DiscordCdnUrl avatar, 
+            DiscordCdnUrl? avatar, 
             bool isBot, 
-            bool hasTwoFactorAuth, 
-            bool isVerified, 
-            string email, 
+            bool? hasTwoFactorAuth, 
+            bool? isVerified, 
+            string? email, 
             bool isWebhookUser = false)
             : base(id)
         {
@@ -71,28 +83,28 @@ namespace Discore
             IsWebhookUser = isWebhookUser;
         }
 
-        internal DiscordUser(bool isWebhookUser, DiscordApiData data)
-            : base(data)
+        internal DiscordUser(JsonElement json, bool isWebhookUser)
+            : base(json)
         {
+            Username = json.GetProperty("username").GetString()!;
+            Discriminator = json.GetProperty("discriminator").GetString()!;
+            IsBot = json.GetPropertyOrNull("bot")?.GetBoolean() ?? false;
+            HasTwoFactorAuth = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean();
+            IsVerified = json.GetPropertyOrNull("verified")?.GetBoolean();
+            Email = json.GetPropertyOrNull("email")?.GetString();
             IsWebhookUser = isWebhookUser;
 
-            Username = data.GetString("username");
-            Discriminator = data.GetString("discriminator");
-            IsBot = data.GetBoolean("bot") ?? false;
-            HasTwoFactorAuth = data.GetBoolean("mfa_enabled") ?? false;
-            IsVerified = data.GetBoolean("verified") ?? false;
-            Email = data.GetString("email");
-
-            string avatarHash = data.GetString("avatar");
-            if (avatarHash != null)
-                Avatar = DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
+            string? avatarHash = json.GetProperty("avatar").GetString();
+            Avatar = avatarHash != null ? DiscordCdnUrl.ForUserAvatar(Id, avatarHash) : null;
         }
 
         public override string ToString()
         {
-            return Username;
+            return $"{Username}#{Discriminator}";
         }
     }
 }
+
+#nullable restore
 
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -2,6 +2,7 @@ using Discore.WebSocket;
 using Discore.WebSocket.Internal;
 using System;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -96,14 +97,16 @@ namespace Discore.Voice.Internal
             OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
         }
 
-        protected override Task OnPayloadReceived(DiscordApiData payload)
+        protected override Task OnPayloadReceived(JsonDocument payload)
         {
-            VoiceOPCode op = (VoiceOPCode)payload.GetInteger("op").Value;
-            DiscordApiData d = payload.Get("d");
+            JsonElement payloadRoot = payload.RootElement;
+
+            VoiceOPCode op = (VoiceOPCode)payloadRoot.GetProperty("op").GetInt32();
+            JsonElement d = payloadRoot.GetProperty("d");
 
             PayloadCallback callback;
             if (payloadHandlers.TryGetValue(op, out callback))
-                callback(payload, d);
+                callback(payloadRoot, d);
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
 

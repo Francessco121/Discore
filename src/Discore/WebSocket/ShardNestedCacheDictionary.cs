@@ -1,19 +1,22 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+#nullable enable
 
 namespace Discore.WebSocket
 {
     class ShardNestedCacheDictionary<T>
         where T : class
     {
-        ConcurrentDictionary<Snowflake, ShardCacheDictionary<T>> dictionary;
+        readonly ConcurrentDictionary<Snowflake, ShardCacheDictionary<T>> dictionary;
 
         public ShardNestedCacheDictionary()
         {
             dictionary = new ConcurrentDictionary<Snowflake, ShardCacheDictionary<T>>();
         }
 
-        public T this[Snowflake parentId, Snowflake childId]
+        public T? this[Snowflake parentId, Snowflake childId]
         {
             get
             {
@@ -38,7 +41,7 @@ namespace Discore.WebSocket
             }
         }
 
-        public bool TryGetValue(Snowflake parentId, Snowflake childId, out T value)
+        public bool TryGetValue(Snowflake parentId, Snowflake childId, [NotNullWhen(true)] out T? value)
         {
             if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
                 return innerDictionary.TryGetValue(childId, out value);
@@ -49,7 +52,7 @@ namespace Discore.WebSocket
             }
         }
 
-        public IEnumerable<T> GetValues(Snowflake parentId)
+        public IEnumerable<T>? GetValues(Snowflake parentId)
         {
             if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
                 return innerDictionary.Values;
@@ -69,7 +72,7 @@ namespace Discore.WebSocket
             return innerDictionary;
         }
 
-        public bool TryRemove(Snowflake parentId, Snowflake childId, out T value)
+        public bool TryRemove(Snowflake parentId, Snowflake childId, [NotNullWhen(true)] out T? value)
         {
             if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
                 return innerDictionary.TryRemove(childId, out value);
@@ -97,3 +100,5 @@ namespace Discore.WebSocket
         }
     }
 }
+
+#nullable restore

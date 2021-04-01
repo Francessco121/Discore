@@ -3,6 +3,8 @@ using System;
 // Permission logic here is based off of:
 // https://discord.com/developers/docs/topics/permissions#permission-hierarchy
 
+#nullable enable
+
 namespace Discore
 {
     public static class DiscordPermissionHelper
@@ -187,3 +189,5 @@ namespace Discore
         }
     }
 }
+
+#nullable restore

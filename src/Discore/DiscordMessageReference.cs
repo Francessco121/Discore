@@ -1,3 +1,7 @@
+using System.Text.Json;
+
+#nullable enable
+
 namespace Discore
 {
     public class DiscordMessageReference
@@ -17,11 +21,21 @@ namespace Discore
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        internal DiscordMessageReference(DiscordApiData data)
+        public DiscordMessageReference(Snowflake? messageId, Snowflake channelId, Snowflake? guildId)
         {
-            MessageId = data.GetSnowflake("message_id");
-            ChannelId = data.GetSnowflake("channel_id").GetValueOrDefault();
-            GuildId = data.GetSnowflake("guild_id");
+            MessageId = messageId;
+            ChannelId = channelId;
+            GuildId = guildId;
         }
+
+        internal DiscordMessageReference(JsonElement json)
+        {
+            MessageId = json.GetPropertyOrNull("message_id")?.GetSnowflake();
+            ChannelId = json.GetProperty("channel_id").GetSnowflake();
+            GuildId = json.GetPropertyOrNull("guild_id")?.GetSnowflake();
+        }
+
     }
 }
+
+#nullable restore
