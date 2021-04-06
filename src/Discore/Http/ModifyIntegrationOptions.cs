@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore.Http
 {
     /// <summary>
@@ -45,14 +49,17 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("expire_behavior", ExpireBehavior);
-            data.Set("expire_grace_period", ExpireGracePeriod);
-            data.Set("enable_emoticons", EnableEmoticons);
+            writer.WriteStartObject();
 
-            return data;
+            writer.WriteNumber("expire_behavior", ExpireBehavior);
+            writer.WriteNumber("expire_grace_period", ExpireGracePeriod);
+            writer.WriteBoolean("enable_emoticons", EnableEmoticons);
+
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

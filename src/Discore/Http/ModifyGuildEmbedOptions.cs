@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore.Http
 {
     /// <summary>
@@ -32,13 +36,16 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("enabled", Enabled);
-            data.SetSnowflake("channel_id", ChannelId);
+            writer.WriteStartObject();
 
-            return data;
+            writer.WriteBoolean("enabled", Enabled);
+            writer.WriteSnowflake("channel_id", ChannelId);
+
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

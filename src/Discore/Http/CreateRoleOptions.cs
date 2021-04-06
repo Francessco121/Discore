@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore.Http
 {
     public class CreateRoleOptions
@@ -5,7 +9,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the name of the role to create.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// Gets or sets the permissions of the role to create (or null to use default).
         /// </summary>
@@ -75,24 +79,31 @@ namespace Discore.Http
             return this;
         }
 
-        internal virtual DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData();
-            data.Set("name", Name);
+            writer.WriteStartObject();
+
+            writer.WriteString("name", Name);
 
             if (Permissions.HasValue)
-                data.Set("permissions", (int)Permissions.Value);
+                writer.WriteNumber("permissions", (int)Permissions.Value);
 
             if (Color.HasValue)
-                data.Set("color", Color.Value.ToHexadecimal());
+                writer.WriteNumber("color", Color.Value.ToHexadecimal());
 
             if (IsHoisted.HasValue)
-                data.Set("hoist", IsHoisted);
+                writer.WriteBoolean("hoist", IsHoisted.Value);
 
             if (IsMentionable.HasValue)
-                data.Set("mentionable", IsMentionable);
+                writer.WriteBoolean("mentionable", IsMentionable.Value);
 
-            return data;
+            BuildAdditionalProperties(writer);
+
+            writer.WriteEndObject();
         }
+
+        protected virtual void BuildAdditionalProperties(Utf8JsonWriter writer) { }
     }
 }
+
+#nullable restore

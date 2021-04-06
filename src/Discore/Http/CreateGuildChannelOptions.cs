@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -11,7 +14,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the channel name.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// Gets the type of guild channel.
         /// </summary>
@@ -53,7 +56,7 @@ namespace Discore.Http
         /// Gets or sets the topic (if a text channel).
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if this builder is not for a text channel.</exception>
-        public string Topic
+        public string? Topic
         {
             get => topic;
             set
@@ -100,11 +103,11 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets a list of permission overwrites.
         /// </summary>
-        public IList<OverwriteOptions> PermissionOverwrites { get; set; }
+        public IList<OverwriteOptions>? PermissionOverwrites { get; set; }
 
         int? bitrate;
         int? userLimit;
-        string topic;
+        string? topic;
         bool? nsfw;
         Snowflake? parentId;
 
@@ -179,40 +182,44 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("name", Name);
-            data.Set("type", (int)Type);
+            writer.WriteStartObject();
+
+            writer.WriteString("name", Name);
+            writer.WriteNumber("type", (int)Type);
 
             if (parentId.HasValue)
-                data.SetSnowflake("parent_id", parentId.Value);
+                writer.WriteSnowflake("parent_id", parentId.Value);
             
             if (Type == DiscordChannelType.GuildVoice)
             {
                 if (bitrate.HasValue)
-                    data.Set("bitrate", bitrate.Value);
+                    writer.WriteNumber("bitrate", bitrate.Value);
                 if (userLimit.HasValue)
-                    data.Set("user_limit", userLimit.Value);
+                    writer.WriteNumber("user_limit", userLimit.Value);
             }
             else if (Type == DiscordChannelType.GuildText)
             {
                 if (topic != null)
-                    data.Set("topic", topic);
+                    writer.WriteString("topic", topic);
                 if (nsfw.HasValue)
-                    data.Set("nsfw", nsfw.Value);
+                    writer.WriteBoolean("nsfw", nsfw.Value);
             }
 
             if (PermissionOverwrites != null)
             {
-                DiscordApiData permissionOverwritesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (OverwriteOptions overwriteParam in PermissionOverwrites)
-                    permissionOverwritesArray.Values.Add(overwriteParam.Build());
+                writer.WriteStartArray("permission_overwrites");
 
-                data.Set("permission_overwrites", permissionOverwritesArray);
+                foreach (OverwriteOptions overwriteParam in PermissionOverwrites)
+                    overwriteParam.Build(writer);
+
+                writer.WriteEndArray();
             }
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

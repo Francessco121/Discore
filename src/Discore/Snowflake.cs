@@ -106,7 +106,7 @@ namespace Discore
         /// <summary>
         /// Attempts to parse a snowflake from a string.
         /// </summary>
-        public static bool TryParse(string snowflakeString, out Snowflake snowflake)
+        public static bool TryParse(string? snowflakeString, out Snowflake snowflake)
         {
             ulong snowflakeId;
             if (ulong.TryParse(snowflakeString, out snowflakeId))

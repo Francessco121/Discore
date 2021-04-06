@@ -1,3 +1,4 @@
+using Discore.Json;
 using Nito.AsyncEx;
 using System;
 using System.IO;
@@ -185,14 +186,10 @@ namespace Discore.WebSocket.Internal
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        /// <exception cref="NotSupportedException">Thrown if the given data cannot be serialized as JSON.</exception>
-        protected async Task SendAsync<T>(T data)
+        protected async Task SendAsync(byte[] data)
         {
             if (socket.State != WebSocketState.Open)
                 throw new InvalidOperationException("Cannot send data when the socket is not open.");
-
-            // Serialize the data as JSON and convert to bytes
-            byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(data);
 
             // Wait for any existing send operations,
             // ClientWebSocket only supports one send operation at a time.
@@ -204,7 +201,7 @@ namespace Discore.WebSocket.Internal
                 {
                     try
                     {
-                        await SendData(bytes).ConfigureAwait(false);
+                        await SendData(data).ConfigureAwait(false);
                     }
                     catch (InvalidOperationException iex) // also catches ObjectDisposedException
                     {
@@ -388,6 +385,8 @@ namespace Discore.WebSocket.Internal
                         try
                         {
                             // Parse the message
+                            ms.Position = 0;
+
                             using JsonDocument message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
 
                             try
@@ -397,7 +396,7 @@ namespace Discore.WebSocket.Internal
                             }
                             // Payload handlers can send other payloads which can result in two
                             // valid exceptions that we do not want to bubble up.
-                            catch (InvalidOperationException)
+                            catch (InvalidOperationException ex)
                             {
                                 // Socket was closed between receiving a payload and handling it
                                 log.LogVerbose("Received InvalidOperationException from OnPayloadReceived, " +
@@ -464,6 +463,8 @@ namespace Discore.WebSocket.Internal
                         // Decompress message
                         using (DeflateStream deflateStream = new DeflateStream(ms, CompressionMode.Decompress, true))
                             await deflateStream.CopyToAsync(decompressed).ConfigureAwait(false);
+
+                        decompressed.Position = 0;
                     }
                     catch (Exception ex)
                     {

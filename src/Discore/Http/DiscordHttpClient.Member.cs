@@ -1,7 +1,10 @@
 using Discore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -13,9 +16,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildMember> GetGuildMember(Snowflake guildId, Snowflake userId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/members/{userId}",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/members/{userId}",
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);
-            return new DiscordGuildMember(data, guildId);
+
+            return new DiscordGuildMember(data!.RootElement, guildId);
         }
 
         /// <summary>
@@ -38,15 +42,18 @@ namespace Discore.Http
         public async Task<IReadOnlyList<DiscordGuildMember>> ListGuildMembers(Snowflake guildId,
             int? limit = null, Snowflake? after = null)
         {
-            UrlParametersBuilder urlParams = new UrlParametersBuilder();
+            var urlParams = new UrlParametersBuilder();
             urlParams["limit"] = limit?.ToString() ?? null;
             urlParams["after"] = after?.Id.ToString() ?? null;
 
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}",
                 $"guilds/{guildId}/members").ConfigureAwait(false);
-            DiscordGuildMember[] members = new DiscordGuildMember[data.Values.Count];
+
+            JsonElement values = data!.RootElement;
+
+            var members = new DiscordGuildMember[values.GetArrayLength()];
             for (int i = 0; i < members.Length; i++)
-                members[i] = new DiscordGuildMember(data.Values[i], guildId);
+                members[i] = new DiscordGuildMember(values[i], guildId);
 
             return members;
         }
@@ -75,9 +82,9 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            await rest.Patch($"guilds/{guildId}/members/{userId}", requestData,
+            await rest.Patch($"guilds/{guildId}/members/{userId}", jsonContent: requestData,
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);
         }
 
@@ -98,14 +105,19 @@ namespace Discore.Http
         /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>
         /// <returns>Returns the new nickname (or null if the nickname was removed).</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<string> ModifyCurrentUsersNickname(Snowflake guildId, string nickname)
+        public async Task<string?> ModifyCurrentUsersNickname(Snowflake guildId, string? nickname)
         {
-            DiscordApiData requestData = new DiscordApiData();
-            requestData.Set("nick", nickname);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteString("nick", nickname);
+                writer.WriteEndObject();
+            });
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/members/@me/nick", requestData,
+            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/members/@me/nick", jsonContent: requestData,
                 $"guilds/{guildId}/members/@me/nick").ConfigureAwait(false);
-            return returnData.GetString("nick");
+
+            return returnData!.RootElement.GetProperty("nick").GetString();
         }
 
         /// <summary>
@@ -115,7 +127,7 @@ namespace Discore.Http
         /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>
         /// <returns>Returns the new nickname (or null if the nickname was removed).</returns>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<string> ModifyCurrentUsersNickname(DiscordGuild guild, string nickname)
+        public Task<string?> ModifyCurrentUsersNickname(DiscordGuild guild, string? nickname)
         {
             return ModifyCurrentUsersNickname(guild.Id, nickname);
         }
@@ -152,3 +164,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

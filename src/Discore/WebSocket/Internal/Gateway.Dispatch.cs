@@ -762,7 +762,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Create message
-            DiscordMessage message = new DiscordMessage(data);
+            DiscordPartialMessage message = new DiscordPartialMessage(data);
 
             OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }

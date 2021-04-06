@@ -3,7 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -18,18 +21,21 @@ namespace Discore.Http
             Snowflake? baseMessageId = null, int? limit = null,
             MessageGetStrategy getStrategy = MessageGetStrategy.Before)
         {
-            UrlParametersBuilder builder = new UrlParametersBuilder();
+            var builder = new UrlParametersBuilder();
             if (baseMessageId.HasValue)
                 builder.Add(getStrategy.ToString().ToLower(), baseMessageId.Value.ToString());
             if (limit.HasValue)
                 builder.Add("limit", limit.Value.ToString());
 
-            DiscordApiData data = await rest.Get($"channels/{channelId}/messages{builder.ToQueryString()}",
+            using JsonDocument? data = await rest.Get($"channels/{channelId}/messages{builder.ToQueryString()}",
                 $"channels/{channelId}/messages").ConfigureAwait(false);
-            DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
+
+            JsonElement values = data!.RootElement;
+
+            var messages = new DiscordMessage[values.GetArrayLength()];
 
             for (int i = 0; i < messages.Length; i++)
-                messages[i] = new DiscordMessage(data.Values[i]);
+                messages[i] = new DiscordMessage(values[i]);
 
             return messages;
         }
@@ -56,9 +62,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> GetChannelMessage(Snowflake channelId, Snowflake messageId)
         {
-            DiscordApiData data = await rest.Get($"channels/{channelId}/messages/{messageId}",
+            using JsonDocument? data = await rest.Get($"channels/{channelId}/messages/{messageId}",
                 $"channels/{channelId}/messages/message").ConfigureAwait(false);
-            return new DiscordMessage(data);
+
+            return new DiscordMessage(data!.RootElement);
         }
 
         /// <summary>
@@ -106,17 +113,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", options.Content);
-            requestData.Set("tts", options.TextToSpeech);
-            requestData.SetSnowflake("nonce", options.Nonce);
+            string requestData = BuildJsonContent(options.Build);
 
-            if (options.Embed != null)
-                requestData.Set("embed", options.Embed.Build());
-
-            DiscordApiData returnData = await rest.Post($"channels/{channelId}/messages", requestData,
+            using JsonDocument? returnData = await rest.Post($"channels/{channelId}/messages", jsonContent: requestData,
                 $"channels/{channelId}/messages").ConfigureAwait(false);
-            return new DiscordMessage(returnData);
+
+            return new DiscordMessage(returnData!.RootElement);
         }
 
         /// <summary>
@@ -144,7 +146,7 @@ namespace Discore.Http
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, Stream fileData, string fileName,
-            CreateMessageOptions options = null)
+            CreateMessageOptions? options = null)
         {
             if (fileData == null)
                 throw new ArgumentNullException(nameof(fileData));
@@ -164,7 +166,7 @@ namespace Discore.Http
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, Stream fileData, string fileName,
-            CreateMessageOptions options = null)
+            CreateMessageOptions? options = null)
         {
             return CreateMessage(channel.Id, fileData, fileName, options);
         }
@@ -180,7 +182,7 @@ namespace Discore.Http
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, ArraySegment<byte> fileData, string fileName,
-            CreateMessageOptions options = null)
+            CreateMessageOptions? options = null)
         {
             return CreateMessage(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, options);
         }
@@ -196,45 +198,39 @@ namespace Discore.Http
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, ArraySegment<byte> fileData, string fileName,
-            CreateMessageOptions options = null)
+            CreateMessageOptions? options = null)
         {
             return CreateMessage(channel.Id, fileData, fileName, options);
         }
 
         /// <exception cref="ArgumentNullException"></exception>
         async Task<DiscordMessage> CreateMessage(Snowflake channelId, HttpContent fileContent, string fileName, 
-            CreateMessageOptions options)
+            CreateMessageOptions? options)
         {
             if (string.IsNullOrWhiteSpace(fileName))
                 // Technically this is also handled when setting the field on the multipart form data
                 throw new ArgumentNullException(nameof(fileName));
 
-            DiscordApiData returnData = await rest.Send(() =>
+            using JsonDocument? returnData = await rest.Send(() =>
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
+                var request = new HttpRequestMessage(HttpMethod.Post,
                     $"{RestClient.BASE_URL}/channels/{channelId}/messages");
 
-                MultipartFormDataContent data = new MultipartFormDataContent();
+                var data = new MultipartFormDataContent();
                 data.Add(fileContent, "file", fileName);
 
                 if (options != null)
                 {
-                    DiscordApiData payloadJson = new DiscordApiData();
-                    payloadJson.Set("content", options.Content);
-                    payloadJson.Set("tts", options.TextToSpeech);
-                    payloadJson.SetSnowflake("nonce", options.Nonce);
-
-                    if (options.Embed != null)
-                        payloadJson.Set("embed", options.Embed.Build());
-
-                    data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
+                    string payloadJson = BuildJsonContent(options.Build);
+                    data.Add(new StringContent(payloadJson), "payload_json");
                 }
 
                 request.Content = data;
 
                 return request;
             }, $"channels/{channelId}/messages").ConfigureAwait(false);
-            return new DiscordMessage(returnData);
+
+            return new DiscordMessage(returnData!.RootElement);
         }
 
         /// <summary>
@@ -244,12 +240,17 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", content);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteString("content", content);
+                writer.WriteEndObject();
+            });
 
-            DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
                 $"channels/{channelId}/messages/message").ConfigureAwait(false);
-            return new DiscordMessage(returnData);
+
+            return new DiscordMessage(returnData!.RootElement);
         }
 
         /// <summary>
@@ -273,15 +274,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", options.Content);
+            string requestData = BuildJsonContent(options.Build);
 
-            if (options.Embed != null)
-                requestData.Set("embed", options.Embed.Build());
-
-            DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
                 $"channels/{channelId}/messages/message").ConfigureAwait(false);
-            return new DiscordMessage(returnData);
+
+            return new DiscordMessage(returnData!.RootElement);
         }
 
         /// <summary>
@@ -330,7 +328,7 @@ namespace Discore.Http
             if (messages == null)
                 throw new ArgumentNullException(nameof(messages));
 
-            List<Snowflake> msgIds = new List<Snowflake>();
+            var msgIds = new List<Snowflake>();
             foreach (DiscordMessage msg in messages)
                 msgIds.Add(msg.Id);
 
@@ -365,25 +363,33 @@ namespace Discore.Http
             if (messageIds == null)
                 throw new ArgumentNullException(nameof(messageIds));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            DiscordApiData messages = requestData.Set("messages", new DiscordApiData(DiscordApiDataType.Array));
-
-            ulong minimumAllowedSnowflake = 0;
-            if (filterTooOldMessages)
+            string requestData = BuildJsonContent(writer =>
             {
-                // See https://github.com/hammerandchisel/discord-api-docs/issues/208
+                writer.WriteStartObject();
 
-                ulong secondsSinceUnixEpoch = (ulong)DateTimeOffset.Now.ToUnixTimeSeconds();
-                minimumAllowedSnowflake = (secondsSinceUnixEpoch - 14 * 24 * 60 * 60) * 1000 - 1420070400000L << 22;
-            }
+                writer.WriteStartArray("messages");
 
-            foreach (Snowflake messageId in messageIds)
-            {
-                if (!filterTooOldMessages && messageId.Id < minimumAllowedSnowflake)
-                    continue;
+                ulong minimumAllowedSnowflake = 0;
+                if (filterTooOldMessages)
+                {
+                    // See https://github.com/hammerandchisel/discord-api-docs/issues/208
 
-                messages.Values.Add(new DiscordApiData(messageId));
-            }
+                    ulong secondsSinceUnixEpoch = (ulong)DateTimeOffset.Now.ToUnixTimeSeconds();
+                    minimumAllowedSnowflake = (secondsSinceUnixEpoch - 14 * 24 * 60 * 60) * 1000 - 1420070400000L << 22;
+                }
+
+                foreach (Snowflake messageId in messageIds)
+                {
+                    if (!filterTooOldMessages && messageId.Id < minimumAllowedSnowflake)
+                        continue;
+
+                    writer.WriteSnowflakeValue(messageId);
+                }
+
+                writer.WriteEndArray();
+
+                writer.WriteEndObject();
+            });
 
             await rest.Post($"channels/{channelId}/messages/bulk-delete", requestData,
                 $"channels/{channelId}/messages/message/delete/bulk").ConfigureAwait(false);
@@ -409,12 +415,15 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
         {
-            DiscordApiData data = await rest.Get($"channels/{channelId}/pins",
+            using JsonDocument? data = await rest.Get($"channels/{channelId}/pins",
                 $"channels/{channelId}/pins").ConfigureAwait(false);
-            DiscordMessage[] messages = new DiscordMessage[data.Values.Count];
+
+            JsonElement values = data!.RootElement;
+
+            var messages = new DiscordMessage[values.GetArrayLength()];
 
             for (int i = 0; i < messages.Length; i++)
-                messages[i] = new DiscordMessage(data.Values[i]);
+                messages[i] = new DiscordMessage(values[i]);
 
             return messages;
         }
@@ -471,3 +480,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

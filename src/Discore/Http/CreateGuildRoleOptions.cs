@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore.Http
 {
     /// <summary>
@@ -65,12 +69,13 @@ namespace Discore.Http
             return this;
         }
 
-        internal override DiscordApiData Build()
+        protected override void BuildAdditionalProperties(Utf8JsonWriter writer)
         {
-            DiscordApiData data = base.Build();
-            data.SetSnowflake("id", TemporaryId);
+            writer.WriteSnowflake("id", TemporaryId);
 
-            return data;
+            base.BuildAdditionalProperties(writer);
         }
     }
 }
+
+#nullable restore

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -13,12 +16,14 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordRole>> GetGuildRoles(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/roles",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/roles",
                 $"guilds/{guildId}/roles").ConfigureAwait(false);
 
-            DiscordRole[] roles = new DiscordRole[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var roles = new DiscordRole[values.GetArrayLength()];
             for (int i = 0; i < roles.Length; i++)
-                roles[i] = new DiscordRole(guildId, data.Values[i]);
+                roles[i] = new DiscordRole(values[i], guildId: guildId);
 
             return roles;
         }
@@ -44,11 +49,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Post($"guilds/{guildId}/roles", requestData,
+            using JsonDocument? returnData = await rest.Post($"guilds/{guildId}/roles", jsonContent: requestData,
                 $"guilds/{guildId}/roles").ConfigureAwait(false);
-            return new DiscordRole(guildId, returnData);
+
+            return new DiscordRole(returnData!.RootElement, guildId: guildId);
         }
 
         /// <summary>
@@ -74,16 +80,24 @@ namespace Discore.Http
             if (positions == null)
                 throw new ArgumentNullException(nameof(positions));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Array);
-            foreach (PositionOptions positionParam in positions)
-                requestData.Values.Add(positionParam.Build());
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartArray();
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/roles", requestData,
+                foreach (PositionOptions positionParam in positions)
+                    positionParam.Build(writer);
+
+                writer.WriteEndArray();
+            });
+
+            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/roles", jsonContent: requestData,
                 $"guilds/{guildId}/roles").ConfigureAwait(false);
 
-            DiscordRole[] roles = new DiscordRole[returnData.Values.Count];
+            JsonElement values = returnData!.RootElement;
+
+            var roles = new DiscordRole[values.GetArrayLength()];
             for (int i = 0; i < roles.Length; i++)
-                roles[i] = new DiscordRole(guildId, returnData.Values[i]);
+                roles[i] = new DiscordRole(values[i], guildId: guildId);
 
             return roles;
         }
@@ -111,11 +125,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/roles/{roleId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/roles/{roleId}", jsonContent: requestData,
                 $"guilds/{guildId}/roles/role").ConfigureAwait(false);
-            return new DiscordRole(guildId, returnData);
+
+            return new DiscordRole(returnData!.RootElement, guildId: guildId);
         }
 
         /// <summary>
@@ -193,3 +208,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

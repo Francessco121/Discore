@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -13,12 +16,14 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordEmoji>> ListGuildEmojis(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/emojis",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/emojis",
                 $"guilds/{guildId}/emojis").ConfigureAwait(false);
 
-            DiscordEmoji[] emojis = new DiscordEmoji[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var emojis = new DiscordEmoji[values.GetArrayLength()];
             for (int i = 0; i < emojis.Length; i++)
-                emojis[i] = new DiscordEmoji(data.Values[i]);
+                emojis[i] = new DiscordEmoji(values[i]);
 
             return emojis;
         }
@@ -41,10 +46,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordEmoji> GetGuildEmoji(Snowflake guildId, Snowflake emojiId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/emojis/{emojiId}",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/emojis/{emojiId}",
                 $"guilds/{guildId}/emojis/emoji").ConfigureAwait(false);
 
-            return new DiscordEmoji(data);
+            return new DiscordEmoji(data!.RootElement);
         }
 
         /// <summary>
@@ -72,12 +77,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData responseData = await rest.Post($"guilds/{guildId}/emojis", requestData,
+            using JsonDocument? responseData = await rest.Post($"guilds/{guildId}/emojis", jsonContent: requestData,
                 $"guilds/{guildId}/emojis").ConfigureAwait(false);
 
-            return new DiscordEmoji(responseData);
+            return new DiscordEmoji(responseData!.RootElement);
         }
 
         /// <summary>
@@ -110,12 +115,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData responseData = await rest.Patch($"guilds/{guildId}/emojis/{emojiId}", requestData,
+            using JsonDocument? responseData = await rest.Patch($"guilds/{guildId}/emojis/{emojiId}", jsonContent: requestData,
                 $"guilds/{guildId}/emojis/emoji").ConfigureAwait(false);
 
-            return new DiscordEmoji(responseData);
+            return new DiscordEmoji(responseData!.RootElement);
         }
 
         /// <summary>
@@ -160,3 +165,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

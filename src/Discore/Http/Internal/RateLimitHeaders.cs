@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 
+#nullable enable
+
 namespace Discore.Http.Internal
 {
     class RateLimitHeaders
@@ -13,15 +15,15 @@ namespace Discore.Http.Internal
         /// <summary>
         /// X-RateLimit-Limit. The maximum number of requests that can be made until the reset time.
         /// </summary>
-        public int Limit { get; }
+        public int? Limit { get; }
         /// <summary>
         /// X-RateLimit-Remaining. The number of remaining requests that can be made.
         /// </summary>
-        public int Remaining { get; }
+        public int? Remaining { get; }
         /// <summary>
         /// X-RateLimit-Reset. Epoch time (seconds since 00:00:00 UTC on January 1, 1970) at which the rate limit resets.
         /// </summary>
-        public double Reset { get; }
+        public double? Reset { get; }
         /// <summary>
         /// Retry-After. If set, the time in milliseconds that needs to be waited before sending another request.
         /// </summary>
@@ -29,7 +31,7 @@ namespace Discore.Http.Internal
         /// <summary>
         /// X-RateLimit-Bucket. If set, a unique string denoting the rate limit being encountered (non-inclusive of major parameters in the route path).
         /// </summary>
-        public string Bucket { get; }
+        public string? Bucket { get; }
 
         private RateLimitHeaders(bool isGlobal, int? retryAfter)
         {
@@ -37,7 +39,7 @@ namespace Discore.Http.Internal
             RetryAfter = retryAfter;
         }
 
-        private RateLimitHeaders(bool isGlobal, int limit, int remaining, double reset, int? retryAfter, string bucket)
+        private RateLimitHeaders(bool isGlobal, int limit, int remaining, double reset, int? retryAfter, string? bucket)
         {
             IsGlobal = isGlobal;
             Limit = limit;
@@ -51,7 +53,7 @@ namespace Discore.Http.Internal
         /// Extracts rate limit headers from the given HTTP response headers.
         /// Returns null if no rate limit headers are present.
         /// </summary>
-        public static RateLimitHeaders ParseOrNull(HttpResponseHeaders headers)
+        public static RateLimitHeaders? ParseOrNull(HttpResponseHeaders headers)
         {
             bool isGlobal = headers.Contains("X-RateLimit-Global");
 
@@ -71,7 +73,7 @@ namespace Discore.Http.Internal
             {
                 int? limitHeader = null, remainingHeader = null;
                 double? resetTimeHeader = null;
-                string bucket = null;
+                string? bucket = null;
 
                 IEnumerable<string> limitValues;
                 if (headers.TryGetValues("X-RateLimit-Limit", out limitValues))
@@ -126,3 +128,5 @@ namespace Discore.Http.Internal
         }
     }
 }
+
+#nullable restore

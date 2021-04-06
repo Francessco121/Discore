@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -11,23 +14,25 @@ namespace Discore.Http
         /// Gets or sets the name of the guild.
         /// <para>Note: cannot be null.</para>
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets the ID of the voice region the guild should use (or null to use default).
         /// </summary>
-        public string VoiceRegion { get; set; }
+        public string? VoiceRegion { get; set; }
 
         /// <summary>
         /// Gets or sets the icon of the guild (or null to use default).
         /// </summary>
-        public DiscordImageData Icon { get; set; }
+        public DiscordImageData? Icon { get; set; }
 
+        // TODO: Why isnt this GuildVerificationLevel
         /// <summary>
         /// Gets or sets the verification level of the guild (or null to use default).
         /// </summary>
         public int? VerificationLevel { get; set; }
 
+        // TODO: Why isnt this GuildNotificationOption
         /// <summary>
         /// Gets or sets the default notification level for new members joining the guild (or null to use default).
         /// </summary>
@@ -37,12 +42,12 @@ namespace Discore.Http
         /// Gets or sets the initial roles in the guild (or null to not include any additional roles).
         /// <para>Note: The first role in this list will end up as the @everyone role.</para>
         /// </summary>
-        public IList<CreateGuildRoleOptions> Roles { get; set; }
+        public IList<CreateGuildRoleOptions>? Roles { get; set; }
 
         /// <summary>
         /// Gets or sets the initial text and voice channels in the guild (or null to use defaults).
         /// </summary>
-        public IList<CreateGuildChannelOptions> Channels { get; set; }
+        public IList<CreateGuildChannelOptions>? Channels { get; set; }
 
         /// <summary>
         /// Sets the name of the guild.
@@ -115,43 +120,47 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            writer.WriteStartObject();
 
-            data.Set("name", Name);
+            writer.WriteString("name", Name);
 
             if (VoiceRegion != null)
-                data.Set("region", VoiceRegion);
+                writer.WriteString("region", VoiceRegion);
 
             if (Icon != null)
-                data.Set("icon", Icon.ToDataUriScheme());
+                writer.WriteString("icon", Icon.ToDataUriScheme());
 
             if (VerificationLevel.HasValue)
-                data.Set("verification_level", VerificationLevel.Value);
+                writer.WriteNumber("verification_level", VerificationLevel.Value);
 
             if (DefaultMessageNotificationsLevel.HasValue)
-                data.Set("default_message_notifications", DefaultMessageNotificationsLevel.Value);
+                writer.WriteNumber("default_message_notifications", DefaultMessageNotificationsLevel.Value);
 
             if (Roles != null)
             {
-                DiscordApiData rolesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (CreateGuildRoleOptions roleParams in Roles)
-                    rolesArray.Values.Add(roleParams.Build());
+                writer.WriteStartArray("roles");
 
-                data.Set("roles", rolesArray);
+                foreach (CreateGuildRoleOptions roleParams in Roles)
+                    roleParams.Build(writer);
+
+                writer.WriteEndArray();
             }
 
             if (Channels != null)
             {
-                DiscordApiData channelsArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (CreateGuildChannelOptions channelParams in Channels)
-                    channelsArray.Values.Add(channelParams.Build());
+                writer.WriteStartArray("channels");
 
-                data.Set("channels", channelsArray);
+                foreach (CreateGuildChannelOptions channelParams in Channels)
+                    channelParams.Build(writer);
+
+                writer.WriteEndArray();
             }
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

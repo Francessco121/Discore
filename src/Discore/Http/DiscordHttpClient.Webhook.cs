@@ -3,7 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -23,14 +26,18 @@ namespace Discore.Http
             if (avatar == null)
                 throw new ArgumentNullException(nameof(avatar));
 
-            DiscordApiData apiData = DiscordApiData.CreateContainer();
-            apiData.Set("name", name);
-            apiData.Set("avatar", avatar);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteString("name", name);
+                writer.WriteString("avatar", avatar.ToDataUriScheme());
+                writer.WriteEndObject();
+            });
 
-            DiscordApiData returnData = await rest.Post($"channels/{channelId}/webhooks", apiData,
+            using JsonDocument? returnData = await rest.Post($"channels/{channelId}/webhooks", jsonContent: requestData,
                 $"channels/{channelId}/webhooks").ConfigureAwait(false);
 
-            return new DiscordWebhook(returnData);
+            return new DiscordWebhook(returnData!.RootElement);
         }
 
         /// <summary>
@@ -51,10 +58,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> GetWebhook(Snowflake webhookId)
         {
-            DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}",
+            using JsonDocument? data = await rest.Get($"webhooks/{webhookId}",
                 $"webhooks/{webhookId}").ConfigureAwait(false);
 
-            return new DiscordWebhook(apiData);
+            return new DiscordWebhook(data!.RootElement);
         }
 
         /// <summary>
@@ -71,10 +78,10 @@ namespace Discore.Http
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
-            DiscordApiData apiData = await rest.Get($"webhooks/{webhookId}/{token}",
+            using JsonDocument? data = await rest.Get($"webhooks/{webhookId}/{token}",
                 $"webhooks/{webhookId}/token").ConfigureAwait(false);
 
-            return new DiscordWebhook(apiData);
+            return new DiscordWebhook(data!.RootElement);
         }
 
         /// <summary>
@@ -84,13 +91,15 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(Snowflake channelId)
         {
-            DiscordApiData apiData = await rest.Get($"channels/{channelId}/webhooks",
+            using JsonDocument? data = await rest.Get($"channels/{channelId}/webhooks",
                 $"channels/{channelId}/webhooks").ConfigureAwait(false);
 
-            DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
+            JsonElement values = data!.RootElement;
 
-            for (int i = 0; i < apiData.Values.Count; i++)
-                webhooks[i] = new DiscordWebhook(apiData.Values[i]);
+            var webhooks = new DiscordWebhook[values.GetArrayLength()];
+
+            for (int i = 0; i < webhooks.Length; i++)
+                webhooks[i] = new DiscordWebhook(values[i]);
 
             return webhooks;
         }
@@ -112,13 +121,15 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(Snowflake guildId)
         {
-            DiscordApiData apiData = await rest.Get($"guilds/{guildId}/webhooks",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/webhooks",
                 $"guilds/{guildId}/webhooks").ConfigureAwait(false);
 
-            DiscordWebhook[] webhooks = new DiscordWebhook[apiData.Values.Count];
+            JsonElement values = data!.RootElement;
 
-            for (int i = 0; i < apiData.Values.Count; i++)
-                webhooks[i] = new DiscordWebhook(apiData.Values[i]);
+            var webhooks = new DiscordWebhook[values.GetArrayLength()];
+
+            for (int i = 0; i < webhooks.Length; i++)
+                webhooks[i] = new DiscordWebhook(values[i]);
 
             return webhooks;
         }
@@ -140,20 +151,26 @@ namespace Discore.Http
         /// <param name="channelId">The ID of the text channel to move the webhook to (or null to not move).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordWebhook> ModifyWebhook(Snowflake webhookId,
-            string name = null, DiscordImageData avatar = null, Snowflake? channelId = null)
+            string? name = null, DiscordImageData? avatar = null, Snowflake? channelId = null)
         {
-            DiscordApiData postData = DiscordApiData.CreateContainer();
-            if (name != null)
-                postData.Set("name", name);
-            if (avatar != null)
-                postData.Set("avatar", avatar);
-            if (channelId.HasValue)
-                postData.SetSnowflake("channel_id", channelId.Value);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
 
-            DiscordApiData apiData = await rest.Patch($"webhooks/{webhookId}", postData,
+                if (name != null)
+                    writer.WriteString("name", name);
+                if (avatar != null)
+                    writer.WriteString("avatar", avatar.ToDataUriScheme());
+                if (channelId.HasValue)
+                    writer.WriteSnowflake("channel_id", channelId.Value);
+
+                writer.WriteEndObject();
+            });
+
+            using JsonDocument? responseData = await rest.Patch($"webhooks/{webhookId}", jsonContent: requestData,
                 $"webhooks/{webhookId}").ConfigureAwait(false);
 
-            return new DiscordWebhook(apiData);
+            return new DiscordWebhook(responseData!.RootElement);
         }
 
         /// <summary>
@@ -163,7 +180,7 @@ namespace Discore.Http
         /// <param name="channel">The text channel to move the webhook to (or null to not move).</param>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> ModifyWebhook(DiscordWebhook webhook,
-            string name = null, DiscordImageData avatar = null, ITextChannel channel = null)
+            string? name = null, DiscordImageData? avatar = null, ITextChannel? channel = null)
         {
             return ModifyWebhook(webhook.Id, name, avatar, channel?.Id);
         }
@@ -175,20 +192,26 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task ModifyWebhookWithToken(Snowflake webhookId, string token,
-            string name = null, DiscordImageData avatar = null)
+            string? name = null, DiscordImageData? avatar = null)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
-            DiscordApiData postData = DiscordApiData.CreateContainer();
-            if (name != null)
-                postData.Set("name", name);
-            if (avatar != null)
-                postData.Set("avatar", avatar);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
 
-            await rest.Patch($"webhooks/{webhookId}/{token}", postData,
+                if (name != null)
+                    writer.WriteString("name", name);
+                if (avatar != null)
+                    writer.WriteString("avatar", avatar.ToDataUriScheme());
+
+                writer.WriteEndObject();
+            });
+
+            await rest.Patch($"webhooks/{webhookId}/{token}", jsonContent: requestData,
                 $"webhooks/{webhookId}/token").ConfigureAwait(false);
         }
 
@@ -199,7 +222,7 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task ModifyWebhookWithToken(DiscordWebhook webhook, string token,
-            string name = null, DiscordImageData avatar = null)
+            string? name = null, DiscordImageData? avatar = null)
         {
             return ModifyWebhookWithToken(webhook.Id, token, name, avatar);
         }
@@ -264,7 +287,7 @@ namespace Discore.Http
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, ExecuteWebhookOptions options,
+        public async Task<DiscordMessage?> ExecuteWebhook(Snowflake webhookId, string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
             if (token == null)
@@ -274,12 +297,12 @@ namespace Discore.Http
             if (string.IsNullOrWhiteSpace(token))
                 throw new ArgumentException("Token cannot be empty or only contain whitespace characters.", nameof(token));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", requestData,
+            using JsonDocument? returnData = await rest.Post($"webhooks/{webhookId}/{token}?wait={waitAndReturnMessage}", jsonContent: requestData,
                 $"webhooks/{webhookId}/token").ConfigureAwait(false);
 
-            return waitAndReturnMessage ? new DiscordMessage(returnData) : null;
+            return waitAndReturnMessage ? new DiscordMessage(returnData!.RootElement) : null;
         }
 
         /// <summary>
@@ -293,7 +316,7 @@ namespace Discore.Http
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
         /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebhook(DiscordWebhook webhook, string token, ExecuteWebhookOptions options,
+        public Task<DiscordMessage?> ExecuteWebhook(DiscordWebhook webhook, string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
             return ExecuteWebhook(webhook.Id, token, options, waitAndReturnMessage);
@@ -312,8 +335,8 @@ namespace Discore.Http
         /// or <paramref name="fileData"/> is null,
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, Stream fileData, string fileName,
-            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
+        public Task<DiscordMessage?> ExecuteWebhook(Snowflake webhookId, string token, Stream fileData, string fileName,
+            ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
             if (fileData == null)
                 throw new ArgumentNullException(nameof(fileData));
@@ -334,8 +357,8 @@ namespace Discore.Http
         /// or <paramref name="fileData"/> is null,
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebhook(DiscordWebhook webhook, string token, Stream fileData, string fileName,
-            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
+        public Task<DiscordMessage?> ExecuteWebhook(DiscordWebhook webhook, string token, Stream fileData, string fileName,
+            ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
             return ExecuteWebhook(webhook.Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
@@ -352,8 +375,8 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException">Thrown if the token is null 
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
-            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
+        public Task<DiscordMessage?> ExecuteWebhook(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
+            ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
             return ExecuteWebhook(webhookId, token, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName,
                 options, waitAndReturnMessage);
@@ -371,8 +394,8 @@ namespace Discore.Http
         /// <exception cref="ArgumentNullException">Thrown if the token is null 
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> ExecuteWebhook(DiscordWebhook webhook, string token, ArraySegment<byte> fileData, string fileName,
-            ExecuteWebhookOptions options = null, bool waitAndReturnMessage = false)
+        public Task<DiscordMessage?> ExecuteWebhook(DiscordWebhook webhook, string token, ArraySegment<byte> fileData, string fileName,
+            ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
             return ExecuteWebhook(webhook.Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
@@ -380,8 +403,8 @@ namespace Discore.Http
         /// <exception cref="ArgumentException"></exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        async Task<DiscordMessage> ExecuteWebhook(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
-            ExecuteWebhookOptions options, bool waitAndReturnMessage)
+        async Task<DiscordMessage?> ExecuteWebhook(Snowflake webhookId, string token, HttpContent fileContent, string fileName,
+            ExecuteWebhookOptions? options, bool waitAndReturnMessage)
         {
             if (token == null)
                 throw new ArgumentNullException(nameof(token));
@@ -391,18 +414,18 @@ namespace Discore.Http
                 // Technically already handled when adding the field to the multipart form data.
                 throw new ArgumentNullException(nameof(fileName));
 
-            DiscordApiData returnData = await rest.Send(() =>
+            using JsonDocument? returnData = await rest.Send(() =>
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post,
+                var request = new HttpRequestMessage(HttpMethod.Post,
                     $"{RestClient.BASE_URL}/webhooks/{webhookId}/{token}");
 
-                MultipartFormDataContent data = new MultipartFormDataContent();
+                var data = new MultipartFormDataContent();
                 data.Add(fileContent, "file", fileName);
 
                 if (options != null)
                 {
-                    DiscordApiData payloadJson = options.Build();
-                    data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
+                    string payloadJson = BuildJsonContent(options.Build);
+                    data.Add(new StringContent(payloadJson), "payload_json");
                 }
 
                 request.Content = data;
@@ -410,7 +433,9 @@ namespace Discore.Http
                 return request;
             }, $"webhooks/{webhookId}/token").ConfigureAwait(false);
 
-            return waitAndReturnMessage ? new DiscordMessage(returnData) : null;
+            return waitAndReturnMessage ? new DiscordMessage(returnData!.RootElement) : null;
         }
     }
 }
+
+#nullable restore

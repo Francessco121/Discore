@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -7,12 +10,12 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the username to override the webhook's normal username with (or null to not override).
         /// </summary>
-        public string UsernameOverride { get; set; }
+        public string? UsernameOverride { get; set; }
 
         /// <summary>
         /// Gets or sets the URL of the avatar to override the webhook's normal avatar with (or null to not override).
         /// </summary>
-        public string AvatarUrl { get; set; }
+        public string? AvatarUrl { get; set; }
 
         /// <summary>
         /// Gets or sets whether the created message should use text-to-speech (or null to default to false).
@@ -22,12 +25,12 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the text content to include in the message (or null to only use embeds and/or attachments).
         /// </summary>
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         /// <summary>
         /// Gets or sets embeds to include in the created message (or null to only use text content and/or attachments).
         /// </summary>
-        public IEnumerable<EmbedOptions> Embeds { get; set; }
+        public IEnumerable<EmbedOptions>? Embeds { get; set; }
 
         /// <summary>
         /// Sets the username to override the webhook's normal username with.
@@ -83,29 +86,32 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            writer.WriteStartObject();
 
             if (UsernameOverride != null)
-                data.Set("username", UsernameOverride);
+                writer.WriteString("username", UsernameOverride);
             if (AvatarUrl != null)
-                data.Set("avatar_url", AvatarUrl);
+                writer.WriteString("avatar_url", AvatarUrl);
             if (TextToSpeech.HasValue)
-                data.Set("tts", TextToSpeech.Value);
+                writer.WriteBoolean("tts", TextToSpeech.Value);
             if (Content != null)
-                data.Set("content", Content);
+                writer.WriteString("content", Content);
 
             if (Embeds != null)
             {
-                DiscordApiData embedArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (EmbedOptions builder in Embeds)
-                    embedArray.Values.Add(builder.Build());
+                writer.WriteStartArray("embeds");
 
-                data.Set("embeds", embedArray);
+                foreach (EmbedOptions builder in Embeds)
+                    builder.Build(writer);
+
+                writer.WriteEndArray();
             }
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

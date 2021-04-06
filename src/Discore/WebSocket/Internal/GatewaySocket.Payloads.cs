@@ -1,5 +1,5 @@
-using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading;
@@ -94,12 +94,25 @@ namespace Discore.WebSocket.Internal
         #region Sending
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>
-        async Task SendPayload(GatewayOPCode op, DiscordApiData data)
+        async Task SendPayload(GatewayOPCode op, Action<Utf8JsonWriter> builder)
         {
-            DiscordApiData payload = new DiscordApiData(DiscordApiDataType.Container);
-            payload.Set("op", (int)op);
-            payload.Set("d", data);
+            // TODO: There must be a more memory efficient way of doing this
+
+            // Create payload bytes
+            using var stream = new MemoryStream();
+            using var writer = new Utf8JsonWriter(stream);
+
+            writer.WriteStartObject();
+
+            writer.WriteNumber("op", (int)op);
+            writer.WritePropertyName("d");
+            builder(writer);
+
+            writer.WriteEndObject();
+
+            writer.Flush();
+
+            byte[] payload = stream.ToArray();
 
             // Check with the payload rate limiter
             await outboundPayloadRateLimiter.Invoke().ConfigureAwait(false);
@@ -111,101 +124,131 @@ namespace Discore.WebSocket.Internal
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         Task SendHeartbeatPayload()
         {
-            return SendPayload(GatewayOPCode.Heartbeat, new DiscordApiData(sequence));
+            return SendPayload(GatewayOPCode.Heartbeat, writer => writer.WriteNumberValue(sequence));
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public async Task SendIdentifyPayload(string token, int largeThreshold, int shardId, int totalShards)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("token", token);
-            data.Set("compress", true);
-            data.Set("large_threshold", largeThreshold);
-
-            if (totalShards > 1)
+            void BuildPayload(Utf8JsonWriter writer)
             {
-                DiscordApiData shardData = new DiscordApiData(DiscordApiDataType.Array);
-                shardData.Values.Add(new DiscordApiData(shardId));
-                shardData.Values.Add(new DiscordApiData(totalShards));
-                data.Set("shard", shardData);
-            }
+                writer.WriteStartObject();
 
-            DiscordApiData props = data.Set("properties", new DiscordApiData(DiscordApiDataType.Container));
-            props.Set("$os", RuntimeInformation.OSDescription);
-            props.Set("$browser", "discore");
-            props.Set("$device", "discore");
+                writer.WriteString("token", token);
+                writer.WriteBoolean("compress", true);
+                writer.WriteNumber("large_threshold", largeThreshold);
+
+                if (totalShards > 1)
+                {
+                    writer.WriteStartArray("shard");
+                    writer.WriteNumberValue(shardId);
+                    writer.WriteNumberValue(totalShards);
+                    writer.WriteEndArray();
+                }
+
+                writer.WriteStartObject("properties");
+                writer.WriteString("$os", RuntimeInformation.OSDescription);
+                writer.WriteString("$browser", "discore");
+                writer.WriteString("$device", "discore");
+                writer.WriteEndObject();
+
+                writer.WriteEndObject();
+            }
 
             log.LogVerbose("[Identify] Sending payload...");
 
             // Make sure we don't send IDENTIFY's too quickly
             await identifyRateLimiter.Invoke(CancellationToken.None).ConfigureAwait(false);
             // Send IDENTIFY
-            await SendPayload(GatewayOPCode.Identify, data).ConfigureAwait(false);
+            await SendPayload(GatewayOPCode.Identify, BuildPayload).ConfigureAwait(false);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendResumePayload(string token, string sessionId, int sequence)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("token", token);
-            data.Set("session_id", sessionId);
-            data.Set("seq", sequence);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
+
+                writer.WriteString("token", token);
+                writer.WriteString("session_id", sessionId);
+                writer.WriteNumber("seq", sequence);
+
+                writer.WriteEndObject();
+            }
 
             log.LogVerbose("[Resume] Sending payload...");
 
-            return SendPayload(GatewayOPCode.Resume, data);
+            return SendPayload(GatewayOPCode.Resume, BuildPayload);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public async Task SendStatusUpdate(StatusOptions options)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("since", options.AfkSince);
-            data.Set("afk", options.Afk);
-            data.Set("status", options.GetStatusString());
-
-            if (options.Game != null)
+            void BuildPayload(Utf8JsonWriter writer)
             {
-                DiscordApiData gameData = new DiscordApiData(DiscordApiDataType.Container);
-                data.Set("game", gameData);
+                writer.WriteStartObject();
 
-                gameData.Set("name", options.Game.Name);
-                gameData.Set("type", (int)options.Game.Type);
-                gameData.Set("url", options.Game.Url);
+                writer.WriteNumber("since", options.AfkSince);
+                writer.WriteBoolean("afk", options.Afk);
+                writer.WriteString("status", options.GetStatusString() ?? "online");
+
+                if (options.Game != null)
+                {
+                    writer.WriteStartObject("game");
+                    writer.WriteString("name", options.Game.Name);
+                    writer.WriteNumber("type", (int)options.Game.Type);
+                    writer.WriteString("url", options.Game.Url);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndObject();
             }
 
             // Check with the game status update limiter
             await gameStatusUpdateRateLimiter.Invoke().ConfigureAwait(false);
             // Send status update
-            await SendPayload(GatewayOPCode.StatusUpdate, data).ConfigureAwait(false);
+            await SendPayload(GatewayOPCode.StatusUpdate, BuildPayload).ConfigureAwait(false);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendRequestGuildMembersPayload(Snowflake guildId, string query, int limit)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.SetSnowflake("guild_id", guildId);
-            data.Set("query", query);
-            data.Set("limit", limit);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
 
-            return SendPayload(GatewayOPCode.RequestGuildMembers, data);
+                writer.WriteSnowflake("guild_id", guildId);
+                writer.WriteString("query", query);
+                writer.WriteNumber("limit", limit);
+
+                writer.WriteEndObject();
+            }
+
+            return SendPayload(GatewayOPCode.RequestGuildMembers, BuildPayload);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.SetSnowflake("guild_id", guildId);
-            data.SetSnowflake("channel_id", channelId);
-            data.Set("self_mute", isMute);
-            data.Set("self_deaf", isDeaf);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
 
-            return SendPayload(GatewayOPCode.VoiceStateUpdate, data);
+                writer.WriteSnowflake("guild_id", guildId);
+                writer.WriteSnowflake("channel_id", channelId);
+                writer.WriteBoolean("self_mute", isMute);
+                writer.WriteBoolean("self_deaf", isDeaf);
+
+                writer.WriteEndObject();
+            }
+
+            return SendPayload(GatewayOPCode.VoiceStateUpdate, BuildPayload);
         }
         #endregion
     }

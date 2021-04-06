@@ -59,9 +59,9 @@ namespace Discore
             : base(json, DiscordChannelType.GuildText, guildId)
         {
             Topic = json.GetProperty("topic").GetString()!;
-            Nsfw = json.GetProperty("nsfw").GetBoolean();
-            ParentId = json.GetProperty("parent_id").GetSnowflakeOrNull();
-            LastMessageId = json.GetProperty("last_message_id").GetSnowflakeOrNull();
+            Nsfw = json.GetPropertyOrNull("nsfw")?.GetBoolean() ?? false;
+            ParentId = json.GetPropertyOrNull("parent_id")?.GetSnowflakeOrNull();
+            LastMessageId = json.GetPropertyOrNull("last_message_id")?.GetSnowflakeOrNull();
         }
     }
 }

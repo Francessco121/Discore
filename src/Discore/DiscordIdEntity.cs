@@ -28,11 +28,6 @@ namespace Discore
             Id = json.GetProperty("id").GetSnowflake();
         }
 
-        internal DiscordIdEntity(DiscordApiData data)
-        {
-            Id = data.GetSnowflake("id")!.Value;
-        }
-
         public override string ToString()
         {
             return Id.ToString();

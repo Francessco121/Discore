@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore.Http
 {
     public class ModifyGuildEmojiOptions
@@ -5,7 +9,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the name of the emoji (or null to leave unchanged).
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Sets the name of the emoji.
@@ -16,14 +20,16 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            writer.WriteStartObject();
 
             if (Name != null)
-                data.Set("name", Name);
+                writer.WriteString("name", Name);
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

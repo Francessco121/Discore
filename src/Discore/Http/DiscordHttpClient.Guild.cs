@@ -1,7 +1,10 @@
 using Discore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -13,9 +16,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> GetGuild(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}",
                 $"guilds/{guildId}").ConfigureAwait(false);
-            return new DiscordGuild(data);
+
+            return new DiscordGuild(data!.RootElement);
         }
 
         /// <summary>
@@ -24,12 +28,12 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> CreateGuild(CreateGuildOptions options)
         {
-            DiscordApiData requestdata = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Post("guilds", requestdata,
+            using JsonDocument? returnData = await rest.Post("guilds", jsonContent: requestData,
                 "guilds").ConfigureAwait(false);
 
-            return new DiscordGuild(returnData);
+            return new DiscordGuild(returnData!.RootElement);
         }
 
         /// <summary>
@@ -43,11 +47,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}", jsonContent: requestData,
                 $"guilds/{guildId}").ConfigureAwait(false);
-            return new DiscordGuild(returnData);
+
+            return new DiscordGuild(returnData!.RootElement);
         }
 
         /// <summary>
@@ -89,12 +94,14 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildBan>> GetGuildBans(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/bans",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/bans",
                 $"guilds/{guildId}/bans").ConfigureAwait(false);
 
-            DiscordGuildBan[] users = new DiscordGuildBan[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var users = new DiscordGuildBan[values.GetArrayLength()];
             for (int i = 0; i < users.Length; i++)
-                users[i] = new DiscordGuildBan(data.Values[i]);
+                users[i] = new DiscordGuildBan(values[i]);
 
             return users;
         }
@@ -117,7 +124,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task CreateGuildBan(Snowflake guildId, Snowflake userId, int? deleteMessageDays = null)
         {
-            UrlParametersBuilder parameters = new UrlParametersBuilder();
+            var parameters = new UrlParametersBuilder();
             parameters["delete-message-days"] = deleteMessageDays?.ToString();
 
             await rest.Put($"guilds/{guildId}/bans/{userId}{parameters.ToQueryString()}",
@@ -167,6 +174,8 @@ namespace Discore.Http
             return RemoveGuildBan(guild, user);
         }
 
+        // TODO: add new guild prune options
+
         /// <summary>
         /// Returns the number of members that would be kicked from a guild prune operation.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
@@ -175,9 +184,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> GetGuildPruneCount(Snowflake guildId, int days)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/prune?days={days}",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/prune?days={days}",
                 $"guilds/{guildId}/prune").ConfigureAwait(false);
-            return data.GetInteger("pruned").Value;
+
+            return data!.RootElement.GetProperty("pruned").GetInt32();
         }
 
         /// <summary>
@@ -200,12 +210,17 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<int> BeginGuildPrune(Snowflake guildId, int days)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("days", days);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("days", days);
+                writer.WriteEndObject();
+            });
 
-            DiscordApiData data = await rest.Post($"guilds/{guildId}/prune", requestData,
+            using JsonDocument? data = await rest.Post($"guilds/{guildId}/prune", jsonContent: requestData,
                 $"guilds/{guildId}/prune").ConfigureAwait(false);
-            return data.GetInteger("pruned").Value;
+
+            return data!.RootElement.GetProperty("pruned").GetInt32();
         }
 
         /// <summary>
@@ -227,12 +242,14 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordIntegration>> GetGuildIntegrations(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/integrations",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/integrations",
                 $"guilds/{guildId}/integrations").ConfigureAwait(false);
 
-            DiscordIntegration[] integrations = new DiscordIntegration[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var integrations = new DiscordIntegration[values.GetArrayLength()];
             for (int i = 0; i < integrations.Length; i++)
-                integrations[i] = new DiscordIntegration(data.Values[i], guildId);
+                integrations[i] = new DiscordIntegration(values[i], guildId);
 
             return integrations;
         }
@@ -254,11 +271,15 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task CreateGuildIntegration(Snowflake guildId, Snowflake integrationId, string type)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.SetSnowflake("id", integrationId);
-            requestData.Set("type", type);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteSnowflake("id", integrationId);
+                writer.WriteString("type", type);
+                writer.WriteEndObject();
+            });
 
-            await rest.Post($"guilds/{guildId}/integrations",
+            await rest.Post($"guilds/{guildId}/integrations", jsonContent: requestData,
                 $"guilds/{guildId}/integrations").ConfigureAwait(false);
         }
 
@@ -284,9 +305,9 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            await rest.Patch($"guilds/{guildId}/integrations/{integrationId}", requestData,
+            await rest.Patch($"guilds/{guildId}/integrations/{integrationId}", jsonContent: requestData,
                 $"guilds/{guildId}/integrations/integration").ConfigureAwait(false);
         }
 
@@ -363,9 +384,10 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildEmbed> GetGuildEmbed(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/embed",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/embed",
                 $"guilds/{guildId}/embed").ConfigureAwait(false);
-            return new DiscordGuildEmbed(guildId, data);
+
+            return new DiscordGuildEmbed(data!.RootElement, guildId: guildId);
         }
 
         /// <summary>
@@ -389,11 +411,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"guilds/{guildId}/embed", requestData,
+            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/embed", jsonContent: requestData,
                 $"guilds/{guildId}/embed").ConfigureAwait(false);
-            return new DiscordGuildEmbed(guildId, returnData);
+
+            return new DiscordGuildEmbed(returnData!.RootElement, guildId: guildId);
         }
 
         /// <summary>
@@ -408,3 +431,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

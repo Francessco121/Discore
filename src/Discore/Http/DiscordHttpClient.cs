@@ -1,5 +1,8 @@
 using Discore.Http.Internal;
 using System;
+using System.IO;
+using System.Text;
+using System.Text.Json;
 
 namespace Discore.Http
 {
@@ -31,9 +34,20 @@ namespace Discore.Http
             rest = new RestClient(botToken);
         }
 
-        DiscordChannel DeserializeChannelData(DiscordApiData data)
+        string BuildJsonContent(Action<Utf8JsonWriter> builder)
         {
-            DiscordChannelType type = (DiscordChannelType)data.GetInteger("type").Value;
+            using var stream = new MemoryStream();
+            using var writer = new Utf8JsonWriter(stream);
+
+            builder(writer);
+            writer.Flush();
+
+            return Encoding.UTF8.GetString(stream.GetBuffer().AsSpan(0, (int)stream.Length));
+        }
+
+        DiscordChannel DeserializeChannelData(JsonElement data)
+        {
+            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
 
             if (type == DiscordChannelType.DirectMessage)
                 return new DiscordDMChannel(data);

@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Text.Json;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -11,12 +14,12 @@ namespace Discore.Http
         /// Gets or sets the member's nickname for the guild (or null to leave unchanged).
         /// <para>Requires <see cref="DiscordPermission.ManageNicknames"/>.</para>
         /// </summary>
-        public string Nickname { get; set; }
+        public string? Nickname { get; set; }
         /// <summary>
         /// Gets or sets a list of IDs for each role the member is to be assigned to (or null to leave unchanged).
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
-        public IEnumerable<Snowflake> RoleIds { get; set; }
+        public IEnumerable<Snowflake>? RoleIds { get; set; }
         /// <summary>
         /// Gets or sets whether the member is server muted (or null to leave unchanged).
         /// <para>Requires <see cref="DiscordPermission.MuteMembers"/>.</para>
@@ -87,28 +90,32 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            writer.WriteStartObject();
+
             if (Nickname != null)
-                data.Set("nick", Nickname);
+                writer.WriteString("nick", Nickname);
             if (IsServerMute.HasValue)
-                data.Set("mute", IsServerMute);
+                writer.WriteBoolean("mute", IsServerMute.Value);
             if (IsServerDeaf.HasValue)
-                data.Set("deaf", IsServerDeaf);
+                writer.WriteBoolean("deaf", IsServerDeaf.Value);
             if (ChannelId.HasValue)
-                data.SetSnowflake("channel_id", ChannelId);
+                writer.WriteSnowflake("channel_id", ChannelId);
 
             if (RoleIds != null)
             {
-                DiscordApiData rolesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (Snowflake roleId in RoleIds)
-                    rolesArray.Values.Add(new DiscordApiData(roleId));
+                writer.WriteStartArray("roles");
 
-                data.Set("roles", rolesArray);
+                foreach (Snowflake roleId in RoleIds)
+                    writer.WriteSnowflakeValue(roleId);
+
+                writer.WriteEndArray();
             }
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }
+
+#nullable restore

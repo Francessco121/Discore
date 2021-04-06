@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -22,8 +25,8 @@ namespace Discore.Http
         public async Task<T> GetChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await rest.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
-            return (T)DeserializeChannelData(data);
+            using JsonDocument? data = await rest.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
+            return (T)DeserializeChannelData(data!.RootElement);
         }
 
         /// <summary>
@@ -41,11 +44,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{textChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{textChannelId}", jsonContent: requestData,
                 $"channels/{textChannelId}").ConfigureAwait(false);
-            return (DiscordGuildTextChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildTextChannel)DeserializeChannelData(returnData!.RootElement);
         }
 
         /// <summary>
@@ -81,11 +85,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{voiceChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{voiceChannelId}", jsonContent: requestData,
                 $"channels/{voiceChannelId}").ConfigureAwait(false);
-            return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData!.RootElement);
         }
 
         /// <summary>
@@ -121,11 +126,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{categoryChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{categoryChannelId}", jsonContent: requestData,
                 $"channels/{categoryChannelId}").ConfigureAwait(false);
-            return (DiscordGuildCategoryChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildCategoryChannel)DeserializeChannelData(returnData!.RootElement);
         }
 
         /// <summary>
@@ -161,11 +167,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{newsChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{newsChannelId}", jsonContent: requestData,
                 $"channels/{newsChannelId}").ConfigureAwait(false);
-            return (DiscordGuildNewsChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildNewsChannel)DeserializeChannelData(returnData!.RootElement);
         }
 
         /// <summary>
@@ -201,11 +208,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{storeChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{storeChannelId}", jsonContent: requestData,
                 $"channels/{storeChannelId}").ConfigureAwait(false);
-            return (DiscordGuildStoreChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildStoreChannel)DeserializeChannelData(returnData!.RootElement);
         }
 
         /// <summary>
@@ -265,8 +273,8 @@ namespace Discore.Http
         public async Task<T> DeleteChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await rest.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
-            return (T)DeserializeChannelData(data);
+            using JsonDocument? data = await rest.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
+            return (T)DeserializeChannelData(data!.RootElement);
         }
 
         /// <summary>
@@ -277,12 +285,16 @@ namespace Discore.Http
         public async Task EditChannelPermissions(Snowflake channelId, Snowflake overwriteId,
             DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("allow", (int)allow);
-            data.Set("deny", (int)deny);
-            data.Set("type", type.ToString().ToLower());
+            string data = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("allow", (int)allow);
+                writer.WriteNumber("deny", (int)deny);
+                writer.WriteString("type", type.ToString().ToLower());
+                writer.WriteEndObject();
+            });
 
-            await rest.Put($"channels/{channelId}/permissions/{overwriteId}", data,
+            await rest.Put($"channels/{channelId}/permissions/{overwriteId}", jsonContent: data,
                 $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
         }
 
@@ -349,12 +361,14 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> GetGuildChannels(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/channels",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/channels",
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
 
-            DiscordGuildChannel[] channels = new DiscordGuildChannel[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var channels = new DiscordGuildChannel[values.GetArrayLength()]; ;
             for (int i = 0; i < channels.Length; i++)
-                channels[i] = (DiscordGuildChannel)DeserializeChannelData(data.Values[i]);
+                channels[i] = (DiscordGuildChannel)DeserializeChannelData(values[i]);
 
             return channels;
         }
@@ -379,11 +393,12 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Post($"guilds/{guildId}/channels", requestData,
+            using JsonDocument? returnData = await rest.Post($"guilds/{guildId}/channels", jsonContent: requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
-            return (DiscordGuildChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildChannel)DeserializeChannelData(returnData!.RootElement);
         }
 
         /// <summary>
@@ -411,11 +426,17 @@ namespace Discore.Http
             if (positions == null)
                 throw new ArgumentNullException(nameof(positions));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Array);
-            foreach (PositionOptions positionParam in positions)
-                requestData.Values.Add(positionParam.Build());
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartArray();
 
-            await rest.Patch($"guilds/{guildId}/channels", requestData,
+                foreach (PositionOptions positionParam in positions)
+                    positionParam.Build(writer);
+
+                writer.WriteEndArray();
+            });
+
+            await rest.Patch($"guilds/{guildId}/channels", jsonContent: requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
         }
 
@@ -434,3 +455,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

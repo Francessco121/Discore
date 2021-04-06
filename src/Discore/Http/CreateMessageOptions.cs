@@ -1,3 +1,7 @@
+#nullable enable
+
+using System.Text.Json;
+
 namespace Discore.Http
 {
     public class CreateMessageOptions
@@ -5,7 +9,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the contents of the message.
         /// </summary>
-        public string Content { get; set; }
+        public string? Content { get; set; }
         /// <summary>
         /// Gets or sets whether the message should use text-to-speech.
         /// Default: false
@@ -18,7 +22,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets an embed to be sent with the message.
         /// </summary>
-        public EmbedOptions Embed { get; set; }
+        public EmbedOptions? Embed { get; set; }
 
         public CreateMessageOptions() { }
 
@@ -62,5 +66,24 @@ namespace Discore.Http
             Embed = embed;
             return this;
         }
+
+        internal void Build(Utf8JsonWriter writer)
+        {
+            writer.WriteStartObject();
+
+            writer.WriteString("content", Content);
+            writer.WriteBoolean("tts", TextToSpeech);
+            writer.WriteSnowflake("nonce", Nonce);
+
+            if (Embed != null)
+            {
+                writer.WritePropertyName("embed");
+                Embed.Build(writer);
+            }
+
+            writer.WriteEndObject();
+        }
     }
 }
+
+#nullable restore

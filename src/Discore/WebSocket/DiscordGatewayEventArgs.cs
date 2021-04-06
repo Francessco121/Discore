@@ -263,9 +263,9 @@ namespace Discore.WebSocket
         /// <summary>
         /// Gets a partial message object representing the changes made to the message.
         /// </summary>
-        public DiscordMessage PartialMessage { get; }
+        public DiscordPartialMessage PartialMessage { get; }
 
-        internal MessageUpdateEventArgs(Shard shard, DiscordMessage message)
+        internal MessageUpdateEventArgs(Shard shard, DiscordPartialMessage message)
             : base(shard)
         {
             PartialMessage = message;

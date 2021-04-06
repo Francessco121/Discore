@@ -10,7 +10,7 @@ namespace Discore.Voice.Internal
 {
     /**
      * REUSABILITY:
-     * This class is mostly reusable already, the only part missing is gauranteeing that
+     * This class is mostly reusable already, the only part missing is guaranteeing that
      * the send/receive tasks have completed before initiating a new connection. Currently,
      * neither is waited for when disconnecting as there is no way to cancel a send/receive
      * operation on a System.Net.Sockets.Socket yet.

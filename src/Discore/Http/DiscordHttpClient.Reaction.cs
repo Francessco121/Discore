@@ -1,7 +1,10 @@
 using Discore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Discore.Http
 {
@@ -100,19 +103,21 @@ namespace Discore.Http
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            UrlParametersBuilder builder = new UrlParametersBuilder();
+            var builder = new UrlParametersBuilder();
             if (baseUserId.HasValue)
                 builder.Add(getStrategy.ToString().ToLower(), baseUserId.Value.ToString());
             if (limit.HasValue)
                 builder.Add("limit", limit.Value.ToString());
 
-            DiscordApiData data = await rest.Get(
+            using JsonDocument? data = await rest.Get(
                 $"channels/{channelId}/messages/{messageId}/reactions/{emoji}{builder.ToQueryString()}",
                 $"channels/{channelId}/messages/message/reactions/emoji").ConfigureAwait(false);
 
-            DiscordUser[] users = new DiscordUser[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var users = new DiscordUser[values.GetArrayLength()];
             for (int i = 0; i < users.Length; i++)
-                users[i] = new DiscordUser(false, data.Values[i]);
+                users[i] = new DiscordUser(values[i], isWebhookUser: false);
 
             return users;
         }
@@ -157,3 +162,5 @@ namespace Discore.Http
         }
     }
 }
+
+#nullable restore

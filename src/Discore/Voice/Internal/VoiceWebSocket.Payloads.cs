@@ -1,10 +1,10 @@
 using Discore.WebSocket;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -88,9 +88,15 @@ namespace Discore.Voice.Internal
         [Payload(VoiceOPCode.HeartbeatAck)]
         void HandleHeartbeatAck(JsonElement payload, JsonElement data)
         {
-            if (data.GetString() is string returnedNonceStr)
+            if (data.ValueKind != JsonValueKind.Null)
             {
-                uint returnedNonce = uint.Parse(returnedNonceStr);
+                uint returnedNonce;
+
+                if (data.ValueKind == JsonValueKind.String)
+                    returnedNonce = uint.Parse(data.GetString());
+                else
+                    returnedNonce = data.GetUInt32();
+
                 if (returnedNonce == heartbeatNonce)
                 {
                     heartbeatNonce++;
@@ -111,12 +117,26 @@ namespace Discore.Voice.Internal
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        /// <exception cref="JsonWriterException">Thrown if the given data cannot be serialized as JSON.</exception>
-        Task SendPayload(VoiceOPCode op, DiscordApiData data)
+        /// <exception cref="NotSupportedException">Thrown if the given data cannot be serialized as JSON.</exception>
+        Task SendPayload(VoiceOPCode op, Action<Utf8JsonWriter> builder)
         {
-            DiscordApiData payload = new DiscordApiData();
-            payload.Set("op", (int)op);
-            payload.Set("d", data);
+            // TODO: There must be a more memory efficient way of doing this
+
+            // Create payload bytes
+            using var stream = new MemoryStream();
+            using var writer = new Utf8JsonWriter(stream);
+
+            writer.WriteStartObject();
+
+            writer.WriteNumber("op", (int)op);
+            writer.WritePropertyName("d");
+            builder(writer);
+
+            writer.WriteEndObject();
+
+            writer.Flush();
+
+            byte[] payload = stream.ToArray();
 
             return SendAsync(payload);
         }
@@ -125,61 +145,87 @@ namespace Discore.Voice.Internal
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         Task SendHeartbeatPayload()
         {
-            return SendPayload(VoiceOPCode.Heartbeat, new DiscordApiData(value: heartbeatNonce));
+            return SendPayload(VoiceOPCode.Heartbeat, writer => writer.WriteNumberValue(heartbeatNonce));
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendIdentifyPayload(Snowflake serverId, Snowflake userId, string sessionId, string token)
         {
-            DiscordApiData data = new DiscordApiData();
-            data.SetSnowflake("server_id", serverId);
-            data.SetSnowflake("user_id", userId);
-            data.Set("session_id", sessionId);
-            data.Set("token", token);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
+
+                writer.WriteSnowflake("server_id", serverId);
+                writer.WriteSnowflake("user_id", userId);
+                writer.WriteString("session_id", sessionId);
+                writer.WriteString("token", token);
+
+                writer.WriteEndObject();
+            }
 
             log.LogVerbose("[Identify] Sending payload...");
-            return SendPayload(VoiceOPCode.Identify, data);
+            return SendPayload(VoiceOPCode.Identify, BuildPayload);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendResumePayload(Snowflake serverId, string sessionId, string token)
         {
-            DiscordApiData data = new DiscordApiData();
-            data.SetSnowflake("server_id", serverId);
-            data.Set("session_id", sessionId);
-            data.Set("token", token);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
+
+                writer.WriteSnowflake("server_id", serverId);
+                writer.WriteString("session_id", sessionId);
+                writer.WriteString("token", token);
+
+                writer.WriteEndObject();
+            }
 
             log.LogVerbose("[Resume] Sending payload...");
-            return SendPayload(VoiceOPCode.Resume, data);
+            return SendPayload(VoiceOPCode.Resume, BuildPayload);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendSelectProtocolPayload(string ip, int port, string encryptionMode)
         {
-            DiscordApiData selectProtocol = new DiscordApiData();
-            selectProtocol.Set("protocol", "udp");
-            DiscordApiData data = selectProtocol.Set("data", DiscordApiData.CreateContainer());
-            data.Set("address", ip);
-            data.Set("port", port);
-            data.Set("mode", encryptionMode);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
+
+                writer.WriteString("protocol", "udp");
+
+                writer.WriteStartObject("data");
+                writer.WriteString("ip", ip);
+                writer.WriteNumber("port", port);
+                writer.WriteString("mode", encryptionMode);
+                writer.WriteEndObject();
+
+                writer.WriteEndObject();
+            }
 
             log.LogVerbose($"[SelectProtocol] Sending to {ip}:{port}...");
-            return SendPayload(VoiceOPCode.SelectProtocol, selectProtocol);
+            return SendPayload(VoiceOPCode.SelectProtocol, BuildPayload);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
         public Task SendSpeakingPayload(bool speaking, int ssrc)
         {
-            DiscordApiData data = new DiscordApiData();
-            data.Set("speaking", speaking);
-            data.Set("delay", value: 0);
-            data.Set("ssrc", ssrc);
+            void BuildPayload(Utf8JsonWriter writer)
+            {
+                writer.WriteStartObject();
 
-            return SendPayload(VoiceOPCode.Speaking, data);
+                writer.WriteBoolean("speaking", speaking);
+                writer.WriteNumber("delay", 0);
+                writer.WriteNumber("ssrc", ssrc);
+
+                writer.WriteEndObject();
+            }
+
+            return SendPayload(VoiceOPCode.Speaking, BuildPayload);
         }
     }
 }
