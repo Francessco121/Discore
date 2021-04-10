@@ -1,10 +1,8 @@
-using Discore.Json;
 using Nito.AsyncEx;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net.WebSockets;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -396,7 +394,7 @@ namespace Discore.WebSocket.Internal
                             }
                             // Payload handlers can send other payloads which can result in two
                             // valid exceptions that we do not want to bubble up.
-                            catch (InvalidOperationException ex)
+                            catch (InvalidOperationException)
                             {
                                 // Socket was closed between receiving a payload and handling it
                                 log.LogVerbose("Received InvalidOperationException from OnPayloadReceived, " +
