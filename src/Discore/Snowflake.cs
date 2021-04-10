@@ -5,10 +5,10 @@ using System;
 namespace Discore
 {
     /// <summary>
-    /// Twitter's snowflake format. Used for IDs in the Discord Api.
+    /// Twitter's snowflake format. Used for IDs in the Discord API.
     /// https://github.com/twitter/snowflake/tree/snowflake-2010
     /// </summary>
-    public struct Snowflake
+    public struct Snowflake : IEquatable<Snowflake>
     {
         /// <summary>
         /// Gets a snowflake representing nothing (or zero).
@@ -64,17 +64,14 @@ namespace Discore
             return Id.ToString();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (obj == null)
-                return false;
-            else if (typeof(Snowflake) == obj.GetType())
-            {
-                Snowflake other = (Snowflake)obj;
-                return Id == other.Id;
-            }
-            else
-                return base.Equals(obj);
+            return obj is Snowflake snowflake && Equals(snowflake);
+        }
+
+        public bool Equals(Snowflake other)
+        {
+            return Id == other.Id;
         }
 
         public override int GetHashCode()
