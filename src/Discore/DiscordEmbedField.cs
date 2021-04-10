@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -21,10 +22,13 @@ namespace Discore
         /// </summary>
         public bool IsInline { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="value"/> is null.
+        /// </exception>
         public DiscordEmbedField(string name, string value, bool isInline)
         {
-            Name = name;
-            Value = value;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Value = value ?? throw new ArgumentNullException(nameof(value));
             IsInline = isInline;
         }
 

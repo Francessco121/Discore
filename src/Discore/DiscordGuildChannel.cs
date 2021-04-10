@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -27,6 +28,9 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
         protected DiscordGuildChannel(
             Snowflake id,
             DiscordChannelType type,
@@ -36,9 +40,9 @@ namespace Discore
             Snowflake guildId)
             : base(id, type)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Position = position;
-            PermissionOverwrites = permissionOverwrites;
+            PermissionOverwrites = permissionOverwrites ?? throw new ArgumentNullException(nameof(permissionOverwrites));
             GuildId = guildId;
         }
 

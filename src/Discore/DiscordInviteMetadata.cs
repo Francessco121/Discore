@@ -44,6 +44,9 @@ namespace Discore
         /// </summary>
         public bool IsRevoked { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="code"/> or <paramref name="channel"/> is null.
+        /// </exception>
         public DiscordInviteMetadata(
             string code,
             DiscordInviteGuild? guild,

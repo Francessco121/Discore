@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 
 #nullable enable
@@ -16,10 +17,11 @@ namespace Discore
         /// </summary>
         public DiscordUser User { get; }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="user"/> is null.</exception>
         public DiscordGuildBan(string? reason, DiscordUser user)
         {
             Reason = reason;
-            User = user;
+            User = user ?? throw new ArgumentNullException(nameof(user));
         }
 
         internal DiscordGuildBan(JsonElement json)

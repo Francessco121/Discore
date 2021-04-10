@@ -35,6 +35,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task CreateReaction(DiscordMessage message, DiscordReactionEmoji emoji)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return CreateReaction(message.ChannelId, message.Id, emoji);
         }
 
@@ -59,6 +61,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteOwnReaction(DiscordMessage message, DiscordReactionEmoji emoji)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return DeleteOwnReaction(message.ChannelId, message.Id, emoji);
         }
 
@@ -85,6 +89,9 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteUserReaction(DiscordMessage message, DiscordUser user, DiscordReactionEmoji emoji)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
             return DeleteUserReaction(message.ChannelId, message.Id, user.Id, emoji);
         }
 
@@ -134,6 +141,8 @@ namespace Discore.Http
             DiscordReactionEmoji emoji, Snowflake? baseUserId = null, int? limit = null,
             ReactionGetStrategy getStrategy = ReactionGetStrategy.Before)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return GetReactions(message.ChannelId, message.Id, emoji,
                 baseUserId: baseUserId,
                 limit: limit,
@@ -155,9 +164,12 @@ namespace Discore.Http
         /// Deletes all reactions on a message.
         /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteAllReactions(DiscordMessage message)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return DeleteAllReactions(message.ChannelId, message.Id);
         }
     }

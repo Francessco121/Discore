@@ -59,7 +59,7 @@ namespace Discore.Http
         /// <param name="textChannel">The guild text channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild text channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="textChannel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildTextChannel> ModifyTextChannel(DiscordGuildTextChannel textChannel,
             GuildTextChannelOptions options)
@@ -100,7 +100,7 @@ namespace Discore.Http
         /// <param name="voiceChannel">The guild voice channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild voice channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="voiceChannel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(DiscordGuildVoiceChannel voiceChannel,
             GuildVoiceChannelOptions options)
@@ -141,7 +141,7 @@ namespace Discore.Http
         /// <param name="categoryChannel">The guild category channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild category channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="categoryChannel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildCategoryChannel> ModifyCategoryChannel(DiscordGuildCategoryChannel categoryChannel,
             GuildCategoryChannelOptions options)
@@ -182,7 +182,7 @@ namespace Discore.Http
         /// <param name="newsChannel">The guild news channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild news channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="newsChannel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildNewsChannel> ModifyNewsChannel(DiscordGuildNewsChannel newsChannel,
             GuildNewsChannelOptions options)
@@ -223,7 +223,7 @@ namespace Discore.Http
         /// <param name="storeChannel">The guild store channel to modify.</param>
         /// <param name="options">A set of options to modify the channel with.</param>
         /// <returns>Returns the updated guild store channel.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="storeChannel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildStoreChannel> ModifyStoreChannel(DiscordGuildStoreChannel storeChannel,
             GuildStoreChannelOptions options)
@@ -248,9 +248,12 @@ namespace Discore.Http
         /// Deletes a guild channel, or closes a DM.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordChannel> DeleteChannel(DiscordChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return DeleteChannel<DiscordChannel>(channel.Id);
         }
 
@@ -258,10 +261,13 @@ namespace Discore.Http
         /// Deletes a guild channel, or closes a DM.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<T> DeleteChannel<T>(T channel)
             where T : DiscordChannel
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return DeleteChannel<T>(channel.Id);
         }
 
@@ -302,10 +308,13 @@ namespace Discore.Http
         /// Edits a guild channel permission overwrite for a user or role.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="overwrite"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task EditChannelPermissions(DiscordOverwrite overwrite,
             DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
         {
+            if (overwrite == null) throw new ArgumentNullException(nameof(overwrite));
+
             return EditChannelPermissions(overwrite.ChannelId.Id, overwrite.Id, allow, deny, type);
         }
 
@@ -324,9 +333,12 @@ namespace Discore.Http
         /// Deletes a guild channel permission overwrite for a user or role.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="overwrite"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteChannelPermission(DiscordOverwrite overwrite)
         {
+            if (overwrite == null) throw new ArgumentNullException(nameof(overwrite));
+
             return DeleteChannelPermission(overwrite.ChannelId.Id, overwrite.Id);
         }
 
@@ -349,9 +361,12 @@ namespace Discore.Http
         /// This should only be used if the bot is responding to a command that is expected
         /// to take a few seconds or longer.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task TriggerTypingIndicator(ITextChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return TriggerTypingIndicator(channel.Id);
         }
 
@@ -376,9 +391,12 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all channels in a guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="guild"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildChannel>> GetGuildChannels(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildChannels(guild.Id);
         }
 
@@ -409,6 +427,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildChannel> CreateGuildChannel(DiscordGuild guild, CreateGuildChannelOptions options)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return CreateGuildChannel(guild.Id, options);
         }
 
@@ -451,6 +471,8 @@ namespace Discore.Http
         public Task ModifyGuildChannelPositions(DiscordGuild guild,
             IEnumerable<PositionOptions> positions)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ModifyGuildChannelPositions(guild.Id, positions);
         }
     }

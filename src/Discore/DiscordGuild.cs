@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -150,6 +151,11 @@ namespace Discore
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/>, <paramref name="regionId"/>,
+        /// <paramref name="preferredLocale"/>, <paramref name="roles"/>,
+        /// or <paramref name="emojis"/> is null.
+        /// </exception>
         public DiscordGuild(
             Snowflake id,
             string name,
@@ -182,11 +188,11 @@ namespace Discore
             IReadOnlyDictionary<Snowflake, DiscordEmoji> emojis)
             : base(id)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Icon = icon;
             Splash = splash;
             OwnerId = ownerId;
-            RegionId = regionId;
+            RegionId = regionId ?? throw new ArgumentNullException(nameof(regionId));
             AfkChannelId = afkChannelId;
             AfkTimeout = afkTimeout;
             IsEmbedEnabled = isEmbedEnabled;
@@ -194,7 +200,7 @@ namespace Discore
             VerificationLevel = verificationLevel;
             DefaultMessageNotifications = defaultMessageNotifications;
             ExplicitContentFilter = explicitContentFilter;
-            Features = features;
+            Features = features ?? throw new ArgumentNullException(nameof(features));
             MfaLevel = mfaLevel;
             ApplicationId = applicationId;
             IsWidgetEnabled = isWidgetEnabled;
@@ -207,9 +213,9 @@ namespace Discore
             Banner = banner;
             PremiumTier = premiumTier;
             PremiumSubscriptionCount = premiumSubscriptionCount;
-            PreferredLocale = preferredLocale;
-            Roles = roles;
-            Emojis = emojis;
+            PreferredLocale = preferredLocale ?? throw new ArgumentNullException(nameof(preferredLocale));
+            Roles = roles ?? throw new ArgumentNullException(nameof(roles));
+            Emojis = emojis ?? throw new ArgumentNullException(nameof(emojis));
         }
 
         internal DiscordGuild(JsonElement json)
@@ -291,6 +297,7 @@ namespace Discore
         /// Returns whether this guild has the given <paramref name="feature"/>.
         /// </summary>
         /// <seealso cref="DiscordGuildFeature"/>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="feature"/> is null.</exception>
         public bool HasFeature(string feature)
         {
             return Features.Contains(feature);

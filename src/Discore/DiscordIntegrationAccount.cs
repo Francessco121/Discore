@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -19,10 +20,13 @@ namespace Discore
         /// </summary>
         public string Name { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="id"/> or <paramref name="name"/> is null.
+        /// </exception>
         public DiscordIntegrationAccount(string id, string name)
         {
-            Id = id;
-            Name = name;
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         internal DiscordIntegrationAccount(JsonElement json)

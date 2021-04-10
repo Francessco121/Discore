@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -27,7 +28,7 @@ namespace Discore
         public DiscordInviteGuild(Snowflake guildId, string name, string? splashHash)
         {
             GuildId = guildId;
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             SplashHash = splashHash;
         }
 

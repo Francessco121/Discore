@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -25,7 +26,7 @@ namespace Discore
         public DiscordInviteChannel(Snowflake channelId, string name, DiscordChannelType type)
         {
             ChannelId = channelId;
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Type = type;
         }
 

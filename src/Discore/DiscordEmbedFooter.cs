@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -21,9 +22,10 @@ namespace Discore
         /// </summary>
         public string? ProxyIconUrl { get; }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="text"/> is null.</exception>
         public DiscordEmbedFooter(string text, string? iconUrl, string? proxyIconUrl)
         {
-            Text = text;
+            Text = text ?? throw new ArgumentNullException(nameof(text));
             IconUrl = iconUrl;
             ProxyIconUrl = proxyIconUrl;
         }

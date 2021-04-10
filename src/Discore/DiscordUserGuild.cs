@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -28,6 +29,7 @@ namespace Discore
 
         // TODO: add: features
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
         public DiscordUserGuild(
             Snowflake id,
             string name, 
@@ -36,7 +38,7 @@ namespace Discore
             DiscordPermission permissions)
             : base(id)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Icon = icon;
             IsOwner = isOwner;
             Permissions = permissions;

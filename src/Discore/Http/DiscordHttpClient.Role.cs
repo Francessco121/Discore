@@ -32,9 +32,12 @@ namespace Discore.Http
         /// Gets a list of all roles in a guild.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordRole>> GetGuildRoles(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildRoles(guild.Id);
         }
 
@@ -65,6 +68,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> CreateGuildRole(DiscordGuild guild, CreateRoleOptions options)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return CreateGuildRole(guild.Id, options);
         }
 
@@ -111,6 +116,8 @@ namespace Discore.Http
         public Task<IReadOnlyList<DiscordRole>> ModifyGuildRolePositions(DiscordGuild guild,
             IEnumerable<PositionOptions> positions)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ModifyGuildRolePositions(guild.Id, positions);
         }
 
@@ -141,6 +148,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordRole> ModifyGuildRole(DiscordRole role, ModifyRoleOptions options)
         {
+            if (role == null) throw new ArgumentNullException(nameof(role));
+
             return ModifyGuildRole(role.GuildId, role.Id, options);
         }
 
@@ -159,9 +168,12 @@ namespace Discore.Http
         /// Deletes a role from a guild.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteGuildRole(DiscordRole role)
         {
+            if (role == null) throw new ArgumentNullException(nameof(role));
+
             return DeleteGuildRole(role.GuildId, role.Id);
         }
 
@@ -180,9 +192,13 @@ namespace Discore.Http
         /// Adds a role to a guild member.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task AddGuildMemberRole(DiscordGuildMember member, DiscordRole role)
         {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (role == null) throw new ArgumentNullException(nameof(role));
+
             return AddGuildMemberRole(member.GuildId, member.Id, role.Id);
         }
 
@@ -201,9 +217,13 @@ namespace Discore.Http
         /// Removes a role from a guild member.
         /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task RemoveGuildMemberRole(DiscordGuildMember member, DiscordRole role)
         {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (role == null) throw new ArgumentNullException(nameof(role));
+
             return RemoveGuildMemberRole(member.GuildId, member.Id, role.Id);
         }
     }

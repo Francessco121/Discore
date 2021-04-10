@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -18,14 +19,16 @@ namespace Discore
         /// </summary>
         public string? Name { get; }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
         public DiscordReactionEmoji(string name)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
         public DiscordReactionEmoji(string name, Snowflake? id)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Id = id;
         }
 

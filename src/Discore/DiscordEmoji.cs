@@ -36,6 +36,9 @@ namespace Discore
 
         // TODO: add available
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="roleIds"/> is null.
+        /// </exception>
         public DiscordEmoji(
             Snowflake id,
             string name, 
@@ -46,8 +49,8 @@ namespace Discore
             bool isAnimated)
             : base(id)
         {
-            Name = name;
-            RoleIds = roleIds;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            RoleIds = roleIds ?? throw new ArgumentNullException(nameof(roleIds));
             UserId = userId;
             RequireColons = requireColons;
             IsManaged = isManaged;

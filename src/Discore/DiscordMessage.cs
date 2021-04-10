@@ -109,6 +109,11 @@ namespace Discore
 
         // TODO: add guild_id, mentions.member, stickers, referenced_message, interaction
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="author"/>, <paramref name="content"/>,
+        /// <paramref name="mentionedRoleIds"/>, <paramref name="attachments"/>,
+        /// or <paramref name="embeds"/> is null.
+        /// </exception>
         public DiscordMessage(
             Snowflake id,
             Snowflake channelId, 
@@ -136,18 +141,18 @@ namespace Discore
             : base(id)
         {
             ChannelId = channelId;
-            Author = author;
+            Author = author ?? throw new ArgumentNullException(nameof(author));
             Member = member;
-            Content = content;
+            Content = content ?? throw new ArgumentNullException(nameof(content));
             Timestamp = timestamp;
             EditedTimestamp = editedTimestamp;
             TextToSpeech = textToSpeech;
             MentionEveryone = mentionEveryone;
-            Mentions = mentions;
-            MentionedRoleIds = mentionedRoleIds;
+            Mentions = mentions ?? throw new ArgumentNullException(nameof(mentions));
+            MentionedRoleIds = mentionedRoleIds ?? throw new ArgumentNullException(nameof(mentionedRoleIds));
             MentionedChannels = mentionedChannels;
-            Attachments = attachments;
-            Embeds = embeds;
+            Attachments = attachments ?? throw new ArgumentNullException(nameof(attachments));
+            Embeds = embeds ?? throw new ArgumentNullException(nameof(embeds));
             Reactions = reactions;
             Nonce = nonce;
             IsPinned = isPinned;

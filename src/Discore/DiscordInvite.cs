@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -44,6 +45,9 @@ namespace Discore
         /// </summary>
         public int? ApproximateMemberCount { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="code"/> or <paramref name="channel"/> is null.
+        /// </exception>
         public DiscordInvite(
             string code, 
             DiscordInviteGuild? guild, 
@@ -53,9 +57,9 @@ namespace Discore
             int? approximatePresenceCount, 
             int? approximateMemberCount)
         {
-            Code = code;
+            Code = code ?? throw new ArgumentNullException(nameof(code));
             Guild = guild;
-            Channel = channel;
+            Channel = channel ?? throw new ArgumentNullException(nameof(channel));
             TargetUser = targetUser;
             TargetUserType = targetUserType;
             ApproximatePresenceCount = approximatePresenceCount;

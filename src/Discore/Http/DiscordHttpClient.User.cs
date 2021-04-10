@@ -92,9 +92,12 @@ namespace Discore.Http
         /// <summary>
         /// Removes the current bot from the specified guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task LeaveGuild(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return LeaveGuild(guild.Id);
         }
 
@@ -139,9 +142,12 @@ namespace Discore.Http
         /// <summary>
         /// Opens a DM channel with the specified user.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordDMChannel> CreateDM(DiscordUser recipient)
         {
+            if (recipient == null) throw new ArgumentNullException(nameof(recipient));
+
             return CreateDM(recipient.Id);
         }
     }

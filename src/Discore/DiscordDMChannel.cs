@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 
 #nullable enable
@@ -23,10 +24,11 @@ namespace Discore
         /// </summary>
         public Snowflake? LastMessageId { get; }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="recipient"/> is null.</exception>
         public DiscordDMChannel(Snowflake id, DiscordUser recipient, Snowflake? lastMessageId)
             : base(id, DiscordChannelType.DirectMessage)
         {
-            Recipient = recipient;
+            Recipient = recipient ?? throw new ArgumentNullException(nameof(recipient));
             LastMessageId = lastMessageId;
         }
 

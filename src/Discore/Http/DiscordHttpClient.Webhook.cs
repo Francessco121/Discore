@@ -45,10 +45,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <param name="channel">The channel the webhook will post to.</param>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> or <paramref name="avatar"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/>, <paramref name="name"/>, or <paramref name="avatar"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> CreateWebhook(string name, DiscordImageData avatar, ITextChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return CreateWebhook(name, avatar, channel.Id);
         }
 
@@ -108,9 +110,12 @@ namespace Discore.Http
         /// Gets a list of webhooks active for the specified text channel.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordWebhook>> GetChannelWebhooks(ITextChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return GetChannelWebhooks(channel.Id);
         }
 
@@ -138,9 +143,12 @@ namespace Discore.Http
         /// Gets a list of all webhooks in a guild.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordWebhook>> GetGuildWebhooks(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildWebhooks(guild.Id);
         }
 
@@ -178,10 +186,13 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
         /// <param name="channel">The text channel to move the webhook to (or null to not move).</param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordWebhook> ModifyWebhook(DiscordWebhook webhook,
             string? name = null, DiscordImageData? avatar = null, ITextChannel? channel = null)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return ModifyWebhook(webhook.Id, name, avatar, channel?.Id);
         }
 
@@ -219,11 +230,13 @@ namespace Discore.Http
         /// Modifies an existing webhook.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if token is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="webhook"/> or <paramref name="token"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task ModifyWebhookWithToken(DiscordWebhook webhook, string token,
             string? name = null, DiscordImageData? avatar = null)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return ModifyWebhookWithToken(webhook.Id, token, name, avatar);
         }
 
@@ -242,9 +255,12 @@ namespace Discore.Http
         /// Deletes a webhook permanently. The current bot must be the owner.
         /// <para>Requires <see cref="DiscordPermission.ManageWebhooks"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteWebhook(DiscordWebhook webhook)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return DeleteWebhook(webhook.Id);
         }
 
@@ -273,6 +289,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteWebhookWithToken(DiscordWebhook webhook, string token)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return DeleteWebhookWithToken(webhook.Id, token);
         }
 
@@ -314,11 +332,13 @@ namespace Discore.Http
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token or <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="webhook"/>, the token, or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage?> ExecuteWebhook(DiscordWebhook webhook, string token, ExecuteWebhookOptions options,
             bool waitAndReturnMessage = false)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return ExecuteWebhook(webhook.Id, token, options, waitAndReturnMessage);
         }
 
@@ -353,13 +373,15 @@ namespace Discore.Http
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token is null, 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="webhook"/>, the token, 
         /// or <paramref name="fileData"/> is null,
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage?> ExecuteWebhook(DiscordWebhook webhook, string token, Stream fileData, string fileName,
             ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return ExecuteWebhook(webhook.Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
 
@@ -391,12 +413,14 @@ namespace Discore.Http
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
         /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the token is null 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="webhook"/>, the token,
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage?> ExecuteWebhook(DiscordWebhook webhook, string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
+            if (webhook == null) throw new ArgumentNullException(nameof(webhook));
+
             return ExecuteWebhook(webhook.Id, token, fileData, fileName, options, waitAndReturnMessage);
         }
 

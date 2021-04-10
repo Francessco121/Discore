@@ -25,9 +25,13 @@ namespace Discore.Http
         /// <summary>
         /// Gets a member in a guild by their user ID.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildMember> GetGuildMember(DiscordGuild guild, DiscordUser user)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
             return GetGuildMember(guild.Id, user.Id);
         }
 
@@ -65,10 +69,13 @@ namespace Discore.Http
         /// <param name="guild">The guild.</param>
         /// <param name="limit">Max number of members to return (1-1000).</param>
         /// <param name="after">The highest user ID in the previous page.</param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildMember>> ListGuildMembers(DiscordGuild guild,
             int? limit = null, Snowflake? after = null)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ListGuildMembers(guild.Id, limit, after);
         }
 
@@ -95,6 +102,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task ModifyGuildMember(DiscordGuildMember member, ModifyGuildMemberOptions options)
         {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+
             return ModifyGuildMember(member.GuildId, member.Id, options);
         }
 
@@ -126,9 +135,12 @@ namespace Discore.Http
         /// </summary>
         /// <param name="nickname">The new nickname (or null or an empty string to remove nickname).</param>
         /// <returns>Returns the new nickname (or null if the nickname was removed).</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<string?> ModifyCurrentUsersNickname(DiscordGuild guild, string? nickname)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ModifyCurrentUsersNickname(guild.Id, nickname);
         }
 
@@ -147,9 +159,13 @@ namespace Discore.Http
         /// Removes a member from a guild.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task RemoveGuildMember(DiscordGuild guild, DiscordUser user)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
             return RemoveGuildMember(guild.Id, user.Id);
         }
 
@@ -157,9 +173,12 @@ namespace Discore.Http
         /// Removes a member from a guild.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task RemoveGuildMember(DiscordGuildMember member)
         {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+
             return RemoveGuildMember(member.GuildId, member.Id);
         }
     }

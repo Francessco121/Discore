@@ -58,6 +58,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> DeleteInvite(DiscordInvite invite)
         {
+            if (invite == null) throw new ArgumentNullException(nameof(invite));
+
             return DeleteInvite(invite.Code);
         }
 
@@ -84,9 +86,12 @@ namespace Discore.Http
         /// Gets a list of invites for the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetGuildInvites(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildInvites(guild.Id);
         }
 
@@ -113,9 +118,12 @@ namespace Discore.Http
         /// Gets a list of all invites for the specified guild channel.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordInviteMetadata>> GetChannelInvites(DiscordGuildChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return GetChannelInvites(channel.Id);
         }
 
@@ -165,10 +173,13 @@ namespace Discore.Http
         /// If true, don't try to reuse a similar invite 
         /// (useful for creating many unique one time use invites).
         /// </param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordInvite> CreateChannelInvite(DiscordGuildChannel channel,
             TimeSpan? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return CreateChannelInvite(channel.Id,
                 maxAge: maxAge,
                 maxUses: maxUses,

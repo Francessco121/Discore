@@ -44,7 +44,7 @@ namespace Discore
         /// Creates image data from raw image data.
         /// </summary>
         /// <param name="mediaType">A supported media type (e.g. image/jpeg, image/png, or image/gif).</param>
-        /// <exception cref="ArgumentNullException">Thrown if the array is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="imageData"/> is null.</exception>
         public DiscordImageData(byte[] imageData, string mediaType)
         {
             base64Data = Convert.ToBase64String(imageData);
@@ -55,8 +55,11 @@ namespace Discore
         /// Creates image data from raw image data.
         /// </summary>
         /// <param name="mediaType">A supported media type (e.g. image/jpeg, image/png, or image/gif).</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="imageData"/> is null.</exception>
         public DiscordImageData(ArraySegment<byte> imageData, string mediaType)
         {
+            if (imageData == null) throw new ArgumentNullException(nameof(imageData));
+
             base64Data = Convert.ToBase64String(imageData.Array, imageData.Offset, imageData.Count);
             this.mediaType = mediaType;
         }

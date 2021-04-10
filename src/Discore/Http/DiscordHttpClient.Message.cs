@@ -44,11 +44,14 @@ namespace Discore.Http
         /// Gets messages from a text channel.
         /// <para>Requires <see cref="DiscordPermission.ReadMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetChannelMessages(ITextChannel channel,
             Snowflake? baseMessageId = null, int? limit = null,
             MessageGetStrategy getStrategy = MessageGetStrategy.Before)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return GetChannelMessages(channel.Id,
                 baseMessageId: baseMessageId,
                 limit: limit,
@@ -72,9 +75,12 @@ namespace Discore.Http
         /// Gets a single message by ID from a channel.
         /// <para>Requires <see cref="DiscordPermission.ReadMessageHistory"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> GetChannelMessage(ITextChannel channel, Snowflake messageId)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return GetChannelMessage(channel.Id, messageId);
         }
 
@@ -94,9 +100,12 @@ namespace Discore.Http
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, string content)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return CreateMessage(channel.Id, content);
         }
 
@@ -127,10 +136,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, CreateMessageOptions options)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return CreateMessage(channel.Id, options);
         }
 
@@ -161,13 +172,15 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="fileData"/> is null, 
+        /// Thrown if <paramref name="channel"/> or <paramref name="fileData"/> is null, 
         /// or if <paramref name="fileName"/> is null or only contains whitespace characters.
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, Stream fileData, string fileName,
             CreateMessageOptions? options = null)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return CreateMessage(channel.Id, fileData, fileName, options);
         }
 
@@ -178,12 +191,14 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="fileName"/> is null or only contains whitespace characters.
+        /// Thrown if <paramref name="fileData"/> is null or <paramref name="fileName"/> is null or only contains whitespace characters.
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, ArraySegment<byte> fileData, string fileName,
             CreateMessageOptions? options = null)
         {
+            if (fileData == null) throw new ArgumentNullException(nameof(fileData));
+
             return CreateMessage(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, options);
         }
 
@@ -194,12 +209,14 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="fileName"/> is null or only contains whitespace characters.
+        /// Thrown if <paramref name="channel"/> or <paramref name="fileData"/> is null or <paramref name="fileName"/> is null or only contains whitespace characters.
         /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, ArraySegment<byte> fileData, string fileName,
             CreateMessageOptions? options = null)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return CreateMessage(channel.Id, fileData, fileName, options);
         }
 
@@ -257,9 +274,12 @@ namespace Discore.Http
         /// Edits an existing message in a text channel.
         /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(DiscordMessage message, string content)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return EditMessage(message.ChannelId, message.Id, content);
         }
 
@@ -290,6 +310,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(DiscordMessage message, EditMessageOptions options)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return EditMessage(message.ChannelId, message.Id, options);
         }
 
@@ -308,9 +330,12 @@ namespace Discore.Http
         /// Deletes a message from a text channel.
         /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteMessage(DiscordMessage message)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return DeleteMessage(message.ChannelId, message.Id);
         }
 
@@ -346,6 +371,8 @@ namespace Discore.Http
         public Task BulkDeleteMessages(ITextChannel channel, IEnumerable<DiscordMessage> messages,
             bool filterTooOldMessages = true)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return BulkDeleteMessages(channel.Id, messages, filterTooOldMessages);
         }
 
@@ -406,6 +433,8 @@ namespace Discore.Http
         public Task BulkDeleteMessages(ITextChannel channel, IEnumerable<Snowflake> messageIds,
             bool filterTooOldMessages = true)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return BulkDeleteMessages(channel.Id, messageIds, filterTooOldMessages);
         }
 
@@ -431,9 +460,12 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all pinned messages in a text channel.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(ITextChannel channel)
         {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
             return GetPinnedMessages(channel.Id);
         }
 
@@ -452,9 +484,12 @@ namespace Discore.Http
         /// Pins a message in a text channel.
         /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task AddPinnedChannelMessage(DiscordMessage message)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return AddPinnedChannelMessage(message.ChannelId, message.Id);
         }
 
@@ -473,9 +508,12 @@ namespace Discore.Http
         /// Unpins a message from a text channel.
         /// <para>Requires <see cref="DiscordPermission.ManageMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeletePinnedChannelMessage(DiscordMessage message)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
             return DeletePinnedChannelMessage(message.ChannelId, message.Id);
         }
     }

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -31,6 +32,10 @@ namespace Discore
         /// </summary>
         public int? Height { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="fileName"/>, <paramref name="url"/>,
+        /// or <paramref name="proxyUrl"/> is null.
+        /// </exception>
         public DiscordAttachment(
             Snowflake id,
             string fileName, 
@@ -41,10 +46,10 @@ namespace Discore
             int? height)
             : base(id)
         {
-            FileName = fileName;
+            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
             Size = size;
-            Url = url;
-            ProxyUrl = proxyUrl;
+            Url = url ?? throw new ArgumentNullException(nameof(url));
+            ProxyUrl = proxyUrl ?? throw new ArgumentNullException(nameof(proxyUrl));
             Width = width;
             Height = height;
         }

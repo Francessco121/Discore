@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -23,12 +24,13 @@ namespace Discore
         /// </summary>
         public string? Url { get; }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
         public DiscordGame(
             string name, 
             DiscordGameType type, 
             string? url)
         {
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
             Type = type;
             Url = url;
         }

@@ -32,9 +32,12 @@ namespace Discore.Http
         /// Gets a list of all emojis in a guild.
         /// </summary>
         /// <param name="guild">The guild.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="guild"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordEmoji>> ListGuildEmojis(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ListGuildEmojis(guild.Id);
         }
 
@@ -57,9 +60,12 @@ namespace Discore.Http
         /// </summary>
         /// <param name="guild">The guild.</param>
         /// <param name="emojiId">The ID of the emoji in the guild.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="guild"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordEmoji> GetGuildEmoji(DiscordGuild guild, Snowflake emojiId)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildEmoji(guild.Id, emojiId);
         }
 
@@ -92,10 +98,12 @@ namespace Discore.Http
         /// <param name="guild">The guild to give the new emoji to.</param>
         /// <param name="options">Options describing the properties of the new emoji.</param>
         /// <returns>Returns the newly created emoji.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="guild"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordEmoji> CreateGuildEmoji(DiscordGuild guild, CreateGuildEmojiOptions options)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return CreateGuildEmoji(guild.Id, options);
         }
 
@@ -131,11 +139,16 @@ namespace Discore.Http
         /// <param name="emoji">The emoji to modify.</param>
         /// <param name="options">Options describing the properties of the new emoji.</param>
         /// <returns>Returns the updated emoji.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="guild"/>, <paramref name="emoji"/>, or <paramref name="options"/> is null.
+        /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordEmoji> ModifyGuildEmoji(DiscordGuild guild, DiscordEmoji emoji,
             ModifyGuildEmojiOptions options)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (emoji == null) throw new ArgumentNullException(nameof(emoji));
+
             return ModifyGuildEmoji(guild.Id, emoji.Id, options);
         }
 
@@ -158,9 +171,15 @@ namespace Discore.Http
         /// </summary>
         /// <param name="guild">The guild the emoji is in.</param>
         /// <param name="emoji">The emoji to delete.</param>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="guild"/> or <paramref name="emoji"/> is null.
+        /// </exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteGuildEmoji(DiscordGuild guild, DiscordEmoji emoji)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (emoji == null) throw new ArgumentNullException(nameof(emoji));
+
             return DeleteGuildEmoji(guild.Id, emoji.Id);
         }
     }

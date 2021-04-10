@@ -61,6 +61,9 @@ namespace Discore
 
         // TODO: Add system, locale, flags, premium_type, public_flags
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="username"/> or <paramref name="discriminator"/> is null.
+        /// </exception>
         public DiscordUser(
             Snowflake id,
             string username, 
@@ -73,8 +76,8 @@ namespace Discore
             bool isWebhookUser = false)
             : base(id)
         {
-            Username = username;
-            Discriminator = discriminator;
+            Username = username ?? throw new ArgumentNullException(nameof(username));
+            Discriminator = discriminator ?? throw new ArgumentNullException(nameof(discriminator));
             Avatar = avatar;
             IsBot = isBot;
             HasTwoFactorAuth = hasTwoFactorAuth;

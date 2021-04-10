@@ -82,8 +82,11 @@ namespace Discore
         /// <summary>
         /// Parses a snowflake from a string.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static Snowflake Parse(string snowflakeString)
         {
+            if (snowflakeString == null) throw new ArgumentNullException(nameof(snowflakeString));
+
             return new Snowflake(ulong.Parse(snowflakeString));
         }
 
@@ -91,7 +94,7 @@ namespace Discore
         /// Attempts to parses a snowflake from a string,
         /// returns null if the parse failed.
         /// </summary>
-        public static Snowflake? ParseOrNull(string snowflakeString)
+        public static Snowflake? ParseOrNull(string? snowflakeString)
         {
             ulong snowflakeId;
             if (ulong.TryParse(snowflakeString, out snowflakeId))

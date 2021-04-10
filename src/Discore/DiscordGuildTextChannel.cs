@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -32,6 +33,9 @@ namespace Discore
         /// </summary>
         public Snowflake? LastMessageId { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
         public DiscordGuildTextChannel(
             Snowflake id,
             string name,

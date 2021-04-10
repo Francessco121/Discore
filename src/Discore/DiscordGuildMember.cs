@@ -45,6 +45,9 @@ namespace Discore
 
         // TODO: add premium_since, pending, permissions
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="user"/> or <paramref name="roleIds"/> is null.
+        /// </exception>
         public DiscordGuildMember(
             Snowflake id,
             Snowflake guildId, 
@@ -57,9 +60,9 @@ namespace Discore
             : base(id)
         {
             GuildId = guildId;
-            User = user;
+            User = user ?? throw new ArgumentNullException(nameof(user));
             Nickname = nickname;
-            RoleIds = roleIds;
+            RoleIds = roleIds ?? throw new ArgumentNullException(nameof(roleIds));
             JoinedAt = joinedAt;
             IsDeaf = isDeaf;
             IsMute = isMute;

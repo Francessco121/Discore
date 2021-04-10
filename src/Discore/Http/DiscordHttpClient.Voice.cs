@@ -1,4 +1,5 @@
 using Discore.Voice;
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -47,9 +48,12 @@ namespace Discore.Http
         /// <summary>
         /// Gets a list of all voice regions available to the specified guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordVoiceRegion>> GetGuildVoiceRegions(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildVoiceRegions(guild.Id);
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -22,6 +23,9 @@ namespace Discore
         /// </summary>
         public Snowflake? ParentId { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
         public DiscordGuildVoiceChannel(
             Snowflake id,
             string name,

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -25,6 +26,9 @@ namespace Discore
         /// </summary>
         public string Name { get; }
 
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="description"/> or <paramref name="name"/> is null.
+        /// </exception>
         public DiscordMessageApplication(
             Snowflake id,
             string? coverImage, 
@@ -34,9 +38,9 @@ namespace Discore
             : base(id)
         {
             CoverImage = coverImage;
-            Description = description;
+            Description = description ?? throw new ArgumentNullException(nameof(description));
             Icon = icon;
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         internal DiscordMessageApplication(JsonElement json)

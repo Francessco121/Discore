@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Text.Json;
 
 namespace Discore
@@ -21,12 +22,13 @@ namespace Discore
         /// </summary>
         public string Name { get; }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
         public DiscordChannelMention(Snowflake id, Snowflake guildId, DiscordChannelType type, string name)
             : base(id)
         {
             GuildId = guildId;
             Type = type;
-            Name = name;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
         }
 
         internal DiscordChannelMention(JsonElement json)

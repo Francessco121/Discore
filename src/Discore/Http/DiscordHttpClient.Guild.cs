@@ -25,9 +25,12 @@ namespace Discore.Http
         /// <summary>
         /// Creates a new guild.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> CreateGuild(CreateGuildOptions options)
         {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
             string requestData = BuildJsonContent(options.Build);
 
             using JsonDocument? returnData = await rest.Post("guilds", jsonContent: requestData,
@@ -63,6 +66,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuild> ModifyGuild(DiscordGuild guild, ModifyGuildOptions options)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ModifyGuild(guild.Id, options);
         }
 
@@ -81,9 +86,12 @@ namespace Discore.Http
         /// Deletes a guild permanently.
         /// <para>Note: current bot must be the owner.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteGuild(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return DeleteGuild(guild.Id);
         }
 
@@ -110,9 +118,12 @@ namespace Discore.Http
         /// Gets a list of all users that are banned from the specified guild.
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordGuildBan>> GetGuildBans(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildBans(guild.Id);
         }
 
@@ -136,9 +147,13 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7) or null to delete none.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="guild"/> or <paramref name="user"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task CreateGuildBan(DiscordGuild guild, DiscordUser user, int? deleteMessageDays = null)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
             return CreateGuildBan(guild.Id, user.Id, deleteMessageDays);
         }
 
@@ -147,9 +162,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
         /// <param name="deleteMessageDays">Number of days to delete messages for (0-7) or null to delete none.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="member"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task CreateGuildBan(DiscordGuildMember member, int? deleteMessageDays = null)
         {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+
             return CreateGuildBan(member.GuildId, member.Id, deleteMessageDays);
         }
 
@@ -168,9 +186,13 @@ namespace Discore.Http
         /// Removes a user ban from the specified guild.
         /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task RemoveGuildBan(DiscordGuild guild, DiscordUser user)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
             return RemoveGuildBan(guild, user);
         }
 
@@ -195,9 +217,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <param name="days">The number of days to count prune for (1 or more).</param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<int> GetGuildPruneCount(DiscordGuild guild, int days)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildPruneCount(guild.Id, days);
         }
 
@@ -229,9 +254,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
         /// <param name="days">The number of days to prune (1 or more).</param>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<int> BeginGuildPrune(DiscordGuild guild, int days)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return BeginGuildPrune(guild.Id, days);
         }
 
@@ -258,9 +286,12 @@ namespace Discore.Http
         /// Gets a list of integrations for the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<IReadOnlyList<DiscordIntegration>> GetGuildIntegrations(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildIntegrations(guild.Id);
         }
 
@@ -287,9 +318,13 @@ namespace Discore.Http
         /// Attaches an integration from the current bot to the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task CreateGuildIntegration(DiscordGuild guild, DiscordIntegration integration)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+            if (integration == null) throw new ArgumentNullException(nameof(integration));
+
             return CreateGuildIntegration(guild.Id, integration.Id, integration.Type);
         }
 
@@ -321,6 +356,8 @@ namespace Discore.Http
         public Task ModifyGuildIntegration(DiscordIntegration integration,
             ModifyIntegrationOptions options)
         {
+            if (integration == null) throw new ArgumentNullException(nameof(integration));
+
             if (integration.GuildId == null)
                 throw new ArgumentException("The given integration is not a guild integration.");
 
@@ -343,9 +380,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if <paramref name="integration"/>.GuildId is null.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task DeleteGuildIntegration(DiscordIntegration integration)
         {
+            if (integration == null) throw new ArgumentNullException(nameof(integration));
+
             if (integration.GuildId == null)
                 throw new ArgumentException("The given integration is not a guild integration.");
 
@@ -368,9 +408,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentException">Thrown if <paramref name="integration"/>.GuildId is null.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task SyncGuildIntegration(DiscordIntegration integration)
         {
+            if (integration == null) throw new ArgumentNullException(nameof(integration));
+
             if (integration.GuildId == null)
                 throw new ArgumentException("The given integration is not a guild integration.");
 
@@ -394,9 +437,12 @@ namespace Discore.Http
         /// Returns the embed for the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> GetGuildEmbed(DiscordGuild guild)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return GetGuildEmbed(guild.Id);
         }
 
@@ -427,6 +473,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordGuildEmbed> ModifyGuildEmbed(DiscordGuild guild, ModifyGuildEmbedOptions options)
         {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
             return ModifyGuildEmbed(guild.Id, options);
         }
     }
