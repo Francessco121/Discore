@@ -48,7 +48,7 @@ namespace Discore
         {
             Bitrate = json.GetProperty("bitrate").GetInt32();
             UserLimit = json.GetProperty("user_limit").GetInt32();
-            ParentId = json.GetProperty("parent_id").GetSnowflakeOrNull();
+            ParentId = json.GetPropertyOrNull("parent_id")?.GetSnowflakeOrNull();
         }
     }
 }

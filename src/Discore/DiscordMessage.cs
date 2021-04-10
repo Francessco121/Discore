@@ -165,7 +165,7 @@ namespace Discore
             ChannelId = json.GetProperty("channel_id").GetSnowflake();
             Content = json.GetProperty("content").GetString()!;
             Timestamp = json.GetProperty("timestamp").GetDateTime();
-            EditedTimestamp = json.GetProperty("edited_timestamp").GetDateTimeOrNull();
+            EditedTimestamp = json.GetPropertyOrNull("edited_timestamp")?.GetDateTimeOrNull();
             TextToSpeech = json.GetProperty("tts").GetBoolean();
             MentionEveryone = json.GetProperty("mention_everyone").GetBoolean();
             Nonce = json.GetPropertyOrNull("nonce")?.GetSnowflake();

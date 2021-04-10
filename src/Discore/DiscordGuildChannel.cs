@@ -49,17 +49,25 @@ namespace Discore
             Name = json.GetProperty("name").GetString()!;
             Position = json.GetProperty("position").GetInt32();
 
-            JsonElement overwritesJson = json.GetProperty("permission_overwrites");
-            var overwrites = new Dictionary<Snowflake, DiscordOverwrite>();
-
-            int numOverwrites = overwritesJson.GetArrayLength();
-            for (int i = 0; i < numOverwrites; i++)
+            JsonElement? overwritesJson = json.GetPropertyOrNull("permission_overwrites");
+            if (overwritesJson != null)
             {
-                var overwrite = new DiscordOverwrite(overwritesJson[i], channelId: Id);
-                overwrites[overwrite.Id] = overwrite;
-            }
+                JsonElement _overwritesJson = overwritesJson.Value;
+                var overwrites = new Dictionary<Snowflake, DiscordOverwrite>();
 
-            PermissionOverwrites = overwrites;
+                int numOverwrites = _overwritesJson.GetArrayLength();
+                for (int i = 0; i < numOverwrites; i++)
+                {
+                    var overwrite = new DiscordOverwrite(_overwritesJson[i], channelId: Id);
+                    overwrites[overwrite.Id] = overwrite;
+                }
+
+                PermissionOverwrites = overwrites;
+            }
+            else
+            {
+                PermissionOverwrites = new Dictionary<Snowflake, DiscordOverwrite>();
+            }
         }
 
         public override string ToString()

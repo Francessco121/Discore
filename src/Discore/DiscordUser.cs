@@ -94,7 +94,7 @@ namespace Discore
             Email = json.GetPropertyOrNull("email")?.GetString();
             IsWebhookUser = isWebhookUser;
 
-            string? avatarHash = json.GetProperty("avatar").GetString();
+            string? avatarHash = json.GetPropertyOrNull("avatar")?.GetString();
             Avatar = avatarHash != null ? DiscordCdnUrl.ForUserAvatar(Id, avatarHash) : null;
         }
 

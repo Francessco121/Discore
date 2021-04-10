@@ -56,8 +56,8 @@ namespace Discore
             Size = json.GetProperty("size").GetInt32();
             Url = json.GetProperty("url").GetString()!;
             ProxyUrl = json.GetProperty("proxy_url").GetString()!;
-            Width = json.GetProperty("width").GetInt32OrNull();
-            Height = json.GetProperty("height").GetInt32OrNull();
+            Width = json.GetPropertyOrNull("width")?.GetInt32OrNull();
+            Height = json.GetPropertyOrNull("height")?.GetInt32OrNull();
         }
 
         public override string ToString()

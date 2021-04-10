@@ -31,7 +31,7 @@ namespace Discore
             GuildId = guildId;
 
             Enabled = json.GetProperty("enabled").GetBoolean();
-            ChannelId = json.GetProperty("channel_id").GetSnowflakeOrNull();
+            ChannelId = json.GetPropertyOrNull("channel_id")?.GetSnowflakeOrNull();
         }
     }
 }

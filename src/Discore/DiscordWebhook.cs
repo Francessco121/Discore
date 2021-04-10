@@ -65,13 +65,13 @@ namespace Discore
         {
             GuildId = json.GetPropertyOrNull("guild_id")?.GetSnowflake();
             ChannelId = json.GetProperty("channel_id").GetSnowflake();
-            Name = json.GetProperty("name").GetString();
+            Name = json.GetPropertyOrNull("name")?.GetString();
             Token = json.GetPropertyOrNull("token")?.GetString();
 
             JsonElement? userJson = json.GetPropertyOrNull("user");
             User = userJson == null ? null : new DiscordUser(userJson.Value, isWebhookUser: false);
 
-            string? avatarHash = json.GetProperty("avatar").GetString();
+            string? avatarHash = json.GetPropertyOrNull("avatar")?.GetString();
             Avatar = avatarHash == null ? null : DiscordCdnUrl.ForUserAvatar(Id, avatarHash);
         }
     }

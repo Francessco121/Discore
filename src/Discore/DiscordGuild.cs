@@ -218,18 +218,18 @@ namespace Discore
             Name = json.GetProperty("name").GetString()!;
             RegionId = json.GetProperty("region").GetString()!;
             AfkTimeout = json.GetProperty("afk_timeout").GetInt32();
-            AfkChannelId = json.GetProperty("afk_channel_id").GetSnowflakeOrNull();
+            AfkChannelId = json.GetPropertyOrNull("afk_channel_id")?.GetSnowflakeOrNull();
             IsEmbedEnabled = json.GetPropertyOrNull("embed_enabled")?.GetBoolean() ?? false;
             EmbedChannelId = json.GetPropertyOrNull("embed_channel_id")?.GetSnowflakeOrNull();
             OwnerId = json.GetProperty("owner_id").GetSnowflake();
-            ApplicationId = json.GetProperty("application_id").GetSnowflakeOrNull();
+            ApplicationId = json.GetPropertyOrNull("application_id")?.GetSnowflakeOrNull();
             IsWidgetEnabled = json.GetPropertyOrNull("widget_enabled")?.GetBoolean() ?? false;
             WidgetChannelId = json.GetPropertyOrNull("widget_channel_id")?.GetSnowflakeOrNull();
-            SystemChannelId = json.GetProperty("system_channel_id").GetSnowflakeOrNull();
+            SystemChannelId = json.GetPropertyOrNull("system_channel_id")?.GetSnowflakeOrNull();
             MaxPresences = json.GetPropertyOrNull("max_presences")?.GetInt32OrNull();
             MaxMembers = json.GetPropertyOrNull("max_members")?.GetInt32();
-            VanityUrlCode = json.GetProperty("vanity_url_code").GetString();
-            Description = json.GetProperty("description").GetString();
+            VanityUrlCode = json.GetPropertyOrNull("vanity_url_code")?.GetString();
+            Description = json.GetPropertyOrNull("description")?.GetString();
             PremiumTier = (GuildPremiumTier)json.GetProperty("premium_tier").GetInt32();
             PremiumSubscriptionCount = json.GetPropertyOrNull("premium_subscription_count")?.GetInt32();
             PreferredLocale = json.GetProperty("preferred_locale").GetString()!;
@@ -239,15 +239,15 @@ namespace Discore
             MfaLevel = (GuildMfaLevel)json.GetProperty("mfa_level").GetInt32();
 
             // Get image hashes
-            string? iconHash = json.GetProperty("icon").GetString();
+            string? iconHash = json.GetPropertyOrNull("icon")?.GetString();
             if (iconHash != null)
                 Icon = DiscordCdnUrl.ForGuildIcon(Id, iconHash);
 
-            string? splashHash = json.GetProperty("splash").GetString();
+            string? splashHash = json.GetPropertyOrNull("splash")?.GetString();
             if (splashHash != null)
                 Splash = DiscordCdnUrl.ForGuildSplash(Id, splashHash);
 
-            string? bannerHash = json.GetProperty("banner").GetString();
+            string? bannerHash = json.GetPropertyOrNull("banner")?.GetString();
             if (bannerHash != null)
                 Banner = DiscordCdnUrl.ForGuildBanner(Id, bannerHash);
 

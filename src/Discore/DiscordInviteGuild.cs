@@ -35,7 +35,7 @@ namespace Discore
         {
             GuildId = json.GetProperty("id").GetSnowflake();
             Name = json.GetProperty("name").GetString()!;
-            SplashHash = json.GetProperty("splash").GetString();
+            SplashHash = json.GetPropertyOrNull("splash")?.GetString();
         }
     }
 }

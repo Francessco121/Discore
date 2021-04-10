@@ -10,7 +10,7 @@ namespace Discore
         /// <summary>
         /// Gets the topic of this channel.
         /// </summary>
-        public string Topic { get; }
+        public string? Topic { get; }
 
         /// <summary>
         /// Gets whether this text channel is NSFW (not-safe-for-work).
@@ -38,7 +38,7 @@ namespace Discore
             int position,
             IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
             Snowflake guildId,
-            string topic,
+            string? topic,
             bool nsfw,
             Snowflake? parentId,
             Snowflake? lastMessageId)
@@ -58,7 +58,7 @@ namespace Discore
         internal DiscordGuildTextChannel(JsonElement json, Snowflake? guildId = null)
             : base(json, DiscordChannelType.GuildText, guildId)
         {
-            Topic = json.GetProperty("topic").GetString()!;
+            Topic = json.GetPropertyOrNull("topic")?.GetString();
             Nsfw = json.GetPropertyOrNull("nsfw")?.GetBoolean() ?? false;
             ParentId = json.GetPropertyOrNull("parent_id")?.GetSnowflakeOrNull();
             LastMessageId = json.GetPropertyOrNull("last_message_id")?.GetSnowflakeOrNull();

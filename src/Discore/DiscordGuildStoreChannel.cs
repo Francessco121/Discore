@@ -39,8 +39,8 @@ namespace Discore
         internal DiscordGuildStoreChannel(JsonElement json, Snowflake? guildId = null)
             : base(json, DiscordChannelType.GuildStore, guildId)
         {
-            Nsfw = json.GetProperty("nsfw").GetBoolean();
-            ParentId = json.GetProperty("parent_id").GetSnowflakeOrNull();
+            Nsfw = json.GetPropertyOrNull("nsfw")?.GetBoolean() ?? false;
+            ParentId = json.GetPropertyOrNull("parent_id")?.GetSnowflakeOrNull();
         }
     }
 }

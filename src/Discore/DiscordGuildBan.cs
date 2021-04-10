@@ -24,7 +24,7 @@ namespace Discore
 
         internal DiscordGuildBan(JsonElement json)
         {
-            Reason = json.GetProperty("reason").GetString();
+            Reason = json.GetPropertyOrNull("reason")?.GetString();
             User = new DiscordUser(json.GetProperty("user"), isWebhookUser: false);
         }
     }

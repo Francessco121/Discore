@@ -44,7 +44,7 @@ namespace Discore
         {
             CoverImage = json.GetPropertyOrNull("cover_image")?.GetString();
             Description = json.GetProperty("description").GetString()!;
-            Icon = json.GetProperty("icon").GetString();
+            Icon = json.GetPropertyOrNull("icon")?.GetString();
             Name = json.GetProperty("name").GetString()!;
         }
     }

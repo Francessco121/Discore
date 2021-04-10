@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -62,13 +63,22 @@ namespace Discore
             IsManaged = json.GetPropertyOrNull("managed")?.GetBoolean() ?? false;
             IsAnimated = json.GetPropertyOrNull("animated")?.GetBoolean() ?? false;
 
-            JsonElement rolesJson = json.GetProperty("roles");
-            var roleIds = new Snowflake[rolesJson.GetArrayLength()];
+            JsonElement? rolesJson = json.GetPropertyOrNull("roles");
 
-            for (int i = 0; i < roleIds.Length; i++)
-                roleIds[i] = rolesJson[i].GetSnowflake();
+            if (rolesJson != null)
+            {
+                JsonElement _rolesJson = rolesJson.Value;
+                var roleIds = new Snowflake[_rolesJson.GetArrayLength()];
 
-            RoleIds = roleIds;
+                for (int i = 0; i < roleIds.Length; i++)
+                    roleIds[i] = _rolesJson[i].GetSnowflake();
+
+                RoleIds = roleIds;
+            }
+            else
+            {
+                RoleIds = Array.Empty<Snowflake>();
+            }
         }
 
         public override string ToString()
