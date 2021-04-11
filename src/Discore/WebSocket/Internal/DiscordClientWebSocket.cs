@@ -7,6 +7,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Discore.WebSocket.Internal
 {
     /**
@@ -27,14 +29,19 @@ namespace Discore.WebSocket.Internal
         /// <summary>
         /// Gets whether the socket is currently connected.
         /// </summary>
-        public virtual bool IsConnected => State == WebSocketState.Open;
+        public bool IsConnected => State == WebSocketState.Open;
 
         /// <summary>
         /// Gets whether the socket is in a state that can be disconnected.
         /// </summary>
-        public virtual bool CanBeDisconnected => State == WebSocketState.Open
+        public bool CanBeDisconnected => State == WebSocketState.Open
             || State == WebSocketState.CloseSent
             || State == WebSocketState.CloseReceived;
+
+        /// <summary>
+        /// Gets whether the socket received a close code and is handling disconnection internally.
+        /// </summary>
+        public bool ReceivedClose => receivedClose;
 
         protected WebSocketState State => socket.State;
 
@@ -44,11 +51,12 @@ namespace Discore.WebSocket.Internal
         readonly DiscoreLogger log;
         readonly ClientWebSocket socket;
 
-        CancellationTokenSource abortCancellationSource;
-        Task receiveTask;
+        CancellationTokenSource? abortCancellationSource;
+        Task? receiveTask;
 
-        AsyncLock sendLock;
+        AsyncLock? sendLock;
 
+        bool receivedClose;
         bool isDisposed;
 
         protected DiscordClientWebSocket(string loggingName)
@@ -146,12 +154,12 @@ namespace Discore.WebSocket.Internal
                 try
                 {
                     // Give the socket 5s to gracefully disconnect.
-                    if (!Task.WaitAll(new Task[] { closeTask, receiveTask }, 5000, cancellationToken))
+                    if (!Task.WaitAll(new Task[] { closeTask, receiveTask! }, 5000, cancellationToken))
                     {
                         // Socket did not gracefully disconnect in the given time,
                         // so abort the socket and move on.
                         log.LogWarning("Socket failed to disconnect after 5s, aborting...");
-                        abortCancellationSource.Cancel();
+                        abortCancellationSource?.Cancel();
                     }
                 }
                 catch (OperationCanceledException)
@@ -191,7 +199,7 @@ namespace Discore.WebSocket.Internal
 
             // Wait for any existing send operations,
             // ClientWebSocket only supports one send operation at a time.
-            using (await sendLock.LockAsync().ConfigureAwait(false))
+            using (await sendLock!.LockAsync().ConfigureAwait(false))
             {
                 // Now that we have acquired the lock, check if the socket is still open.
                 // If not, just ignore this message so we can effectively cancel any pending sends after close.
@@ -263,174 +271,183 @@ namespace Discore.WebSocket.Internal
                 else
                     count = SEND_BUFFER_SIZE;
 
-                ArraySegment<byte> arraySeg = new ArraySegment<byte>(data, offset, count);
+                var arraySeg = new ArraySegment<byte>(data, offset, count);
 
                 // Can only throw:
                 //   OperationCanceledException (if aborted)
                 //   WebSocketException (if stream closed)
                 //   ObjectDisposedException (if disposed)
                 //   InvalidOperationException (if not connected)
-                await socket.SendAsync(arraySeg, WebSocketMessageType.Text, isLast, abortCancellationSource.Token)
+                await socket.SendAsync(arraySeg, WebSocketMessageType.Text, isLast, abortCancellationSource!.Token)
                     .ConfigureAwait(false);
             }
         }
 
         async Task ReceiveLoop()
         {
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[RECEIVE_BUFFER_SIZE]);
+            var buffer = new ArraySegment<byte>(new byte[RECEIVE_BUFFER_SIZE]);
 
-            using (MemoryStream ms = new MemoryStream())
+            using var ms = new MemoryStream();
+
+            WebSocketReceiveResult? result = null;
+
+            try
             {
-                WebSocketReceiveResult result = null;
-                bool isClosing = false;
-
-                try
+                while (socket.State == WebSocketState.Open)
                 {
-                    while (socket.State == WebSocketState.Open)
+                    // Reset memory stream for next message
+                    ms.Position = 0;
+                    ms.SetLength(0);
+
+                    // Continue receiving data until a full message is read or the socket is no longer open.
+                    do
                     {
-                        // Reset memory stream for next message
-                        ms.Position = 0;
-                        ms.SetLength(0);
-
-                        // Continue receiving data until a full message is read or the socket is no longer open.
-                        do
+                        try
                         {
-                            try
+                            // This call only throws WebSocketExceptions.
+                            result = await socket.ReceiveAsync(buffer, abortCancellationSource!.Token).ConfigureAwait(false);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            log.LogVerbose($"[ReceiveLoop] Socket aborted while receiving.");
+                            break;
+                        }
+                        catch (WebSocketException wsex)
+                        {
+                            // Only two errors here should be InvalidState (if socket is aborted),
+                            // or ConnectionClosedPrematurely (with an inner exception detailing what happened).
+
+                            if (wsex.WebSocketErrorCode == WebSocketError.InvalidState)
+                                log.LogVerbose($"[ReceiveLoop] Socket was aborted while receiving message. code = {wsex.WebSocketErrorCode}");
+                            else if (wsex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
                             {
-                                // This call only throws WebSocketExceptions.
-                                result = await socket.ReceiveAsync(buffer, abortCancellationSource.Token).ConfigureAwait(false);
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                log.LogVerbose($"[ReceiveLoop] Socket aborted while receiving.");
-                                break;
-                            }
-                            catch (WebSocketException wsex)
-                            {
-                                // Only two errors here should be InvalidState (if socket is aborted),
-                                // or ConnectionClosedPrematurely (with an inner exception detailing what happened).
+                                log.LogError($"[ReceiveLoop] Socket closed prematurely while receiving: code = {wsex.WebSocketErrorCode}");
 
-                                if (wsex.WebSocketErrorCode == WebSocketError.InvalidState)
-                                    log.LogVerbose($"[ReceiveLoop] Socket was aborted while receiving message. code = {wsex.WebSocketErrorCode}");
-                                else if (wsex.WebSocketErrorCode == WebSocketError.ConnectionClosedPrematurely)
-                                {
-                                    log.LogError($"[ReceiveLoop] Socket closed prematurely while receiving: code = {wsex.WebSocketErrorCode}");
-
-                                    // Notify inherting object
-                                    OnClosedPrematurely();
-                                }
-                                else
-                                {
-                                    log.LogError("[ReceiveLoop] Socket encountered error while receiving: " +
-                                        $"code = {wsex.WebSocketErrorCode}, error = {wsex}");
-
-                                    // Notify inherting object
-                                    OnClosedPrematurely();
-                                }
-
-                                break;
-                            }
-
-                            if (result.MessageType == WebSocketMessageType.Close)
-                            {
-                                // Server is disconnecting us
-                                isClosing = true;
-
-                                log.LogVerbose($"[ReceiveLoop] Received close: {result.CloseStatusDescription} " +
-                                    $"{result.CloseStatus} ({(int)result.CloseStatus})");
-
-                                if (socket.State == WebSocketState.Open 
-                                    || socket.State == WebSocketState.CloseReceived
-                                    || socket.State == WebSocketState.CloseSent)
-                                {
-                                    try
-                                    {
-                                        log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
-
-                                        // Complete the closing handshake
-                                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", abortCancellationSource.Token)
-                                            .ConfigureAwait(false);
-
-                                        log.LogVerbose("[ReceiveLoop] Completed close handshake.");
-                                    }
-                                    catch (OperationCanceledException)
-                                    {
-                                        log.LogVerbose($"[ReceiveLoop] Socket aborted while closing.");
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        log.LogError($"[ReceiveLoop] Failed to complete closing handshake: {ex}");
-                                    }
-                                }
-                                else
-                                {
-                                    log.LogVerbose("[ReceiveLoop] Close handshake completed by remote end.");
-                                }
-
-                                // Notify inheriting object
-                                OnCloseReceived(result.CloseStatus.Value, result.CloseStatusDescription);
-                                break;
+                                // Notify inherting object
+                                OnClosedPrematurely();
                             }
                             else
-                                // Data message, append buffer to memory stream
-                                ms.Write(buffer.Array, 0, result.Count);
-                        }
-                        while (socket.State == WebSocketState.Open && !result.EndOfMessage);
+                            {
+                                log.LogError("[ReceiveLoop] Socket encountered error while receiving: " +
+                                    $"code = {wsex.WebSocketErrorCode}, error = {wsex}");
 
-                        if (isClosing || socket.State == WebSocketState.Aborted)
+                                // Notify inherting object
+                                OnClosedPrematurely();
+                            }
+
                             break;
+                        }
+
+                        if (result.MessageType == WebSocketMessageType.Close)
+                        {
+                            // Server is disconnecting us
+                            receivedClose = true;
+
+                            log.LogVerbose($"[ReceiveLoop] Received close: {result.CloseStatusDescription} " +
+                                $"{result.CloseStatus} ({(int?)result.CloseStatus})");
+
+                            if (socket.State == WebSocketState.Open
+                                || socket.State == WebSocketState.CloseReceived
+                                || socket.State == WebSocketState.CloseSent)
+                            {
+                                try
+                                {
+                                    log.LogVerbose("[ReceiveLoop] Completing close handshake with status NormalClosure (1000)...");
+
+                                    // In the case of an external disconnect call happening at the same time as receiving a close code,
+                                    // the websocket may be disposed right before we finish up the close handshake. In that case,
+                                    // abortCancellationSource has been disposed so just dont use a cancellation token.
+                                    CancellationToken cancellationToken = isDisposed ? CancellationToken.None : abortCancellationSource.Token;
+
+                                    // Complete the closing handshake
+                                    await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", cancellationToken)
+                                        .ConfigureAwait(false);
+
+                                    log.LogVerbose("[ReceiveLoop] Completed close handshake.");
+                                }
+                                catch (OperationCanceledException)
+                                {
+                                    log.LogVerbose($"[ReceiveLoop] Socket aborted while closing.");
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.LogError($"[ReceiveLoop] Failed to complete closing handshake: {ex}");
+                                }
+                            }
+                            else
+                            {
+                                log.LogVerbose("[ReceiveLoop] Close handshake completed by remote end.");
+                            }
+
+                            // Notify inheriting object
+                            OnCloseReceived(result.CloseStatus ?? 0, result.CloseStatusDescription);
+                            break;
+                        }
+                        else
+                            // Data message, append buffer to memory stream
+                            ms.Write(buffer.Array, 0, result.Count);
+                    }
+                    while (socket.State == WebSocketState.Open && !result.EndOfMessage);
+
+                    if (receivedClose || socket.State == WebSocketState.Aborted)
+                        break;
+
+                    if (result == null)
+                    {
+                        log.LogWarning($"[ReceiveLoop] Result is null, but loop is not ending. Socket state: {socket.State}");
+                        continue;
+                    }
+
+                    try
+                    {
+                        // Parse the message
+                        ms.Position = 0;
+
+                        using JsonDocument message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
 
                         try
                         {
-                            // Parse the message
-                            ms.Position = 0;
-
-                            using JsonDocument message = await ParseMessage(result.MessageType, ms).ConfigureAwait(false);
-
-                            try
-                            {
-                                // Notify inheriting object that a payload has been received.
-                                await OnPayloadReceived(message).ConfigureAwait(false);
-                            }
-                            // Payload handlers can send other payloads which can result in two
-                            // valid exceptions that we do not want to bubble up.
-                            catch (InvalidOperationException)
-                            {
-                                // Socket was closed between receiving a payload and handling it
-                                log.LogVerbose("Received InvalidOperationException from OnPayloadReceived, " +
-                                    "stopping receive loop...");
-
-                                break;
-                            }
-                            catch (DiscordWebSocketException dwex)
-                            {
-                                if (dwex.Error == DiscordWebSocketError.ConnectionClosed)
-                                    // Socket was closed while a payload handler was sending another payload
-                                    break;
-                                else
-                                {
-                                    // Unexpected error occured, we should only let it bubble up if the socket
-                                    // is not open after the exception.
-                                    if (socket.State == WebSocketState.Open)
-                                        log.LogError("[ReceiveLoop] Unexpected error from OnPayloadReceived: " +
-                                            $"code = {dwex.Error}, error = {dwex}");
-                                    else
-                                        // Don't log since that will be handled below
-                                        throw;
-                                }
-                            }
+                            // Notify inheriting object that a payload has been received.
+                            await OnPayloadReceived(message).ConfigureAwait(false);
                         }
-                        catch (Exception ex)
+                        // Payload handlers can send other payloads which can result in two
+                        // valid exceptions that we do not want to bubble up.
+                        catch (InvalidOperationException)
                         {
-                            log.LogError($"[ReceiveLoop] Failed to parse message: {ex}");
+                            // Socket was closed between receiving a payload and handling it
+                            log.LogVerbose("[ReceiveLoop] Received InvalidOperationException from OnPayloadReceived, " +
+                                "stopping receive loop...");
+
+                            break;
+                        }
+                        catch (DiscordWebSocketException dwex)
+                        {
+                            if (dwex.Error == DiscordWebSocketError.ConnectionClosed)
+                                // Socket was closed while a payload handler was sending another payload
+                                break;
+                            else
+                            {
+                                // Unexpected error occured, we should only let it bubble up if the socket
+                                // is not open after the exception.
+                                if (socket.State == WebSocketState.Open)
+                                    log.LogError("[ReceiveLoop] Unexpected error from OnPayloadReceived: " +
+                                        $"code = {dwex.Error}, error = {dwex}");
+                                else
+                                    // Don't log since that will be handled below
+                                    throw;
+                            }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        log.LogError($"[ReceiveLoop] Failed to parse message: {ex}");
+                    }
                 }
-                catch (Exception ex)
-                {
-                    log.LogError($"[ReceiveLoop] Uncaught exception: {ex}");
-                    OnClosedPrematurely();
-                }
+            }
+            catch (Exception ex)
+            {
+                log.LogError($"[ReceiveLoop] Uncaught exception: {ex}");
+                OnClosedPrematurely();
             }
         }
 
@@ -491,3 +508,5 @@ namespace Discore.WebSocket.Internal
         }
     }
 }
+
+#nullable restore

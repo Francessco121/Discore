@@ -251,7 +251,7 @@ namespace Discore.Voice
                 webSocket.OnTimedOut -= WebSocket_OnTimedOut;
                 webSocket.OnUserSpeaking -= WebSocket_OnUserSpeaking;
 
-                if (webSocket.CanBeDisconnected)
+                if (webSocket.CanBeDisconnected && !webSocket.ReceivedClose)
                 {
                     try
                     {

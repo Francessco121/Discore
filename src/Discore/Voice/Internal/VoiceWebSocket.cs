@@ -72,6 +72,8 @@ namespace Discore.Voice.Internal
             switch (voiceCloseCode)
             {
                 case VoiceCloseCode.Disconnected:
+                    // Kicked or channel was deleted, don't reconnect
+                    break;
                 case VoiceCloseCode.VoiceServerCrashed:
                     heartbeatCancellationSource?.Cancel();
                     OnResumeRequested?.Invoke(this, EventArgs.Empty);
