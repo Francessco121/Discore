@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordEmbedVideo
@@ -43,5 +41,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

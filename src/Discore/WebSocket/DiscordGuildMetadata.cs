@@ -1,8 +1,6 @@
 using System;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     /// <summary>
@@ -47,5 +45,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

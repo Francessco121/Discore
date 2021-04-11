@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordGuildVoiceChannel : DiscordGuildChannel
@@ -56,5 +54,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

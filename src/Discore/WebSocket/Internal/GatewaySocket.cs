@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading;
@@ -15,31 +16,33 @@ namespace Discore.WebSocket.Internal
         /// <summary>
         /// Called when a dispatch payload is received.
         /// </summary>
-        public event EventHandler<DispatchEventArgs> OnDispatch;
+        public event EventHandler<DispatchEventArgs>? OnDispatch;
         /// <summary>
         /// Called when the socket has disconnected and requires reconnection.
         /// The argument specifies whether a new session is required.
         /// </summary>
-        public event EventHandler<ReconnectionEventArgs> OnReconnectionRequired;
+        public event EventHandler<ReconnectionEventArgs>? OnReconnectionRequired;
         /// <summary>
         /// Called when the socket has disconnected with a code specifying that
         /// we cannot saftely reconnect.
         /// </summary>
-        public event EventHandler<GatewayCloseCode> OnFatalDisconnection;
+        public event EventHandler<GatewayCloseCode>? OnFatalDisconnection;
 
         /// <summary>
         /// Called when the socket receives the HELLO payload.
         /// </summary>
-        public HelloCallback OnHello { get; set; }
+        public HelloCallback? OnHello { get; set; }
 
-        GatewayRateLimiter identifyRateLimiter;
-        GatewayRateLimiter outboundPayloadRateLimiter;
-        GatewayRateLimiter gameStatusUpdateRateLimiter;
+        readonly GatewayRateLimiter identifyRateLimiter;
+        readonly GatewayRateLimiter outboundPayloadRateLimiter;
+        readonly GatewayRateLimiter gameStatusUpdateRateLimiter;
+
+        readonly Dictionary<GatewayOPCode, PayloadCallback> payloadHandlers;
 
         int sequence;
 
-        Task heartbeatTask;
-        CancellationTokenSource heartbeatCancellationSource;
+        Task? heartbeatTask;
+        CancellationTokenSource? heartbeatCancellationSource;
         int heartbeatInterval;
         bool receivedHeartbeatAck;
 
@@ -56,7 +59,7 @@ namespace Discore.WebSocket.Internal
         
         bool isDisposed;
 
-        DiscoreLogger log;
+        readonly DiscoreLogger log;
 
         public GatewaySocket(string loggingName, int sequence, 
             GatewayRateLimiter outboundPayloadRateLimiter, GatewayRateLimiter gameStatusUpdateRateLimiter,
@@ -69,8 +72,8 @@ namespace Discore.WebSocket.Internal
             this.identifyRateLimiter = identifyRateLimiter;
 
             log = new DiscoreLogger(loggingName);
-            
-            InitializePayloadHandlers();
+
+            payloadHandlers = InitializePayloadHandlers();
         }
 
         public override async Task DisconnectAsync(WebSocketCloseStatus closeStatus, string statusDescription, 
@@ -94,13 +97,13 @@ namespace Discore.WebSocket.Internal
             GatewayOPCode op = (GatewayOPCode)payloadRoot.GetProperty("op").GetInt32();
             JsonElement data = payloadRoot.GetProperty("d");
 
-            PayloadCallback callback;
+            PayloadCallback? callback;
             if (payloadHandlers.TryGetValue(op, out callback))
             {
                 if (callback.Synchronous != null)
                     callback.Synchronous(payloadRoot, data);
                 else
-                    await callback.Asynchronous(payloadRoot, data).ConfigureAwait(false);
+                    await callback.Asynchronous!(payloadRoot, data).ConfigureAwait(false);
             }
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
@@ -159,7 +162,7 @@ namespace Discore.WebSocket.Internal
 
             log.LogVerbose("[HeartbeatLoop] Begin.");
 
-            while (State == WebSocketState.Open && !heartbeatCancellationSource.IsCancellationRequested)
+            while (State == WebSocketState.Open && !heartbeatCancellationSource!.IsCancellationRequested)
             {
                 if (receivedHeartbeatAck)
                 {

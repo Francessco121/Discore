@@ -1,8 +1,6 @@
 using System;
 using System.Net;
 
-#nullable enable
-
 namespace Discore.Http
 {
     /// <summary>
@@ -35,5 +33,3 @@ namespace Discore.Http
         }
     }
 }
-
-#nullable restore

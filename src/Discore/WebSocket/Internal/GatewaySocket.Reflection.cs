@@ -4,8 +4,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Discore.WebSocket.Internal
 {
     partial class GatewaySocket
@@ -40,11 +38,9 @@ namespace Discore.WebSocket.Internal
             }
         }
 
-        Dictionary<GatewayOPCode, PayloadCallback> payloadHandlers;
-
-        void InitializePayloadHandlers()
+        Dictionary<GatewayOPCode, PayloadCallback> InitializePayloadHandlers()
         {
-            payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
+            var payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
 
             Type taskType = typeof(Task);
             Type gatewaySocketType = typeof(GatewaySocket);
@@ -71,8 +67,8 @@ namespace Discore.WebSocket.Internal
                     payloadHandlers[attr.OPCode] = payloadCallback;
                 }
             }
+
+            return payloadHandlers;
         }
     }
 }
-
-#nullable restore

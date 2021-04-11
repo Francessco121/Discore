@@ -1,5 +1,3 @@
-#nullable enable
-
 using System.Text.Json;
 
 namespace Discore.Http
@@ -105,5 +103,3 @@ namespace Discore.Http
         protected virtual void BuildAdditionalProperties(Utf8JsonWriter writer) { }
     }
 }
-
-#nullable restore

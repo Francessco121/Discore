@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
     <Copyright>Ethan Lafrenais 2020</Copyright>
     <Version>4.4.1</Version>
     <AssemblyVersion>4.4.1.0</AssemblyVersion>

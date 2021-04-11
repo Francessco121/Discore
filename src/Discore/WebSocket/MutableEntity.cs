@@ -1,8 +1,6 @@
 using ConcurrentCollections;
 using System;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     abstract class MutableEntity
@@ -70,5 +68,3 @@ namespace Discore.WebSocket
         protected abstract T BuildImmutableEntity();
     }
 }
-
-#nullable restore

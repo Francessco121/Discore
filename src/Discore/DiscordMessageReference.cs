@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public class DiscordMessageReference
@@ -37,5 +35,3 @@ namespace Discore
 
     }
 }
-
-#nullable restore

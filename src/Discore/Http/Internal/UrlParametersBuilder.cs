@@ -4,13 +4,13 @@ using System.Text;
 
 namespace Discore.Http.Internal
 {
-    class UrlParametersBuilder : Dictionary<string, string>
+    class UrlParametersBuilder : Dictionary<string, string?>
     {
         public string ToQueryString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             
-            foreach (KeyValuePair<string, string> parameter in this)
+            foreach (KeyValuePair<string, string?> parameter in this)
             {
                 if (parameter.Value == null)
                     break;

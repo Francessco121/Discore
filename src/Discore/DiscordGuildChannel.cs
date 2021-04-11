@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public abstract class DiscordGuildChannel : DiscordChannel
@@ -80,5 +78,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

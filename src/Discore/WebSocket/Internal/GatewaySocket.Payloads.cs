@@ -5,8 +5,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-#nullable enable
-
 #pragma warning disable IDE0051 // Remove unused private members
 
 namespace Discore.WebSocket.Internal
@@ -194,7 +192,7 @@ namespace Discore.WebSocket.Internal
 
                 writer.WriteNumber("since", options.AfkSince);
                 writer.WriteBoolean("afk", options.Afk);
-                writer.WriteString("status", options.GetStatusString() ?? "online");
+                writer.WriteString("status", Utils.UserStatusToString(options.Status) ?? "online");
 
                 if (options.Game != null)
                 {
@@ -255,5 +253,3 @@ namespace Discore.WebSocket.Internal
 }
 
 #pragma warning restore IDE0051 // Remove unused private members
-
-#nullable restore

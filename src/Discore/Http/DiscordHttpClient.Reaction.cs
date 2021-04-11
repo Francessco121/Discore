@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Discore.Http
 {
     partial class DiscordHttpClient
@@ -174,5 +172,3 @@ namespace Discore.Http
         }
     }
 }
-
-#nullable restore

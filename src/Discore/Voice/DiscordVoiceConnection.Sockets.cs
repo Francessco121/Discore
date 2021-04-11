@@ -12,21 +12,21 @@ namespace Discore.Voice
 {
     partial class DiscordVoiceConnection
     {
-        VoiceWebSocket webSocket;
-        string endPoint;
-        string token;
+        VoiceWebSocket? webSocket;
+        string? endPoint;
+        string? token;
         int? heartbeatInterval;
-        IPAddress udpIP;
+        IPAddress? udpIP;
         int? udpPort;
         int? ssrc;
-        string[] encryptionModes;
-        Task heartbeatLoopTask;
-        VoiceUdpSocket udpSocket;
-        string discoveredIP;
+        string[]? encryptionModes;
+        Task? heartbeatLoopTask;
+        VoiceUdpSocket? udpSocket;
+        string? discoveredIP;
         int? discoveredPort;
 
-        Task resumeTask;
-        CancellationTokenSource resumeCancellationTokenSource;
+        Task? resumeTask;
+        CancellationTokenSource? resumeCancellationTokenSource;
 
         internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
         {
@@ -70,7 +70,7 @@ namespace Discore.Voice
                     {
                         // Ensure we send a speaking payload so that moving between voice servers
                         // updates the ssrc correctly.
-                        await webSocket.SendSpeakingPayload(isSpeaking, ssrc.Value)
+                        await webSocket!.SendSpeakingPayload(isSpeaking, ssrc!.Value)
                             .ConfigureAwait(false);
                     }
                 }
@@ -83,7 +83,7 @@ namespace Discore.Voice
 
             try
             {
-                Func<Task>[] functions = new Func<Task>[]
+                var functions = new Func<Task>[]
                 {
                     CreateVoiceWebSocket,
                     ConnectVoiceWebSocket,
@@ -111,7 +111,7 @@ namespace Discore.Voice
                 {
                     isConnected = true;
                     isConnecting = false;
-                    connectingCancellationSource.Cancel();
+                    connectingCancellationSource?.Cancel();
 
                     OnConnected?.Invoke(this, new VoiceConnectionEventArgs(shard, this));
                 }
@@ -147,7 +147,7 @@ namespace Discore.Voice
 
             try
             {
-                Func<Task>[] functions = new Func<Task>[]
+                var functions = new Func<Task>[]
                 {
                     CreateVoiceWebSocket,
                     ConnectVoiceWebSocket,
@@ -202,9 +202,11 @@ namespace Discore.Voice
         /// </summary>
         /// <exception cref="OperationCanceledException"></exception>
         async Task CloseAndInvalidate(WebSocketCloseStatus webSocketCloseCode, string webSocketCloseDescription,
-            VoiceConnectionInvalidationReason reason, string errorMessage = null,
+            VoiceConnectionInvalidationReason reason, string? errorMessage = null,
             CancellationToken? cancellationToken = null)
         {
+            isConnected = false;
+
             Task leaveChannelTask = EnsureUserLeftVoiceChannel(cancellationToken ?? CancellationToken.None);
 
             Task webSocketDisconnectTask = EnsureWebSocketIsClosed(webSocketCloseCode,
@@ -218,7 +220,7 @@ namespace Discore.Voice
             Invalidate(reason, errorMessage);
         }
 
-        void Invalidate(VoiceConnectionInvalidationReason reason, string errorMessage = null)
+        void Invalidate(VoiceConnectionInvalidationReason reason, string? errorMessage = null)
         {
             if (isValid)
             {
@@ -467,7 +469,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[ConnectVoiceWebSocket] endPoint must not be null!");
 
             // Build WebSocket URI
-            Uri uri = new Uri($"wss://{endPoint}?v={VoiceWebSocket.GATEWAY_VERSION}");
+            var uri = new Uri($"wss://{endPoint}?v={VoiceWebSocket.GATEWAY_VERSION}");
 
             log.LogVerbose($"[ConnectVoiceWebSocket] Connecting WebSocket to {uri}...");
 
@@ -507,7 +509,7 @@ namespace Discore.Voice
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveResumed] webSocket must not be null!");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
@@ -522,7 +524,7 @@ namespace Discore.Voice
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceHello] webSocket must not be null!");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
@@ -553,7 +555,7 @@ namespace Discore.Voice
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceReady] webSocket must not be null!");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
@@ -640,7 +642,7 @@ namespace Discore.Voice
             if (udpSocket == null)
                 throw new InvalidOperationException("[ReceiveIPDiscovery] udpSocket must not be null!");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>
@@ -682,7 +684,7 @@ namespace Discore.Voice
             if (udpSocket == null)
                 throw new InvalidOperationException("[ReceiveSessionDescription] udpSocket must not be null!");
 
-            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(5 * 1000);
 
             return Task.Run(() =>

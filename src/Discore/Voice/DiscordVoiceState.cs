@@ -1,5 +1,3 @@
-#nullable enable
-
 using System.Text.Json;
 
 namespace Discore.Voice
@@ -96,5 +94,3 @@ namespace Discore.Voice
         }
     }
 }
-
-#nullable restore

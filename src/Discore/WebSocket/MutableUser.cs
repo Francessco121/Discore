@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     class MutableUser : MutableEntity<DiscordUser>
@@ -98,5 +96,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

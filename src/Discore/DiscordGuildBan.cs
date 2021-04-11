@@ -1,8 +1,6 @@
 using System;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordGuildBan
@@ -31,5 +29,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

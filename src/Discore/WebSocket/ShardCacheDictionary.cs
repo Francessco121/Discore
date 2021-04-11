@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-
-#nullable enable
+using System.Diagnostics.CodeAnalysis;
 
 namespace Discore.WebSocket
 {
@@ -37,12 +36,12 @@ namespace Discore.WebSocket
             }
         }
 
-        public bool TryGetValue(Snowflake id, out T value)
+        public bool TryGetValue(Snowflake id, [NotNullWhen(true)] out T? value)
         {
             return dictionary.TryGetValue(id, out value);
         }
 
-        public bool TryRemove(Snowflake id, out T value)
+        public bool TryRemove(Snowflake id, [NotNullWhen(true)] out T? value)
         {
             return dictionary.TryRemove(id, out value);
         }
@@ -58,5 +57,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

@@ -44,9 +44,9 @@ namespace Discore.WebSocket
         /// <summary>
         /// If available, gets the exception that sparked the failure.
         /// </summary>
-        public Exception Exception { get; }
+        public Exception? Exception { get; }
 
-        internal ShardFailureEventArgs(Shard shard, string message, ShardFailureReason reason, Exception ex)
+        internal ShardFailureEventArgs(Shard shard, string message, ShardFailureReason reason, Exception? ex)
             : base(shard)
         {
             Message = message;

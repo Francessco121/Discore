@@ -4,8 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     /// <summary>
@@ -73,7 +71,7 @@ namespace Discore.WebSocket
         {
             GuildChannels[guildChannel.Id] = guildChannel;
 
-            ConcurrentHashSet<Snowflake> guildChannelsIdSet;
+            ConcurrentHashSet<Snowflake>? guildChannelsIdSet;
             if (!GuildChannelIds.TryGetValue(guildChannel.GuildId, out guildChannelsIdSet))
             {
                 guildChannelsIdSet = new ConcurrentHashSet<Snowflake>();
@@ -87,7 +85,7 @@ namespace Discore.WebSocket
         {
             GuildChannels.TryRemove(guildChannelId, out _);
 
-            if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
+            if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake>? guildChannelsIdSet))
                 guildChannelsIdSet.TryRemove(guildChannelId);
         }
 
@@ -177,7 +175,7 @@ namespace Discore.WebSocket
         /// </summary>
         public IReadOnlyList<DiscordGuildChannel>? GetGuildChannels(Snowflake guildId)
         {
-            if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake> guildChannelsIdSet))
+            if (GuildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake>? guildChannelsIdSet))
             {
                 List<DiscordGuildChannel> guildChannels = new List<DiscordGuildChannel>();
                 foreach (Snowflake guildChannelId in guildChannelsIdSet)
@@ -314,5 +312,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

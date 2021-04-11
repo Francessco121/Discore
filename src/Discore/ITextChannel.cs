@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Discore
 {
     public interface ITextChannel
@@ -23,5 +21,3 @@ namespace Discore
         Snowflake? LastMessageId { get; }
     }
 }
-
-#nullable restore

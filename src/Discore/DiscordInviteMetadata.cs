@@ -1,8 +1,6 @@
 using System;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordInviteMetadata : DiscordInvite
@@ -94,5 +92,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     class MutableGuild : MutableEntity<DiscordGuild>
@@ -149,5 +147,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

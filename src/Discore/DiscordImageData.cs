@@ -1,7 +1,5 @@
 using System;
 
-#nullable enable
-
 namespace Discore
 {
     public class DiscordImageData
@@ -101,5 +99,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

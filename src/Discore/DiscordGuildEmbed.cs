@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordGuildEmbed
@@ -35,5 +33,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

@@ -3,8 +3,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Discore.Http.Internal
 {
     class RateLimitLock
@@ -87,5 +85,3 @@ namespace Discore.Http.Internal
         }
     }
 }
-
-#nullable restore

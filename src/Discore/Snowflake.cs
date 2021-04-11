@@ -1,7 +1,5 @@
 using System;
 
-#nullable enable
-
 namespace Discore
 {
     /// <summary>
@@ -142,5 +140,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.Http
 {
     /// <summary>
@@ -135,5 +133,3 @@ namespace Discore.Http
         }
     }
 }
-
-#nullable restore

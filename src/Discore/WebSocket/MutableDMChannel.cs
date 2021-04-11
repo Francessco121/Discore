@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Discore.WebSocket
 {
     class MutableDMChannel : MutableEntity<DiscordDMChannel>
@@ -22,5 +20,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

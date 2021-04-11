@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace Discore
 {
     static class Utils
@@ -16,7 +14,18 @@ namespace Discore
                 _ => null,
             };
         }
+
+        public static string? UserStatusToString(DiscordUserStatus status)
+        {
+            return status switch
+            {
+                DiscordUserStatus.Offline => "offline",
+                DiscordUserStatus.Invisible => "invisible",
+                DiscordUserStatus.DoNotDisturb => "dnd",
+                DiscordUserStatus.Idle => "idle",
+                DiscordUserStatus.Online => "online",
+                _ => null,
+            };
+        }
     }
 }
-
-#nullable restore

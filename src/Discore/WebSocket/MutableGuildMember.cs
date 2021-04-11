@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     class MutableGuildMember : MutableEntity<DiscordGuildMember>
@@ -72,5 +70,3 @@ namespace Discore.WebSocket
         }
     }
 }
-
-#nullable restore

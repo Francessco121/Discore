@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.Http
 {
     public class EmbedOptions
@@ -330,5 +328,3 @@ namespace Discore.Http
         }
     }
 }
-
-#nullable restore

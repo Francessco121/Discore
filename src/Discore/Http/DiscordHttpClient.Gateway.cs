@@ -1,8 +1,6 @@
 using System.Text.Json;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Discore.Http
 {
     class GatewayBotResponse
@@ -48,5 +46,3 @@ namespace Discore.Http
         }
     }
 }
-
-#nullable restore

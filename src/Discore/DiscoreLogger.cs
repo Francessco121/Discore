@@ -1,7 +1,5 @@
 using System;
 
-#nullable enable
-
 namespace Discore
 {
     public class DiscoreLogEventArgs : EventArgs
@@ -165,5 +163,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

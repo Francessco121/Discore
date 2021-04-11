@@ -5,7 +5,7 @@ namespace Discore.WebSocket.Internal
     /// </summary>
     static class GatewayUrlMemoryCache
     {
-        public static string GatewayUrl { get; private set; }
+        public static string? GatewayUrl { get; private set; }
 
         static readonly object lockObj = new object();
 

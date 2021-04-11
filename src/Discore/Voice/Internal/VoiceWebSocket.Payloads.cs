@@ -8,8 +8,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-#nullable enable
-
 #pragma warning disable IDE0051 // Remove unused private members
 
 namespace Discore.Voice.Internal
@@ -231,5 +229,3 @@ namespace Discore.Voice.Internal
 }
 
 #pragma warning restore IDE0051 // Remove unused private members
-
-#nullable restore

@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 
-#nullable enable
-
 namespace Discore.Http.Internal
 {
     class RateLimitHeaders
@@ -59,7 +57,7 @@ namespace Discore.Http.Internal
 
             int? retryAfterHeader = null;
 
-            IEnumerable<string> retryAfterValues;
+            IEnumerable<string>? retryAfterValues;
             if (headers.TryGetValues("Retry-After", out retryAfterValues))
             {
                 string retryAfterStr = retryAfterValues.FirstOrDefault();
@@ -75,7 +73,7 @@ namespace Discore.Http.Internal
                 double? resetTimeHeader = null;
                 string? bucket = null;
 
-                IEnumerable<string> limitValues;
+                IEnumerable<string>? limitValues;
                 if (headers.TryGetValues("X-RateLimit-Limit", out limitValues))
                 {
                     string limit = limitValues.FirstOrDefault();
@@ -85,7 +83,7 @@ namespace Discore.Http.Internal
                         limitHeader = limitInt;
                 }
 
-                IEnumerable<string> remainingValues;
+                IEnumerable<string>? remainingValues;
                 if (headers.TryGetValues("X-RateLimit-Remaining", out remainingValues))
                 {
                     string remainingStr = remainingValues.FirstOrDefault();
@@ -95,7 +93,7 @@ namespace Discore.Http.Internal
                         remainingHeader = remaining;
                 }
 
-                IEnumerable<string> resetValues;
+                IEnumerable<string>? resetValues;
                 if (headers.TryGetValues("X-RateLimit-Reset", out resetValues))
                 {
                     string resetTimeStr = resetValues.FirstOrDefault();
@@ -105,7 +103,7 @@ namespace Discore.Http.Internal
                         resetTimeHeader = resetTime;
                 }
 
-                IEnumerable<string> bucketValues;
+                IEnumerable<string>? bucketValues;
                 if (headers.TryGetValues("X-RateLimit-Bucket", out bucketValues))
                 {
                     bucket = bucketValues.FirstOrDefault();
@@ -128,5 +126,3 @@ namespace Discore.Http.Internal
         }
     }
 }
-
-#nullable restore

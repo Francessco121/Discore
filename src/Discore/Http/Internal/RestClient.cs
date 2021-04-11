@@ -9,8 +9,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Discore.Http.Internal
 {
     // TODO: rename to ApiClient
@@ -246,7 +244,7 @@ namespace Discore.Http.Internal
                             else
                             {
                                 // If the route was previously in a rate-limit bucket, but isn't anymore, remove the link
-                                if (routesToBuckets.TryRemove(rateLimitRoute, out string bucket))
+                                if (routesToBuckets.TryRemove(rateLimitRoute, out string? bucket))
                                 {
                                     // Additionally remove the bucket if no routes are linked to it
                                     if (!routesToBuckets.Values.Contains(bucket))
@@ -363,5 +361,3 @@ namespace Discore.Http.Internal
         }
     }
 }
-
-#nullable restore

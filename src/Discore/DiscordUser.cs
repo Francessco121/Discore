@@ -3,8 +3,6 @@ using System.Text.Json;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordUser : DiscordIdEntity
@@ -107,7 +105,5 @@ namespace Discore
         }
     }
 }
-
-#nullable restore
 
 #pragma warning restore CS0618 // Type or member is obsolete

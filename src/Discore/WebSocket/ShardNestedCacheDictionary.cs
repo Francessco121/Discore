@@ -2,8 +2,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-#nullable enable
-
 namespace Discore.WebSocket
 {
     class ShardNestedCacheDictionary<T>
@@ -20,9 +18,9 @@ namespace Discore.WebSocket
         {
             get
             {
-                if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
+                if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T>? innerDictionary))
                 {
-                    if (innerDictionary.TryGetValue(childId, out T value))
+                    if (innerDictionary.TryGetValue(childId, out T? value))
                         return value;
                 }
 
@@ -30,7 +28,7 @@ namespace Discore.WebSocket
             }
             set
             {
-                ShardCacheDictionary<T> innerDictionary;
+                ShardCacheDictionary<T>? innerDictionary;
                 if (!dictionary.TryGetValue(parentId, out innerDictionary))
                 {
                     innerDictionary = new ShardCacheDictionary<T>();
@@ -43,7 +41,7 @@ namespace Discore.WebSocket
 
         public bool TryGetValue(Snowflake parentId, Snowflake childId, [NotNullWhen(true)] out T? value)
         {
-            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
+            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T>? innerDictionary))
                 return innerDictionary.TryGetValue(childId, out value);
             else
             {
@@ -54,7 +52,7 @@ namespace Discore.WebSocket
 
         public IEnumerable<T>? GetValues(Snowflake parentId)
         {
-            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
+            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T>? innerDictionary))
                 return innerDictionary.Values;
             else
                 return null;
@@ -62,7 +60,7 @@ namespace Discore.WebSocket
 
         public ShardCacheDictionary<T> GetOrCreateInner(Snowflake parentId)
         {
-            ShardCacheDictionary<T> innerDictionary;
+            ShardCacheDictionary<T>? innerDictionary;
             if (!dictionary.TryGetValue(parentId, out innerDictionary))
             {
                 innerDictionary = new ShardCacheDictionary<T>();
@@ -74,7 +72,7 @@ namespace Discore.WebSocket
 
         public bool TryRemove(Snowflake parentId, Snowflake childId, [NotNullWhen(true)] out T? value)
         {
-            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
+            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T>? innerDictionary))
                 return innerDictionary.TryRemove(childId, out value);
             else
             {
@@ -95,10 +93,8 @@ namespace Discore.WebSocket
 
         public void Clear(Snowflake parentId)
         {
-            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T> innerDictionary))
+            if (dictionary.TryGetValue(parentId, out ShardCacheDictionary<T>? innerDictionary))
                 innerDictionary.Clear();
         }
     }
 }
-
-#nullable restore

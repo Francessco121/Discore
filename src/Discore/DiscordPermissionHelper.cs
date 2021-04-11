@@ -3,8 +3,6 @@ using System;
 // Permission logic here is based off of:
 // https://discord.com/developers/docs/topics/permissions#permission-hierarchy
 
-#nullable enable
-
 namespace Discore
 {
     public static class DiscordPermissionHelper
@@ -43,7 +41,7 @@ namespace Discore
             // Apply permissions for each role the member has
             foreach (Snowflake roleId in member.RoleIds)
             {
-                if (guild.Roles.TryGetValue(roleId, out DiscordRole role))
+                if (guild.Roles.TryGetValue(roleId, out DiscordRole? role))
                 {
                     userPermissions = userPermissions | role.Permissions;
                 }
@@ -98,7 +96,7 @@ namespace Discore
             // Apply permissions for each role the member has
             foreach (Snowflake roleId in member.RoleIds)
             {
-                if (guild.Roles.TryGetValue(roleId, out DiscordRole role))
+                if (guild.Roles.TryGetValue(roleId, out DiscordRole? role))
                 {
                     userPermissions = userPermissions | role.Permissions;
                 }
@@ -109,7 +107,7 @@ namespace Discore
                 return true;
 
             // Apply channel @everyone overwrites
-            DiscordOverwrite channelEveryoneOverwrite;
+            DiscordOverwrite? channelEveryoneOverwrite;
             if (channel.PermissionOverwrites.TryGetValue(guild.Id, out channelEveryoneOverwrite))
             {
                 userPermissions = (userPermissions & (~channelEveryoneOverwrite.Deny)) | channelEveryoneOverwrite.Allow;
@@ -121,7 +119,7 @@ namespace Discore
 
             foreach (Snowflake roleId in member.RoleIds)
             {
-                DiscordOverwrite overwrite;
+                DiscordOverwrite? overwrite;
                 if (channel.PermissionOverwrites.TryGetValue(roleId, out overwrite))
                 {
                     roleOverwriteAllow = roleOverwriteAllow | overwrite.Allow;
@@ -132,7 +130,7 @@ namespace Discore
             userPermissions = (userPermissions & (~roleOverwriteDeny)) | roleOverwriteAllow;
 
             // Apply channel-specific member overwrite for this channel
-            DiscordOverwrite memberOverwrite;
+            DiscordOverwrite? memberOverwrite;
             if (channel.PermissionOverwrites.TryGetValue(member.Id, out memberOverwrite))
             {
                 userPermissions = (userPermissions & (~memberOverwrite.Deny)) | memberOverwrite.Allow;
@@ -189,5 +187,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

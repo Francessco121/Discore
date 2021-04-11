@@ -4,8 +4,6 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Discore.WebSocket.Internal
 {
     partial class Gateway
@@ -40,11 +38,9 @@ namespace Discore.WebSocket.Internal
             }
         }
 
-        Dictionary<string, DispatchCallback> dispatchHandlers;
-
-        void InitializeDispatchHandlers()
+        Dictionary<string, DispatchCallback> InitializeDispatchHandlers()
         {
-            dispatchHandlers = new Dictionary<string, DispatchCallback>();
+            var dispatchHandlers = new Dictionary<string, DispatchCallback>();
 
             Type taskType = typeof(Task);
             Type gatewayType = typeof(Gateway);
@@ -71,8 +67,8 @@ namespace Discore.WebSocket.Internal
                     dispatchHandlers[attr.EventName] = dispatchCallback;
                 }
             }
+
+            return dispatchHandlers;
         }
     }
 }
-
-#nullable restore

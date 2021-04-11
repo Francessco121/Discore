@@ -1,7 +1,5 @@
 using System;
 
-#nullable enable
-
 namespace Discore
 {
     public static class DiscordGuildMemberExtensions
@@ -77,5 +75,3 @@ namespace Discore
             => DiscordPermissionHelper.AssertPermission(permissions, member, guild, channel);
     }
 }
-
-#nullable restore

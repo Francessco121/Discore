@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordClientStatus
@@ -36,5 +34,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

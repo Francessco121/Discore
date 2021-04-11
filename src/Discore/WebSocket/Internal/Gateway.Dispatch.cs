@@ -6,8 +6,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-#nullable enable
-
 #pragma warning disable IDE0051 // Remove unused private members
 
 namespace Discore.WebSocket.Internal
@@ -91,7 +89,7 @@ namespace Discore.WebSocket.Internal
             Snowflake userId = userData.GetProperty("id").GetSnowflake();
 
             // Get user
-            MutableUser mutableUser;
+            MutableUser? mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
                 // Create user
@@ -196,7 +194,7 @@ namespace Discore.WebSocket.Internal
             bool wasUnavailable = !cache.IsGuildAvailable(guildId);
 
             // Update guild
-            MutableGuild mutableGuild;
+            MutableGuild? mutableGuild;
             if (!cache.Guilds.TryGetValue(guildId, out mutableGuild))
             {
                 mutableGuild = new MutableGuild(guildId);
@@ -284,7 +282,7 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake guildId = data.GetProperty("id").GetSnowflake();
 
-            MutableGuild mutableGuild;
+            MutableGuild? mutableGuild;
             if (cache.Guilds.TryGetValue(guildId, out mutableGuild))
             {
                 // Update guild
@@ -308,7 +306,7 @@ namespace Discore.WebSocket.Internal
                 // Tell the cache this guild is no longer available
                 cache.SetGuildAvailability(guildId, false);
 
-                if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
+                if (cache.Guilds.TryGetValue(guildId, out MutableGuild? mutableGuild))
                 {
                     // Fire event
                     OnGuildUnavailable?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
@@ -319,7 +317,7 @@ namespace Discore.WebSocket.Internal
             else
             {
                 // Disconnect the voice connection for this guild if connected.
-                if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection voiceConnection)
+                if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection? voiceConnection)
                     && voiceConnection.IsConnected)
                 {
                     CancellationTokenSource cts = new CancellationTokenSource();
@@ -335,7 +333,7 @@ namespace Discore.WebSocket.Internal
                 cache.GuildPresences.RemoveParent(guildId);
                 cache.GuildVoiceStates.RemoveParent(guildId);
 
-                if (cache.GuildChannelIds.TryRemove(guildId, out  ConcurrentHashSet<Snowflake> channelIds))
+                if (cache.GuildChannelIds.TryRemove(guildId, out  ConcurrentHashSet<Snowflake>? channelIds))
                 {
                     foreach (Snowflake channelId in channelIds)
                         cache.GuildChannels.TryRemove(channelId, out _);
@@ -343,7 +341,7 @@ namespace Discore.WebSocket.Internal
 
                 // Remove the guild from cache
                 cache.RemoveGuildId(guildId);
-                if (cache.Guilds.TryRemove(guildId, out MutableGuild mutableGuild))
+                if (cache.Guilds.TryRemove(guildId, out MutableGuild? mutableGuild))
                 {
                     // Ensure all references are cleared
                     mutableGuild.ClearReferences();
@@ -381,7 +379,7 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
+            if (cache.Guilds.TryGetValue(guildId, out MutableGuild? mutableGuild))
             { 
                 // Clear existing emojis
                 mutableGuild.Emojis.Clear();
@@ -487,7 +485,7 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
+            if (cache.Guilds.TryGetValue(guildId, out MutableGuild? mutableGuild))
             {
                 JsonElement roleData = data.GetProperty("role");
                 DiscordRole role = new DiscordRole(roleData, guildId: guildId);
@@ -506,7 +504,7 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
+            if (cache.Guilds.TryGetValue(guildId, out MutableGuild? mutableGuild))
             {
                 JsonElement roleData = data.GetProperty("role");
                 DiscordRole role = new DiscordRole(roleData, guildId: guildId);
@@ -525,11 +523,11 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
+            if (cache.Guilds.TryGetValue(guildId, out MutableGuild? mutableGuild))
             {
                 Snowflake roleId = data.GetProperty("role_id").GetSnowflake();
 
-                if (mutableGuild.Roles.TryRemove(roleId, out DiscordRole role))
+                if (mutableGuild.Roles.TryRemove(roleId, out DiscordRole? role))
                     OnGuildRoleDeleted?.Invoke(this, new GuildRoleEventArgs(shard, mutableGuild.ImmutableEntity, role));
                 else
                     throw new ShardCacheException($"Role {roleId} was not in the guild {guildId} cache!");
@@ -551,7 +549,7 @@ namespace Discore.WebSocket.Internal
                 // DM channel
                 MutableUser recipient = CacheUser(data.GetProperty("recipients")[0]);
 
-                MutableDMChannel mutableDMChannel;
+                MutableDMChannel? mutableDMChannel;
                 if (!cache.DMChannels.TryGetValue(id, out mutableDMChannel))
                 {
                     mutableDMChannel = new MutableDMChannel(id, recipient);
@@ -630,7 +628,7 @@ namespace Discore.WebSocket.Internal
             {
                 // DM channel
                 DiscordDMChannel dm;
-                if (cache.DMChannels.TryRemove(id, out MutableDMChannel mutableDM))
+                if (cache.DMChannels.TryRemove(id, out MutableDMChannel? mutableDM))
                 {
                     mutableDM.ClearReferences();
 
@@ -650,7 +648,7 @@ namespace Discore.WebSocket.Internal
                 // Guild channel
                 Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-                DiscordGuildChannel channel;
+                DiscordGuildChannel? channel;
 
                 if (type == DiscordChannelType.GuildText)
                 {
@@ -703,7 +701,7 @@ namespace Discore.WebSocket.Internal
             Snowflake authorId = authorData.GetProperty("id").GetSnowflake();
             bool isWebhookUser = !string.IsNullOrWhiteSpace(data.GetPropertyOrNull("webhook_id")?.GetString());
 
-            MutableUser mutableAuthor;
+            MutableUser? mutableAuthor;
             if (!cache.Users.TryGetValue(authorId, out mutableAuthor))
             {
                 mutableAuthor = new MutableUser(authorId, isWebhookUser);
@@ -738,7 +736,7 @@ namespace Discore.WebSocket.Internal
                 Snowflake authorId = _authorData.GetProperty("id").GetSnowflake();
                 bool isWebhookUser = !string.IsNullOrWhiteSpace(data.GetPropertyOrNull("webhook_id")?.GetString());
 
-                MutableUser mutableAuthor;
+                MutableUser? mutableAuthor;
                 if (!cache.Users.TryGetValue(authorId, out mutableAuthor))
                 {
                     mutableAuthor = new MutableUser(authorId, isWebhookUser);
@@ -844,7 +842,7 @@ namespace Discore.WebSocket.Internal
             JsonElement userData = data.GetProperty("user");
             Snowflake userId = userData.GetProperty("id").GetSnowflake();
 
-            if (cache.Users.TryGetValue(userId, out MutableUser mutableUser))
+            if (cache.Users.TryGetValue(userId, out MutableUser? mutableUser))
             {
                 mutableUser.PartialUpdate(userData);
             }
@@ -883,7 +881,7 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake userId = data.GetProperty("id").GetSnowflake();
 
-            MutableUser mutableUser;
+            MutableUser? mutableUser;
             if (!cache.Users.TryGetValue(userId, out mutableUser))
             {
                 mutableUser = new MutableUser(userId, false);
@@ -937,7 +935,7 @@ namespace Discore.WebSocket.Internal
                 // then we need to notify the connection of the session ID.
                 if (userId == shard.UserId)
                 {
-                    DiscordVoiceConnection connection;
+                    DiscordVoiceConnection? connection;
                     if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                     {
                         if (voiceState.ChannelId.HasValue)
@@ -969,7 +967,7 @@ namespace Discore.WebSocket.Internal
                 string token = data.GetProperty("token").GetString()!;
                 string endpoint = data.GetProperty("endpoint").GetString()!;
 
-                DiscordVoiceConnection connection;
+                DiscordVoiceConnection? connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
                     // Notify the connection of the server update
@@ -986,5 +984,3 @@ namespace Discore.WebSocket.Internal
 }
 
 #pragma warning restore IDE0051 // Remove unused private members
-
-#nullable restore

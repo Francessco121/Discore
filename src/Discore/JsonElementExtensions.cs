@@ -1,8 +1,6 @@
 using System;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     static class JsonElementExtensions
@@ -141,5 +139,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

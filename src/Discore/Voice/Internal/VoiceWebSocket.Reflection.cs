@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.Voice.Internal
 {
     partial class VoiceWebSocket
@@ -22,11 +20,9 @@ namespace Discore.Voice.Internal
             }
         }
 
-        Dictionary<VoiceOPCode, PayloadCallback> payloadHandlers;
-
-        void InitializePayloadHandlers()
+        Dictionary<VoiceOPCode, PayloadCallback> InitializePayloadHandlers()
         {
-            payloadHandlers = new Dictionary<VoiceOPCode, PayloadCallback>();
+            var payloadHandlers = new Dictionary<VoiceOPCode, PayloadCallback>();
 
             Type gatewayType = typeof(VoiceWebSocket);
             Type payloadType = typeof(PayloadCallback);
@@ -37,8 +33,8 @@ namespace Discore.Voice.Internal
                 if (attr != null)
                     payloadHandlers[attr.OPCode] = (PayloadCallback)method.CreateDelegate(payloadType, this);
             }
+
+            return payloadHandlers;
         }
     }
 }
-
-#nullable restore

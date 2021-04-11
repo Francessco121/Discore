@@ -31,10 +31,10 @@ namespace Discore.Voice
         /// If reason is set to error or timed out, gets a message describing the error that caused the invalidation.
         /// Otherwise returns null.
         /// </summary>
-        public string ErrorMessage { get; }
+        public string? ErrorMessage { get; }
 
         internal VoiceConnectionInvalidatedEventArgs(Shard shard, DiscordVoiceConnection connection,
-            VoiceConnectionInvalidationReason reason, string errorMessage = null)
+            VoiceConnectionInvalidationReason reason, string? errorMessage = null)
             : base(shard, connection)
         {
             Reason = reason;

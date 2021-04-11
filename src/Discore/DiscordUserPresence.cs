@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     public sealed class DiscordUserPresence
@@ -98,5 +96,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

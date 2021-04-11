@@ -1,5 +1,3 @@
-#nullable enable
-
 using System.Text.Json;
 
 namespace Discore
@@ -30,5 +28,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

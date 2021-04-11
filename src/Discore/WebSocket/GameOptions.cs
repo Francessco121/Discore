@@ -5,7 +5,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// The name of the game.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// The type of the game. Defaults to <see cref="DiscordGameType.Game"/>.
@@ -16,7 +16,7 @@ namespace Discore.WebSocket
         /// The URL of the stream. <see cref="Type"/> must be <see cref="DiscordGameType.Streaming"/>
         /// for this to take effect. Defaults to null.
         /// </summary>
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
         public GameOptions() { }
         public GameOptions(string name)

@@ -1,6 +1,7 @@
 using Discore.Http;
 using Nito.AsyncEx;
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading;
@@ -19,28 +20,28 @@ namespace Discore.WebSocket.Internal
 
         public Shard Shard => shard;
 
-        public event EventHandler<GatewayReconnectedEventArgs> OnReconnected;
-        public event EventHandler<GatewayFailureData> OnFailure;
+        public event EventHandler<GatewayReconnectedEventArgs>? OnReconnected;
+        public event EventHandler<GatewayFailureData>? OnFailure;
 
         const int GATEWAY_VERSION = 6;
 
-        string botToken;
-        DiscordHttpClient http;
+        readonly string botToken;
+        readonly DiscordHttpClient http;
 
-        Shard shard;
-        int totalShards;
+        readonly Shard shard;
+        readonly int totalShards;
 
-        DiscordShardCache cache;
+        readonly DiscordShardCache cache;
 
-        ShardStartConfig lastShardStartConfig;
+        ShardStartConfig? lastShardStartConfig;
 
-        GatewaySocket socket;
+        GatewaySocket? socket;
 
-        GatewayRateLimiter identifyRateLimiter;
+        readonly GatewayRateLimiter identifyRateLimiter;
         // These two rate limiters are used by the socket itself,
         // but must be saved between creating new sockets.
-        GatewayRateLimiter outboundPayloadRateLimiter;
-        GatewayRateLimiter gameStatusUpdateRateLimiter;
+        readonly GatewayRateLimiter outboundPayloadRateLimiter;
+        readonly GatewayRateLimiter gameStatusUpdateRateLimiter;
 
         /// <summary>
         /// State to be tracked only for the public API of this class.
@@ -48,7 +49,7 @@ namespace Discore.WebSocket.Internal
         /// </summary>
         GatewayState state;
 
-        Task connectTask;
+        Task? connectTask;
         /// <summary>
         /// Whether the next HELLO payload should be responded to with a RESUME, otherwise IDENTIFY.
         /// </summary>
@@ -56,26 +57,28 @@ namespace Discore.WebSocket.Internal
         /// <summary>
         /// Used to cancel the connect task when it is started automatically (i.e. not from public ConnectAsync).
         /// </summary>
-        CancellationTokenSource connectTaskCancellationSource;
+        CancellationTokenSource? connectTaskCancellationSource;
 
-        AsyncManualResetEvent handshakeCompleteEvent;
+        readonly AsyncManualResetEvent handshakeCompleteEvent;
         /// <summary>
         /// Used to cancel operations that wait for the handshakeCompleteEvent.
         /// Cancellation occurs when the Gateway is disconnected publicly (i.e. not from a socket error).
         /// </summary>
         CancellationTokenSource handshakeCompleteCancellationSource;
 
-        GatewayFailureData gatewayFailureData;
+        GatewayFailureData? gatewayFailureData;
 
         /// <summary>
         /// Milliseconds to wait before attempting the next socket connection. Will be reset after wait completes.
         /// </summary>
         int nextConnectionDelayMs;
 
-        DiscoreLogger log;
+        Dictionary<string, DispatchCallback> dispatchHandlers;
+
+        readonly DiscoreLogger log;
 
         int lastSequence;
-        string sessionId;
+        string? sessionId;
 
         bool isDisposed;
 
@@ -100,9 +103,10 @@ namespace Discore.WebSocket.Internal
             outboundPayloadRateLimiter = new GatewayRateLimiter(60, 120); // 120 outbound payloads every 60 seconds
             gameStatusUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute
 
-            InitializeDispatchHandlers();
+            dispatchHandlers = InitializeDispatchHandlers();
         }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException">
@@ -111,9 +115,11 @@ namespace Discore.WebSocket.Internal
         public async Task UpdateStatusAsync(StatusOptions options, 
             CancellationToken? cancellationToken = null)
         {
+            if (options == null)
+                throw new ArgumentNullException(nameof(options));
             if (isDisposed)
                 throw new ObjectDisposedException(GetType().FullName);
-            if (state != GatewayState.Connected)
+            if (socket == null || state != GatewayState.Connected)
                 throw new InvalidOperationException("The gateway is not currently connected!");
 
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
@@ -125,6 +131,7 @@ namespace Discore.WebSocket.Internal
             }).ConfigureAwait(false);
         }
 
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="query"/> is null.</exception>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="ObjectDisposedException"></exception>
         /// <exception cref="OperationCanceledException">
@@ -133,9 +140,11 @@ namespace Discore.WebSocket.Internal
         public async Task RequestGuildMembersAsync(Snowflake guildId, string query = "", int limit = 0, 
             CancellationToken? cancellationToken = null)
         {
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
             if (isDisposed)
                 throw new ObjectDisposedException(GetType().FullName);
-            if (state != GatewayState.Connected)
+            if (socket == null || state != GatewayState.Connected)
                 throw new InvalidOperationException("The gateway is not currently connected!");
 
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
@@ -154,7 +163,7 @@ namespace Discore.WebSocket.Internal
             await RepeatTrySendPayload(cancellationToken, "RequestGuildMembers", async () =>
             {
                 // Try to send the status update
-                await socket.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
+                await socket!.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
 
@@ -170,7 +179,7 @@ namespace Discore.WebSocket.Internal
         /// </exception>
         async Task RepeatTrySendPayload(CancellationToken ct, string opName, Func<Task> callback)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
 
             // This can be cancelled either by the caller, or the gateway disconnecting.
             using (ct.Register(() => cts.Cancel()))
@@ -326,7 +335,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Disconnect the socket if needed
-            if (socket.CanBeDisconnected)
+            if (socket != null && socket.CanBeDisconnected)
             {
                 await socket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "Disconnecting...", CancellationToken.None)
                     .ConfigureAwait(false);
@@ -352,7 +361,7 @@ namespace Discore.WebSocket.Internal
                 // Ensure previous socket has been closed
                 if (socket != null)
                 {
-                    UnsubscribeSocketEvents();
+                    UnsubscribeSocketEvents(socket);
 
                     if (resume)
                     {
@@ -399,19 +408,19 @@ namespace Discore.WebSocket.Internal
                     if (isDisposed)
                         return;
 
-                    if (isConnectionResuming)
+                    if (isConnectionResuming && sessionId != null)
                         // Resume
                         await socket.SendResumePayload(botToken, sessionId, lastSequence);
                     else
                         // Identify
-                        await socket.SendIdentifyPayload(botToken, lastShardStartConfig.GatewayLargeThreshold, 
+                        await socket.SendIdentifyPayload(botToken, lastShardStartConfig!.GatewayLargeThreshold, 
                             shard.Id, totalShards);
                 };
 
-                SubscribeSocketEvents();
+                SubscribeSocketEvents(socket);
 
                 // Get the gateway URL if we don't have one
-                string gatewayUrl = GatewayUrlMemoryCache.GatewayUrl;
+                string? gatewayUrl = GatewayUrlMemoryCache.GatewayUrl;
 
                 if (gatewayUrl == null)
                 {
@@ -476,7 +485,7 @@ namespace Discore.WebSocket.Internal
                 }
                 catch (WebSocketException wsex)
                 {
-                    UnsubscribeSocketEvents();
+                    UnsubscribeSocketEvents(socket);
 
                     // Failed to connect
                     log.LogError("[ConnectLoop] Failed to connect: " +
@@ -512,14 +521,14 @@ namespace Discore.WebSocket.Internal
             }
         }
 
-        void SubscribeSocketEvents()
+        void SubscribeSocketEvents(GatewaySocket socket)
         {
             socket.OnReconnectionRequired += Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection += Socket_OnFatalDisconnection;
             socket.OnDispatch += Socket_OnDispatch;
         }
 
-        void UnsubscribeSocketEvents()
+        void UnsubscribeSocketEvents(GatewaySocket socket)
         {
             socket.OnReconnectionRequired -= Socket_OnReconnectionRequired;
             socket.OnFatalDisconnection -= Socket_OnFatalDisconnection;
@@ -572,7 +581,7 @@ namespace Discore.WebSocket.Internal
                 return;
             }
 
-            DispatchCallback callback;
+            DispatchCallback? callback;
             if (dispatchHandlers.TryGetValue(eventName, out callback))
             {
                 try
@@ -580,7 +589,7 @@ namespace Discore.WebSocket.Internal
                     if (callback.Synchronous != null)
                         callback.Synchronous(e.Data);
                     else
-                        await callback.Asynchronous(e.Data).ConfigureAwait(false);
+                        await callback.Asynchronous!(e.Data).ConfigureAwait(false);
                 }
                 catch (ShardCacheException cex)
                 {

@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore.WebSocket.Internal
 {
     class DispatchEventArgs
@@ -16,5 +14,3 @@ namespace Discore.WebSocket.Internal
         }
     }
 }
-
-#nullable restore

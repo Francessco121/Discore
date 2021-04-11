@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-#nullable enable
-
 namespace Discore
 {
     /// <summary>
@@ -85,5 +83,3 @@ namespace Discore
         }
     }
 }
-
-#nullable restore

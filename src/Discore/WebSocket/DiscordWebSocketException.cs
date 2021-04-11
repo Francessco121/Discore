@@ -12,8 +12,8 @@ namespace Discore.WebSocket
         /// </summary>
         public DiscordWebSocketError Error { get; }
 
-        internal DiscordWebSocketException(string message, DiscordWebSocketError error, Exception innerException)
-            : base(message)
+        internal DiscordWebSocketException(string message, DiscordWebSocketError error, Exception? innerException)
+            : base(message, innerException)
         {
             Error = error;
         }

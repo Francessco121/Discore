@@ -18,9 +18,9 @@ namespace Discore.Voice.Internal
 
     class VoiceUdpSocket : IDisposable
     {
-        public event EventHandler OnClosedPrematurely;
+        public event EventHandler? OnClosedPrematurely;
 
-        public bool IsConnected => socket.Connected;
+        public bool IsConnected => socket != null && socket.Connected;
 
         public int BytesToSend => sendBuffer.Count;
 
@@ -33,14 +33,14 @@ namespace Discore.Voice.Internal
 
         bool isDisposed;
 
-        Socket socket;
-        IPEndPoint endPoint;
+        Socket? socket;
+        IPEndPoint? endPoint;
 
-        Thread sendThread;
-        Task receiveTask;
+        Thread? sendThread;
+        Task? receiveTask;
 
         bool discoveringIP;
-        byte[] secretKey;
+        byte[]? secretKey;
 
         readonly OpusEncoder encoder;
         readonly CircularBuffer sendBuffer;
@@ -95,7 +95,7 @@ namespace Discore.Voice.Internal
         {
             try
             {
-                socket.Shutdown(SocketShutdown.Both);
+                socket?.Shutdown(SocketShutdown.Both);
             }
             catch (SocketException ex)
             {
@@ -162,7 +162,7 @@ namespace Discore.Voice.Internal
 
         async Task ReceiveLoop()
         {
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[socket.ReceiveBufferSize]);
+            var buffer = new ArraySegment<byte>(new byte[socket!.ReceiveBufferSize]);
             
             while (socket.Connected)
             {
@@ -225,7 +225,7 @@ namespace Discore.Voice.Internal
 
         void Send(byte[] buffer, int offset, int count)
         {
-            socket.Send(buffer, offset, count, SocketFlags.None);
+            socket!.Send(buffer, offset, count, SocketFlags.None);
         }
 
         /// <exception cref="SocketException">Thrown if the socket encounters an error while sending data.</exception>
@@ -276,7 +276,7 @@ namespace Discore.Voice.Internal
 
             // Begin send loop
             bool hasFrame = false;
-            while (socket.Connected)
+            while (socket!.Connected)
             {
                 try
                 {
@@ -305,7 +305,7 @@ namespace Discore.Voice.Internal
                         Buffer.BlockCopy(voicePacket, 2, nonce, 2, 6);
 
                         // Encrypt the frame
-                        int encryptStatus = LibSodium.Encrypt(encodedFrame, encodedLength, voicePacket, 12, nonce, secretKey);
+                        int encryptStatus = LibSodium.Encrypt(encodedFrame, encodedLength, voicePacket, 12, nonce, secretKey!);
                         if (encryptStatus == 0)
                         {
                             // Update timestamp
