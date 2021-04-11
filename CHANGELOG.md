@@ -1,5 +1,6 @@
 ## v5.0.0
 ### Breaking Changes
+- Discore now targets .NET Standard 2.1.
 - `DiscordHttpRateLimitException.Limit` is now nullable.
 - `DiscordHttpRateLimitException.Reset` is now nullable.
 - `DiscordHttpRateLimitException.ResetHighPrecision` is now nullable.
