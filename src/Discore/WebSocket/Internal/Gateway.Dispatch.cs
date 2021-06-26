@@ -1,4 +1,3 @@
-using ConcurrentCollections;
 using Discore.Voice;
 using System;
 using System.Collections.Concurrent;
@@ -16,48 +15,48 @@ namespace Discore.WebSocket.Internal
         #region Public Events       
         public event EventHandler<ReadyEventArgs>? OnReady;
 
-        public event EventHandler<ChannelEventArgs>? OnChannelCreated;
-        public event EventHandler<ChannelEventArgs>? OnChannelUpdated;
-        public event EventHandler<ChannelEventArgs>? OnChannelDeleted;
+        public event EventHandler<ChannelCreateEventArgs>? OnChannelCreate;
+        public event EventHandler<ChannelUpdateEventArgs>? OnChannelUpdate;
+        public event EventHandler<ChannelDeleteEventArgs>? OnChannelDelete;
 
 
-        public event EventHandler<GuildCreateEventArgs>? OnGuildCreated;
-        public event EventHandler<GuildUpdateEventArgs>? OnGuildUpdated;
-        public event EventHandler<GuildDeleteEventArgs>? OnGuildDeleted;
+        public event EventHandler<GuildCreateEventArgs>? OnGuildCreate;
+        public event EventHandler<GuildUpdateEventArgs>? OnGuildUpdate;
+        public event EventHandler<GuildDeleteEventArgs>? OnGuildDelete;
 
-        public event EventHandler<GuildUserEventArgs>? OnGuildBanAdded;
-        public event EventHandler<GuildUserEventArgs>? OnGuildBanRemoved;
+        public event EventHandler<GuildBanAddEventArgs>? OnGuildBanAdd;
+        public event EventHandler<GuildBanRemoveEventArgs>? OnGuildBanRemove;
 
-        public event EventHandler<GuildEmojisEventArgs>? OnGuildEmojisUpdated;
+        public event EventHandler<GuildEmojisUpdateEventArgs>? OnGuildEmojisUpdate;
 
-        public event EventHandler<GuildIntegrationsEventArgs>? OnGuildIntegrationsUpdated;
+        public event EventHandler<GuildIntegrationsUpdateEventArgs>? OnGuildIntegrationsUpdate;
 
-        public event EventHandler<GuildMemberEventArgs>? OnGuildMemberAdded;
-        public event EventHandler<GuildUserEventArgs>? OnGuildMemberRemoved;
-        public event EventHandler<GuildMemberUpdateEventArgs>? OnGuildMemberUpdated;
+        public event EventHandler<GuildMemberAddEventArgs>? OnGuildMemberAdd;
+        public event EventHandler<GuildMemberRemoveEventArgs>? OnGuildMemberRemove;
+        public event EventHandler<GuildMemberUpdateEventArgs>? OnGuildMemberUpdate;
         public event EventHandler<GuildMemberChunkEventArgs>? OnGuildMembersChunk;
 
-        public event EventHandler<GuildRoleEventArgs>? OnGuildRoleCreated;
-        public event EventHandler<GuildRoleEventArgs>? OnGuildRoleUpdated;
-        public event EventHandler<GuildRoleIdEventArgs>? OnGuildRoleDeleted;
+        public event EventHandler<GuildRoleCreateEventArgs>? OnGuildRoleCreate;
+        public event EventHandler<GuildRoleUpdateEventArgs>? OnGuildRoleUpdate;
+        public event EventHandler<GuildRoleDeleteEventArgs>? OnGuildRoleDelete;
 
-        public event EventHandler<ChannelPinsUpdateEventArgs>? OnChannelPinsUpdated;
+        public event EventHandler<ChannelPinsUpdateEventArgs>? OnChannelPinsUpdate;
 
-        public event EventHandler<MessageEventArgs>? OnMessageCreated;
-        public event EventHandler<MessageUpdateEventArgs>? OnMessageUpdated;
-        public event EventHandler<MessageDeleteEventArgs>? OnMessageDeleted;
-        public event EventHandler<MessageReactionEventArgs>? OnMessageReactionAdded;
-        public event EventHandler<MessageReactionEventArgs>? OnMessageReactionRemoved;
-        public event EventHandler<MessageReactionRemoveAllEventArgs>? OnMessageAllReactionsRemoved;
+        public event EventHandler<MessageCreateEventArgs>? OnMessageCreate;
+        public event EventHandler<MessageUpdateEventArgs>? OnMessageUpdate;
+        public event EventHandler<MessageDeleteEventArgs>? OnMessageDelete;
+        public event EventHandler<MessageReactionAddEventArgs>? OnMessageReactionAdd;
+        public event EventHandler<MessageReactionRemoveEventArgs>? OnMessageReactionRemove;
+        public event EventHandler<MessageReactionRemoveAllEventArgs>? OnMessageReactionRemoveAll;
 
-        public event EventHandler<WebhooksUpdateEventArgs>? OnWebhookUpdated;
+        public event EventHandler<WebhooksUpdateEventArgs>? OnWebhookUpdate;
 
-        public event EventHandler<PresenceEventArgs>? OnPresenceUpdated;
+        public event EventHandler<PresenceUpdateEventArgs>? OnPresenceUpdate;
 
-        public event EventHandler<TypingStartEventArgs>? OnTypingStarted;
+        public event EventHandler<TypingStartEventArgs>? OnTypingStart;
 
-        public event EventHandler<UserEventArgs>? OnUserUpdated;
-        public event EventHandler<VoiceStateEventArgs>? OnVoiceStateUpdated;
+        public event EventHandler<UserUpdateEventArgs>? OnUserUpdate;
+        public event EventHandler<VoiceStateUpdateEventArgs>? OnVoiceStateUpdate;
         #endregion
 
         void LogServerTrace(string prefix, JsonElement data)
@@ -238,7 +237,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Fire event
-            OnGuildCreated?.Invoke(this, new GuildCreateEventArgs(
+            OnGuildCreate?.Invoke(this, new GuildCreateEventArgs(
                 shard,
                 becameAvailable: wasUnavailable,
                 guild,
@@ -256,7 +255,7 @@ namespace Discore.WebSocket.Internal
             var guild = new DiscordGuild(data);
 
             // Fire event
-            OnGuildUpdated?.Invoke(this, new GuildUpdateEventArgs(shard, guild));
+            OnGuildUpdate?.Invoke(this, new GuildUpdateEventArgs(shard, guild));
         }
 
         [DispatchEvent("GUILD_DELETE")]
@@ -285,7 +284,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Fire event
-            OnGuildDeleted?.Invoke(this, new GuildDeleteEventArgs(shard, guildId, unavailable));
+            OnGuildDelete?.Invoke(this, new GuildDeleteEventArgs(shard, guildId, unavailable));
         }
 
         [DispatchEvent("GUILD_BAN_ADD")]
@@ -295,7 +294,7 @@ namespace Discore.WebSocket.Internal
 
             var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
-            OnGuildBanAdded?.Invoke(this, new GuildUserEventArgs(shard, guildId, user));
+            OnGuildBanAdd?.Invoke(this, new GuildBanAddEventArgs(shard, guildId, user));
         }
 
         [DispatchEvent("GUILD_BAN_REMOVE")]
@@ -305,7 +304,7 @@ namespace Discore.WebSocket.Internal
 
             var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
-            OnGuildBanRemoved?.Invoke(this, new GuildUserEventArgs(shard, guildId, user));
+            OnGuildBanRemove?.Invoke(this, new GuildBanRemoveEventArgs(shard, guildId, user));
         }
 
         [DispatchEvent("GUILD_EMOJIS_UPDATE")]
@@ -323,7 +322,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Fire event
-            OnGuildEmojisUpdated?.Invoke(this, new GuildEmojisEventArgs(shard, guildId, emojis));
+            OnGuildEmojisUpdate?.Invoke(this, new GuildEmojisUpdateEventArgs(shard, guildId, emojis));
         }
 
         [DispatchEvent("GUILD_INTEGRATIONS_UPDATE")]
@@ -331,7 +330,7 @@ namespace Discore.WebSocket.Internal
         {
             Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            OnGuildIntegrationsUpdated?.Invoke(this, new GuildIntegrationsEventArgs(shard, guildId));
+            OnGuildIntegrationsUpdate?.Invoke(this, new GuildIntegrationsUpdateEventArgs(shard, guildId));
         }
 
         [DispatchEvent("GUILD_MEMBER_ADD")]
@@ -342,7 +341,7 @@ namespace Discore.WebSocket.Internal
             var member = new DiscordGuildMember(data, guildId);
 
             // Fire event
-            OnGuildMemberAdded?.Invoke(this, new GuildMemberEventArgs(shard, guildId, member));
+            OnGuildMemberAdd?.Invoke(this, new GuildMemberAddEventArgs(shard, guildId, member));
         }
 
         [DispatchEvent("GUILD_MEMBER_REMOVE")]
@@ -353,7 +352,7 @@ namespace Discore.WebSocket.Internal
             var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
             // Fire event
-            OnGuildMemberRemoved?.Invoke(this, new GuildUserEventArgs(shard, guildId, user));
+            OnGuildMemberRemove?.Invoke(this, new GuildMemberRemoveEventArgs(shard, guildId, user));
         }
 
         [DispatchEvent("GUILD_MEMBER_UPDATE")]
@@ -364,7 +363,7 @@ namespace Discore.WebSocket.Internal
             var partialMember = new DiscordPartialGuildMember(data, guildId);
 
             // Fire event
-            OnGuildMemberUpdated?.Invoke(this, new GuildMemberUpdateEventArgs(shard, guildId, partialMember));
+            OnGuildMemberUpdate?.Invoke(this, new GuildMemberUpdateEventArgs(shard, guildId, partialMember));
         }
 
         [DispatchEvent("GUILD_MEMBERS_CHUNK")]
@@ -393,7 +392,7 @@ namespace Discore.WebSocket.Internal
             var role = new DiscordRole(data.GetProperty("role"), guildId: guildId);
 
             // Fire event
-            OnGuildRoleCreated?.Invoke(this, new GuildRoleEventArgs(shard, guildId, role));
+            OnGuildRoleCreate?.Invoke(this, new GuildRoleCreateEventArgs(shard, guildId, role));
         }
 
         [DispatchEvent("GUILD_ROLE_UPDATE")]
@@ -404,7 +403,7 @@ namespace Discore.WebSocket.Internal
             var role = new DiscordRole(data.GetProperty("role"), guildId: guildId);
 
             // Fire event
-            OnGuildRoleUpdated?.Invoke(this, new GuildRoleEventArgs(shard, guildId, role));
+            OnGuildRoleUpdate?.Invoke(this, new GuildRoleUpdateEventArgs(shard, guildId, role));
         }
 
         [DispatchEvent("GUILD_ROLE_DELETE")]
@@ -414,7 +413,7 @@ namespace Discore.WebSocket.Internal
             Snowflake roleId = data.GetProperty("role_id").GetSnowflake();
 
             // Fire event
-            OnGuildRoleDeleted?.Invoke(this, new GuildRoleIdEventArgs(shard, guildId, roleId));
+            OnGuildRoleDelete?.Invoke(this, new GuildRoleDeleteEventArgs(shard, guildId, roleId));
         }
         #endregion
 
@@ -457,7 +456,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Fire event
-            OnChannelCreated?.Invoke(this, new ChannelEventArgs(shard, channel));
+            OnChannelCreate?.Invoke(this, new ChannelCreateEventArgs(shard, channel));
         }
 
         [DispatchEvent("CHANNEL_UPDATE")]
@@ -483,7 +482,7 @@ namespace Discore.WebSocket.Internal
                 channel = new DiscordGuildChannel(data, type, guildId);
 
             // Fire event
-            OnChannelUpdated?.Invoke(this, new ChannelEventArgs(shard, channel));
+            OnChannelUpdate?.Invoke(this, new ChannelUpdateEventArgs(shard, channel));
         }
 
         [DispatchEvent("CHANNEL_DELETE")]
@@ -524,7 +523,7 @@ namespace Discore.WebSocket.Internal
             }
 
             // Fire event
-            OnChannelDeleted?.Invoke(this, new ChannelEventArgs(shard, channel));
+            OnChannelDelete?.Invoke(this, new ChannelDeleteEventArgs(shard, channel));
         }
 
         [DispatchEvent("CHANNEL_PINS_UPDATE")]
@@ -533,7 +532,7 @@ namespace Discore.WebSocket.Internal
             DateTime? lastPinTimestamp = data.GetPropertyOrNull("last_pin_timestamp")?.GetDateTimeOrNull();
             Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            OnChannelPinsUpdated?.Invoke(this, new ChannelPinsUpdateEventArgs(shard, channelId, lastPinTimestamp));
+            OnChannelPinsUpdate?.Invoke(this, new ChannelPinsUpdateEventArgs(shard, channelId, lastPinTimestamp));
         }
         #endregion
 
@@ -544,7 +543,7 @@ namespace Discore.WebSocket.Internal
             // Deserialize message
             var message = new DiscordMessage(data);
 
-            OnMessageCreated?.Invoke(this, new MessageEventArgs(shard, message));
+            OnMessageCreate?.Invoke(this, new MessageCreateEventArgs(shard, message));
         }
 
         [DispatchEvent("MESSAGE_UPDATE")]
@@ -553,7 +552,7 @@ namespace Discore.WebSocket.Internal
             // Deserialize message
             var message = new DiscordPartialMessage(data);
 
-            OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
+            OnMessageUpdate?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }
 
         [DispatchEvent("MESSAGE_DELETE")]
@@ -562,7 +561,7 @@ namespace Discore.WebSocket.Internal
             Snowflake messageId = data.GetProperty("id").GetSnowflake();
             Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
+            OnMessageDelete?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
         }
 
         [DispatchEvent("MESSAGE_DELETE_BULK")]
@@ -577,7 +576,7 @@ namespace Discore.WebSocket.Internal
                 Snowflake messageId = idArray[i].GetSnowflake();
 
                 // TODO: Fire OnMessageDeletedBulk event
-                OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
+                OnMessageDelete?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
             }
         }
 
@@ -591,7 +590,7 @@ namespace Discore.WebSocket.Internal
 
             DiscordReactionEmoji emoji = new DiscordReactionEmoji(emojiData);
 
-            OnMessageReactionAdded?.Invoke(this, new MessageReactionEventArgs(shard, messageId, channelId, userId, emoji));
+            OnMessageReactionAdd?.Invoke(this, new MessageReactionAddEventArgs(shard, messageId, channelId, userId, emoji));
         }
 
         [DispatchEvent("MESSAGE_REACTION_REMOVE")]
@@ -604,7 +603,7 @@ namespace Discore.WebSocket.Internal
 
             DiscordReactionEmoji emoji = new DiscordReactionEmoji(emojiData);
 
-            OnMessageReactionRemoved?.Invoke(this, new MessageReactionEventArgs(shard, messageId, channelId, userId, emoji));
+            OnMessageReactionRemove?.Invoke(this, new MessageReactionRemoveEventArgs(shard, messageId, channelId, userId, emoji));
         }
 
         [DispatchEvent("MESSAGE_REACTION_REMOVE_ALL")]
@@ -613,7 +612,7 @@ namespace Discore.WebSocket.Internal
             Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
             Snowflake messageId = data.GetProperty("message_id").GetSnowflake();
 
-            OnMessageAllReactionsRemoved?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, channelId));
+            OnMessageReactionRemoveAll?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, channelId));
         }
         #endregion
 
@@ -623,7 +622,7 @@ namespace Discore.WebSocket.Internal
             Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
             Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            OnWebhookUpdated?.Invoke(this, new WebhooksUpdateEventArgs(shard, guildId, channelId));
+            OnWebhookUpdate?.Invoke(this, new WebhooksUpdateEventArgs(shard, guildId, channelId));
         }
 
         [DispatchEvent("PRESENCE_UPDATE")]
@@ -634,7 +633,7 @@ namespace Discore.WebSocket.Internal
             var presence = new DiscordUserPresence(data, guildId);
 
             // Fire event
-            OnPresenceUpdated?.Invoke(this, new PresenceEventArgs(shard, guildId, presence));
+            OnPresenceUpdate?.Invoke(this, new PresenceUpdateEventArgs(shard, guildId, presence));
         }
 
         [DispatchEvent("TYPING_START")]
@@ -644,7 +643,7 @@ namespace Discore.WebSocket.Internal
             Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
             int timestamp = data.GetProperty("timestamp").GetInt32();
 
-            OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, userId, channelId, timestamp));
+            OnTypingStart?.Invoke(this, new TypingStartEventArgs(shard, userId, channelId, timestamp));
         }
 
         [DispatchEvent("USER_UPDATE")]
@@ -652,7 +651,7 @@ namespace Discore.WebSocket.Internal
         {
             var user = new DiscordUser(data, isWebhookUser: false);
 
-            OnUserUpdated?.Invoke(this, new UserEventArgs(shard, user));
+            OnUserUpdate?.Invoke(this, new UserUpdateEventArgs(shard, user));
         }
 
         #region Voice
@@ -722,7 +721,7 @@ namespace Discore.WebSocket.Internal
                 }
 
                 // Fire event
-                OnVoiceStateUpdated?.Invoke(this, new VoiceStateEventArgs(shard, voiceState));
+                OnVoiceStateUpdate?.Invoke(this, new VoiceStateUpdateEventArgs(shard, voiceState));
             }
             else
                 throw new NotImplementedException("Non-guild voice channels are not supported.");

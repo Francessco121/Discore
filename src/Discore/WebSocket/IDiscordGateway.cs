@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 
 namespace Discore.WebSocket
 {
+    // Note: Gateway event names should follow the pattern: On{{EventName}}
+
     public interface IDiscordGateway
     {
         /// <summary>
@@ -19,64 +21,64 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when a channel is created, relavent to the current application.
         /// </summary>
-        event EventHandler<ChannelEventArgs>? OnChannelCreated;
+        event EventHandler<ChannelCreateEventArgs>? OnChannelCreate;
         /// <summary>
         /// Called when a channel is updated.
         /// </summary>
-        event EventHandler<ChannelEventArgs>? OnChannelUpdated;
+        event EventHandler<ChannelUpdateEventArgs>? OnChannelUpdate;
         /// <summary>
         /// Called when a channel is deleted, relavent to the current application.
         /// </summary>
-        event EventHandler<ChannelEventArgs>? OnChannelDeleted;
+        event EventHandler<ChannelDeleteEventArgs>? OnChannelDelete;
 
         /// <summary>
         /// Called when this application joins a guild or when a known guild that was
         /// unavailable becomes available again (i.e. when the Gateway discovers 
         /// guilds that the user is in when connecting).
         /// </summary>
-        event EventHandler<GuildCreateEventArgs>? OnGuildCreated;
+        event EventHandler<GuildCreateEventArgs>? OnGuildCreate;
         /// <summary>
         /// Called when a guild is updated.
         /// </summary>
-        event EventHandler<GuildUpdateEventArgs>? OnGuildUpdated;
+        event EventHandler<GuildUpdateEventArgs>? OnGuildUpdate;
         /// <summary>
         /// Called when this application is removed from a guild or when a guild
         /// becomes unavailable (if the guild became unavailable, this application
         /// was NOT removed from the guild).
         /// </summary>
-        event EventHandler<GuildDeleteEventArgs>? OnGuildDeleted;
+        event EventHandler<GuildDeleteEventArgs>? OnGuildDelete;
 
         /// <summary>
         /// Called when a user is banned from a guild.
         /// </summary>
-        event EventHandler<GuildUserEventArgs>? OnGuildBanAdded;
+        event EventHandler<GuildBanAddEventArgs>? OnGuildBanAdd;
         /// <summary>
-        /// Called when a user ban is removed from a guild.
+        /// Called when a user ban is removed from a guild (i.e. they were unbanned).
         /// </summary>
-        event EventHandler<GuildUserEventArgs>? OnGuildBanRemoved;
+        event EventHandler<GuildBanRemoveEventArgs>? OnGuildBanRemove;
 
         /// <summary>
         /// Called when the emojis of a guild are updated.
         /// </summary>
-        event EventHandler<GuildEmojisEventArgs>? OnGuildEmojisUpdated;
+        event EventHandler<GuildEmojisUpdateEventArgs>? OnGuildEmojisUpdate;
 
         /// <summary>
         /// Called when the integrations of a guild are updated.
         /// </summary>
-        event EventHandler<GuildIntegrationsEventArgs>? OnGuildIntegrationsUpdated;
+        event EventHandler<GuildIntegrationsUpdateEventArgs>? OnGuildIntegrationsUpdate;
 
         /// <summary>
         /// Called when a user joins a guild.
         /// </summary>
-        event EventHandler<GuildMemberEventArgs>? OnGuildMemberAdded;
+        event EventHandler<GuildMemberAddEventArgs>? OnGuildMemberAdd;
         /// <summary>
         /// Called when a user leaves or gets kicked/banned from a guild.
         /// </summary>
-        event EventHandler<GuildUserEventArgs>? OnGuildMemberRemoved;
+        event EventHandler<GuildMemberRemoveEventArgs>? OnGuildMemberRemove;
         /// <summary>
         /// Called when a member is updated for a specific guild.
         /// </summary>
-        event EventHandler<GuildMemberUpdateEventArgs>? OnGuildMemberUpdated;
+        event EventHandler<GuildMemberUpdateEventArgs>? OnGuildMemberUpdate;
         /// <summary>
         /// Called when members are requested for a guild.
         /// </summary>
@@ -85,25 +87,25 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when a role is added to a guild.
         /// </summary>
-        event EventHandler<GuildRoleEventArgs>? OnGuildRoleCreated;
+        event EventHandler<GuildRoleCreateEventArgs>? OnGuildRoleCreate;
         /// <summary>
         /// Called when a guild role is updated.
         /// </summary>
-        event EventHandler<GuildRoleEventArgs>? OnGuildRoleUpdated;
+        event EventHandler<GuildRoleUpdateEventArgs>? OnGuildRoleUpdate;
         /// <summary>
         /// Called when a role is removed from a guild.
         /// </summary>
-        event EventHandler<GuildRoleIdEventArgs>? OnGuildRoleDeleted;
+        event EventHandler<GuildRoleDeleteEventArgs>? OnGuildRoleDelete;
 
         /// <summary>
         /// Called when a message is pinned or unpinned from a channel.
         /// </summary>
-        event EventHandler<ChannelPinsUpdateEventArgs>? OnChannelPinsUpdated;
+        event EventHandler<ChannelPinsUpdateEventArgs>? OnChannelPinsUpdate;
 
         /// <summary>
         /// Called when a message is created (either from a DM or guild text channel).
         /// </summary>
-        event EventHandler<MessageEventArgs>? OnMessageCreated;
+        event EventHandler<MessageCreateEventArgs>? OnMessageCreate;
         /// <summary>
         /// Called when a message is updated.
         /// <para>
@@ -111,48 +113,48 @@ namespace Discore.WebSocket
         /// The only guaranteed field is the channel the message was sent in.
         /// </para>
         /// </summary>
-        event EventHandler<MessageUpdateEventArgs>? OnMessageUpdated;
+        event EventHandler<MessageUpdateEventArgs>? OnMessageUpdate;
         /// <summary>
         /// Called when a message is deleted.
         /// </summary>
-        event EventHandler<MessageDeleteEventArgs>? OnMessageDeleted;
+        event EventHandler<MessageDeleteEventArgs>? OnMessageDelete;
         /// <summary>
         /// Called when someone reacts to a message.
         /// </summary>
-        event EventHandler<MessageReactionEventArgs>? OnMessageReactionAdded;
+        event EventHandler<MessageReactionAddEventArgs>? OnMessageReactionAdd;
         /// <summary>
         /// Called when a reaction is removed from a message.
         /// </summary>
-        event EventHandler<MessageReactionEventArgs>? OnMessageReactionRemoved;
+        event EventHandler<MessageReactionRemoveEventArgs>? OnMessageReactionRemove;
         /// <summary>
         /// Called when all reactions are removed from a message at once.
         /// </summary>
-        event EventHandler<MessageReactionRemoveAllEventArgs>? OnMessageAllReactionsRemoved;
+        event EventHandler<MessageReactionRemoveAllEventArgs>? OnMessageReactionRemoveAll;
 
         /// <summary>
         /// Called when a webhook is updated.
         /// </summary>
-        event EventHandler<WebhooksUpdateEventArgs>? OnWebhookUpdated;
+        event EventHandler<WebhooksUpdateEventArgs>? OnWebhookUpdate;
 
         /// <summary>
         /// Called when the presence of a member in a guild is updated.
         /// </summary>
-        event EventHandler<PresenceEventArgs>? OnPresenceUpdated;
+        event EventHandler<PresenceUpdateEventArgs>? OnPresenceUpdate;
 
         /// <summary>
         /// Called when a user starts typing.
         /// </summary>
-        event EventHandler<TypingStartEventArgs>? OnTypingStarted;
+        event EventHandler<TypingStartEventArgs>? OnTypingStart;
 
         /// <summary>
         /// Called when a user is updated.
         /// </summary>
-        event EventHandler<UserEventArgs>? OnUserUpdated;
+        event EventHandler<UserUpdateEventArgs>? OnUserUpdate;
 
         /// <summary>
         /// Called when someone joins/leaves/moves voice channels.
         /// </summary>
-        event EventHandler<VoiceStateEventArgs>? OnVoiceStateUpdated;
+        event EventHandler<VoiceStateUpdateEventArgs>? OnVoiceStateUpdate;
 
         /// <summary>
         /// Updates the status of the bot user.

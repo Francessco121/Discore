@@ -67,27 +67,27 @@ namespace Discore.Caching
 
             IDiscordGateway gateway = shard.Gateway;
             gateway.OnReady += Gateway_OnReady;
-            gateway.OnGuildCreated += Gateway_OnGuildCreated;
-            gateway.OnGuildUpdated += Gateway_OnGuildUpdated;
-            gateway.OnGuildDeleted += Gateway_OnGuildDeleted;
-            gateway.OnGuildBanAdded += Gateway_OnGuildBanAdded;
-            gateway.OnGuildBanRemoved += Gateway_OnGuildBanRemoved;
-            gateway.OnGuildEmojisUpdated += Gateway_OnGuildEmojisUpdated;
-            gateway.OnGuildMemberAdded += Gateway_OnGuildMemberAdded;
-            gateway.OnGuildMemberRemoved += Gateway_OnGuildMemberRemoved;
-            gateway.OnGuildMemberUpdated += Gateway_OnGuildMemberUpdated;
+            gateway.OnGuildCreate += Gateway_OnGuildCreated;
+            gateway.OnGuildUpdate += Gateway_OnGuildUpdated;
+            gateway.OnGuildDelete += Gateway_OnGuildDeleted;
+            gateway.OnGuildBanAdd += Gateway_OnGuildBanAdded;
+            gateway.OnGuildBanRemove += Gateway_OnGuildBanRemoved;
+            gateway.OnGuildEmojisUpdate += Gateway_OnGuildEmojisUpdated;
+            gateway.OnGuildMemberAdd += Gateway_OnGuildMemberAdded;
+            gateway.OnGuildMemberRemove += Gateway_OnGuildMemberRemoved;
+            gateway.OnGuildMemberUpdate += Gateway_OnGuildMemberUpdated;
             gateway.OnGuildMembersChunk += Gateway_OnGuildMembersChunk;
-            gateway.OnGuildRoleCreated += Gateway_OnGuildRoleCreated;
-            gateway.OnGuildRoleUpdated += Gateway_OnGuildRoleUpdated;
-            gateway.OnGuildRoleDeleted += Gateway_OnGuildRoleDeleted;
-            gateway.OnChannelCreated += Gateway_OnChannelCreated;
-            gateway.OnChannelUpdated += Gateway_OnChannelUpdated;
-            gateway.OnChannelDeleted += Gateway_OnChannelDeleted;
-            gateway.OnMessageCreated += Gateway_OnMessageCreated;
-            gateway.OnMessageUpdated += Gateway_OnMessageUpdated;
-            gateway.OnPresenceUpdated += Gateway_OnPresenceUpdated;
-            gateway.OnUserUpdated += Gateway_OnUserUpdated;
-            gateway.OnVoiceStateUpdated += Gateway_OnVoiceStateUpdated;
+            gateway.OnGuildRoleCreate += Gateway_OnGuildRoleCreated;
+            gateway.OnGuildRoleUpdate += Gateway_OnGuildRoleUpdated;
+            gateway.OnGuildRoleDelete += Gateway_OnGuildRoleDeleted;
+            gateway.OnChannelCreate += Gateway_OnChannelCreated;
+            gateway.OnChannelUpdate += Gateway_OnChannelUpdated;
+            gateway.OnChannelDelete += Gateway_OnChannelDeleted;
+            gateway.OnMessageCreate += Gateway_OnMessageCreated;
+            gateway.OnMessageUpdate += Gateway_OnMessageUpdated;
+            gateway.OnPresenceUpdate += Gateway_OnPresenceUpdated;
+            gateway.OnUserUpdate += Gateway_OnUserUpdated;
+            gateway.OnVoiceStateUpdate += Gateway_OnVoiceStateUpdated;
         }
 
         /// <summary>
@@ -102,27 +102,27 @@ namespace Discore.Caching
             // Unsubscribe from Gateway events
             IDiscordGateway gateway = shard.Gateway;
             gateway.OnReady -= Gateway_OnReady;
-            gateway.OnGuildCreated -= Gateway_OnGuildCreated;
-            gateway.OnGuildUpdated -= Gateway_OnGuildUpdated;
-            gateway.OnGuildDeleted -= Gateway_OnGuildDeleted;
-            gateway.OnGuildBanAdded -= Gateway_OnGuildBanAdded;
-            gateway.OnGuildBanRemoved -= Gateway_OnGuildBanRemoved;
-            gateway.OnGuildEmojisUpdated -= Gateway_OnGuildEmojisUpdated;
-            gateway.OnGuildMemberAdded -= Gateway_OnGuildMemberAdded;
-            gateway.OnGuildMemberRemoved -= Gateway_OnGuildMemberRemoved;
-            gateway.OnGuildMemberUpdated -= Gateway_OnGuildMemberUpdated;
+            gateway.OnGuildCreate -= Gateway_OnGuildCreated;
+            gateway.OnGuildUpdate -= Gateway_OnGuildUpdated;
+            gateway.OnGuildDelete -= Gateway_OnGuildDeleted;
+            gateway.OnGuildBanAdd -= Gateway_OnGuildBanAdded;
+            gateway.OnGuildBanRemove -= Gateway_OnGuildBanRemoved;
+            gateway.OnGuildEmojisUpdate -= Gateway_OnGuildEmojisUpdated;
+            gateway.OnGuildMemberAdd -= Gateway_OnGuildMemberAdded;
+            gateway.OnGuildMemberRemove -= Gateway_OnGuildMemberRemoved;
+            gateway.OnGuildMemberUpdate -= Gateway_OnGuildMemberUpdated;
             gateway.OnGuildMembersChunk -= Gateway_OnGuildMembersChunk;
-            gateway.OnGuildRoleCreated -= Gateway_OnGuildRoleCreated;
-            gateway.OnGuildRoleUpdated -= Gateway_OnGuildRoleUpdated;
-            gateway.OnGuildRoleDeleted -= Gateway_OnGuildRoleDeleted;
-            gateway.OnChannelCreated -= Gateway_OnChannelCreated;
-            gateway.OnChannelUpdated -= Gateway_OnChannelUpdated;
-            gateway.OnChannelDeleted -= Gateway_OnChannelDeleted;
-            gateway.OnMessageCreated -= Gateway_OnMessageCreated;
-            gateway.OnMessageUpdated -= Gateway_OnMessageUpdated;
-            gateway.OnPresenceUpdated -= Gateway_OnPresenceUpdated;
-            gateway.OnUserUpdated -= Gateway_OnUserUpdated;
-            gateway.OnVoiceStateUpdated -= Gateway_OnVoiceStateUpdated;
+            gateway.OnGuildRoleCreate -= Gateway_OnGuildRoleCreated;
+            gateway.OnGuildRoleUpdate -= Gateway_OnGuildRoleUpdated;
+            gateway.OnGuildRoleDelete -= Gateway_OnGuildRoleDeleted;
+            gateway.OnChannelCreate -= Gateway_OnChannelCreated;
+            gateway.OnChannelUpdate -= Gateway_OnChannelUpdated;
+            gateway.OnChannelDelete -= Gateway_OnChannelDeleted;
+            gateway.OnMessageCreate -= Gateway_OnMessageCreated;
+            gateway.OnMessageUpdate -= Gateway_OnMessageUpdated;
+            gateway.OnPresenceUpdate -= Gateway_OnPresenceUpdated;
+            gateway.OnUserUpdate -= Gateway_OnUserUpdated;
+            gateway.OnVoiceStateUpdate -= Gateway_OnVoiceStateUpdated;
 
             // Clear cache
             Clear();
@@ -252,19 +252,19 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnGuildBanAdded(object sender, GuildUserEventArgs e)
+        private void Gateway_OnGuildBanAdded(object sender, GuildBanAddEventArgs e)
         {
             // Cache user
             CacheUser(e.User);
         }
 
-        private void Gateway_OnGuildBanRemoved(object sender, GuildUserEventArgs e)
+        private void Gateway_OnGuildBanRemoved(object sender, GuildBanRemoveEventArgs e)
         {
             // Cache user
             CacheUser(e.User);
         }
 
-        private void Gateway_OnGuildEmojisUpdated(object sender, GuildEmojisEventArgs e)
+        private void Gateway_OnGuildEmojisUpdated(object sender, GuildEmojisUpdateEventArgs e)
         {
             // Cache new emojis
             if (guilds.TryGetValue(e.GuildId, out MutableGuild? mutableGuild))
@@ -281,13 +281,13 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnGuildMemberAdded(object sender, GuildMemberEventArgs e)
+        private void Gateway_OnGuildMemberAdded(object sender, GuildMemberAddEventArgs e)
         {
             // Cache member
             CacheGuildMember(e.Member, e.GuildId);
         }
 
-        private void Gateway_OnGuildMemberRemoved(object sender, GuildUserEventArgs e)
+        private void Gateway_OnGuildMemberRemoved(object sender, GuildMemberRemoveEventArgs e)
         {
             // Cache user
             CacheUser(e.User);
@@ -323,7 +323,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnGuildRoleCreated(object sender, GuildRoleEventArgs e)
+        private void Gateway_OnGuildRoleCreated(object sender, GuildRoleCreateEventArgs e)
         {
             // Update guild roles
             if (guilds.TryGetValue(e.GuildId, out MutableGuild? guild))
@@ -333,7 +333,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnGuildRoleUpdated(object sender, GuildRoleEventArgs e)
+        private void Gateway_OnGuildRoleUpdated(object sender, GuildRoleUpdateEventArgs e)
         {
             // Update guild roles
             if (guilds.TryGetValue(e.GuildId, out MutableGuild? guild))
@@ -343,7 +343,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnGuildRoleDeleted(object sender, GuildRoleIdEventArgs e)
+        private void Gateway_OnGuildRoleDeleted(object sender, GuildRoleDeleteEventArgs e)
         {
             // Update guild roles
             if (guilds.TryGetValue(e.GuildId, out MutableGuild? guild))
@@ -353,7 +353,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnChannelCreated(object sender, ChannelEventArgs e)
+        private void Gateway_OnChannelCreated(object sender, ChannelCreateEventArgs e)
         {
             if (e.Channel is DiscordDMChannel dmChannel)
             {
@@ -375,7 +375,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnChannelUpdated(object sender, ChannelEventArgs e)
+        private void Gateway_OnChannelUpdated(object sender, ChannelUpdateEventArgs e)
         {
             if (e.Channel is DiscordGuildChannel guildChannel)
             {
@@ -384,7 +384,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnChannelDeleted(object sender, ChannelEventArgs e)
+        private void Gateway_OnChannelDeleted(object sender, ChannelDeleteEventArgs e)
         {
             if (e.Channel is DiscordDMChannel dmChannel)
             {
@@ -405,7 +405,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnMessageCreated(object sender, MessageEventArgs e)
+        private void Gateway_OnMessageCreated(object sender, MessageCreateEventArgs e)
         {
             // Cache author user
             CacheUser(e.Message.Author);
@@ -435,7 +435,7 @@ namespace Discore.Caching
             }
         }
 
-        private void Gateway_OnPresenceUpdated(object sender, PresenceEventArgs e)
+        private void Gateway_OnPresenceUpdated(object sender, PresenceUpdateEventArgs e)
         {
             // Cache user
             if (users.TryGetValue(e.Presence.User.Id, out MutableUser? mutableUser))
@@ -447,13 +447,13 @@ namespace Discore.Caching
             guildPresences[e.GuildId, e.Presence.User.Id] = e.Presence;
         }
 
-        private void Gateway_OnUserUpdated(object sender, UserEventArgs e)
+        private void Gateway_OnUserUpdated(object sender, UserUpdateEventArgs e)
         {
             // Cache user
             CacheUser(e.User);
         }
 
-        private void Gateway_OnVoiceStateUpdated(object sender, VoiceStateEventArgs e)
+        private void Gateway_OnVoiceStateUpdated(object sender, VoiceStateUpdateEventArgs e)
         {
             // Cache voice state
             if (e.VoiceState.GuildId != null)
