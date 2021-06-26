@@ -1,4 +1,6 @@
+using Discore.WebSocket;
 using System;
+using System.Collections.Generic;
 
 // Permission logic here is based off of:
 // https://discord.com/developers/docs/topics/permissions#permission-hierarchy
@@ -184,6 +186,63 @@ namespace Discore
         {
             if (!HasPermission(permissions, member, guild, channel))
                 throw new DiscordPermissionException(member, guild, channel, permissions);
+        }
+
+        /// <summary>
+        /// Returns whether the given member can join the specified voice channel.
+        /// </summary>
+        /// <param name="member">The guild member to check.</param>
+        /// <param name="voiceChannel">The voice channel to check if the member can join.</param>
+        /// <param name="guild">The guild the member is in.</param>
+        /// <param name="shard">
+        /// The shard which handles the guild (needed to determine the number of users in the voice channel).
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// Thrown if <paramref name="member"/> or <paramref name="voiceChannel"/> is not in the 
+        /// specified <paramref name="guild"/>
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="member"/>, <paramref name="guild"/>, <paramref name="voiceChannel"/>,
+        /// or <paramref name="shard"/> is null.
+        /// </exception>
+        public static bool CanJoinVoiceChannel(
+            DiscordGuildMember member, 
+            DiscordGuildVoiceChannel voiceChannel,
+            DiscordGuild guild, 
+            Shard shard)
+        {
+            if (member == null)
+                throw new ArgumentNullException(nameof(member));
+            if (voiceChannel == null)
+                throw new ArgumentNullException(nameof(voiceChannel));
+            if (guild == null)
+                throw new ArgumentNullException(nameof(guild));
+            if (shard == null)
+                throw new ArgumentNullException(nameof(shard));
+
+            if (voiceChannel.GuildId != member.GuildId)
+                throw new ArgumentException("Voice channel must be in the same guild as this member.");
+            if (voiceChannel.GuildId != guild.Id)
+                throw new ArgumentException("Voice channel must be in the specified guild.");
+
+            // Check if the user has permission to connect.
+            if (!HasPermission(DiscordPermission.Connect, member, guild, voiceChannel))
+                return false;
+
+            // Check if the voice channel has room
+            bool channelHasRoom = false;
+            if (voiceChannel.UserLimit == 0)
+                channelHasRoom = true;
+            else if (HasPermission(DiscordPermission.Administrator, member, guild, voiceChannel))
+                channelHasRoom = true;
+            else
+            {
+                IReadOnlyList<Snowflake> usersInChannel = shard.Voice.GetUsersInVoiceChannel(voiceChannel.Id);
+                if (usersInChannel.Count < voiceChannel.UserLimit)
+                    channelHasRoom = true;
+            }
+
+            return channelHasRoom;
         }
     }
 }

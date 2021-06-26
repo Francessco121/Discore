@@ -23,6 +23,13 @@ namespace Discore.WebSocket
         /// </summary>
         public event EventHandler<ShardEventArgs>? OnConnected;
         /// <summary>
+        /// Called when this shard disconnects from the Discord Gateway for any reason.
+        /// <para/>
+        /// If a shard failure is the cause, <see cref="OnFailure"/> will be fired right before
+        /// this event.
+        /// </summary>
+        public event EventHandler<ShardEventArgs>? OnDisconnected;
+        /// <summary>
         /// Called when the internal connection of this shard reconnected to the Discord Gateway.
         /// <para>
         /// This can be used to reset things such as the user status,
@@ -34,11 +41,6 @@ namespace Discore.WebSocket
         /// Called when this shard fails and cannot reconnect due to the error. 
         /// </summary> 
         public event EventHandler<ShardFailureEventArgs>? OnFailure;
-
-        /// <summary>
-        /// Gets the local memory cache of data from the Discord API.
-        /// </summary>
-        public DiscordShardCache Cache { get; }
 
         /// <summary>
         /// Gets the ID of the user used to authenticate this shard connection.
@@ -82,8 +84,6 @@ namespace Discore.WebSocket
 
             stoppedResetEvent = new AsyncManualResetEvent(true);
 
-            Cache = new DiscordShardCache();
-
             gateway = new Gateway(botToken, this, totalShards);
             gateway.OnFailure += Gateway_OnFailure;
             gateway.OnReconnected += Gateway_OnReconnected;
@@ -101,9 +101,16 @@ namespace Discore.WebSocket
             isRunning = false;
             CleanUp();
 
-            OnFailure?.Invoke(this, new ShardFailureEventArgs(this, e.Message, e.Reason, e.Exception));
-
             stoppedResetEvent.Set();
+
+            try
+            {
+                OnFailure?.Invoke(this, new ShardFailureEventArgs(this, e.Message, e.Reason, e.Exception));
+            }
+            finally
+            {
+                OnDisconnected?.Invoke(this, new ShardEventArgs(this));
+            }
         }
 
         /// <summary>
@@ -200,6 +207,8 @@ namespace Discore.WebSocket
                 log.LogInfo("Successfully disconnected from the Gateway.");
 
                 stoppedResetEvent.Set();
+
+                OnDisconnected?.Invoke(this, new ShardEventArgs(this));
             }
             else
                 throw new InvalidOperationException($"Shard {Id} has already been stopped!");
@@ -219,7 +228,6 @@ namespace Discore.WebSocket
         {
             UserId = null;
 
-            Cache.Clear();
             Voice.Clear();
         }
 

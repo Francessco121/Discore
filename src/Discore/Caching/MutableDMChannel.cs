@@ -1,4 +1,4 @@
-namespace Discore.WebSocket
+namespace Discore.Caching
 {
     class MutableDMChannel : MutableEntity<DiscordDMChannel>
     {

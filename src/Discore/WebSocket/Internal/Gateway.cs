@@ -1,6 +1,9 @@
+using ConcurrentCollections;
 using Discore.Http;
+using Discore.Voice;
 using Nito.AsyncEx;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.WebSockets;
@@ -30,8 +33,6 @@ namespace Discore.WebSocket.Internal
 
         readonly Shard shard;
         readonly int totalShards;
-
-        readonly DiscordShardCache cache;
 
         ShardStartConfig? lastShardStartConfig;
 
@@ -73,7 +74,9 @@ namespace Discore.WebSocket.Internal
         /// </summary>
         int nextConnectionDelayMs;
 
-        Dictionary<string, DispatchCallback> dispatchHandlers;
+        readonly Dictionary<string, DispatchCallback> dispatchHandlers;
+        readonly ConcurrentHashSet<Snowflake> unavailableGuildIds;
+        readonly ConcurrentDictionary<Snowflake, ConcurrentDictionary<Snowflake, DiscordVoiceState>> voiceStates;
 
         readonly DiscoreLogger log;
 
@@ -90,10 +93,11 @@ namespace Discore.WebSocket.Internal
 
             http = new DiscordHttpClient(botToken);
 
-            cache = shard.Cache;
-
             log = new DiscoreLogger($"Gateway#{shard.Id}");
             state = GatewayState.Disconnected;
+
+            unavailableGuildIds = new ConcurrentHashSet<Snowflake>();
+            voiceStates = new ConcurrentDictionary<Snowflake, ConcurrentDictionary<Snowflake, DiscordVoiceState>>();
 
             handshakeCompleteEvent = new AsyncManualResetEvent();
             handshakeCompleteCancellationSource = new CancellationTokenSource();
@@ -590,10 +594,6 @@ namespace Discore.WebSocket.Internal
                         callback.Synchronous(e.Data);
                     else
                         await callback.Asynchronous!(e.Data).ConfigureAwait(false);
-                }
-                catch (ShardCacheException cex)
-                {
-                    log.LogWarning($"[{eventName}] Did not complete because: {cex.Message}.");
                 }
                 catch (Exception ex)
                 {

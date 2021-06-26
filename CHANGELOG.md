@@ -8,6 +8,9 @@
 - `DiscordVoiceConnection.SetSpeakingAsync` will now throw an `InvalidOperationException` if called before being fully connected.
 - `DiscordVoiceConnection.ClearVoiceBuffer` will now throw an `InvalidOperationException` if called before being fully connected.
 
+### Additions
+- Added `Shard.OnDisconnected`.
+
 ### Other Changes
 - Discore now makes full use of C# 8 null safety!
 - `Snowflake` now implements `IEquatable<Snowflake>`.

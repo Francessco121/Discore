@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace Discore.WebSocket
+namespace Discore.Caching
 {
     class MutableUser : MutableEntity<DiscordUser>
     {
@@ -9,14 +9,14 @@ namespace Discore.WebSocket
 
         public string? Username { get; private set; }
         public string? Discriminator { get; private set; }
-        public string? Avatar { get; private set; }
+        public DiscordCdnUrl? Avatar { get; private set; }
         public bool IsBot { get; private set; }
         public bool? HasTwoFactorAuth { get; private set; }
         public bool? IsVerified { get; private set; }
         public string? Email { get; private set; }
 
         string? lastUsername;
-        string? lastAvatar;
+        DiscordCdnUrl? lastAvatar;
         bool? lastHasTwoFactorAuth;
         bool? lastIsVerified;
         string? lastEmail;
@@ -27,15 +27,15 @@ namespace Discore.WebSocket
             IsWebhookUser = isWebhookUser;
         }
 
-        public void Update(JsonElement json)
+        public void Update(DiscordUser user)
         {
-            Username = json.GetProperty("username").GetString()!;
-            Discriminator = json.GetProperty("discriminator").GetString()!;
-            Avatar = json.GetProperty("avatar").GetString();
-            IsBot = json.GetPropertyOrNull("bot")?.GetBoolean() ?? false;
-            HasTwoFactorAuth = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean();
-            IsVerified = json.GetPropertyOrNull("verified")?.GetBoolean();
-            Email = json.GetPropertyOrNull("email")?.GetString();
+            Username = user.Username;
+            Discriminator = user.Discriminator;
+            Avatar = user.Avatar;
+            IsBot = user.IsBot;
+            HasTwoFactorAuth = user.HasTwoFactorAuth;
+            IsVerified = user.IsVerified;
+            Email = user.Email;
 
             // To avoid causing every entity that references this user to be unncessarily
             // dirtied, check to see if any properties actually changed with this update.
@@ -43,15 +43,11 @@ namespace Discore.WebSocket
                 Dirty();
         }
 
-        public void PartialUpdate(JsonElement json)
+        public void PartialUpdate(DiscordPartialUser user)
         {
-            Username = json.GetPropertyOrNull("username")?.GetString() ?? Username;
-            Discriminator = json.GetPropertyOrNull("discriminator")?.GetString() ?? Discriminator;
-            Avatar = json.GetPropertyOrNull("avatar")?.GetString() ?? Avatar;
-            IsBot = json.GetPropertyOrNull("bot")?.GetBoolean() ?? IsBot;
-            HasTwoFactorAuth = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean() ?? HasTwoFactorAuth;
-            IsVerified = json.GetPropertyOrNull("verified")?.GetBoolean() ?? IsVerified;
-            Email = json.GetPropertyOrNull("email")?.GetString() ?? Email;
+            Username = user.Username ?? Username;
+            Discriminator = user.Discriminator ?? Discriminator;
+            Avatar = user.Avatar ?? Avatar;
 
             // To avoid causing every entity that references this user to be unncessarily
             // dirtied, check to see if any properties actually changed with this update.
@@ -87,7 +83,7 @@ namespace Discore.WebSocket
                 id: Id,
                 username: Username!,
                 discriminator: Discriminator!,
-                avatar: Avatar != null ? DiscordCdnUrl.ForUserAvatar(Id, Avatar) : null,
+                avatar: Avatar,
                 isBot: IsBot,
                 hasTwoFactorAuth: HasTwoFactorAuth,
                 isVerified: IsVerified,

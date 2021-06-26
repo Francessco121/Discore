@@ -5,7 +5,7 @@ namespace Discore
     /// <summary>
     /// A <see cref="DiscordDMChannel"/> or a <see cref="DiscordGuildChannel"/>.
     /// </summary>
-    public abstract class DiscordChannel : DiscordIdEntity
+    public class DiscordChannel : DiscordIdEntity
     {
         /// <summary>
         /// Gets the type of this channel.
@@ -22,7 +22,7 @@ namespace Discore
             || ChannelType == DiscordChannelType.GuildNews
             || ChannelType == DiscordChannelType.GuildStore;
 
-        protected DiscordChannel(Snowflake id, DiscordChannelType type)
+        public DiscordChannel(Snowflake id, DiscordChannelType type)
             : base(id)
         {
             ChannelType = type;

@@ -106,7 +106,6 @@ namespace Discore.Voice
         readonly Shard shard;
         readonly Snowflake guildId;
 
-        readonly DiscordShardCache cache;
         readonly Gateway gateway;
 
         DiscordVoiceState? voiceState;
@@ -126,7 +125,6 @@ namespace Discore.Voice
             this.shard = shard;
             this.guildId = guildId;
 
-            cache = shard.Cache;
             gateway = (Gateway)shard.Gateway;
 
             log = new DiscoreLogger($"VoiceConnection:{guildId}");
@@ -143,13 +141,8 @@ namespace Discore.Voice
         /// </summary>
         /// <param name="startMute">Whether the current bot should connect self-muted.</param>
         /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
-        /// <exception cref="DiscordPermissionException">
-        /// Thrown if the current bot does not have permission to connect to the voice channel.
-        /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if connect is called more than once, 
-        /// if the voice channel is full and the current bot is not an admin, 
-        /// or if the shard behind this connection isn't running.
+        /// Thrown if connect is called more than once or if the shard behind this connection isn't running.
         /// </exception>
         /// <exception cref="OperationCanceledException">
         /// Thrown if the give cancellation token is cancelled or the Gateway connection is closed while initiating the voice connection.
@@ -165,9 +158,6 @@ namespace Discore.Voice
                     // so double-check that the shard is running.
                     if (!Shard.IsRunning)
                         throw new InvalidOperationException("Voice connection cannot be started while the parent shard is not running!");
-
-                    // Ensure the API user has permission to connect (this is to avoid the 10s timeout (if possible) otherwise).
-                    AssertUserCanJoin(guildId, voiceChannelId);
 
                     // Set state
                     voiceState = new DiscordVoiceState(guildId, Shard.UserId!.Value, voiceChannelId);
@@ -203,43 +193,6 @@ namespace Discore.Voice
             catch (OperationCanceledException)
             {
                 // connectingCancellationSource was cancelled because we connected successfully.
-            }
-        }
-
-        /// <summary>
-        /// Using the cache, this will attempt to verify that the current bot can
-        /// join the selected voice channel. If the cache does not have the required details,
-        /// this will NOT throw an exception (the handshake timeout will handle invalid permission anyway).
-        /// </summary>
-        /// <exception cref="DiscordPermissionException"></exception>
-        /// <exception cref="InvalidOperationException"></exception>
-        void AssertUserCanJoin(Snowflake guildId, Snowflake voiceChannelId)
-        {
-            DiscordGuildMember? member = cache.GetGuildMember(guildId, Shard.UserId!.Value);
-            DiscordGuild? guild = cache.GetGuild(guildId);
-            DiscordGuildVoiceChannel? voiceChannel = cache.GetGuildVoiceChannel(voiceChannelId);
-
-            if (member != null && guild != null && voiceChannel != null)
-            {
-                // Check if the user has permission to connect.
-                DiscordPermissionHelper.AssertPermission(DiscordPermission.Connect, member, guild, voiceChannel);
-
-                // Check if the voice channel has room
-                bool channelHasRoom = false;
-                if (voiceChannel.UserLimit == 0)
-                    channelHasRoom = true;
-                else if (DiscordPermissionHelper.HasPermission(DiscordPermission.Administrator, member, guild, voiceChannel))
-                    channelHasRoom = true;
-                else
-                {
-                    IReadOnlyList<Snowflake> usersInChannel = Shard.Voice.GetUsersInVoiceChannel(voiceChannelId);
-                    if (usersInChannel.Count < voiceChannel.UserLimit)
-                        channelHasRoom = true;
-                }
-                
-                if (!channelHasRoom)
-                    throw new InvalidOperationException("The voice channel is full, and the current bot " +
-                        "does not have the administrator permission.");
             }
         }
 

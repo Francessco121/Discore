@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public abstract class DiscordGuildChannel : DiscordChannel
+    public class DiscordGuildChannel : DiscordChannel
     {
         /// <summary>
         /// Gets the name of this channel.
@@ -29,7 +29,7 @@ namespace Discore
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
         /// </exception>
-        protected DiscordGuildChannel(
+        public DiscordGuildChannel(
             Snowflake id,
             DiscordChannelType type,
             string name,

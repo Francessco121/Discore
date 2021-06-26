@@ -12,49 +12,39 @@ namespace Discore.WebSocket
         Shard Shard { get; }
 
         /// <summary>
-        /// Called when a direct message channel is created/opened.
+        /// Called when the Gateway establishes a new session.
         /// </summary>
-        event EventHandler<DMChannelEventArgs>? OnDMChannelCreated;
-        /// <summary>
-        /// Called when a (text or voice) guild channel is created.
-        /// </summary>
-        event EventHandler<GuildChannelEventArgs>? OnGuildChannelCreated;
-        /// <summary>
-        /// Called when a (text or voice) guild channel is updated.
-        /// </summary>
-        event EventHandler<GuildChannelEventArgs>? OnGuildChannelUpdated;
-        /// <summary>
-        /// Called when a direct message channel is removed/closed.
-        /// </summary>
-        event EventHandler<DMChannelEventArgs>? OnDMChannelRemoved;
-        /// <summary>
-        /// Called when a (text or voice) guild channel is removed.
-        /// </summary>
-        event EventHandler<GuildChannelEventArgs>? OnGuildChannelRemoved;
+        event EventHandler<ReadyEventArgs>? OnReady;
 
         /// <summary>
-        /// Called when this application joins a guild.
+        /// Called when a channel is created, relavent to the current application.
         /// </summary>
-        event EventHandler<GuildEventArgs>? OnGuildCreated;
+        event EventHandler<ChannelEventArgs>? OnChannelCreated;
+        /// <summary>
+        /// Called when a channel is updated.
+        /// </summary>
+        event EventHandler<ChannelEventArgs>? OnChannelUpdated;
+        /// <summary>
+        /// Called when a channel is deleted, relavent to the current application.
+        /// </summary>
+        event EventHandler<ChannelEventArgs>? OnChannelDeleted;
+
+        /// <summary>
+        /// Called when this application joins a guild or when a known guild that was
+        /// unavailable becomes available again (i.e. when the Gateway discovers 
+        /// guilds that the user is in when connecting).
+        /// </summary>
+        event EventHandler<GuildCreateEventArgs>? OnGuildCreated;
         /// <summary>
         /// Called when a guild is updated.
         /// </summary>
-        event EventHandler<GuildEventArgs>? OnGuildUpdated;
+        event EventHandler<GuildUpdateEventArgs>? OnGuildUpdated;
         /// <summary>
-        /// Called when this application is removed from a guild.
+        /// Called when this application is removed from a guild or when a guild
+        /// becomes unavailable (if the guild became unavailable, this application
+        /// was NOT removed from the guild).
         /// </summary>
-        event EventHandler<GuildEventArgs>? OnGuildRemoved;
-
-        /// <summary>
-        /// Called when a known guild that was unavailable becomes available again.
-        /// (i.e. when the Gateway discovers guilds that the user is in when connecting).
-        /// </summary>
-        event EventHandler<GuildEventArgs>? OnGuildAvailable;
-        /// <summary>
-        /// Called when a known guild to this application becomes unavailable.
-        /// This application was NOT removed from the guild.
-        /// </summary>
-        event EventHandler<GuildEventArgs>? OnGuildUnavailable;
+        event EventHandler<GuildDeleteEventArgs>? OnGuildDeleted;
 
         /// <summary>
         /// Called when a user is banned from a guild.
@@ -68,7 +58,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when the emojis of a guild are updated.
         /// </summary>
-        event EventHandler<GuildEventArgs>? OnGuildEmojisUpdated;
+        event EventHandler<GuildEmojisEventArgs>? OnGuildEmojisUpdated;
 
         /// <summary>
         /// Called when the integrations of a guild are updated.
@@ -82,11 +72,11 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when a user leaves or gets kicked/banned from a guild.
         /// </summary>
-        event EventHandler<GuildMemberEventArgs>? OnGuildMemberRemoved;
+        event EventHandler<GuildUserEventArgs>? OnGuildMemberRemoved;
         /// <summary>
         /// Called when a member is updated for a specific guild.
         /// </summary>
-        event EventHandler<GuildMemberEventArgs>? OnGuildMemberUpdated;
+        event EventHandler<GuildMemberUpdateEventArgs>? OnGuildMemberUpdated;
         /// <summary>
         /// Called when members are requested for a guild.
         /// </summary>
@@ -103,7 +93,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when a role is removed from a guild.
         /// </summary>
-        event EventHandler<GuildRoleEventArgs>? OnGuildRoleDeleted;
+        event EventHandler<GuildRoleIdEventArgs>? OnGuildRoleDeleted;
 
         /// <summary>
         /// Called when a message is pinned or unpinned from a channel.

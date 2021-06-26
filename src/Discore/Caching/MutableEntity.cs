@@ -1,7 +1,7 @@
 using ConcurrentCollections;
 using System;
 
-namespace Discore.WebSocket
+namespace Discore.Caching
 {
     abstract class MutableEntity
     {

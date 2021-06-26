@@ -2,9 +2,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Discore.WebSocket
+namespace Discore.Caching
 {
-    class ShardCacheDictionary<T>
+    class CacheDictionary<T>
         where T : class
     {
         public int Count => dictionary.Count;
@@ -13,7 +13,7 @@ namespace Discore.WebSocket
 
         readonly ConcurrentDictionary<Snowflake, T> dictionary;
 
-        public ShardCacheDictionary()
+        public CacheDictionary()
         {
             dictionary = new ConcurrentDictionary<Snowflake, T>();
         }
@@ -34,6 +34,12 @@ namespace Discore.WebSocket
                 else
                     dictionary[id] = value;
             }
+        }
+
+        public void AddRange(IEnumerable<KeyValuePair<Snowflake, T>> keyValuePairs)
+        {
+            foreach (KeyValuePair<Snowflake, T> pair in keyValuePairs)
+                dictionary[pair.Key] = pair.Value;
         }
 
         public bool TryGetValue(Snowflake id, [NotNullWhen(true)] out T? value)

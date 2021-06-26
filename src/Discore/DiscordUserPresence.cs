@@ -7,9 +7,14 @@ namespace Discore
     public sealed class DiscordUserPresence
     {
         /// <summary>
-        /// Gets the ID of the user this presence is for.
+        /// Gets the user this presence is for.
         /// </summary>
-        public Snowflake UserId { get; }
+        public DiscordPartialUser User { get; }
+
+        /// <summary>
+        /// Gets the ID of the guild this presence is from.
+        /// </summary>
+        public Snowflake GuildId { get; }
 
         /// <summary>
         /// Gets the game this user is currently playing.
@@ -32,22 +37,27 @@ namespace Discore
         public DiscordClientStatus? ClientStatus { get; }
 
         public DiscordUserPresence(
-            Snowflake userId, 
+            DiscordPartialUser user, 
+            Snowflake guildId,
             DiscordGame? game, 
             DiscordUserStatus? status, 
             IReadOnlyList<DiscordGame>? activities, 
             DiscordClientStatus? clientStatus)
         {
-            UserId = userId;
+            User = user;
+            GuildId = guildId;
             Game = game;
             Status = status;
             Activities = activities;
             ClientStatus = clientStatus;
         }
 
-        internal DiscordUserPresence(JsonElement json)
+        internal DiscordUserPresence(JsonElement json, Snowflake guildId)
         {
-            UserId = json.GetProperty("user").GetProperty("id").GetSnowflake();
+            GuildId = guildId;
+
+            // User
+            User = new DiscordPartialUser(json.GetProperty("user"));
 
             // Game
             JsonElement? gameJson = json.GetPropertyOrNull("game");
@@ -73,7 +83,7 @@ namespace Discore
                         Status = DiscordUserStatus.Online;
 
                         // However, this should issue a warning.
-                        DiscoreLogger.Global.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {UserId}. " +
+                        DiscoreLogger.Global.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {User.Id}. " +
                             $"status = {statusStr}");
                     }
                 }

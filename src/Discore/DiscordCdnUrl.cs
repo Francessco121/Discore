@@ -5,7 +5,7 @@ namespace Discore
     /// <summary>
     /// A URL builder for Discord CDN resources.
     /// </summary>
-    public class DiscordCdnUrl
+    public class DiscordCdnUrl : IEquatable<DiscordCdnUrl?>
     {
         /// <summary>
         /// The base URL for all Discord CDN resources.
@@ -158,6 +158,40 @@ namespace Discore
                 return $"{baseUrl}.{ext}?size={size.Value}";
             else
                 return $"{baseUrl}.{ext}";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as DiscordCdnUrl);
+        }
+
+        public bool Equals(DiscordCdnUrl? other)
+        {
+            return other != null &&
+                   Type == other.Type &&
+                   ResourceId == other.ResourceId &&
+                   FileName == other.FileName &&
+                   baseUrl == other.baseUrl;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Type, ResourceId, FileName, baseUrl);
+        }
+
+        public static bool operator ==(DiscordCdnUrl? left, DiscordCdnUrl? right)
+        {
+            if (left != null)
+                return left.Equals(right);
+            else if (right != null)
+                return right.Equals(left);
+            else
+                return true;
+        }
+
+        public static bool operator !=(DiscordCdnUrl? left, DiscordCdnUrl? right)
+        {
+            return !(left == right);
         }
     }
 }
