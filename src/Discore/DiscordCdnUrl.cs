@@ -26,17 +26,27 @@ namespace Discore
         /// a hash of the resource.
         /// </summary>
         public string FileName { get; }
+        /// <summary>
+        /// Gets the computed base URL for any image derived from this CDN URL
+        /// (e.g. "avatars/{userId}/{avatarHash}").
+        /// <para/>
+        /// Does not include <see cref="CdnBaseUrl"/>.
+        /// </summary>
+        public string BaseUrl { get; }
 
-        readonly string baseUrl;
-
-        private DiscordCdnUrl(DiscordCdnUrlType type, Snowflake? resourceId, string fileName,
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="fileName"/> or <paramref name="baseUrl"/> is null.
+        /// </exception>
+        public DiscordCdnUrl(
+            DiscordCdnUrlType type, 
+            Snowflake? resourceId, 
+            string fileName,
             string baseUrl)
         {
             Type = type;
             ResourceId = resourceId;
-            FileName = fileName;
-
-            this.baseUrl = baseUrl;
+            FileName = fileName ?? throw new ArgumentNullException(fileName);
+            BaseUrl = baseUrl ?? throw new ArgumentNullException(fileName);
         }
 
         /// <summary>
@@ -155,9 +165,14 @@ namespace Discore
             if (ext == null) throw new ArgumentNullException(nameof(ext));
 
             if (size.HasValue)
-                return $"{baseUrl}.{ext}?size={size.Value}";
+                return $"{CdnBaseUrl}/{BaseUrl}.{ext}?size={size.Value}";
             else
-                return $"{baseUrl}.{ext}";
+                return $"{CdnBaseUrl}/{BaseUrl}.{ext}";
+        }
+
+        public override string ToString()
+        {
+            return $"{CdnBaseUrl}/{BaseUrl}";
         }
 
         public override bool Equals(object? obj)
@@ -171,12 +186,12 @@ namespace Discore
                    Type == other.Type &&
                    ResourceId.Equals(other.ResourceId) &&
                    FileName == other.FileName &&
-                   baseUrl == other.baseUrl;
+                   BaseUrl == other.BaseUrl;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Type, ResourceId, FileName, baseUrl);
+            return HashCode.Combine(Type, ResourceId, FileName, BaseUrl);
         }
 
         public static bool operator ==(DiscordCdnUrl? left, DiscordCdnUrl? right)

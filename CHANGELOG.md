@@ -24,6 +24,7 @@
 
 ### Additions
 - Added `Shard.OnDisconnected`.
+- Added public constructor for `DiscordCdnUrl` so it may be reconstructed from deserialization outside of Discore.
 
 ### Changes
 - Discore now makes full use of C# 8 null safety!
