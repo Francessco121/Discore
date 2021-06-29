@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Text.Json;
 
 namespace Discore.WebSocket
 {
@@ -27,12 +28,20 @@ namespace Discore.WebSocket
         /// </summary>
         public int MemberCount { get; }
 
-        internal DiscordGuildMetadata(DiscordApiData data)
+        public DiscordGuildMetadata(Snowflake guildId, bool isLarge, DateTime joinedAt, int memberCount)
         {
-            GuildId = data.GetSnowflake("id").Value;
-            IsLarge = data.GetBoolean("large") ?? false;
-            JoinedAt = data.GetDateTime("joined_at").Value;
-            MemberCount = data.GetInteger("member_count").Value;
+            GuildId = guildId;
+            IsLarge = isLarge;
+            JoinedAt = joinedAt;
+            MemberCount = memberCount;
+        }
+
+        internal DiscordGuildMetadata(JsonElement json)
+        {
+            GuildId = json.GetProperty("id").GetSnowflake();
+            IsLarge = json.GetPropertyOrNull("large")?.GetBoolean() ?? false;
+            JoinedAt = json.GetProperty("joined_at").GetDateTime();
+            MemberCount = json.GetProperty("member_count").GetInt32();
         }
     }
 }

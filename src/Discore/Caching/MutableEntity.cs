@@ -1,20 +1,20 @@
-﻿using ConcurrentCollections;
-using Discore.Http;
+using ConcurrentCollections;
 using System;
 
-namespace Discore.WebSocket
+namespace Discore.Caching
 {
     abstract class MutableEntity
     {
         public bool IsDirty { get; private set; }
 
-        ConcurrentHashSet<MutableEntity> referencedBy;
-        ConcurrentHashSet<MutableEntity> referencing;
+        /// <summary>
+        /// A set of all other mutable entities that contain a reference to this entity.
+        /// </summary>
+        readonly ConcurrentHashSet<MutableEntity> referencedBy;
 
         public MutableEntity()
         {
             referencedBy = new ConcurrentHashSet<MutableEntity>();
-            referencing = new ConcurrentHashSet<MutableEntity>();
         }
 
         /// <exception cref="ArgumentNullException"></exception>
@@ -23,7 +23,6 @@ namespace Discore.WebSocket
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            referencing.Add(entity);
             entity.referencedBy.Add(this);
         }
 
@@ -31,6 +30,7 @@ namespace Discore.WebSocket
         {
             IsDirty = true;
 
+            // Any entity that contains a reference to this entity also needs to be marked as dirty
             foreach (MutableEntity entity in referencedBy)
                 entity.Dirty();
         }
@@ -42,24 +42,18 @@ namespace Discore.WebSocket
 
         public void ClearReferences()
         {
-            foreach (MutableEntity entity in referencedBy)
-                entity.referencing.TryRemove(this);
-
             referencedBy.Clear();
-            referencing.Clear();
         }
     }
 
     abstract class MutableEntity<T> : MutableEntity
+        where T : class
     {
-        /// <summary>
-        /// Note: Will return null if the immutable entity has not been built and the entity is not dirty.
-        /// </summary>
         public T ImmutableEntity
         {
             get
             {
-                if (IsDirty)
+                if (IsDirty || immutableEntity == null)
                 {
                     immutableEntity = BuildImmutableEntity();
                     ResetDirty();
@@ -69,14 +63,7 @@ namespace Discore.WebSocket
             }
         }
 
-        protected DiscordHttpClient Http { get; }
-
-        T immutableEntity;
-
-        public MutableEntity(DiscordHttpClient http)
-        {
-            Http = http;
-        }
+        T? immutableEntity;
 
         protected abstract T BuildImmutableEntity();
     }

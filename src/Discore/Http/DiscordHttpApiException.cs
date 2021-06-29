@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Net;
-using System.Text;
 
 namespace Discore.Http
 {
@@ -27,16 +26,10 @@ namespace Discore.Http
 
         static string CreateExceptionMessage(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
         {
-            StringBuilder sb = new StringBuilder();
-
             if (errorCode == DiscordHttpErrorCode.None)
-                sb.Append($"{httpCode}({(int)httpCode}): ");
+                return $"{httpCode}({(int)httpCode}): {message}";
             else
-                sb.Append($"{errorCode}({(int)errorCode}): ");
-
-            sb.Append(message);
-
-            return sb.ToString();
+                return $"{errorCode}({(int)errorCode}): {message}";
         }
     }
 }

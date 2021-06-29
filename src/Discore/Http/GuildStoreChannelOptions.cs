@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Discore.Http
 {
@@ -10,7 +11,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the name of the channel (or null to leave unchanged).
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets the sorting position of the channel (or null to leave unchanged).
@@ -31,7 +32,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the list of permission overwrites (or null to leave unchanged).
         /// </summary>
-        public IList<OverwriteOptions> PermissionOverwrites { get; set; }
+        public IList<OverwriteOptions>? PermissionOverwrites { get; set; }
 
         /// <summary>
         /// Sets the name of the channel.
@@ -81,35 +82,36 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            writer.WriteStartObject();
 
             if (Name != null)
-                data.Set("name", Name);
+                writer.WriteString("name", Name);
             if (Position.HasValue)
-                data.Set("position", Position.Value);
+                writer.WriteNumber("position", Position.Value);
             if (Nsfw.HasValue)
-                data.Set("nsfw", Nsfw.Value);
+                writer.WriteBoolean("nsfw", Nsfw.Value);
 
             if (ParentId.HasValue)
             {
                 if (ParentId.Value == Snowflake.None)
-                    data.SetSnowflake("parent_id", null);
+                    writer.WriteSnowflake("parent_id", null);
                 else
-                    data.SetSnowflake("parent_id", ParentId.Value);
+                    writer.WriteSnowflake("parent_id", ParentId.Value);
             }
 
             if (PermissionOverwrites != null)
             {
-                DiscordApiData permissionOverwritesArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (OverwriteOptions overwriteParam in PermissionOverwrites)
-                    permissionOverwritesArray.Values.Add(overwriteParam.Build());
+                writer.WriteStartArray("permission_overwrites");
 
-                data.Set("permission_overwrites", permissionOverwritesArray);
+                foreach (OverwriteOptions overwriteParam in PermissionOverwrites)
+                    overwriteParam.Build(writer);
+
+                writer.WriteEndArray();
             }
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }

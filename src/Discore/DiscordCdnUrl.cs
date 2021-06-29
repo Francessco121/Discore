@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 
 namespace Discore
 {
     /// <summary>
     /// A URL builder for Discord CDN resources.
     /// </summary>
-    public class DiscordCdnUrl
+    public class DiscordCdnUrl : IEquatable<DiscordCdnUrl?>
     {
         /// <summary>
         /// The base URL for all Discord CDN resources.
@@ -26,17 +26,27 @@ namespace Discore
         /// a hash of the resource.
         /// </summary>
         public string FileName { get; }
+        /// <summary>
+        /// Gets the computed base URL for any image derived from this CDN URL
+        /// (e.g. "avatars/{userId}/{avatarHash}").
+        /// <para/>
+        /// Does not include <see cref="CdnBaseUrl"/>.
+        /// </summary>
+        public string BaseUrl { get; }
 
-        readonly string baseUrl;
-
-        private DiscordCdnUrl(DiscordCdnUrlType type, Snowflake? resourceId, string fileName,
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="fileName"/> or <paramref name="baseUrl"/> is null.
+        /// </exception>
+        public DiscordCdnUrl(
+            DiscordCdnUrlType type, 
+            Snowflake? resourceId, 
+            string fileName,
             string baseUrl)
         {
             Type = type;
             ResourceId = resourceId;
-            FileName = fileName;
-
-            this.baseUrl = baseUrl;
+            FileName = fileName ?? throw new ArgumentNullException(fileName);
+            BaseUrl = baseUrl ?? throw new ArgumentNullException(fileName);
         }
 
         /// <summary>
@@ -54,8 +64,11 @@ namespace Discore
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="iconHash">The icon hash for the guild.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="iconHash"/> is null.</exception>
         public static DiscordCdnUrl ForGuildIcon(Snowflake guildId, string iconHash)
         {
+            if (iconHash == null) throw new ArgumentNullException(nameof(iconHash));
+
             return new DiscordCdnUrl(DiscordCdnUrlType.GuildIcon, guildId, iconHash,
                 $"{CdnBaseUrl}/icons/{guildId}/{iconHash}");
         }
@@ -65,8 +78,11 @@ namespace Discore
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="splashHash">The hash of the splash image for the guild.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="splashHash"/> is null.</exception>
         public static DiscordCdnUrl ForGuildSplash(Snowflake guildId, string splashHash)
         {
+            if (splashHash == null) throw new ArgumentNullException(nameof(splashHash));
+
             return new DiscordCdnUrl(DiscordCdnUrlType.GuildSplash, guildId, splashHash,
                 $"{CdnBaseUrl}/splashes/{guildId}/{splashHash}");
         }
@@ -76,8 +92,11 @@ namespace Discore
         /// </summary>
         /// <param name="guildId">The ID of the guild.</param>
         /// <param name="bannerHash">The hash of the banner image for the guild.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="bannerHash"/> is null.</exception>
         public static DiscordCdnUrl ForGuildBanner(Snowflake guildId, string bannerHash)
         {
+            if (bannerHash == null) throw new ArgumentNullException(nameof(bannerHash));
+
             return new DiscordCdnUrl(DiscordCdnUrlType.GuildBanner, guildId, bannerHash,
                 $"{CdnBaseUrl}/banners/{guildId}/{bannerHash}");
         }
@@ -94,6 +113,8 @@ namespace Discore
         /// </exception>
         public static DiscordCdnUrl ForDefaultUserAvatar(string userDiscriminator)
         {
+            if (userDiscriminator == null) throw new ArgumentNullException(nameof(userDiscriminator));
+
             // The actual file name is the original discriminator modulo 5.
             int discriminatorNum = int.Parse(userDiscriminator);
             string fileName = (discriminatorNum % 5).ToString();
@@ -107,8 +128,11 @@ namespace Discore
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
         /// <param name="avatarHash">The avatar hash for the user.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="avatarHash"/> is null.</exception>
         public static DiscordCdnUrl ForUserAvatar(Snowflake userId, string avatarHash)
         {
+            if (avatarHash == null) throw new ArgumentNullException(nameof(avatarHash));
+
             return new DiscordCdnUrl(DiscordCdnUrlType.UserAvatar, userId, avatarHash,
                 $"{CdnBaseUrl}/avatars/{userId}/{avatarHash}");
         }
@@ -118,8 +142,11 @@ namespace Discore
         /// </summary>
         /// <param name="applicationId">The ID of the application.</param>
         /// <param name="iconHash">The icon hash for the application.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="iconHash"/> is null.</exception>
         public static DiscordCdnUrl ForApplicationIcon(Snowflake applicationId, string iconHash)
         {
+            if (iconHash == null) throw new ArgumentNullException(nameof(iconHash));
+
             return new DiscordCdnUrl(DiscordCdnUrlType.ApplicationIcon, applicationId, iconHash,
                 $"{CdnBaseUrl}/app-icons/{applicationId}/{iconHash}");
         }
@@ -132,12 +159,52 @@ namespace Discore
         /// <para>An optional pixel size of the resource to return (sets both width and height).</para>
         /// <para>Note: Must be a power of 2 and be between 16 and 2048.</para>
         /// </param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="ext"/> is null.</exception>
         public string BuildUrl(string ext = "png", int? size = null)
         {
+            if (ext == null) throw new ArgumentNullException(nameof(ext));
+
             if (size.HasValue)
-                return $"{baseUrl}.{ext}?size={size.Value}";
+                return $"{CdnBaseUrl}/{BaseUrl}.{ext}?size={size.Value}";
             else
-                return $"{baseUrl}.{ext}";
+                return $"{CdnBaseUrl}/{BaseUrl}.{ext}";
+        }
+
+        public override string ToString()
+        {
+            return $"{CdnBaseUrl}/{BaseUrl}";
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as DiscordCdnUrl);
+        }
+
+        public bool Equals(DiscordCdnUrl? other)
+        {
+            return !(other is null) &&
+                   Type == other.Type &&
+                   ResourceId.Equals(other.ResourceId) &&
+                   FileName == other.FileName &&
+                   BaseUrl == other.BaseUrl;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Type, ResourceId, FileName, BaseUrl);
+        }
+
+        public static bool operator ==(DiscordCdnUrl? left, DiscordCdnUrl? right)
+        {
+            if (left is null != right is null) return true;
+            if (left is null) return false;
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(DiscordCdnUrl? left, DiscordCdnUrl? right)
+        {
+            return !(left == right);
         }
     }
 }

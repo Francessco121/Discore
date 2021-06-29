@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Discore.Http
 {
@@ -7,10 +8,10 @@ namespace Discore.Http
         public string Url { get; }
         public int Shards { get; }
 
-        public GatewayBotResponse(DiscordApiData data)
+        internal GatewayBotResponse(JsonElement json)
         {
-            Url = data.GetString("url");
-            Shards = data.GetInteger("shards").Value;
+            Url = json.GetProperty("url").GetString()!;
+            Shards = json.GetProperty("shards").GetInt32();
         }
     }
 
@@ -29,17 +30,19 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<string> GetGateway()
         {
-            DiscordApiData data = await rest.Get("gateway",
+            using JsonDocument? data = await rest.Get("gateway",
                 "gateway").ConfigureAwait(false);
-            return data.GetString("url");
+
+            return data!.RootElement.GetProperty("url").GetString()!;
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<GatewayBotResponse> GetGatewayBot()
         {
-            DiscordApiData data = await rest.Get("gateway/bot",
+            using JsonDocument? data = await rest.Get("gateway/bot",
                 "gateway/bot").ConfigureAwait(false);
-            return new GatewayBotResponse(data);
+
+            return new GatewayBotResponse(data!.RootElement);
         }
     }
 }

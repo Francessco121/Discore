@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Discore
 {
@@ -8,19 +8,25 @@ namespace Discore
         /// Gets a <see cref="DiscordImageData"/> instance representing a cleared image. 
         /// This can be used to remove avatars from guilds, users, etc.
         /// </summary>
-        public static readonly DiscordImageData None = new DiscordImageData(base64Data: null, mediaType: null);
+        public static readonly DiscordImageData None = new DiscordImageData();
 
         /// <summary>
         /// Gets the image data as a base64 encoded string.
         /// </summary>
-        public string Base64Data => base64Data;
+        public string? Base64Data => base64Data;
         /// <summary>
         /// Gets the media type of the image data (e.g. image/jpeg).
         /// </summary>
-        public string MediaType => mediaType;
+        public string? MediaType => mediaType;
 
-        string base64Data;
-        string mediaType;
+        readonly string? base64Data;
+        readonly string? mediaType;
+
+        private DiscordImageData()
+        {
+            base64Data = null;
+            mediaType = null;
+        }
 
         /// <summary>
         /// Creates image data from the base64 encoded string of an image.
@@ -36,7 +42,7 @@ namespace Discore
         /// Creates image data from raw image data.
         /// </summary>
         /// <param name="mediaType">A supported media type (e.g. image/jpeg, image/png, or image/gif).</param>
-        /// <exception cref="ArgumentNullException">Thrown if the array is null.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="imageData"/> is null.</exception>
         public DiscordImageData(byte[] imageData, string mediaType)
         {
             base64Data = Convert.ToBase64String(imageData);
@@ -47,8 +53,11 @@ namespace Discore
         /// Creates image data from raw image data.
         /// </summary>
         /// <param name="mediaType">A supported media type (e.g. image/jpeg, image/png, or image/gif).</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="imageData"/> is null.</exception>
         public DiscordImageData(ArraySegment<byte> imageData, string mediaType)
         {
+            if (imageData == null) throw new ArgumentNullException(nameof(imageData));
+
             base64Data = Convert.ToBase64String(imageData.Array, imageData.Offset, imageData.Count);
             this.mediaType = mediaType;
         }
@@ -57,7 +66,8 @@ namespace Discore
         /// Converts the image data to the following format:
         /// <para>data:MEDIA_TYPE;base64,BASE64_IMAGE_DATA</para>
         /// </summary>
-        public string ToDataUriScheme()
+        /// <returns>A data URI or null if this is <see cref="None"/>.</returns>
+        public string? ToDataUriScheme()
         {
             return string.IsNullOrWhiteSpace(base64Data) ? null : $"data:{mediaType};base64,{base64Data}";
         }

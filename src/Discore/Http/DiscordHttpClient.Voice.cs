@@ -1,5 +1,7 @@
-﻿using Discore.Voice;
+using Discore.Voice;
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -12,11 +14,13 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> ListVoiceRegions()
         {
-            DiscordApiData data = await rest.Get("voice/regions", "voice/regions").ConfigureAwait(false);
+            using JsonDocument? data = await rest.Get("voice/regions", "voice/regions").ConfigureAwait(false);
 
-            DiscordVoiceRegion[] regions = new DiscordVoiceRegion[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var regions = new DiscordVoiceRegion[values.GetArrayLength()];
             for (int i = 0; i < regions.Length; i++)
-                regions[i] = new DiscordVoiceRegion(data.Values[i]);
+                regions[i] = new DiscordVoiceRegion(values[i]);
 
             return regions;
         }
@@ -27,14 +31,28 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetGuildVoiceRegions(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/regions",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/regions",
                 $"guilds/{guildId}/regions").ConfigureAwait(false);
 
-            DiscordVoiceRegion[] regions = new DiscordVoiceRegion[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var regions = new DiscordVoiceRegion[values.GetArrayLength()];
             for (int i = 0; i < regions.Length; i++)
-                regions[i] = new DiscordVoiceRegion(data.Values[i]);
+                regions[i] = new DiscordVoiceRegion(values[i]);
 
             return regions;
+        }
+
+        /// <summary>
+        /// Gets a list of all voice regions available to the specified guild.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<IReadOnlyList<DiscordVoiceRegion>> GetGuildVoiceRegions(DiscordGuild guild)
+        {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
+            return GetGuildVoiceRegions(guild.Id);
         }
     }
 }

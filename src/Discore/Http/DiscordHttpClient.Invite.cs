@@ -1,6 +1,7 @@
-﻿using Discore.Http.Internal;
+using Discore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -21,11 +22,11 @@ namespace Discore.Http
             if (string.IsNullOrWhiteSpace(inviteCode))
                 throw new ArgumentException("Invite code cannot be empty or only contain whitespace characters.", nameof(inviteCode));
 
-            UrlParametersBuilder urlParams = new UrlParametersBuilder();
+            var urlParams = new UrlParametersBuilder();
             urlParams["with_counts"] = withCounts?.ToString() ?? null;
 
-            DiscordApiData data = await rest.Get($"invites/{inviteCode}{urlParams.ToQueryString()}", "invities/invite").ConfigureAwait(false);
-            return new DiscordInvite(this, data);
+            using JsonDocument? data = await rest.Get($"invites/{inviteCode}{urlParams.ToQueryString()}", "invities/invite").ConfigureAwait(false);
+            return new DiscordInvite(data!.RootElement);
         }
 
         /// <summary>
@@ -42,8 +43,22 @@ namespace Discore.Http
             if (string.IsNullOrWhiteSpace(inviteCode))
                 throw new ArgumentException("Invite code cannot be empty or only contain whitespace characters.", nameof(inviteCode));
 
-            DiscordApiData data = await rest.Delete($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
-            return new DiscordInvite(this, data);
+            using JsonDocument? data = await rest.Delete($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
+            return new DiscordInvite(data!.RootElement);
+        }
+
+        /// <summary>
+        /// Deletes an invite to a channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentException">Thrown if the invite code is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordInvite> DeleteInvite(DiscordInvite invite)
+        {
+            if (invite == null) throw new ArgumentNullException(nameof(invite));
+
+            return DeleteInvite(invite.Code);
         }
 
         /// <summary>
@@ -53,14 +68,29 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetGuildInvites(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/invites",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/invites",
                 $"guilds/{guildId}/invites").ConfigureAwait(false);
 
-            DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var invites = new DiscordInviteMetadata[values.GetArrayLength()];
             for (int i = 0; i < invites.Length; i++)
-                invites[i] = new DiscordInviteMetadata(this, data.Values[i]);
+                invites[i] = new DiscordInviteMetadata(values[i]);
 
             return invites;
+        }
+
+        /// <summary>
+        /// Gets a list of invites for the specified guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<IReadOnlyList<DiscordInviteMetadata>> GetGuildInvites(DiscordGuild guild)
+        {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
+            return GetGuildInvites(guild.Id);
         }
 
         /// <summary>
@@ -70,14 +100,29 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetChannelInvites(Snowflake channelId)
         {
-            DiscordApiData data = await rest.Get($"channels/{channelId}/invites",
+            using JsonDocument? data = await rest.Get($"channels/{channelId}/invites",
                 $"channels/{channelId}/invites").ConfigureAwait(false);
 
-            DiscordInviteMetadata[] invites = new DiscordInviteMetadata[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var invites = new DiscordInviteMetadata[values.GetArrayLength()];
             for (int i = 0; i < invites.Length; i++)
-                invites[i] = new DiscordInviteMetadata(this, data.Values[i]);
+                invites[i] = new DiscordInviteMetadata(values[i]);
 
             return invites;
+        }
+
+        /// <summary>
+        /// Gets a list of all invites for the specified guild channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<IReadOnlyList<DiscordInviteMetadata>> GetChannelInvites(DiscordGuildChannel channel)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
+            return GetChannelInvites(channel.Id);
         }
 
         /// <summary>
@@ -96,15 +141,48 @@ namespace Discore.Http
         public async Task<DiscordInvite> CreateChannelInvite(Snowflake channelId,
             TimeSpan? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            if (maxAge.HasValue) requestData.Set("max_age", maxAge.Value.Seconds);
-            if (maxUses.HasValue) requestData.Set("max_uses", maxUses.Value);
-            if (temporary.HasValue) requestData.Set("temporary", temporary.Value);
-            if (unique.HasValue) requestData.Set("unique", unique.Value);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
 
-            DiscordApiData returnData = await rest.Post($"channels/{channelId}/invites", requestData,
+                if (maxAge.HasValue) writer.WriteNumber("max_age", maxAge.Value.Seconds);
+                if (maxUses.HasValue) writer.WriteNumber("max_uses", maxUses.Value);
+                if (temporary.HasValue) writer.WriteBoolean("temporary", temporary.Value);
+                if (unique.HasValue) writer.WriteBoolean("unique", unique.Value);
+
+                writer.WriteEndObject();
+            });
+
+            using JsonDocument? returnData = await rest.Post($"channels/{channelId}/invites", requestData,
                 $"channels/{channelId}/invites").ConfigureAwait(false);
-            return new DiscordInvite(this, returnData);
+
+            return new DiscordInvite(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Creates a new invite for the specified guild channel.
+        /// <para>Requires <see cref="DiscordPermission.CreateInstantInvite"/>.</para>
+        /// </summary>
+        /// <param name="channel">The guild channel.</param>
+        /// <param name="maxAge">The duration of invite before expiry, or 0 or null for never.</param>
+        /// <param name="maxUses">The max number of uses or 0 or null for unlimited.</param>
+        /// <param name="temporary">Whether this invite only grants temporary membership.</param>
+        /// <param name="unique">
+        /// If true, don't try to reuse a similar invite 
+        /// (useful for creating many unique one time use invites).
+        /// </param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordInvite> CreateChannelInvite(DiscordGuildChannel channel,
+            TimeSpan? maxAge = null, int? maxUses = null, bool? temporary = null, bool? unique = null)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
+            return CreateChannelInvite(channel.Id,
+                maxAge: maxAge,
+                maxUses: maxUses,
+                temporary: temporary,
+                unique: unique);
         }
     }
 }

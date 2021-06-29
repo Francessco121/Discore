@@ -1,7 +1,11 @@
-﻿namespace Discore
+using System;
+using System.Text.Json;
+
+namespace Discore
 {
-    public sealed class DiscordInviteGuild
+    public class DiscordInviteGuild
     {
+        // TODO: Rename to Id
         /// <summary>
         /// Gets the ID of the guild this invite is for.
         /// </summary>
@@ -15,13 +19,22 @@
         /// <summary>
         /// Gets the hash of the guild splash (or null if none exists).
         /// </summary>
-        public string SplashHash { get; }
+        public string? SplashHash { get; }
 
-        internal DiscordInviteGuild(DiscordApiData data)
+        // TODO: add splash, banner, description, icon, features, verification_level, vanity_url_code
+
+        public DiscordInviteGuild(Snowflake guildId, string name, string? splashHash)
         {
-            GuildId = data.GetSnowflake("id").Value;
-            Name = data.GetString("name");
-            SplashHash = data.GetString("splash_hash");
+            GuildId = guildId;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            SplashHash = splashHash;
+        }
+
+        internal DiscordInviteGuild(JsonElement json)
+        {
+            GuildId = json.GetProperty("id").GetSnowflake();
+            Name = json.GetProperty("name").GetString()!;
+            SplashHash = json.GetPropertyOrNull("splash")?.GetString();
         }
     }
 }

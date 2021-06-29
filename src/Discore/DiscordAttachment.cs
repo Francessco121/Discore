@@ -1,6 +1,9 @@
-﻿namespace Discore
+using System;
+using System.Text.Json;
+
+namespace Discore
 {
-    public sealed class DiscordAttachment : DiscordIdEntity
+    public class DiscordAttachment : DiscordIdEntity
     {
         /// <summary>
         /// Gets the file name of the attachment.
@@ -27,15 +30,37 @@
         /// </summary>
         public int? Height { get; }
 
-        internal DiscordAttachment(DiscordApiData data)
-            : base(data)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="fileName"/>, <paramref name="url"/>,
+        /// or <paramref name="proxyUrl"/> is null.
+        /// </exception>
+        public DiscordAttachment(
+            Snowflake id,
+            string fileName, 
+            int size, 
+            string url, 
+            string proxyUrl, 
+            int? width, 
+            int? height)
+            : base(id)
         {
-            FileName = data.GetString("filename");
-            Size     = data.GetInteger("size").Value;
-            Url      = data.GetString("url");
-            ProxyUrl = data.GetString("proxy_url");
-            Width    = data.GetInteger("width");
-            Height   = data.GetInteger("height");
+            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
+            Size = size;
+            Url = url ?? throw new ArgumentNullException(nameof(url));
+            ProxyUrl = proxyUrl ?? throw new ArgumentNullException(nameof(proxyUrl));
+            Width = width;
+            Height = height;
+        }
+
+        internal DiscordAttachment(JsonElement json)
+            : base(json)
+        {
+            FileName = json.GetProperty("filename").GetString()!;
+            Size = json.GetProperty("size").GetInt32();
+            Url = json.GetProperty("url").GetString()!;
+            ProxyUrl = json.GetProperty("proxy_url").GetString()!;
+            Width = json.GetPropertyOrNull("width")?.GetInt32OrNull();
+            Height = json.GetPropertyOrNull("height")?.GetInt32OrNull();
         }
 
         public override string ToString()

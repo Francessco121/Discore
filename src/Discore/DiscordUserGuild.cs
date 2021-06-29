@@ -1,9 +1,12 @@
-﻿namespace Discore
+using System;
+using System.Text.Json;
+
+namespace Discore
 {
     /// <summary>
     /// A brief version of a guild object.
     /// </summary>
-    public sealed class DiscordUserGuild : DiscordIdEntity
+    public class DiscordUserGuild : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this guild.
@@ -12,7 +15,7 @@
         /// <summary>
         /// Gets the icon of this guild or null if the guild has no icon set.
         /// </summary>
-        public DiscordCdnUrl Icon { get; }
+        public DiscordCdnUrl? Icon { get; }
         /// <summary>
         /// Gets whether the user is the owner of this guild.
         /// </summary>
@@ -22,18 +25,32 @@
         /// </summary>
         public DiscordPermission Permissions { get; }
 
-        internal DiscordUserGuild(DiscordApiData data)
-            : base(data)
+        // TODO: add: features
+
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
+        public DiscordUserGuild(
+            Snowflake id,
+            string name, 
+            DiscordCdnUrl? icon, 
+            bool isOwner, 
+            DiscordPermission permissions)
+            : base(id)
         {
-            Name = data.GetString("name");
-            IsOwner = data.GetBoolean("owner").Value;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Icon = icon;
+            IsOwner = isOwner;
+            Permissions = permissions;
+        }
 
-            string iconHash = data.GetString("icon");
-            if (iconHash != null)
-                Icon = DiscordCdnUrl.ForGuildIcon(Id, iconHash);
+        internal DiscordUserGuild(JsonElement json)
+            : base(json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            IsOwner = json.GetProperty("owner").GetBoolean();
+            Permissions = (DiscordPermission)json.GetProperty("permissions").GetUInt64();
 
-            long permissions = data.GetInt64("permissions").Value;
-            Permissions = (DiscordPermission)permissions;
+            string? iconStr = json.GetPropertyOrNull("icon")?.GetString();
+            Icon = iconStr == null ? null : DiscordCdnUrl.ForGuildIcon(Id, iconStr);
         }
 
         public override string ToString()

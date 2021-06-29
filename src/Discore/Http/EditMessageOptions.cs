@@ -1,16 +1,18 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     public class EditMessageOptions
     {
         /// <summary>
         /// Gets or sets the content of the message.
         /// </summary>
-        public string Content { get; set; }
+        public string? Content { get; set; }
 
         /// <summary>
         /// Gets or sets the embed within the message.
         /// </summary>
-        public EmbedOptions Embed { get; set; }
+        public EmbedOptions? Embed { get; set; }
 
         public EditMessageOptions() { }
 
@@ -35,6 +37,21 @@
         {
             Embed = embed;
             return this;
+        }
+
+        internal void Build(Utf8JsonWriter writer)
+        {
+            writer.WriteStartObject();
+
+            writer.WriteString("content", Content);
+
+            if (Embed != null)
+            {
+                writer.WritePropertyName("embed");
+                Embed.Build(writer);
+            }
+
+            writer.WriteEndObject();
         }
     }
 }

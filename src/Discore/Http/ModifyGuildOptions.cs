@@ -1,4 +1,6 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     /// <summary>
     /// An optional set of parameters for modifying a guild.
@@ -8,15 +10,17 @@
         /// <summary>
         /// Gets or sets the guild name (or null to leave unchanged).
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// Gets or sets the ID of the voice region the guild will use (or null to leave unchanged).
         /// </summary>
-        public string VoiceRegion { get; set; }
+        public string? VoiceRegion { get; set; }
+        // TODO: Why isn't this GuildVerificationLevel
         /// <summary>
         /// Gets or sets the required verification level (or null to leave unchanged).
         /// </summary>
         public int? VerificationLevel { get; set; }
+        // TODO: Why isn't this GuildNotificationOptions
         /// <summary>
         /// Gets or sets the default message notification setting to be used by new members entering the guild
         /// (or null to leave unchanged).
@@ -36,7 +40,7 @@
         /// Gets or sets the icon for the guild (or null to leave unchanged).
         /// <para>Set to <see cref="DiscordImageData.None"/> to remove the icon.</para>
         /// </summary>
-        public DiscordImageData Icon { get; set; }
+        public DiscordImageData? Icon { get; set; }
         /// <summary>
         /// Gets or sets the ID of the user to transfer guild ownership to (or null to leave unchanged) 
         /// (the current bot must be guild owner).
@@ -46,7 +50,7 @@
         /// Gets or sets the image splash for the guild (or null to leave unchanged) (VIP guilds only).
         /// <para>Set to <see cref="DiscordImageData.None"/> to remove the splash.</para>
         /// </summary>
-        public DiscordImageData Splash { get; set; }
+        public DiscordImageData? Splash { get; set; }
         /// <summary>
         /// Gets or sets the ID of the text channel which system messages are sent to (or null to leave unchanged).
         /// <para>Set to <see cref="Snowflake.None"/> to remove the system channel.</para>
@@ -147,31 +151,32 @@
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            if (Name != null)
-                data.Set("name", Name);
-            if (VoiceRegion != null)
-                data.Set("region", VoiceRegion);
-            if (VerificationLevel.HasValue)
-                data.Set("verification_level", VerificationLevel);
-            if (DefaultMessageNotifications.HasValue)
-                data.Set("default_message_notifications", DefaultMessageNotifications);
-            if (AfkChannelId.HasValue)
-                data.SetSnowflake("afk_channel_id", AfkChannelId);
-            if (AfkTimeout.HasValue)
-                data.Set("afk_timeout", AfkTimeout);
-            if (Icon != null)
-                data.Set("icon", Icon.ToDataUriScheme());
-            if (OwnerId.HasValue)
-                data.SetSnowflake("owner_id", OwnerId);
-            if (Splash != null)
-                data.Set("splash", Splash.ToDataUriScheme());
-            if (SystemChannelId.HasValue)
-                data.SetSnowflake("system_channel_id", SystemChannelId);
+            writer.WriteStartObject();
 
-            return data;
+            if (Name != null)
+                writer.WriteString("name", Name);
+            if (VoiceRegion != null)
+                writer.WriteString("region", VoiceRegion);
+            if (VerificationLevel.HasValue)
+                writer.WriteNumber("verification_level", VerificationLevel.Value);
+            if (DefaultMessageNotifications.HasValue)
+                writer.WriteNumber("default_message_notifications", DefaultMessageNotifications.Value);
+            if (AfkChannelId.HasValue)
+                writer.WriteSnowflake("afk_channel_id", AfkChannelId);
+            if (AfkTimeout.HasValue)
+                writer.WriteNumber("afk_timeout", AfkTimeout.Value);
+            if (Icon != null)
+                writer.WriteString("icon", Icon.ToDataUriScheme());
+            if (OwnerId.HasValue)
+                writer.WriteSnowflake("owner_id", OwnerId);
+            if (Splash != null)
+                writer.WriteString("splash", Splash.ToDataUriScheme());
+            if (SystemChannelId.HasValue)
+                writer.WriteSnowflake("system_channel_id", SystemChannelId);
+
+            writer.WriteEndObject();
         }
     }
 }

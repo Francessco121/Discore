@@ -1,15 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Http.Internal
 {
+    // TODO: rename to ApiClient
+
     class RestClient : IDisposable
     {
         public const string BASE_URL = "https://discord.com/api/v6";
@@ -20,20 +23,17 @@ namespace Discore.Http.Internal
         static readonly string discoreVersion;
 
         readonly string botToken;
-        readonly DiscoreLogger log;
 
         static readonly RateLimitLock globalRateLimitLock;
         static readonly ConcurrentDictionary<string, RateLimitLock> routeRateLimitLocks;
         static readonly ConcurrentDictionary<string, string> routesToBuckets;
         static readonly ConcurrentDictionary<string, RateLimitLock> bucketRateLimitLocks;
 
-        readonly HttpClient globalHttpClient;
+        readonly HttpClient? globalHttpClient;
 
         public RestClient(string botToken)
         {
             this.botToken = botToken;
-
-            log = new DiscoreLogger("RestClient");
 
             if (DiscordHttpClient.UseSingleHttpClient)
                 globalHttpClient = CreateHttpClient();
@@ -53,7 +53,7 @@ namespace Discore.Http.Internal
 
         HttpClient CreateHttpClient()
         {
-            HttpClient http = new HttpClient();
+            var http = new HttpClient();
             http.DefaultRequestHeaders.Add("Accept", "application/json");
             http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
             http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
@@ -62,116 +62,89 @@ namespace Discore.Http.Internal
             return http;
         }
 
+        /// <summary>
+        /// Note: Consumers of this method become owners of the returned JsonDocument.
+        /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        async Task<DiscordApiData> ParseResponse(HttpResponseMessage response, RateLimitHeaders rateLimitHeaders)
+        async Task<JsonDocument?> ParseResponse(HttpResponseMessage response, RateLimitHeaders? rateLimitHeaders, 
+            CancellationToken cancellationToken)
         {
-            // Read response payload as string
-            string json;
+            // Parse response payload as JSON
+            JsonDocument? data;
 
             if (response.StatusCode == HttpStatusCode.NoContent)
-                json = null;
-            else
-                json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-
-            // Attempt to parse the payload as JSON.
-            DiscordApiData data;
-            if (DiscordApiData.TryParseJson(json, out data))
             {
-                if (response.IsSuccessStatusCode)
-                    // If successful, no more action is required.
-                    return data;
-                else
+                // Don't attempt to parse if the response is intentionally empty
+                data = null;
+            }
+            else
+            {
+                // Parse
+                try
                 {
-                    string message = null;
-                    DiscordHttpErrorCode errorCode = DiscordHttpErrorCode.None;
+                    Stream stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
 
-                    // Get the Discord-specific error code if it exists.
-                    if ((int)response.StatusCode == 429)
-                        errorCode = DiscordHttpErrorCode.TooManyRequests;
-                    else if (data.ContainsKey("code"))
-                    {
-                        long? code = data.GetInt64("code");
-                        if (code.HasValue)
-                            errorCode = (DiscordHttpErrorCode)code;
-                    }
-
-                    // Get the message.
-                    if (data.ContainsKey("content"))
-                    {
-                        IList<DiscordApiData> content = data.GetArray("content");
-
-                        StringBuilder sb = new StringBuilder();
-                        for (int i = 0; i < content.Count; i++)
-                        {
-                            sb.Append(content[i]);
-
-                            if (i < content.Count - 1)
-                                sb.Append(", ");
-                        }
-
-                        message = sb.ToString();
-                    }
-                    else if (data.ContainsKey("message"))
-                    {
-                        message = data.GetString("message");
-                    }
-                    else if (response.StatusCode == HttpStatusCode.BadRequest && data.Type == DiscordApiDataType.Container)
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        foreach (KeyValuePair<string, DiscordApiData> pair in data.Entries)
-                        {
-                            sb.Append($"{pair.Key}: ");
-
-                            if (pair.Value.Type != DiscordApiDataType.Array)
-                            {
-                                // Shouldn't happen, but if it does then this error is not one we can parse.
-                                // Set sb to null so that message ends up null and let the application get
-                                // the raw JSON payload so they at least know what happened until we can
-                                // implement the correct parser.
-                                sb = null;
-                                break;
-                            }
-
-                            bool addComma = false;
-                            foreach (DiscordApiData errorData in pair.Value.Values)
-                            {
-                                if (addComma)
-                                    sb.Append(", ");
-
-                                sb.Append(errorData.ToString());
-
-                                addComma = true;
-                            }
-
-                            sb.AppendLine();
-                        }
-
-                        message = sb?.ToString();
-                    }
-
-                    // Throw the appropriate exception
-                    if (message != null) // If null, let the "unknown error" exception be thrown
-                    {
-                        if ((int)response.StatusCode == 429 && rateLimitHeaders != null)
-                            throw new DiscordHttpRateLimitException(rateLimitHeaders, message, errorCode, response.StatusCode);
-                        else
-                            throw new DiscordHttpApiException(message, errorCode, response.StatusCode);
-                    }
+                    data = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+                }
+                catch (JsonException ex)
+                {
+                    // JSON was expected, but could not be parsed, we should not continue
+                    throw new DiscordHttpApiException($"Failed to parse response: {ex}", DiscordHttpErrorCode.None, response.StatusCode);
                 }
             }
 
-            throw new DiscordHttpApiException($"Unknown error. Response: {json}",
-                DiscordHttpErrorCode.None, response.StatusCode);
+            if (response.IsSuccessStatusCode)
+            {
+                // Success, no more action is required
+                return data;
+            }
+            else
+            {
+                // Handle error
+                using (data)
+                {
+                    throw BuildUnsuccessfulResponseException(response, rateLimitHeaders, data!.RootElement);
+                }
+            }
+        }
+
+        DiscordHttpApiException BuildUnsuccessfulResponseException(HttpResponseMessage response, RateLimitHeaders? rateLimitHeaders, JsonElement data)
+        {
+            // TODO: Parse form error responses: https://discord.com/developers/docs/reference#error-messages
+
+            // Get the Discord-specific error code
+            DiscordHttpErrorCode errorCode = DiscordHttpErrorCode.None;
+
+            if ((int)response.StatusCode == 429)
+            {
+                errorCode = DiscordHttpErrorCode.TooManyRequests;
+            }
+            else
+            {
+                int? code = data.GetPropertyOrNull("code")?.GetInt32();
+
+                if (code != null)
+                    errorCode = (DiscordHttpErrorCode)code;
+            }
+
+            // Get the message
+            string message = data.GetPropertyOrNull("message")?.GetString() ?? "An error occurred.";
+
+            // Throw the appropriate exception
+            if ((int)response.StatusCode == 429 && rateLimitHeaders != null)
+                return new DiscordHttpRateLimitException(rateLimitHeaders, message, errorCode, response.StatusCode);
+            else
+                return new DiscordHttpApiException(message, errorCode, response.StatusCode);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordApiData> Send(Func<HttpRequestMessage> requestCreate, string rateLimitRoute, 
+        public async Task<JsonDocument?> Send(Func<HttpRequestMessage> requestCreate, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
             // Get the rate limit lock for the route
-            RateLimitLock routeLock = null;
+            RateLimitLock? routeLock = null;
             
             if (routesToBuckets.TryGetValue(rateLimitRoute, out string rateLimitBucket))
             {
@@ -193,12 +166,12 @@ namespace Discore.Http.Internal
             using (await routeLock.LockAsync(ct).ConfigureAwait(false))
             {
                 HttpResponseMessage response;
-                RateLimitHeaders rateLimitHeaders;
+                RateLimitHeaders? rateLimitHeaders;
 
                 bool retry = false;
                 int attempts = 0;
 
-                IDisposable globalLock = null;
+                IDisposable? globalLock = null;
 
                 do
                 {
@@ -241,9 +214,9 @@ namespace Discore.Http.Internal
                             {
                                 // Tell the appropriate lock to wait
                                 if (rateLimitHeaders.IsGlobal)
-                                    globalRateLimitLock.ResetAfter(rateLimitHeaders.RetryAfter.Value);
+                                    globalRateLimitLock.ResetAfter(rateLimitHeaders.RetryAfter!.Value);
                                 else
-                                    routeLock.ResetAfter(rateLimitHeaders.RetryAfter.Value);
+                                    routeLock.ResetAfter(rateLimitHeaders.RetryAfter!.Value);
 
                                 retry = RetryOnRateLimit && attempts < 20;
 
@@ -256,7 +229,7 @@ namespace Discore.Http.Internal
                                 // If the request succeeded but we are out of calls, set the route lock
                                 // to wait until the reset time.
                                 if (rateLimitHeaders.Remaining == 0)
-                                    routeLock.ResetAt(rateLimitHeaders.Reset * 1000);
+                                    routeLock.ResetAt(rateLimitHeaders.Reset!.Value * 1000);
                             }
 
                             if (rateLimitHeaders.Bucket != null)
@@ -271,7 +244,7 @@ namespace Discore.Http.Internal
                             else
                             {
                                 // If the route was previously in a rate-limit bucket, but isn't anymore, remove the link
-                                if (routesToBuckets.TryRemove(rateLimitRoute, out string bucket))
+                                if (routesToBuckets.TryRemove(rateLimitRoute, out string? bucket))
                                 {
                                     // Additionally remove the bucket if no routes are linked to it
                                     if (!routesToBuckets.Values.Contains(bucket))
@@ -299,12 +272,12 @@ namespace Discore.Http.Internal
                 }
                 while (retry);
 
-                return await ParseResponse(response, rateLimitHeaders).ConfigureAwait(false);
+                return await ParseResponse(response, rateLimitHeaders, ct).ConfigureAwait(false);
             }
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Get(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Get(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -314,7 +287,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Post(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Post(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -324,20 +297,20 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Post(string action, DiscordApiData data, string rateLimitRoute, 
+        public Task<JsonDocument?> Post(string action, string jsonContent, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
-                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}/{action}");
+                request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 return request;
             }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Put(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Put(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -347,33 +320,33 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Put(string action, DiscordApiData data, string rateLimitRoute, 
+        public Task<JsonDocument?> Put(string action, string jsonContent, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
-                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+                var request = new HttpRequestMessage(HttpMethod.Put, $"{BASE_URL}/{action}");
+                request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 return request;
             }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Patch(string action, DiscordApiData data, string rateLimitRoute, 
+        public Task<JsonDocument?> Patch(string action, string jsonContent, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
             {
-                HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BASE_URL}/{action}");
-                request.Content = new StringContent(data.SerializeToJson(), Encoding.UTF8, "application/json");
+                var request = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BASE_URL}/{action}");
+                request.Content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 return request;
             }, rateLimitRoute, cancellationToken);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordApiData> Delete(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Delete(string action, string rateLimitRoute, 
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>

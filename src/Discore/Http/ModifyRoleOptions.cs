@@ -1,4 +1,6 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     /// <summary>
     /// An optional set of parameters used for modifying a guild role.
@@ -8,7 +10,7 @@
         /// <summary>
         /// Gets or sets the name of the role (or null to leave unchanged).
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
         /// <summary>
         /// Gets or sets the permissions granted by this role (or null to leave unchanged).
         /// </summary>
@@ -71,21 +73,22 @@
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            if (Name != null)
-                data.Set("name", Name);
-            if (Permissions.HasValue)
-                data.Set("permissions", (long)Permissions.Value);
-            if (Color.HasValue)
-                data.Set("color", Color.Value.ToHexadecimal());
-            if (IsHoisted.HasValue)
-                data.Set("hoist", IsHoisted);
-            if (IsMentionable.HasValue)
-                data.Set("mentionable", IsMentionable);
+            writer.WriteStartObject();
 
-            return data;
+            if (Name != null)
+                writer.WriteString("name", Name);
+            if (Permissions.HasValue)
+                writer.WriteNumber("permissions", (long)Permissions.Value);
+            if (Color.HasValue)
+                writer.WriteNumber("color", Color.Value.ToHexadecimal());
+            if (IsHoisted.HasValue)
+                writer.WriteBoolean("hoist", IsHoisted.Value);
+            if (IsMentionable.HasValue)
+                writer.WriteBoolean("mentionable", IsMentionable.Value);
+
+            writer.WriteEndObject();
         }
     }
 }

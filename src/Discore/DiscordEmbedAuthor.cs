@@ -1,38 +1,48 @@
-﻿namespace Discore
+using System.Text.Json;
+
+namespace Discore
 {
-    public sealed class DiscordEmbedAuthor
+    public class DiscordEmbedAuthor
     {
         /// <summary>
         /// Gets the name of the author.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
 
         /// <summary>
         /// Gets the url to the author.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
 
         /// <summary>
-        /// Gets the url of an icon of the author (only http(s)).
+        /// Gets the url of an icon of the author.
         /// </summary>
-        public string IconUrl { get; }
+        public string? IconUrl { get; }
 
         /// <summary>
         /// Gets a proxied url to the icon of the author.
         /// </summary>
-        public string ProxyIconUrl { get; }
+        public string? ProxyIconUrl { get; }
 
-        internal DiscordEmbedAuthor(DiscordApiData data)
+        public DiscordEmbedAuthor(string? name, string? url, string? iconUrl, string? proxyIconUrl)
         {
-            Name         = data.GetString("name");
-            Url          = data.GetString("url");
-            IconUrl      = data.GetString("icon_url");
-            ProxyIconUrl = data.GetString("proxy_icon_url");
+            Name = name;
+            Url = url;
+            IconUrl = iconUrl;
+            ProxyIconUrl = proxyIconUrl;
+        }
+
+        internal DiscordEmbedAuthor(JsonElement json)
+        {
+            Name = json.GetPropertyOrNull("name")?.GetString();
+            Url = json.GetPropertyOrNull("url")?.GetString();
+            IconUrl = json.GetPropertyOrNull("icon_url")?.GetString();
+            ProxyIconUrl = json.GetPropertyOrNull("proxy_icon_url")?.GetString();
         }
 
         public override string ToString()
         {
-            return Name;
+            return Name ?? base.ToString();
         }
     }
 }

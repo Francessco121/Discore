@@ -1,4 +1,6 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     /// <summary>
     /// A set of parameters defining a permission overwrite.
@@ -46,15 +48,16 @@
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.SetSnowflake("id", Id);
-            data.Set("type", Type.ToString().ToLower());
-            data.Set("allow", (int)Allow);
-            data.Set("deny", (int)Deny);
+            writer.WriteStartObject();
 
-            return data;
+            writer.WriteSnowflake("id", Id);
+            writer.WriteString("type", Type.ToString().ToLower());
+            writer.WriteNumber("allow", (int)Allow);
+            writer.WriteNumber("deny", (int)Deny);
+
+            writer.WriteEndObject();
         }
     }
 }

@@ -1,79 +1,80 @@
-﻿using ConcurrentCollections;
 using Discore.Voice;
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
+#pragma warning disable IDE0051 // Remove unused private members
 
 namespace Discore.WebSocket.Internal
 {
     partial class Gateway
     {
         #region Public Events       
-        public event EventHandler<DMChannelEventArgs> OnDMChannelCreated;
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelCreated;
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelUpdated;
-        public event EventHandler<DMChannelEventArgs> OnDMChannelRemoved;
-        public event EventHandler<GuildChannelEventArgs> OnGuildChannelRemoved;
+        public event EventHandler<ReadyEventArgs>? OnReady;
+
+        public event EventHandler<ChannelCreateEventArgs>? OnChannelCreate;
+        public event EventHandler<ChannelUpdateEventArgs>? OnChannelUpdate;
+        public event EventHandler<ChannelDeleteEventArgs>? OnChannelDelete;
 
 
-        public event EventHandler<GuildEventArgs> OnGuildCreated;
-        public event EventHandler<GuildEventArgs> OnGuildUpdated;
-        public event EventHandler<GuildEventArgs> OnGuildRemoved;
+        public event EventHandler<GuildCreateEventArgs>? OnGuildCreate;
+        public event EventHandler<GuildUpdateEventArgs>? OnGuildUpdate;
+        public event EventHandler<GuildDeleteEventArgs>? OnGuildDelete;
 
-        public event EventHandler<GuildEventArgs> OnGuildAvailable;
-        public event EventHandler<GuildEventArgs> OnGuildUnavailable;
+        public event EventHandler<GuildBanAddEventArgs>? OnGuildBanAdd;
+        public event EventHandler<GuildBanRemoveEventArgs>? OnGuildBanRemove;
 
-        public event EventHandler<GuildUserEventArgs> OnGuildBanAdded;
-        public event EventHandler<GuildUserEventArgs> OnGuildBanRemoved;
+        public event EventHandler<GuildEmojisUpdateEventArgs>? OnGuildEmojisUpdate;
 
-        public event EventHandler<GuildEventArgs> OnGuildEmojisUpdated;
+        public event EventHandler<GuildIntegrationsUpdateEventArgs>? OnGuildIntegrationsUpdate;
 
-        public event EventHandler<GuildIntegrationsEventArgs> OnGuildIntegrationsUpdated;
+        public event EventHandler<GuildMemberAddEventArgs>? OnGuildMemberAdd;
+        public event EventHandler<GuildMemberRemoveEventArgs>? OnGuildMemberRemove;
+        public event EventHandler<GuildMemberUpdateEventArgs>? OnGuildMemberUpdate;
+        public event EventHandler<GuildMemberChunkEventArgs>? OnGuildMembersChunk;
 
-        public event EventHandler<GuildMemberEventArgs> OnGuildMemberAdded;
-        public event EventHandler<GuildMemberEventArgs> OnGuildMemberRemoved;
-        public event EventHandler<GuildMemberEventArgs> OnGuildMemberUpdated;
-        public event EventHandler<GuildMemberChunkEventArgs> OnGuildMembersChunk;
+        public event EventHandler<GuildRoleCreateEventArgs>? OnGuildRoleCreate;
+        public event EventHandler<GuildRoleUpdateEventArgs>? OnGuildRoleUpdate;
+        public event EventHandler<GuildRoleDeleteEventArgs>? OnGuildRoleDelete;
 
-        public event EventHandler<GuildRoleEventArgs> OnGuildRoleCreated;
-        public event EventHandler<GuildRoleEventArgs> OnGuildRoleUpdated;
-        public event EventHandler<GuildRoleEventArgs> OnGuildRoleDeleted;
+        public event EventHandler<ChannelPinsUpdateEventArgs>? OnChannelPinsUpdate;
 
-        public event EventHandler<ChannelPinsUpdateEventArgs> OnChannelPinsUpdated;
+        public event EventHandler<MessageCreateEventArgs>? OnMessageCreate;
+        public event EventHandler<MessageUpdateEventArgs>? OnMessageUpdate;
+        public event EventHandler<MessageDeleteEventArgs>? OnMessageDelete;
+        public event EventHandler<MessageReactionAddEventArgs>? OnMessageReactionAdd;
+        public event EventHandler<MessageReactionRemoveEventArgs>? OnMessageReactionRemove;
+        public event EventHandler<MessageReactionRemoveAllEventArgs>? OnMessageReactionRemoveAll;
 
-        public event EventHandler<MessageEventArgs> OnMessageCreated;
-        public event EventHandler<MessageUpdateEventArgs> OnMessageUpdated;
-        public event EventHandler<MessageDeleteEventArgs> OnMessageDeleted;
-        public event EventHandler<MessageReactionEventArgs> OnMessageReactionAdded;
-        public event EventHandler<MessageReactionEventArgs> OnMessageReactionRemoved;
-        public event EventHandler<MessageReactionRemoveAllEventArgs> OnMessageAllReactionsRemoved;
+        public event EventHandler<WebhooksUpdateEventArgs>? OnWebhookUpdate;
 
-        public event EventHandler<WebhooksUpdateEventArgs> OnWebhookUpdated;
+        public event EventHandler<PresenceUpdateEventArgs>? OnPresenceUpdate;
 
-        public event EventHandler<PresenceEventArgs> OnPresenceUpdated;
+        public event EventHandler<TypingStartEventArgs>? OnTypingStart;
 
-        public event EventHandler<TypingStartEventArgs> OnTypingStarted;
-
-        public event EventHandler<UserEventArgs> OnUserUpdated;
-        public event EventHandler<VoiceStateEventArgs> OnVoiceStateUpdated;
+        public event EventHandler<UserUpdateEventArgs>? OnUserUpdate;
+        public event EventHandler<VoiceStateUpdateEventArgs>? OnVoiceStateUpdate;
         #endregion
 
-        void LogServerTrace(string prefix, DiscordApiData data)
+        void LogServerTrace(string prefix, JsonElement data)
         {
-            IList<DiscordApiData> traceArray = data.GetArray("_trace");
-            if (traceArray != null)
+            JsonElement? traceArray = data.GetPropertyOrNull("_trace");
+            if (traceArray != null && traceArray.Value.ValueKind == JsonValueKind.Array)
             {
+                JsonElement _traceArray = traceArray.Value;
+                int numTraces = _traceArray.GetArrayLength();
+
                 StringBuilder sb = new StringBuilder();
 
-                for (int i = 0; i < traceArray.Count; i++)
+                for (int i = 0; i < numTraces; i++)
                 {
                     if (i > 0)
                         sb.Append(", ");
 
-                    sb.Append(traceArray[i].ToString());
+                    sb.Append(_traceArray[i].ToString());
                 }
 
                 log.LogVerbose($"[{prefix}] trace = {sb}");
@@ -81,66 +82,78 @@ namespace Discore.WebSocket.Internal
         }
 
         [DispatchEvent("READY")]
-        void HandleReadyEvent(DiscordApiData data)
+        void HandleReadyEvent(JsonElement data)
         {
             // Check gateway protocol
-            int protocolVersion = data.GetInteger("v").Value;
+            int protocolVersion = data.GetProperty("v").GetInt32();
             if (protocolVersion != GATEWAY_VERSION)
                 log.LogError($"[Ready] Gateway protocol mismatch! Expected v{GATEWAY_VERSION}, got {protocolVersion}.");
 
             // Check shard
+            int? _shardId = null;
+            int? _totalShards = null;
+
             if (shard.Id != 0 || totalShards > 1)
             {
-                IList<DiscordApiData> shardData = data.GetArray("shard");
+                JsonElement? shardData = data.GetPropertyOrNull("shard");
                 if (shardData != null)
                 {
-                    if (shardData.Count > 0 && shardData[0].ToInteger() != shard.Id)
-                        log.LogError($"[Ready] Shard ID mismatch! Expected {shard.Id}, got {shardData[0].ToInteger()}");
-                    if (shardData.Count > 1 && shardData[1].ToInteger() != totalShards)
-                        log.LogError($"[Ready] Total shards mismatch! Expected {totalShards}, got {shardData[1].ToInteger()}");
+                    JsonElement _shardData = shardData.Value;
+                    int shardDataCount = _shardData.GetArrayLength();
+
+                    if (shardDataCount > 0)
+                    {
+                        _shardId = _shardData[0].GetInt32();
+
+                        if (_shardId.Value != shard.Id)
+                            log.LogError($"[Ready] Shard ID mismatch! Expected {shard.Id}, got {_shardData[0].GetInt32()}");
+                    }
+
+                    if (shardDataCount > 1)
+                    {
+                        _totalShards = _shardData[1].GetInt32();
+
+                        if (_totalShards.Value != totalShards)
+                            log.LogError($"[Ready] Total shards mismatch! Expected {totalShards}, got {_shardData[1].GetInt32()}");
+                    }
                 }
             }
 
-            // Clear the cache
-            cache.Clear();
-
             // Get the current bot's user object
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
-            MutableUser user;
-            if (!cache.Users.TryGetValue(userId, out user))
-            {
-                user = new MutableUser(userId, false, http);
-                cache.Users[userId] = user;
-            }
-
-            user.Update(userData);
-
-            shard.UserId = userId;
+            shard.UserId = user.Id;
 
             log.LogInfo($"[Ready] user = {user.Username}#{user.Discriminator}");
 
             // Get session ID
-            sessionId = data.GetString("session_id");
+            sessionId = data.GetProperty("session_id").GetString()!;
 
             // Get unavailable guilds
-            foreach (DiscordApiData unavailableGuildData in data.GetArray("guilds"))
-            {
-                Snowflake guildId = unavailableGuildData.GetSnowflake("id").Value;
+            unavailableGuildIds.Clear();
 
-                cache.AddGuildId(guildId);
-                cache.SetGuildAvailability(guildId, false);
+            JsonElement guildsData = data.GetProperty("guilds");
+            var guildIds = new Snowflake[guildsData.GetArrayLength()];
+
+            for (int i = 0; i < guildIds.Length; i++)
+            {
+                Snowflake guildId = guildsData[i].GetProperty("id").GetSnowflake();
+                guildIds[i] = guildId;
+
+                unavailableGuildIds.Add(guildId);
             }
 
             LogServerTrace("Ready", data);
 
             // Signal that the connection is ready
             handshakeCompleteEvent.Set();
+
+            // Fire event
+            OnReady?.Invoke(this, new ReadyEventArgs(shard, user, guildIds, _shardId, _totalShards));
         }
 
         [DispatchEvent("RESUMED")]
-        void HandleResumedEvent(DiscordApiData data)
+        void HandleResumedEvent(JsonElement data)
         {
             // Signal that the connection is ready
             handshakeCompleteEvent.Set();
@@ -151,393 +164,220 @@ namespace Discore.WebSocket.Internal
 
         #region Guild
         [DispatchEvent("GUILD_CREATE")]
-        void HandleGuildCreateEvent(DiscordApiData data)
+        void HandleGuildCreateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("id").Value;
+            Snowflake guildId = data.GetProperty("id").GetSnowflake();
 
-            bool wasUnavailable = !cache.IsGuildAvailable(guildId);
+            bool wasUnavailable = unavailableGuildIds.TryRemove(guildId);
 
-            // Update guild
-            MutableGuild mutableGuild;
-            if (!cache.Guilds.TryGetValue(guildId, out mutableGuild))
-            {
-                mutableGuild = new MutableGuild(guildId, http);
-                cache.Guilds[guildId] = mutableGuild;
-            }
-
-            mutableGuild.Update(data);
-
-            // Ensure the cache guildId list contains this guild (it uses a hashset so don't worry about duplicates).
-            cache.AddGuildId(guildId);
+            // Deserialize guild
+            var guild = new DiscordGuild(data);
 
             // GUILD_CREATE specifics
-            // Update metadata
-            cache.GuildMetadata[guildId] = new DiscordGuildMetadata(data);
+
+            // Deserialize metadata
+            var guildMetadata = new DiscordGuildMetadata(data);
 
             // Deserialize members
-            cache.GuildMembers.Clear(guildId);
-            IList<DiscordApiData> membersArray = data.GetArray("members");
-            for (int i = 0; i < membersArray.Count; i++)
+            JsonElement membersArray = data.GetProperty("members");
+            var members = new DiscordGuildMember[membersArray.GetArrayLength()];
+
+            for (int i = 0; i < members.Length; i++)
             {
-                DiscordApiData memberData = membersArray[i];
-
-                DiscordApiData userData = memberData.Get("user");
-                Snowflake userId = userData.GetSnowflake("id").Value;
-
-                MutableUser user;
-                if (!cache.Users.TryGetValue(userId, out user))
-                {
-                    user = new MutableUser(userId, false, http);
-                    cache.Users[userId] = user;
-                }
-
-                user.Update(userData);
-
-                MutableGuildMember member;
-                if (!cache.GuildMembers.TryGetValue(guildId, userId, out member))
-                {
-                    member = new MutableGuildMember(user, guildId, http);
-                    cache.GuildMembers[guildId, userId] = member;
-                }
-
-                member.Update(memberData);
+                members[i] = new DiscordGuildMember(membersArray[i], guildId);
             }
 
             // Deserialize channels
-            cache.ClearGuildChannels(guildId);
-            IList<DiscordApiData> channelsArray = data.GetArray("channels");
-            for (int i = 0; i < channelsArray.Count; i++)
+            JsonElement channelsArray = data.GetProperty("channels");
+            var channels = new DiscordGuildChannel[channelsArray.GetArrayLength()];
+
+            for (int i = 0; i < channels.Length; i++)
             {
-                DiscordApiData channelData = channelsArray[i];
-                DiscordChannelType channelType = (DiscordChannelType)channelData.GetInteger("type");
+                JsonElement channelData = channelsArray[i];
+                DiscordChannelType channelType = (DiscordChannelType)channelData.GetProperty("type").GetInt32();
 
-                DiscordGuildChannel channel = null;
+                DiscordGuildChannel channel;
                 if (channelType == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(http, channelData, guildId);
+                    channel = new DiscordGuildTextChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(http, channelData, guildId);
+                    channel = new DiscordGuildVoiceChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(http, channelData, guildId);
+                    channel = new DiscordGuildCategoryChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(http, channelData, guildId);
+                    channel = new DiscordGuildNewsChannel(channelData, guildId);
                 else if (channelType == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(http, channelData, guildId);
+                    channel = new DiscordGuildStoreChannel(channelData, guildId);
+                else
+                    channel = new DiscordGuildChannel(channelData, channelType, guildId);
 
-                if (channel != null)
-                    cache.AddGuildChannel(channel);
+                channels[i] = channel;
             }
 
             // Deserialize voice states
-            cache.GuildVoiceStates.Clear(guildId);
-            IList<DiscordApiData> voiceStatesArray = data.GetArray("voice_states");
-            for (int i = 0; i < voiceStatesArray.Count; i++)
+            this.voiceStates.TryRemove(guildId, out _);
+
+            JsonElement voiceStatesArray = data.GetProperty("voice_states");
+            var voiceStates = new DiscordVoiceState[voiceStatesArray.GetArrayLength()];
+
+            for (int i = 0; i < voiceStates.Length; i++)
             {
-                DiscordVoiceState state = new DiscordVoiceState(guildId, voiceStatesArray[i]);
+                var state = new DiscordVoiceState(voiceStatesArray[i], guildId: guildId);
+                voiceStates[i] = state;
+
                 UpdateMemberVoiceState(state);
             }
 
             // Deserialize presences
-            cache.GuildPresences.Clear(guildId);
-            IList<DiscordApiData> presencesArray = data.GetArray("presences");
-            for (int i = 0; i < presencesArray.Count; i++)
+            JsonElement presencesArray = data.GetProperty("presences");
+            var presences = new DiscordUserPresence[presencesArray.GetArrayLength()];
+
+            for (int i = 0; i < presences.Length; i++)
             {
-                // Presence's in GUILD_CREATE do not contain full user objects,
-                // so don't attempt to update them here.
-
-                DiscordApiData presenceData = presencesArray[i];
-                Snowflake userId = presenceData.LocateSnowflake("user.id").Value;
-
-                cache.GuildPresences[guildId, userId] = new DiscordUserPresence(userId, presenceData);
+                presences[i] = new DiscordUserPresence(presencesArray[i], guildId);
             }
 
-            // Mark the guild as available
-            cache.SetGuildAvailability(guildId, true);
-
             // Fire event
-            if (wasUnavailable)
-                OnGuildAvailable?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
-            else
-                OnGuildCreated?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
+            OnGuildCreate?.Invoke(this, new GuildCreateEventArgs(
+                shard,
+                becameAvailable: wasUnavailable,
+                guild,
+                guildMetadata,
+                members,
+                channels,
+                voiceStates,
+                presences));
         }
 
         [DispatchEvent("GUILD_UPDATE")]
-        void HandleGuildUpdateEvent(DiscordApiData data)
+        void HandleGuildUpdateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("id").Value;
+            // Deserialize guild
+            var guild = new DiscordGuild(data);
 
-            MutableGuild mutableGuild;
-            if (cache.Guilds.TryGetValue(guildId, out mutableGuild))
-            {
-                // Update guild
-                mutableGuild.Update(data);
-
-                // Fire event
-                OnGuildUpdated?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
-            }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+            // Fire event
+            OnGuildUpdate?.Invoke(this, new GuildUpdateEventArgs(shard, guild));
         }
 
         [DispatchEvent("GUILD_DELETE")]
-        async Task HandleGuildDeleteEvent(DiscordApiData data)
+        async Task HandleGuildDeleteEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("id").Value;
-            bool unavailable = data.GetBoolean("unavailable") ?? false;
+            Snowflake guildId = data.GetProperty("id").GetSnowflake();
+            bool unavailable = data.GetPropertyOrNull("unavailable")?.GetBooleanOrNull() ?? false;
 
             if (unavailable)
             {
-                // Tell the cache this guild is no longer available
-                cache.SetGuildAvailability(guildId, false);
-
-                if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
-                {
-                    // Fire event
-                    OnGuildUnavailable?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
-                }
-                else
-                    throw new ShardCacheException($"Guild {guildId} was not in the cache! unavailable = true");
+                // Mark guild as unavailable
+                unavailableGuildIds.Add(guildId);
             }
             else
             {
                 // Disconnect the voice connection for this guild if connected.
-                if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection voiceConnection)
+                if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection? voiceConnection)
                     && voiceConnection.IsConnected)
                 {
-                    CancellationTokenSource cts = new CancellationTokenSource();
+                    var cts = new CancellationTokenSource();
                     cts.CancelAfter(5000);
 
                     await voiceConnection.DisconnectWithReasonAsync(VoiceConnectionInvalidationReason.BotRemovedFromGuild, 
                         cts.Token).ConfigureAwait(false);
                 }
-
-                // Clear all cache data related to the guild
-                cache.GuildMetadata.TryRemove(guildId, out _);
-                cache.GuildMembers.RemoveParent(guildId);
-                cache.GuildPresences.RemoveParent(guildId);
-                cache.GuildVoiceStates.RemoveParent(guildId);
-
-                if (cache.GuildChannelIds.TryRemove(guildId, out  ConcurrentHashSet<Snowflake> channelIds))
-                {
-                    foreach (Snowflake channelId in channelIds)
-                        cache.GuildChannels.TryRemove(channelId, out _);
-                }
-
-                // Remove the guild from cache
-                cache.RemoveGuildId(guildId);
-                if (cache.Guilds.TryRemove(guildId, out MutableGuild mutableGuild))
-                {
-                    // Ensure all references are cleared
-                    mutableGuild.ClearReferences();
-
-                    // Fire event
-                    OnGuildRemoved?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
-                }
-                else
-                    throw new ShardCacheException($"Guild {guildId} was not in the cache! unavailable = false");
             }
+
+            // Fire event
+            OnGuildDelete?.Invoke(this, new GuildDeleteEventArgs(shard, guildId, unavailable));
         }
 
         [DispatchEvent("GUILD_BAN_ADD")]
-        void HandleGuildBanAddEvent(DiscordApiData data)
+        void HandleGuildBanAddEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            MutableUser mutableUser;
-            if (!cache.Users.TryGetValue(userId, out mutableUser))
-            {
-                mutableUser = new MutableUser(userId, false, http);
-                cache.Users[userId] = mutableUser;
-            }
+            var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
-            mutableUser.Update(userData);
-
-            OnGuildBanAdded?.Invoke(this, new GuildUserEventArgs(shard, guildId, mutableUser.ImmutableEntity));
+            OnGuildBanAdd?.Invoke(this, new GuildBanAddEventArgs(shard, guildId, user));
         }
 
         [DispatchEvent("GUILD_BAN_REMOVE")]
-        void HandleGuildBanRemoveEvent(DiscordApiData data)
+        void HandleGuildBanRemoveEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            MutableUser mutableUser;
-            if (!cache.Users.TryGetValue(userId, out mutableUser))
-            {
-                mutableUser = new MutableUser(userId, false, http);
-                cache.Users[userId] = mutableUser;
-            }
+            var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
-            mutableUser.Update(userData);
-
-            OnGuildBanRemoved?.Invoke(this, new GuildUserEventArgs(shard, guildId, mutableUser.ImmutableEntity));
+            OnGuildBanRemove?.Invoke(this, new GuildBanRemoveEventArgs(shard, guildId, user));
         }
 
         [DispatchEvent("GUILD_EMOJIS_UPDATE")]
-        void HandleGuildEmojisUpdateEvent(DiscordApiData data)
+        void HandleGuildEmojisUpdateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
-            { 
-                // Clear existing emojis
-                mutableGuild.Emojis.Clear();
+            // Deseralize new emojis
+            JsonElement emojisArray = data.GetProperty("emojis");
+            var emojis = new DiscordEmoji[emojisArray.GetArrayLength()];
 
-                // Deseralize new emojis
-                IList<DiscordApiData> emojisArray = data.GetArray("emojis");
-                for (int i = 0; i < emojisArray.Count; i++)
-                {
-                    DiscordEmoji emoji = new DiscordEmoji(emojisArray[i]);
-                    mutableGuild.Emojis[emoji.Id] = emoji;
-                }
-
-                // Dirty the guild
-                mutableGuild.Dirty();
-
-                // Invoke the event
-                OnGuildEmojisUpdated?.Invoke(this, new GuildEventArgs(shard, mutableGuild.ImmutableEntity));
+            for (int i = 0; i < emojis.Length; i++)
+            {
+                emojis[i] = new DiscordEmoji(emojisArray[i]);
             }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+
+            // Fire event
+            OnGuildEmojisUpdate?.Invoke(this, new GuildEmojisUpdateEventArgs(shard, guildId, emojis));
         }
 
         [DispatchEvent("GUILD_INTEGRATIONS_UPDATE")]
-        void HandleGuildIntegrationsUpdateEvent(DiscordApiData data)
+        void HandleGuildIntegrationsUpdateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            OnGuildIntegrationsUpdated?.Invoke(this, new GuildIntegrationsEventArgs(shard, guildId));
+            OnGuildIntegrationsUpdate?.Invoke(this, new GuildIntegrationsUpdateEventArgs(shard, guildId));
         }
 
         [DispatchEvent("GUILD_MEMBER_ADD")]
-        void HandleGuildMemberAddEvent(DiscordApiData data)
+        void HandleGuildMemberAddEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            // Get user
-            MutableUser mutableUser;
-            if (!cache.Users.TryGetValue(userId, out mutableUser))
-            {
-                mutableUser = new MutableUser(userId, false, http);
-                cache.Users[userId] = mutableUser;
-            }
-
-            // Update user
-            mutableUser.Update(userData);
-
-            // Get or create member
-            MutableGuildMember mutableMember;
-            if (!cache.GuildMembers.TryGetValue(guildId, userId, out mutableMember))
-            {
-                mutableMember = new MutableGuildMember(mutableUser, guildId, http);
-                cache.GuildMembers[guildId, userId] = mutableMember;
-            }
-
-            // Update member
-            mutableMember.Update(data);
+            var member = new DiscordGuildMember(data, guildId);
 
             // Fire event
-            OnGuildMemberAdded?.Invoke(this, new GuildMemberEventArgs(shard, guildId, mutableMember.ImmutableEntity));
+            OnGuildMemberAdd?.Invoke(this, new GuildMemberAddEventArgs(shard, guildId, member));
         }
 
         [DispatchEvent("GUILD_MEMBER_REMOVE")]
-        void HandleGuildMemberRemoveEvent(DiscordApiData data)
+        void HandleGuildMemberRemoveEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            // Get user
-            MutableUser mutableUser;
-            if (!cache.Users.TryGetValue(userId, out mutableUser))
-            {
-                mutableUser = new MutableUser(userId, false, http);
-                cache.Users[userId] = mutableUser;
-            }
+            var user = new DiscordUser(data.GetProperty("user"), isWebhookUser: false);
 
-            mutableUser.Update(userData);
-
-            // Get and remove member
-            if (cache.GuildMembers.TryRemove(guildId, userId, out MutableGuildMember mutableMember))
-            {
-                // Ensure all references are removed
-                mutableMember.ClearReferences();
-
-                // Fire event
-                OnGuildMemberRemoved?.Invoke(this, new GuildMemberEventArgs(shard, guildId, mutableMember.ImmutableEntity));
-            }
+            // Fire event
+            OnGuildMemberRemove?.Invoke(this, new GuildMemberRemoveEventArgs(shard, guildId, user));
         }
 
         [DispatchEvent("GUILD_MEMBER_UPDATE")]
-        void HandleGuildMemberUpdateEvent(DiscordApiData data)
+        void HandleGuildMemberUpdateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            // Get user
-            MutableUser mutableUser;
-            if (!cache.Users.TryGetValue(userId, out mutableUser))
-            {
-                mutableUser = new MutableUser(userId, false, http);
-                cache.Users[userId] = mutableUser;
-            }
+            var partialMember = new DiscordPartialGuildMember(data, guildId);
 
-            mutableUser.Update(userData);
-
-            // Get member
-            if (cache.GuildMembers.TryGetValue(guildId, userId, out MutableGuildMember mutableMember))
-            {
-                // Update member
-                mutableMember.PartialUpdate(data);
-
-                // Fire event
-                OnGuildMemberUpdated?.Invoke(this, new GuildMemberEventArgs(shard, guildId, mutableMember.ImmutableEntity));
-            }
-
-            // It is technically valid for the member to not exist here, especially if the guild is considered large.
+            // Fire event
+            OnGuildMemberUpdate?.Invoke(this, new GuildMemberUpdateEventArgs(shard, guildId, partialMember));
         }
 
         [DispatchEvent("GUILD_MEMBERS_CHUNK")]
-        void HandleGuildMembersChunkEvent(DiscordApiData data)
+        void HandleGuildMembersChunkEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            // Get every member and ensure they are cached
-            IList<DiscordApiData> membersData = data.GetArray("members");
-            DiscordGuildMember[] members = new DiscordGuildMember[membersData.Count];
-            for (int i = 0; i < membersData.Count; i++)
+            // Get every member
+            JsonElement membersData = data.GetProperty("members");
+            var members = new DiscordGuildMember[membersData.GetArrayLength()];
+
+            for (int i = 0; i < members.Length; i++)
             {
-                DiscordApiData memberData = membersData[i];
-
-                DiscordApiData userData = memberData.Get("user");
-                Snowflake userId = userData.GetSnowflake("id").Value;
-
-                // Get user
-                MutableUser mutableUser;
-                if (!cache.Users.TryGetValue(userId, out mutableUser))
-                {
-                    mutableUser = new MutableUser(userId, false, http);
-                    cache.Users[userId] = mutableUser;
-                }
-
-                mutableUser.Update(userData);
-
-                // Get or create member
-                MutableGuildMember mutableMember;
-                if (!cache.GuildMembers.TryGetValue(guildId, userId, out mutableMember))
-                {
-                    mutableMember = new MutableGuildMember(mutableUser, guildId, http);
-                    mutableMember.Update(memberData);
-
-                    cache.GuildMembers[guildId, userId] = mutableMember;
-                }
-
-                members[i] = mutableMember.ImmutableEntity;
+                members[i] = new DiscordGuildMember(membersData[i], guildId);
             }
 
             // Fire event
@@ -545,439 +385,273 @@ namespace Discore.WebSocket.Internal
         }
 
         [DispatchEvent("GUILD_ROLE_CREATE")]
-        void HandleGuildRoleCreateEvent(DiscordApiData data)
+        void HandleGuildRoleCreateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
-            {
-                DiscordApiData roleData = data.Get("role");
-                DiscordRole role = new DiscordRole(http, guildId, roleData);
+            var role = new DiscordRole(data.GetProperty("role"), guildId: guildId);
 
-                mutableGuild.Roles[role.Id] = role;
-                mutableGuild.Dirty();
-
-                OnGuildRoleCreated?.Invoke(this, new GuildRoleEventArgs(shard, mutableGuild.ImmutableEntity, role));
-            }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+            // Fire event
+            OnGuildRoleCreate?.Invoke(this, new GuildRoleCreateEventArgs(shard, guildId, role));
         }
 
         [DispatchEvent("GUILD_ROLE_UPDATE")]
-        void HandleGuildRoleUpdateEvent(DiscordApiData data)
+        void HandleGuildRoleUpdateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
-            {
-                DiscordApiData roleData = data.Get("role");
-                DiscordRole role = new DiscordRole(http, guildId, roleData);
+            var role = new DiscordRole(data.GetProperty("role"), guildId: guildId);
 
-                mutableGuild.Roles[role.Id] = role;
-                mutableGuild.Dirty();
-
-                OnGuildRoleUpdated?.Invoke(this, new GuildRoleEventArgs(shard, mutableGuild.ImmutableEntity, role));
-            }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+            // Fire event
+            OnGuildRoleUpdate?.Invoke(this, new GuildRoleUpdateEventArgs(shard, guildId, role));
         }
 
         [DispatchEvent("GUILD_ROLE_DELETE")]
-        void HandleGuildRoleDeleteEvent(DiscordApiData data)
+        void HandleGuildRoleDeleteEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
+            Snowflake roleId = data.GetProperty("role_id").GetSnowflake();
 
-            if (cache.Guilds.TryGetValue(guildId, out MutableGuild mutableGuild))
-            {
-                Snowflake roleId = data.GetSnowflake("role_id").Value;
-
-                if (mutableGuild.Roles.TryRemove(roleId, out DiscordRole role))
-                    OnGuildRoleDeleted?.Invoke(this, new GuildRoleEventArgs(shard, mutableGuild.ImmutableEntity, role));
-                else
-                    throw new ShardCacheException($"Role {roleId} was not in the guild {guildId} cache!");
-            }
-            else
-                throw new ShardCacheException($"Guild {guildId} was not in the cache!");
+            // Fire event
+            OnGuildRoleDelete?.Invoke(this, new GuildRoleDeleteEventArgs(shard, guildId, roleId));
         }
         #endregion
 
         #region Channel
         [DispatchEvent("CHANNEL_CREATE")]
-        void HandleChannelCreateEvent(DiscordApiData data)
+        void HandleChannelCreateEvent(JsonElement data)
         {
-            Snowflake id = data.GetSnowflake("id").Value;
-            DiscordChannelType type = (DiscordChannelType)data.GetInteger("type").Value;
+            Snowflake id = data.GetProperty("id").GetSnowflake();
+            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
+
+            DiscordChannel channel;
 
             if (type == DiscordChannelType.DirectMessage)
             {
                 // DM channel
-                DiscordApiData recipientData = data.GetArray("recipients").First();
-                Snowflake recipientId = recipientData.GetSnowflake("id").Value;
-
-                MutableUser recipient;
-                if (!cache.Users.TryGetValue(recipientId, out recipient))
-                {
-                    recipient = new MutableUser(recipientId, false, http);
-                    cache.Users[recipientId] = recipient;
-                }
-
-                recipient.Update(recipientData);
-
-                MutableDMChannel mutableDMChannel;
-                if (!cache.DMChannels.TryGetValue(id, out mutableDMChannel))
-                {
-                    mutableDMChannel = new MutableDMChannel(id, recipient, http);
-                    cache.DMChannels[id] = mutableDMChannel;
-                }
-
-                OnDMChannelCreated?.Invoke(this, new DMChannelEventArgs(shard, mutableDMChannel.ImmutableEntity));
+                channel = new DiscordDMChannel(data);
             }
-            else if (type == DiscordChannelType.GuildText 
-                || type == DiscordChannelType.GuildVoice
-                || type == DiscordChannelType.GuildCategory
-                || type == DiscordChannelType.GuildNews
-                || type == DiscordChannelType.GuildStore)
+            else if (data.HasProperty("guild_id"))
             {
                 // Guild channel
-                Snowflake guildId = data.GetSnowflake("guild_id").Value;
-
-                DiscordGuildChannel channel;
+                Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
                 if (type == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(http, data, guildId);
+                    channel = new DiscordGuildTextChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                    channel = new DiscordGuildVoiceChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(http, data, guildId);
+                    channel = new DiscordGuildCategoryChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(http, data, guildId);
+                    channel = new DiscordGuildNewsChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(http, data, guildId);
+                    channel = new DiscordGuildStoreChannel(data, guildId);
                 else
-                    throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
-
-                cache.GuildChannels[id] = channel;
-
-                OnGuildChannelCreated?.Invoke(this, new GuildChannelEventArgs(shard, guildId, channel));
+                    channel = new DiscordGuildChannel(data, type, guildId);
             }
+            else
+            {
+                // Fallback
+                channel = new DiscordChannel(data, type);
+            }
+
+            // Fire event
+            OnChannelCreate?.Invoke(this, new ChannelCreateEventArgs(shard, channel));
         }
 
         [DispatchEvent("CHANNEL_UPDATE")]
-        void HandleChannelUpdateEvent(DiscordApiData data)
+        void HandleChannelUpdateEvent(JsonElement data)
         {
-            Snowflake id = data.GetSnowflake("id").Value;
-            DiscordChannelType type = (DiscordChannelType)data.GetInteger("type");
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake id = data.GetProperty("id").GetSnowflake();
+            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            DiscordGuildChannel channel = null;
+            DiscordGuildChannel channel;
 
             if (type == DiscordChannelType.GuildText)
-                channel = new DiscordGuildTextChannel(http, data, guildId);
+                channel = new DiscordGuildTextChannel(data, guildId);
             else if (type == DiscordChannelType.GuildVoice)
-                channel = new DiscordGuildVoiceChannel(http, data, guildId);
+                channel = new DiscordGuildVoiceChannel(data, guildId);
             else if (type == DiscordChannelType.GuildCategory)
-                channel = new DiscordGuildCategoryChannel(http, data, guildId);
+                channel = new DiscordGuildCategoryChannel(data, guildId);
             else if (type == DiscordChannelType.GuildNews)
-                channel = new DiscordGuildNewsChannel(http, data, guildId);
+                channel = new DiscordGuildNewsChannel(data, guildId);
             else if (type == DiscordChannelType.GuildStore)
-                channel = new DiscordGuildStoreChannel(http, data, guildId);
-
-            if (channel != null)
-            {
-                cache.GuildChannels[id] = channel;
-
-                OnGuildChannelUpdated?.Invoke(this, new GuildChannelEventArgs(shard, guildId, channel));
-            }
+                channel = new DiscordGuildStoreChannel(data, guildId);
             else
-                log.LogWarning($"Failed to update channel {id} because the type ({type}) doesn't have an implementation!");
+                channel = new DiscordGuildChannel(data, type, guildId);
+
+            // Fire event
+            OnChannelUpdate?.Invoke(this, new ChannelUpdateEventArgs(shard, channel));
         }
 
         [DispatchEvent("CHANNEL_DELETE")]
-        void HandleChannelDeleteEvent(DiscordApiData data)
+        void HandleChannelDeleteEvent(JsonElement data)
         {
-            Snowflake id = data.GetSnowflake("id").Value;
-            DiscordChannelType type = (DiscordChannelType)data.GetInteger("type").Value;
+            Snowflake id = data.GetProperty("id").GetSnowflake();
+            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
+
+            DiscordChannel channel;
 
             if (type == DiscordChannelType.DirectMessage)
             {
                 // DM channel
-                DiscordDMChannel dm;
-                if (cache.DMChannels.TryRemove(id, out MutableDMChannel mutableDM))
-                {
-                    mutableDM.ClearReferences();
-
-                    dm = mutableDM.ImmutableEntity;
-                }
-                else
-                    dm = new DiscordDMChannel(http, data);
-
-                OnDMChannelRemoved?.Invoke(this, new DMChannelEventArgs(shard, dm));
+                channel = new DiscordDMChannel(data);
             }
-            else if (type == DiscordChannelType.GuildText 
-                || type == DiscordChannelType.GuildVoice
-                || type == DiscordChannelType.GuildCategory
-                || type == DiscordChannelType.GuildNews
-                || type == DiscordChannelType.GuildStore)
+            else if (data.HasProperty("guild_id"))
             {
                 // Guild channel
-                Snowflake guildId = data.GetSnowflake("guild_id").Value;
-
-                DiscordGuildChannel channel;
+                Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
                 if (type == DiscordChannelType.GuildText)
-                {
-                    if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildTextChannel(http, data, guildId);
-                }
+                    channel = new DiscordGuildTextChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildVoice)
-                {
-                    if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildVoiceChannel(http, data, guildId);
-                }
+                    channel = new DiscordGuildVoiceChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildCategory)
-                {
-                    if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildCategoryChannel(http, data, guildId);
-                }
+                    channel = new DiscordGuildCategoryChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildNews)
-                {
-                    if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildNewsChannel(http, data, guildId);
-                }
+                    channel = new DiscordGuildNewsChannel(data, guildId);
                 else if (type == DiscordChannelType.GuildStore)
-                {
-                    if (!cache.GuildChannels.TryRemove(id, out channel))
-                        channel = new DiscordGuildStoreChannel(http, data, guildId);
-                }
+                    channel = new DiscordGuildStoreChannel(data, guildId);
                 else
-                    throw new NotImplementedException($"Guild channel type \"{type}\" has no implementation!");
-
-                OnGuildChannelRemoved?.Invoke(this, new GuildChannelEventArgs(shard, guildId, channel));
+                    channel = new DiscordGuildChannel(data, type, guildId);
             }
+            else
+            {
+                // Fallback
+                channel = new DiscordChannel(data, type);
+            }
+
+            // Fire event
+            OnChannelDelete?.Invoke(this, new ChannelDeleteEventArgs(shard, channel));
         }
 
         [DispatchEvent("CHANNEL_PINS_UPDATE")]
-        void HandleChannelPinsUpdateEvent(DiscordApiData data)
+        void HandleChannelPinsUpdateEvent(JsonElement data)
         {
-            DateTime? lastPinTimestamp = data.GetDateTime("last_pin_timestamp");
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            DateTime? lastPinTimestamp = data.GetPropertyOrNull("last_pin_timestamp")?.GetDateTimeOrNull();
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            OnChannelPinsUpdated?.Invoke(this, new ChannelPinsUpdateEventArgs(shard, channelId, lastPinTimestamp));
+            OnChannelPinsUpdate?.Invoke(this, new ChannelPinsUpdateEventArgs(shard, channelId, lastPinTimestamp));
         }
         #endregion
 
         #region Message
         [DispatchEvent("MESSAGE_CREATE")]
-        void HandleMessageCreateEvent(DiscordApiData data)
+        void HandleMessageCreateEvent(JsonElement data)
         {
-            // Get author
-            DiscordApiData authorData = data.Get("author");
-            Snowflake authorId = authorData.GetSnowflake("id").Value;
-            bool isWebhookUser = !string.IsNullOrWhiteSpace(data.GetString("webhook_id"));
+            // Deserialize message
+            var message = new DiscordMessage(data);
 
-            MutableUser mutableAuthor;
-            if (!cache.Users.TryGetValue(authorId, out mutableAuthor))
-            {
-                mutableAuthor = new MutableUser(authorId, isWebhookUser, http);
-                cache.Users[authorId] = mutableAuthor;
-            }
-
-            mutableAuthor.Update(authorData);
-
-            // Get mentioned users
-            IList<DiscordApiData> mentionsArray = data.GetArray("mentions");
-            for (int i = 0; i < mentionsArray.Count; i++)
-            {
-                DiscordApiData userData = mentionsArray[i];
-                Snowflake userId = userData.GetSnowflake("id").Value;
-
-                MutableUser mutableUser;
-                if (!cache.Users.TryGetValue(userId, out mutableUser))
-                {
-                    mutableUser = new MutableUser(userId, false, http);
-                    cache.Users[userId] = mutableUser;
-                }
-
-                mutableUser.Update(userData);
-            }
-
-            // Create message
-            DiscordMessage message = new DiscordMessage(http, data);
-
-            OnMessageCreated?.Invoke(this, new MessageEventArgs(shard, message));
+            OnMessageCreate?.Invoke(this, new MessageCreateEventArgs(shard, message));
         }
 
         [DispatchEvent("MESSAGE_UPDATE")]
-        void HandleMessageUpdateEvent(DiscordApiData data)
+        void HandleMessageUpdateEvent(JsonElement data)
         {
-            // Get author
-            DiscordApiData authorData = data.Get("author");
-            if (authorData != null)
-            {
-                Snowflake authorId = authorData.GetSnowflake("id").Value;
-                bool isWebhookUser = !string.IsNullOrWhiteSpace(data.GetString("webhook_id"));
+            // Deserialize message
+            var message = new DiscordPartialMessage(data);
 
-                MutableUser mutableAuthor;
-                if (!cache.Users.TryGetValue(authorId, out mutableAuthor))
-                {
-                    mutableAuthor = new MutableUser(authorId, isWebhookUser, http);
-                    cache.Users[authorId] = mutableAuthor;
-                }
-
-                mutableAuthor.Update(authorData);
-            }
-
-            // Get mentioned users
-            IList<DiscordApiData> mentionsArray = data.GetArray("mentions");
-            if (mentionsArray != null)
-            {
-                for (int i = 0; i < mentionsArray.Count; i++)
-                {
-                    DiscordApiData userData = mentionsArray[i];
-                    Snowflake userId = userData.GetSnowflake("id").Value;
-
-                    MutableUser mutableUser;
-                    if (!cache.Users.TryGetValue(userId, out mutableUser))
-                    {
-                        mutableUser = new MutableUser(userId, false, http);
-                        cache.Users[userId] = mutableUser;
-                    }
-
-                    mutableUser.Update(userData);
-                }
-            }
-
-            // Create message
-            DiscordMessage message = new DiscordMessage(http, data);
-
-            OnMessageUpdated?.Invoke(this, new MessageUpdateEventArgs(shard, message));
+            OnMessageUpdate?.Invoke(this, new MessageUpdateEventArgs(shard, message));
         }
 
         [DispatchEvent("MESSAGE_DELETE")]
-        void HandleMessageDeleteEvent(DiscordApiData data)
+        void HandleMessageDeleteEvent(JsonElement data)
         {
-            Snowflake messageId = data.GetSnowflake("id").Value;
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            Snowflake messageId = data.GetProperty("id").GetSnowflake();
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
+            OnMessageDelete?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
         }
 
         [DispatchEvent("MESSAGE_DELETE_BULK")]
-        void HandleMessageDeleteBulkEvent(DiscordApiData data)
+        void HandleMessageDeleteBulkEvent(JsonElement data)
         {
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            IList<DiscordApiData> idArray = data.GetArray("ids");
-            for (int i = 0; i < idArray.Count; i++)
+            JsonElement idArray = data.GetProperty("ids");
+            int numIds = idArray.GetArrayLength();
+            for (int i = 0; i < numIds; i++)
             {
-                Snowflake messageId = idArray[i].ToSnowflake().Value;
-                OnMessageDeleted?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
+                Snowflake messageId = idArray[i].GetSnowflake();
+
+                // TODO: Fire OnMessageDeletedBulk event
+                OnMessageDelete?.Invoke(this, new MessageDeleteEventArgs(shard, messageId, channelId));
             }
         }
 
         [DispatchEvent("MESSAGE_REACTION_ADD")]
-        void HandleMessageReactionAddEvent(DiscordApiData data)
+        void HandleMessageReactionAddEvent(JsonElement data)
         {
-            Snowflake userId = data.GetSnowflake("user_id").Value;
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
-            Snowflake messageId = data.GetSnowflake("message_id").Value;
-            DiscordApiData emojiData = data.Get("emoji");
+            Snowflake userId = data.GetProperty("user_id").GetSnowflake();
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
+            Snowflake messageId = data.GetProperty("message_id").GetSnowflake();
+            JsonElement emojiData = data.GetProperty("emoji");
 
             DiscordReactionEmoji emoji = new DiscordReactionEmoji(emojiData);
 
-            OnMessageReactionAdded?.Invoke(this, new MessageReactionEventArgs(shard, messageId, channelId, userId, emoji));
+            OnMessageReactionAdd?.Invoke(this, new MessageReactionAddEventArgs(shard, messageId, channelId, userId, emoji));
         }
 
         [DispatchEvent("MESSAGE_REACTION_REMOVE")]
-        void HandleMessageReactionRemoveEvent(DiscordApiData data)
+        void HandleMessageReactionRemoveEvent(JsonElement data)
         {
-            Snowflake userId = data.GetSnowflake("user_id").Value;
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
-            Snowflake messageId = data.GetSnowflake("message_id").Value;
-            DiscordApiData emojiData = data.Get("emoji");
+            Snowflake userId = data.GetProperty("user_id").GetSnowflake();
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
+            Snowflake messageId = data.GetProperty("message_id").GetSnowflake();
+            JsonElement emojiData = data.GetProperty("emoji");
 
             DiscordReactionEmoji emoji = new DiscordReactionEmoji(emojiData);
 
-            OnMessageReactionRemoved?.Invoke(this, new MessageReactionEventArgs(shard, messageId, channelId, userId, emoji));
+            OnMessageReactionRemove?.Invoke(this, new MessageReactionRemoveEventArgs(shard, messageId, channelId, userId, emoji));
         }
 
         [DispatchEvent("MESSAGE_REACTION_REMOVE_ALL")]
-        void HandleMessageReactionRemoveAllEvent(DiscordApiData data)
+        void HandleMessageReactionRemoveAllEvent(JsonElement data)
         {
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
-            Snowflake messageId = data.GetSnowflake("message_id").Value;
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
+            Snowflake messageId = data.GetProperty("message_id").GetSnowflake();
 
-            OnMessageAllReactionsRemoved?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, channelId));
+            OnMessageReactionRemoveAll?.Invoke(this, new MessageReactionRemoveAllEventArgs(shard, messageId, channelId));
         }
         #endregion
 
         [DispatchEvent("WEBHOOKS_UPDATE")]
-        void HandleWebhooksUpdate(DiscordApiData data)
+        void HandleWebhooksUpdate(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
 
-            OnWebhookUpdated?.Invoke(this, new WebhooksUpdateEventArgs(shard, guildId, channelId));
+            OnWebhookUpdate?.Invoke(this, new WebhooksUpdateEventArgs(shard, guildId, channelId));
         }
 
         [DispatchEvent("PRESENCE_UPDATE")]
-        void HandlePresenceUpdateEvent(DiscordApiData data)
+        void HandlePresenceUpdateEvent(JsonElement data)
         {
-            Snowflake guildId = data.GetSnowflake("guild_id").Value;
+            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
 
-            // Update user
-            DiscordApiData userData = data.Get("user");
-            Snowflake userId = userData.GetSnowflake("id").Value;
+            var presence = new DiscordUserPresence(data, guildId);
 
-            if (cache.Users.TryGetValue(userId, out MutableUser mutableUser))
-            {
-                mutableUser.PartialUpdate(userData);
-            }
-            else
-                // Don't throw exception since we can still update everything else...
-                log.LogError($"[PRESENCE_UPDATE] Failed to update user {userId}, they were not in the cache!");
-
-            // Update presence
-            DiscordUserPresence presence = new DiscordUserPresence(userId, data);
-            cache.GuildPresences[guildId, userId] = presence;
-
-            // Update member
-            if (cache.GuildMembers.TryGetValue(guildId, userId, out MutableGuildMember mutableMember))
-            {
-                mutableMember.PartialUpdate(data);
-
-                // Fire event
-                OnPresenceUpdated?.Invoke(this, new PresenceEventArgs(shard, guildId, mutableMember.ImmutableEntity, presence));
-            }
-
-            // It is technically valid for the member to not exist here, especially if the guild is considered large.
+            // Fire event
+            OnPresenceUpdate?.Invoke(this, new PresenceUpdateEventArgs(shard, guildId, presence));
         }
 
         [DispatchEvent("TYPING_START")]
-        void HandleTypingStartEvent(DiscordApiData data)
+        void HandleTypingStartEvent(JsonElement data)
         {
-            Snowflake userId = data.GetSnowflake("user_id").Value;
-            Snowflake channelId = data.GetSnowflake("channel_id").Value;
-            int timestamp = data.GetInteger("timestamp").Value;
+            Snowflake userId = data.GetProperty("user_id").GetSnowflake();
+            Snowflake channelId = data.GetProperty("channel_id").GetSnowflake();
+            int timestamp = data.GetProperty("timestamp").GetInt32();
 
-            OnTypingStarted?.Invoke(this, new TypingStartEventArgs(shard, userId, channelId, timestamp));
+            OnTypingStart?.Invoke(this, new TypingStartEventArgs(shard, userId, channelId, timestamp));
         }
 
         [DispatchEvent("USER_UPDATE")]
-        void HandleUserUpdateEvent(DiscordApiData data)
+        void HandleUserUpdateEvent(JsonElement data)
         {
-            Snowflake userId = data.GetSnowflake("id").Value;
+            var user = new DiscordUser(data, isWebhookUser: false);
 
-            MutableUser mutableUser;
-            if (!cache.Users.TryGetValue(userId, out mutableUser))
-            {
-                mutableUser = new MutableUser(userId, false, http);
-                cache.Users[userId] = mutableUser;
-            }
-
-            mutableUser.Update(data);
-
-            OnUserUpdated?.Invoke(this, new UserEventArgs(shard, mutableUser.ImmutableEntity));
+            OnUserUpdate?.Invoke(this, new UserUpdateEventArgs(shard, user));
         }
 
         #region Voice
@@ -986,11 +660,19 @@ namespace Discore.WebSocket.Internal
         /// </summary>
         void UpdateMemberVoiceState(DiscordVoiceState newState)
         {
+            ConcurrentDictionary<Snowflake, DiscordVoiceState> guildVoiceStates;
+            if (!voiceStates.TryGetValue(newState.GuildId!.Value, out guildVoiceStates))
+            {
+                guildVoiceStates = new ConcurrentDictionary<Snowflake, DiscordVoiceState>();
+                voiceStates[newState.GuildId.Value] = guildVoiceStates;
+            }
+
             // Save previous state
-            DiscordVoiceState previousState = cache.GuildVoiceStates[newState.GuildId, newState.UserId];
+            DiscordVoiceState? previousState;
+            guildVoiceStates.TryGetValue(newState.UserId, out previousState);
 
             // Update cache with new state
-            cache.GuildVoiceStates[newState.GuildId, newState.UserId] = newState;
+            guildVoiceStates[newState.UserId] = newState;
 
             // If previously in a voice channel that differs from the new channel (or no longer in a channel),
             // then remove this user from the voice channel user list.
@@ -1007,22 +689,22 @@ namespace Discore.WebSocket.Internal
         }
 
         [DispatchEvent("VOICE_STATE_UPDATE")]
-        async Task HandleVoiceStateUpdateEvent(DiscordApiData data)
+        async Task HandleVoiceStateUpdateEvent(JsonElement data)
         {
-            Snowflake? guildId = data.GetSnowflake("guild_id");
-            if (guildId.HasValue) // Only guild voice channels are supported so far.
+            Snowflake? guildId = data.GetPropertyOrNull("guild_id")?.GetSnowflake();
+            if (guildId.HasValue) // Only guild voice channels are supported.
             {
-                Snowflake userId = data.GetSnowflake("user_id").Value;
+                Snowflake userId = data.GetProperty("user_id").GetSnowflake();
 
                 // Update the voice state
-                DiscordVoiceState voiceState = new DiscordVoiceState(guildId.Value, data);
+                DiscordVoiceState voiceState = new DiscordVoiceState(data, guildId: guildId.Value);
                 UpdateMemberVoiceState(voiceState);
 
                 // If this voice state belongs to the current bot,
                 // then we need to notify the connection of the session ID.
                 if (userId == shard.UserId)
                 {
-                    DiscordVoiceConnection connection;
+                    DiscordVoiceConnection? connection;
                     if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                     {
                         if (voiceState.ChannelId.HasValue)
@@ -1039,33 +721,33 @@ namespace Discore.WebSocket.Internal
                 }
 
                 // Fire event
-                OnVoiceStateUpdated?.Invoke(this, new VoiceStateEventArgs(shard, voiceState));
+                OnVoiceStateUpdate?.Invoke(this, new VoiceStateUpdateEventArgs(shard, voiceState));
             }
             else
-                throw new NotImplementedException("Non-guild voice channels are not supported yet.");
+                throw new NotImplementedException("Non-guild voice channels are not supported.");
         }
 
         [DispatchEvent("VOICE_SERVER_UPDATE")]
-        async Task HandleVoiceServerUpdateEvent(DiscordApiData data)
+        async Task HandleVoiceServerUpdateEvent(JsonElement data)
         {
-            Snowflake? guildId = data.GetSnowflake("guild_id");
-            if (guildId.HasValue) // Only guild voice channels are supported so far.
+            Snowflake? guildId = data.GetPropertyOrNull("guild_id")?.GetSnowflake();
+            if (guildId.HasValue) // Only guild voice channels are supported.
             {
-                string token = data.GetString("token");
-                string endpoint = data.GetString("endpoint");
+                string token = data.GetProperty("token").GetString()!;
+                string endpoint = data.GetProperty("endpoint").GetString()!;
 
-                DiscordVoiceConnection connection;
+                DiscordVoiceConnection? connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
                 {
                     // Notify the connection of the server update
                     await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
                 }
-                else
-                    throw new ShardCacheException($"Voice connection for guild {guildId.Value} was not in the cache!");
             }
             else
-                throw new NotImplementedException("Non-guild voice channels are not supported yet.");
+                throw new NotImplementedException("Non-guild voice channels are not supported.");
         }
         #endregion
     }
 }
+
+#pragma warning restore IDE0051 // Remove unused private members

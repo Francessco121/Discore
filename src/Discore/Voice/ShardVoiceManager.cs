@@ -1,8 +1,8 @@
-﻿using ConcurrentCollections;
+using ConcurrentCollections;
 using Discore.WebSocket;
-using Discore.WebSocket.Internal;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Discore.Voice
 {
@@ -13,19 +13,14 @@ namespace Discore.Voice
         /// </summary>
         public ICollection<DiscordVoiceConnection> VoiceConnections => voiceConnections.Values;
 
-        ConcurrentDictionary<Snowflake, DiscordVoiceConnection> voiceConnections;
-        ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> voiceChannelUsers;
+        readonly ConcurrentDictionary<Snowflake, DiscordVoiceConnection> voiceConnections;
+        readonly ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> voiceChannelUsers;
 
-        Shard shard;
-        Gateway gateway;
-        DiscordShardCache cache;
+        readonly Shard shard;
 
-        internal ShardVoiceManager(Shard shard, Gateway gateway)
+        internal ShardVoiceManager(Shard shard)
         {
             this.shard = shard;
-            this.gateway = gateway;
-
-            cache = shard.Cache;
 
             voiceConnections = new ConcurrentDictionary<Snowflake, DiscordVoiceConnection>();
             voiceChannelUsers = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
@@ -37,9 +32,9 @@ namespace Discore.Voice
         /// </summary>
         public IReadOnlyList<Snowflake> GetUsersInVoiceChannel(Snowflake voiceChannelId)
         {
-            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake> userIds))
+            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake>? userIds))
             {
-                List<Snowflake> ids = new List<Snowflake>(userIds.Count);
+                var ids = new List<Snowflake>(userIds.Count);
                 foreach (Snowflake id in userIds)
                     ids.Add(id);
 
@@ -52,7 +47,7 @@ namespace Discore.Voice
         /// <summary>
         /// Attempts to retrieve a voice connection by the guild the connection is in.
         /// </summary>
-        public bool TryGetVoiceConnection(Snowflake guildId, out DiscordVoiceConnection connection)
+        public bool TryGetVoiceConnection(Snowflake guildId, [NotNullWhen(true)] out DiscordVoiceConnection? connection)
         {
             return voiceConnections.TryGetValue(guildId, out connection);
         }
@@ -64,7 +59,7 @@ namespace Discore.Voice
         /// </summary>
         public DiscordVoiceConnection CreateOrGetConnection(Snowflake guildId)
         {
-            DiscordVoiceConnection connection;
+            DiscordVoiceConnection? connection;
             if (voiceConnections.TryGetValue(guildId, out connection))
             {
                 // Return existing connection
@@ -86,7 +81,7 @@ namespace Discore.Voice
 
         internal void AddUserToVoiceChannel(Snowflake voiceChannelId, Snowflake userId)
         {
-            ConcurrentHashSet<Snowflake> userList;
+            ConcurrentHashSet<Snowflake>? userList;
             if (!voiceChannelUsers.TryGetValue(voiceChannelId, out userList))
             {
                 userList = new ConcurrentHashSet<Snowflake>();
@@ -98,7 +93,7 @@ namespace Discore.Voice
 
         internal void RemoveUserFromVoiceChannel(Snowflake voiceChannelId, Snowflake userId)
         {
-            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake> userList))
+            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake>? userList))
                 userList.TryRemove(userId);
         }
 

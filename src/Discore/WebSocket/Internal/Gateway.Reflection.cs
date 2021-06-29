@@ -1,19 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Internal
 {
     partial class Gateway
     {
-        delegate void DispatchSynchronousCallback(DiscordApiData data);
-        delegate Task DispatchAsynchronousCallback(DiscordApiData data);
+        delegate void DispatchSynchronousCallback(JsonElement data);
+        delegate Task DispatchAsynchronousCallback(JsonElement data);
 
         class DispatchCallback
         {
-            public DispatchSynchronousCallback Synchronous { get; }
-            public DispatchAsynchronousCallback Asynchronous { get; }
+            public DispatchSynchronousCallback? Synchronous { get; }
+            public DispatchAsynchronousCallback? Asynchronous { get; }
 
             public DispatchCallback(DispatchSynchronousCallback synchronous)
             {
@@ -37,11 +38,9 @@ namespace Discore.WebSocket.Internal
             }
         }
 
-        Dictionary<string, DispatchCallback> dispatchHandlers;
-
-        void InitializeDispatchHandlers()
+        Dictionary<string, DispatchCallback> InitializeDispatchHandlers()
         {
-            dispatchHandlers = new Dictionary<string, DispatchCallback>();
+            var dispatchHandlers = new Dictionary<string, DispatchCallback>();
 
             Type taskType = typeof(Task);
             Type gatewayType = typeof(Gateway);
@@ -68,6 +67,8 @@ namespace Discore.WebSocket.Internal
                     dispatchHandlers[attr.EventName] = dispatchCallback;
                 }
             }
+
+            return dispatchHandlers;
         }
     }
 }

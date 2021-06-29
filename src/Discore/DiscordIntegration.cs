@@ -1,18 +1,18 @@
-﻿using Discore.Http;
 using System;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Discore
 {
     /// <summary>
-    /// A guild integration.
+    /// A user or guild integration.
     /// </summary>
-    public sealed class DiscordIntegration : DiscordIdEntity
+    public class DiscordIntegration : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this integration.
         /// </summary>
         public string Name { get; }
+        // TODO: maybe make enum
         /// <summary>
         /// Gets the type of this integration.
         /// </summary>
@@ -20,7 +20,7 @@ namespace Discore
         /// <summary>
         /// Gets whether or not this integration is enabled.
         /// </summary>
-        public bool? IsEnabled { get; }
+        public bool IsEnabled { get; }
         /// <summary>
         /// Gets whether or not this integration is syncing.
         /// </summary>
@@ -29,6 +29,7 @@ namespace Discore
         /// Gets the ID of the associated role with this integration.
         /// </summary>
         public Snowflake? RoleId { get; }
+        // TODO: make enum
         /// <summary>
         /// Gets the expire behavior of this integration.
         /// </summary>
@@ -40,7 +41,7 @@ namespace Discore
         /// <summary>
         /// Gets the associated <see cref="DiscordUser"/> with this integration.
         /// </summary>
-        public DiscordUser User { get; }
+        public DiscordUser? User { get; }
         /// <summary>
         /// Gets the account of this integration.
         /// </summary>
@@ -54,81 +55,56 @@ namespace Discore
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        DiscordHttpClient http;
+        // TODO: add enable_emoticons, subscriber_count, revoked, application
 
-        internal DiscordIntegration(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
-            : this(http, data)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/>, <paramref name="type"/>,
+        /// or <paramref name="account"/> is null.
+        /// </exception>
+        public DiscordIntegration(
+            Snowflake id,
+            string name, 
+            string type, 
+            bool isEnabled, 
+            bool? isSyncing, 
+            Snowflake? roleId, 
+            int? expireBehavior, 
+            int? expireGracePeriod, 
+            DiscordUser? user, 
+            DiscordIntegrationAccount account, 
+            DateTime? syncedAt, 
+            Snowflake? guildId)
+            : base(id)
         {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Type = type ?? throw new ArgumentNullException(nameof(type));
+            IsEnabled = isEnabled;
+            IsSyncing = isSyncing;
+            RoleId = roleId;
+            ExpireBehavior = expireBehavior;
+            ExpireGracePeriod = expireGracePeriod;
+            User = user;
+            Account = account ?? throw new ArgumentNullException(nameof(account));
+            SyncedAt = syncedAt;
             GuildId = guildId;
         }
 
-        internal DiscordIntegration(DiscordHttpClient http, DiscordApiData data)
-            : base(data)
+        internal DiscordIntegration(JsonElement json, Snowflake? guildId = null)
+            : base(json)
         {
-            this.http = http;
+            Name = json.GetProperty("name").GetString()!;
+            Type = json.GetProperty("type").GetString()!;
+            IsEnabled = json.GetProperty("enabled").GetBoolean();
+            IsSyncing = json.GetPropertyOrNull("syncing")?.GetBoolean();
+            RoleId = json.GetPropertyOrNull("role_id")?.GetSnowflake();
+            ExpireBehavior = json.GetPropertyOrNull("expire_behavior")?.GetInt32();
+            ExpireGracePeriod = json.GetPropertyOrNull("expire_grace_period")?.GetInt32();
+            Account = new DiscordIntegrationAccount(json.GetProperty("account"));
+            SyncedAt = json.GetPropertyOrNull("synced_at")?.GetDateTime();
+            GuildId = guildId;
 
-            Name = data.GetString("name");
-            Type = data.GetString("type");
-            IsEnabled = data.GetBoolean("enabled");
-            IsSyncing = data.GetBoolean("syncing");
-            ExpireBehavior = data.GetInteger("expire_behavior");
-            ExpireGracePeriod = data.GetInteger("expire_grace_period");
-            SyncedAt = data.GetDateTime("synced_at");
-            RoleId = data.GetSnowflake("role_id");
-
-            DiscordApiData userData = data.Get("user");
-            if (userData != null)
-                User = new DiscordUser(false, userData);
-
-            DiscordApiData accountData = data.Get("account");
-            if (accountData != null)
-                Account = new DiscordIntegrationAccount(accountData);
-        }
-
-        /// <summary>
-        /// Changes the attributes of this integration, if this is a guild integration.
-        /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task Modify(ModifyIntegrationOptions options)
-        {
-            if (!GuildId.HasValue)
-                throw new InvalidOperationException("This integration does not represent a guild integration");
-
-            return http.ModifyGuildIntegration(GuildId.Value, Id, options);
-        }
-
-        /// <summary>
-        /// Deletes this integration, if this is a guild integration.
-        /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task Delete()
-        {
-            if (!GuildId.HasValue)
-                throw new InvalidOperationException("This integration does not represent a guild integration");
-
-            return http.DeleteGuildIntegration(GuildId.Value, Id);
-        }
-
-        /// <summary>
-        /// Synchronizes this integration, if this is a guild integration.
-        /// <para>You can check if this is a guild integration, if <see cref="GuildId"/> is not null.</para>
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        /// <exception cref="InvalidOperationException">Thrown if this is not a guild integration.</exception>
-        public Task Sync()
-        {
-            if (!GuildId.HasValue)
-                throw new InvalidOperationException("This integration does not represent a guild integration");
-
-            return http.SyncGuildIntegration(GuildId.Value, Id);
+            JsonElement? userJson = json.GetPropertyOrNull("user");
+            User = userJson == null ? null : new DiscordUser(userJson.Value, isWebhookUser: false);
         }
 
         public override string ToString()

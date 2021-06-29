@@ -1,12 +1,11 @@
-﻿using Discore.Http;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Discore
 {
     /// <summary>
     /// A <see cref="DiscordDMChannel"/> or a <see cref="DiscordGuildChannel"/>.
     /// </summary>
-    public abstract class DiscordChannel : DiscordIdEntity
+    public class DiscordChannel : DiscordIdEntity
     {
         /// <summary>
         /// Gets the type of this channel.
@@ -23,29 +22,16 @@ namespace Discore
             || ChannelType == DiscordChannelType.GuildNews
             || ChannelType == DiscordChannelType.GuildStore;
 
-        readonly DiscordHttpClient http;
-
-        internal DiscordChannel(DiscordHttpClient http, DiscordChannelType type)
+        public DiscordChannel(Snowflake id, DiscordChannelType type)
+            : base(id)
         {
-            this.http = http;
             ChannelType = type;
         }
 
-        internal DiscordChannel(DiscordHttpClient http, DiscordApiData data, DiscordChannelType type)
-            : base(data)
+        internal DiscordChannel(JsonElement json, DiscordChannelType type)
+            : base(json)
         {
-            this.http = http;
             ChannelType = type;
-        }
-
-        /// <summary>
-        /// Deletes/closes this channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if this is a guild channel.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordChannel> Delete()
-        {
-            return http.DeleteChannel(Id);
         }
 
         public override string ToString()

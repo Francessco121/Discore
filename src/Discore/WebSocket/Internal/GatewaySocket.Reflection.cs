@@ -1,19 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Discore.WebSocket.Internal
 {
     partial class GatewaySocket
     {
-        delegate void PayloadSynchronousCallback(DiscordApiData payload, DiscordApiData data);
-        delegate Task PayloadAsynchronousCallback(DiscordApiData payload, DiscordApiData data);
+        delegate void PayloadSynchronousCallback(JsonElement payload, JsonElement data);
+        delegate Task PayloadAsynchronousCallback(JsonElement payload, JsonElement data);
 
         class PayloadCallback
         {
-            public PayloadSynchronousCallback Synchronous { get; }
-            public PayloadAsynchronousCallback Asynchronous { get; }
+            public PayloadSynchronousCallback? Synchronous { get; }
+            public PayloadAsynchronousCallback? Asynchronous { get; }
 
             public PayloadCallback(PayloadSynchronousCallback synchronous)
             {
@@ -37,11 +38,9 @@ namespace Discore.WebSocket.Internal
             }
         }
 
-        Dictionary<GatewayOPCode, PayloadCallback> payloadHandlers;
-
-        void InitializePayloadHandlers()
+        Dictionary<GatewayOPCode, PayloadCallback> InitializePayloadHandlers()
         {
-            payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
+            var payloadHandlers = new Dictionary<GatewayOPCode, PayloadCallback>();
 
             Type taskType = typeof(Task);
             Type gatewaySocketType = typeof(GatewaySocket);
@@ -68,6 +67,8 @@ namespace Discore.WebSocket.Internal
                     payloadHandlers[attr.OPCode] = payloadCallback;
                 }
             }
+
+            return payloadHandlers;
         }
     }
 }

@@ -1,10 +1,10 @@
-﻿using Discore.Http;
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildVoiceChannel : DiscordGuildChannel
+    public class DiscordGuildVoiceChannel : DiscordGuildChannel
     {
         /// <summary>
         /// Gets the audio bitrate used for this channel.
@@ -21,29 +21,36 @@ namespace Discore
         /// </summary>
         public Snowflake? ParentId { get; }
 
-        DiscordHttpClient http;
-
-        internal DiscordGuildVoiceChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null)
-            : base(http, data, DiscordChannelType.GuildVoice, guildId)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
+        public DiscordGuildVoiceChannel(
+            Snowflake id,
+            string name,
+            int position,
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
+            Snowflake guildId,
+            int bitrate,
+            int userLimit,
+            Snowflake? parentId)
+            : base(id,
+                  DiscordChannelType.GuildVoice,
+                  name,
+                  position,
+                  permissionOverwrites,
+                  guildId)
         {
-            this.http = http;
-
-            Bitrate = data.GetInteger("bitrate").Value;
-            UserLimit = data.GetInteger("user_limit").Value;
-            ParentId = data.GetSnowflake("parent_id");
+            Bitrate = bitrate;
+            UserLimit = userLimit;
+            ParentId = parentId;
         }
 
-        /// <summary>
-        /// Modifies this voice channel's settings.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
-        /// </summary>
-        /// <param name="options">A set of options to modify the channel with</param>
-        /// <returns>Returns the updated voice channel.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildVoiceChannel> Modify(GuildVoiceChannelOptions options)
+        internal DiscordGuildVoiceChannel(JsonElement json, Snowflake? guildId = null)
+            : base(json, DiscordChannelType.GuildVoice, guildId)
         {
-            return http.ModifyVoiceChannel(Id, options);
+            Bitrate = json.GetProperty("bitrate").GetInt32();
+            UserLimit = json.GetProperty("user_limit").GetInt32();
+            ParentId = json.GetPropertyOrNull("parent_id")?.GetSnowflakeOrNull();
         }
     }
 }

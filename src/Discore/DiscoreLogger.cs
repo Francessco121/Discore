@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Discore
 {
@@ -60,7 +60,7 @@ namespace Discore
         /// <summary>
         /// Fired when a message is logged from Discore.
         /// </summary>
-        public static event EventHandler<DiscoreLogEventArgs> OnLog;
+        public static event EventHandler<DiscoreLogEventArgs>? OnLog;
 
         internal static DiscoreLogger Global { get; }
 
@@ -79,7 +79,7 @@ namespace Discore
         /// <summary>
         /// Gets or sets the prefix for this <see cref="DiscoreLogger"/>.
         /// </summary>
-        public string Prefix { get; set; }
+        public string? Prefix { get; set; }
 
         static DiscoreLogger()
         {
@@ -91,7 +91,7 @@ namespace Discore
         /// Creates a new <see cref="DiscoreLogger"/> instance.
         /// </summary>
         /// <param name="prefix">The prefix of this logger.</param>
-        internal DiscoreLogger(string prefix)
+        internal DiscoreLogger(string? prefix)
         {
             Prefix = prefix;
         }
@@ -103,6 +103,8 @@ namespace Discore
         /// <param name="type">The type of log.</param>
         public void Log(string msg, DiscoreLogLevel type)
         {
+            // TODO: skip as early as possible if there are no listeners to OnLog
+
             if (type >= MinimumLevel)
             {
                 if (!string.IsNullOrWhiteSpace(Prefix))

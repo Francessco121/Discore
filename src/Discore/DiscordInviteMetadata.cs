@@ -1,14 +1,15 @@
-﻿using Discore.Http;
 using System;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordInviteMetadata : DiscordInvite
+    public class DiscordInviteMetadata : DiscordInvite
     {
+        // TODO: move to DiscordInvite
         /// <summary>
         /// Gets the user who created the invite.
         /// </summary>
-        public DiscordUser Inviter { get; }
+        public DiscordUser? Inviter { get; }
 
         /// <summary>
         /// Gets the number of times this invite has been used.
@@ -35,24 +36,59 @@ namespace Discore
         /// </summary>
         public DateTime CreatedAt { get; }
 
+        // TODO: it looks like this property was removed?
         /// <summary>
         /// Gets whether this invite has been revoked.
         /// </summary>
         public bool IsRevoked { get; }
 
-        internal DiscordInviteMetadata(DiscordHttpClient http, DiscordApiData data)
-            : base(http, data)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="code"/> or <paramref name="channel"/> is null.
+        /// </exception>
+        public DiscordInviteMetadata(
+            string code,
+            DiscordInviteGuild? guild,
+            DiscordInviteChannel channel,
+            DiscordUser? targetUser,
+            DiscordInviteTargetUserType? targetUserType,
+            int? approximatePresenceCount,
+            int? approximateMemberCount,
+            DiscordUser? inviter, 
+            int uses, 
+            int maxUses, 
+            int maxAge, 
+            bool isTemporary, 
+            DateTime createdAt,
+            bool isRevoked)
+            : base(code: code,
+                  guild: guild,
+                  channel: channel,
+                  targetUser: targetUser,
+                  targetUserType: targetUserType,
+                  approximatePresenceCount: approximatePresenceCount,
+                  approximateMemberCount: approximateMemberCount)
         {
-            DiscordApiData inviterData = data.Get("inviter");
-            if (inviterData != null)
-                Inviter = new DiscordUser(false, inviterData);
+            Inviter = inviter;
+            Uses = uses;
+            MaxUses = maxUses;
+            MaxAge = maxAge;
+            IsTemporary = isTemporary;
+            CreatedAt = createdAt;
+            IsRevoked = isRevoked;
+        }
 
-            Uses = data.GetInteger("uses").Value;
-            MaxUses = data.GetInteger("max_uses").Value;
-            MaxAge = data.GetInteger("max_age").Value;
-            IsTemporary = data.GetBoolean("temporary").Value;
-            CreatedAt = data.GetDateTime("created_at").Value;
-            IsRevoked = data.GetBoolean("revoked") ?? false;
+        internal DiscordInviteMetadata(JsonElement json)
+            : base(json)
+        {
+            JsonElement? inviterJson = json.GetPropertyOrNull("inviter");
+            Inviter = inviterJson == null ? null : new DiscordUser(inviterJson.Value, isWebhookUser: false);
+
+            Uses = json.GetProperty("uses").GetInt32();
+            MaxUses = json.GetProperty("max_uses").GetInt32();
+            MaxAge = json.GetProperty("max_age").GetInt32();
+            IsTemporary = json.GetProperty("temporary").GetBoolean();
+            CreatedAt = json.GetProperty("created_at").GetDateTime();
+            IsRevoked = json.GetPropertyOrNull("revoked")?.GetBoolean() ?? false;
         }
     }
 }

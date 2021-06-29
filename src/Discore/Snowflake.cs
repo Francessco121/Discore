@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 
 namespace Discore
 {
     /// <summary>
-    /// Twitter's snowflake format. Used for IDs in the Discord Api.
+    /// Twitter's snowflake format. Used for IDs in the Discord API.
     /// https://github.com/twitter/snowflake/tree/snowflake-2010
     /// </summary>
-    public struct Snowflake
+    public struct Snowflake : IEquatable<Snowflake>
     {
         /// <summary>
         /// Gets a snowflake representing nothing (or zero).
@@ -62,17 +62,14 @@ namespace Discore
             return Id.ToString();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (obj == null)
-                return false;
-            else if (typeof(Snowflake) == obj.GetType())
-            {
-                Snowflake other = (Snowflake)obj;
-                return Id == other.Id;
-            }
-            else
-                return base.Equals(obj);
+            return obj is Snowflake snowflake && Equals(snowflake);
+        }
+
+        public bool Equals(Snowflake other)
+        {
+            return Id == other.Id;
         }
 
         public override int GetHashCode()
@@ -83,8 +80,11 @@ namespace Discore
         /// <summary>
         /// Parses a snowflake from a string.
         /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public static Snowflake Parse(string snowflakeString)
         {
+            if (snowflakeString == null) throw new ArgumentNullException(nameof(snowflakeString));
+
             return new Snowflake(ulong.Parse(snowflakeString));
         }
 
@@ -92,7 +92,7 @@ namespace Discore
         /// Attempts to parses a snowflake from a string,
         /// returns null if the parse failed.
         /// </summary>
-        public static Snowflake? ParseOrNull(string snowflakeString)
+        public static Snowflake? ParseOrNull(string? snowflakeString)
         {
             ulong snowflakeId;
             if (ulong.TryParse(snowflakeString, out snowflakeId))
@@ -104,7 +104,7 @@ namespace Discore
         /// <summary>
         /// Attempts to parse a snowflake from a string.
         /// </summary>
-        public static bool TryParse(string snowflakeString, out Snowflake snowflake)
+        public static bool TryParse(string? snowflakeString, out Snowflake snowflake)
         {
             ulong snowflakeId;
             if (ulong.TryParse(snowflakeString, out snowflakeId))

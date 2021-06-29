@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket
+namespace Discore.WebSocket
 {
     /// <summary>
     /// Types of errors that trigger a <see cref="DiscordWebSocketException"/>.

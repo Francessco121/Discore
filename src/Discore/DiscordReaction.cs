@@ -1,6 +1,9 @@
-﻿namespace Discore
+using System;
+using System.Text.Json;
+
+namespace Discore
 {
-    public sealed class DiscordReaction
+    public class DiscordReaction
     {
         /// <summary>
         /// Gets the number of times this emoji has been used to react.
@@ -17,19 +20,24 @@
         /// </summary>
         public DiscordReactionEmoji Emoji { get; }
 
-        internal DiscordReaction(DiscordApiData data)
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="emoji"/> is null.</exception>
+        public DiscordReaction(int count, bool me, DiscordReactionEmoji emoji)
         {
-            Count = data.GetInteger("count").Value;
-            Me = data.GetBoolean("me").Value;
+            Count = count;
+            Me = me;
+            Emoji = emoji ?? throw new ArgumentNullException(nameof(emoji));
+        }
 
-            DiscordApiData emojiData = data.Get("emoji");
-            if (emojiData != null)
-                Emoji = new DiscordReactionEmoji(emojiData);
+        internal DiscordReaction(JsonElement json)
+        {
+            Count = json.GetProperty("count").GetInt32();
+            Me = json.GetProperty("me").GetBoolean();
+            Emoji = new DiscordReactionEmoji(json.GetProperty("emoji"));
         }
 
         public override string ToString()
         {
-            return Emoji == null ? base.ToString() : Emoji.Name;
+            return Emoji.Name ?? base.ToString();
         }
     }
 }

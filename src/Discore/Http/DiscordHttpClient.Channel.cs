@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -22,8 +23,8 @@ namespace Discore.Http
         public async Task<T> GetChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await rest.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
-            return (T)DeserializeChannelData(data);
+            using JsonDocument? data = await rest.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
+            return (T)DeserializeChannelData(data!.RootElement);
         }
 
         /// <summary>
@@ -41,11 +42,30 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{textChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{textChannelId}", jsonContent: requestData,
                 $"channels/{textChannelId}").ConfigureAwait(false);
-            return (DiscordGuildTextChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildTextChannel)DeserializeChannelData(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild text channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="textChannel">The guild text channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild text channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="textChannel"/> or <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildTextChannel> ModifyTextChannel(DiscordGuildTextChannel textChannel,
+            GuildTextChannelOptions options)
+        {
+            if (textChannel == null)
+                throw new ArgumentNullException(nameof(textChannel));
+
+            return ModifyTextChannel(textChannel.Id, options);
         }
 
         /// <summary>
@@ -63,11 +83,30 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{voiceChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{voiceChannelId}", jsonContent: requestData,
                 $"channels/{voiceChannelId}").ConfigureAwait(false);
-            return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild voice channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="voiceChannel">The guild voice channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild voice channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="voiceChannel"/> or <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildVoiceChannel> ModifyVoiceChannel(DiscordGuildVoiceChannel voiceChannel,
+            GuildVoiceChannelOptions options)
+        {
+            if (voiceChannel == null)
+                throw new ArgumentNullException(nameof(voiceChannel));
+
+            return ModifyVoiceChannel(voiceChannel.Id, options);
         }
 
         /// <summary>
@@ -85,11 +124,30 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{categoryChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{categoryChannelId}", jsonContent: requestData,
                 $"channels/{categoryChannelId}").ConfigureAwait(false);
-            return (DiscordGuildCategoryChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildCategoryChannel)DeserializeChannelData(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild category channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="categoryChannel">The guild category channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild category channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="categoryChannel"/> or <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildCategoryChannel> ModifyCategoryChannel(DiscordGuildCategoryChannel categoryChannel,
+            GuildCategoryChannelOptions options)
+        {
+            if (categoryChannel == null)
+                throw new ArgumentNullException(nameof(categoryChannel));
+
+            return ModifyCategoryChannel(categoryChannel.Id, options);
         }
 
         /// <summary>
@@ -107,11 +165,30 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{newsChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{newsChannelId}", jsonContent: requestData,
                 $"channels/{newsChannelId}").ConfigureAwait(false);
-            return (DiscordGuildNewsChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildNewsChannel)DeserializeChannelData(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild news channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="newsChannel">The guild news channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild news channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="newsChannel"/> or <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildNewsChannel> ModifyNewsChannel(DiscordGuildNewsChannel newsChannel,
+            GuildNewsChannelOptions options)
+        {
+            if (newsChannel == null)
+                throw new ArgumentNullException(nameof(newsChannel));
+
+            return ModifyNewsChannel(newsChannel.Id, options);
         }
 
         /// <summary>
@@ -129,11 +206,30 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Patch($"channels/{storeChannelId}", requestData,
+            using JsonDocument? returnData = await rest.Patch($"channels/{storeChannelId}", jsonContent: requestData,
                 $"channels/{storeChannelId}").ConfigureAwait(false);
-            return (DiscordGuildStoreChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildStoreChannel)DeserializeChannelData(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Updates the settings of a guild store channel.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <param name="storeChannel">The guild store channel to modify.</param>
+        /// <param name="options">A set of options to modify the channel with.</param>
+        /// <returns>Returns the updated guild store channel.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="storeChannel"/> or <paramref name="options"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildStoreChannel> ModifyStoreChannel(DiscordGuildStoreChannel storeChannel,
+            GuildStoreChannelOptions options)
+        {
+            if (storeChannel == null)
+                throw new ArgumentNullException(nameof(storeChannel));
+
+            return ModifyStoreChannel(storeChannel.Id, options);
         }
 
         /// <summary>
@@ -150,12 +246,39 @@ namespace Discore.Http
         /// Deletes a guild channel, or closes a DM.
         /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
         /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordChannel> DeleteChannel(DiscordChannel channel)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
+            return DeleteChannel<DiscordChannel>(channel.Id);
+        }
+
+        /// <summary>
+        /// Deletes a guild channel, or closes a DM.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<T> DeleteChannel<T>(T channel)
+            where T : DiscordChannel
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
+            return DeleteChannel<T>(channel.Id);
+        }
+
+        /// <summary>
+        /// Deletes a guild channel, or closes a DM.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/> if deleting a guild channel.</para>
+        /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<T> DeleteChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            DiscordApiData data = await rest.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
-            return (T)DeserializeChannelData(data);
+            using JsonDocument? data = await rest.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
+            return (T)DeserializeChannelData(data!.RootElement);
         }
 
         /// <summary>
@@ -166,13 +289,31 @@ namespace Discore.Http
         public async Task EditChannelPermissions(Snowflake channelId, Snowflake overwriteId,
             DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("allow", (int)allow);
-            data.Set("deny", (int)deny);
-            data.Set("type", type.ToString().ToLower());
+            string data = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("allow", (int)allow);
+                writer.WriteNumber("deny", (int)deny);
+                writer.WriteString("type", type.ToString().ToLower());
+                writer.WriteEndObject();
+            });
 
-            await rest.Put($"channels/{channelId}/permissions/{overwriteId}", data,
+            await rest.Put($"channels/{channelId}/permissions/{overwriteId}", jsonContent: data,
                 $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Edits a guild channel permission overwrite for a user or role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="overwrite"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task EditChannelPermissions(DiscordOverwrite overwrite,
+            DiscordPermission allow, DiscordPermission deny, DiscordOverwriteType type)
+        {
+            if (overwrite == null) throw new ArgumentNullException(nameof(overwrite));
+
+            return EditChannelPermissions(overwrite.ChannelId.Id, overwrite.Id, allow, deny, type);
         }
 
         /// <summary>
@@ -184,6 +325,19 @@ namespace Discore.Http
         {
             await rest.Delete($"channels/{channelId}/permissions/{overwriteId}",
                 $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Deletes a guild channel permission overwrite for a user or role.
+        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="overwrite"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task DeleteChannelPermission(DiscordOverwrite overwrite)
+        {
+            if (overwrite == null) throw new ArgumentNullException(nameof(overwrite));
+
+            return DeleteChannelPermission(overwrite.ChannelId.Id, overwrite.Id);
         }
 
         /// <summary>
@@ -200,19 +354,48 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Causes the current bot to appear as typing in this channel.
+        /// <para>Note: it is recommended that bots do not generally use this route.
+        /// This should only be used if the bot is responding to a command that is expected
+        /// to take a few seconds or longer.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task TriggerTypingIndicator(ITextChannel channel)
+        {
+            if (channel == null) throw new ArgumentNullException(nameof(channel));
+
+            return TriggerTypingIndicator(channel.Id);
+        }
+
+        /// <summary>
         /// Gets a list of all channels in a guild.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> GetGuildChannels(Snowflake guildId)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/channels",
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/channels",
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
 
-            DiscordGuildChannel[] channels = new DiscordGuildChannel[data.Values.Count];
+            JsonElement values = data!.RootElement;
+
+            var channels = new DiscordGuildChannel[values.GetArrayLength()]; ;
             for (int i = 0; i < channels.Length; i++)
-                channels[i] = (DiscordGuildChannel)DeserializeChannelData(data.Values[i]);
+                channels[i] = (DiscordGuildChannel)DeserializeChannelData(values[i]);
 
             return channels;
+        }
+
+        /// <summary>
+        /// Gets a list of all channels in a guild.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="guild"/> is null.</exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<IReadOnlyList<DiscordGuildChannel>> GetGuildChannels(DiscordGuild guild)
+        {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
+            return GetGuildChannels(guild.Id);
         }
 
         /// <summary>
@@ -226,11 +409,25 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = options.Build();
+            string requestData = BuildJsonContent(options.Build);
 
-            DiscordApiData returnData = await rest.Post($"guilds/{guildId}/channels", requestData,
+            using JsonDocument? returnData = await rest.Post($"guilds/{guildId}/channels", jsonContent: requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
-            return (DiscordGuildChannel)DeserializeChannelData(returnData);
+
+            return (DiscordGuildChannel)DeserializeChannelData(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Creates a new text channel, voice channel, or channel category for a guild.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordGuildChannel> CreateGuildChannel(DiscordGuild guild, CreateGuildChannelOptions options)
+        {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
+            return CreateGuildChannel(guild.Id, options);
         }
 
         /// <summary>
@@ -247,12 +444,34 @@ namespace Discore.Http
             if (positions == null)
                 throw new ArgumentNullException(nameof(positions));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Array);
-            foreach (PositionOptions positionParam in positions)
-                requestData.Values.Add(positionParam.Build());
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartArray();
 
-            await rest.Patch($"guilds/{guildId}/channels", requestData,
+                foreach (PositionOptions positionParam in positions)
+                    positionParam.Build(writer);
+
+                writer.WriteEndArray();
+            });
+
+            await rest.Patch($"guilds/{guildId}/channels", jsonContent: requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Changes the positions of channels in the specified guild. The list of
+        /// positions does not need to include every channel, it just needs the 
+        /// channels that are being moved.
+        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task ModifyGuildChannelPositions(DiscordGuild guild,
+            IEnumerable<PositionOptions> positions)
+        {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
+            return ModifyGuildChannelPositions(guild.Id, positions);
         }
     }
 }

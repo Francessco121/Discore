@@ -1,28 +1,36 @@
-﻿namespace Discore
+using System.Text.Json;
+
+namespace Discore
 {
     /// <summary>
     /// The web provider of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public sealed class DiscordEmbedProvider
+    public class DiscordEmbedProvider
     {
         /// <summary>
         /// Gets the name of this provider.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
         /// <summary>
         /// Gets the url of this provider.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
 
-        internal DiscordEmbedProvider(DiscordApiData data)
+        public DiscordEmbedProvider(string? name, string? url)
         {
-            Name = data.GetString("name");
-            Url = data.GetString("url");
+            Name = name;
+            Url = url;
+        }
+
+        internal DiscordEmbedProvider(JsonElement json)
+        {
+            Name = json.GetPropertyOrNull("name")?.GetString();
+            Url = json.GetPropertyOrNull("url")?.GetString();
         }
 
         public override string ToString()
         {
-            return Name;
+            return Name ?? base.ToString();
         }
     }
 }

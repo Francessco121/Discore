@@ -1,9 +1,8 @@
-﻿using Discore.Http;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildEmbed
+    public class DiscordGuildEmbed
     {
         /// <summary>
         /// Gets whether this embed is enabled.
@@ -12,32 +11,25 @@ namespace Discore
         /// <summary>
         /// Gets the embed channel ID.
         /// </summary>
-        public Snowflake ChannelId { get; }
+        public Snowflake? ChannelId { get; }
         /// <summary>
         /// Gets the ID of the guild this embed is for.
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpClient http;
-
-        internal DiscordGuildEmbed(DiscordHttpClient http, Snowflake guildId, DiscordApiData data)
+        public DiscordGuildEmbed(bool enabled, Snowflake? channelId, Snowflake guildId)
         {
-            this.http = http;
-
+            Enabled = enabled;
+            ChannelId = channelId;
             GuildId = guildId;
-
-            Enabled = data.GetBoolean("enabled").Value;
-            ChannelId = data.GetSnowflake("channel_id").Value;
         }
 
-        /// <summary>
-        /// Modifies the properties of this guild embed.
-        /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildEmbed> Modify(ModifyGuildEmbedOptions options)
+        internal DiscordGuildEmbed(JsonElement json, Snowflake guildId)
         {
-            return http.ModifyGuildEmbed(GuildId, options);
+            GuildId = guildId;
+
+            Enabled = json.GetProperty("enabled").GetBoolean();
+            ChannelId = json.GetPropertyOrNull("channel_id")?.GetSnowflakeOrNull();
         }
     }
 }

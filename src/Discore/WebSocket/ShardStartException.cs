@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Discore.WebSocket
 {
@@ -20,7 +20,7 @@ namespace Discore.WebSocket
             Reason = reason;
         }
 
-        internal ShardStartException(string message, Shard shard, ShardFailureReason reason, Exception innerException)
+        internal ShardStartException(string message, Shard shard, ShardFailureReason reason, Exception? innerException)
             : base(message, innerException)
         {
             Shard = shard;

@@ -1,9 +1,12 @@
-﻿namespace Discore
+using System;
+using System.Text.Json;
+
+namespace Discore
 {
     /// <summary>
     /// Representation of the game a user is currently playing.
     /// </summary>
-    public sealed class DiscordGame
+    public class DiscordGame
     {
         /// <summary>
         /// Gets the name of the game.
@@ -17,13 +20,24 @@
         /// Gets the URL of the stream when the type is set to "Streaming" and the URL is valid.
         /// Otherwise, returns null.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
 
-        internal DiscordGame(DiscordApiData data)
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
+        public DiscordGame(
+            string name, 
+            DiscordGameType type, 
+            string? url)
         {
-            Name = data.GetString("name");
-            Type = (DiscordGameType)(data.GetInteger("type") ?? 0);
-            Url = data.GetString("url");
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Type = type;
+            Url = url;
+        }
+
+        internal DiscordGame(JsonElement json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            Type = (DiscordGameType)json.GetProperty("type").GetInt32();
+            Url = json.GetPropertyOrNull("url")?.GetString();
         }
 
         public override string ToString()

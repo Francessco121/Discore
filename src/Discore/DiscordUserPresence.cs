@@ -1,78 +1,108 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordUserPresence
+    public class DiscordUserPresence
     {
         /// <summary>
-        /// Gets the ID of the user this presence is for.
+        /// Gets the user this presence is for.
         /// </summary>
-        public Snowflake UserId { get; }
+        public DiscordPartialUser User { get; }
+
+        /// <summary>
+        /// Gets the ID of the guild this presence is from.
+        /// </summary>
+        public Snowflake GuildId { get; }
 
         /// <summary>
         /// Gets the game this user is currently playing.
         /// </summary>
-        public DiscordGame Game { get; }
+        public DiscordGame? Game { get; }
 
         /// <summary>
         /// Gets the current status of this user.
         /// </summary>
-        public DiscordUserStatus Status { get; }
+        public DiscordUserStatus? Status { get; }
 
         /// <summary>
         /// Gets the user's current activities.
         /// </summary>
-        public IReadOnlyList<DiscordGame> Activities;
+        public IReadOnlyList<DiscordGame>? Activities { get; }
 
         /// <summary>
         /// Gets the user's platform-dependent status.
         /// </summary>
-        public DiscordClientStatus ClientStatus { get; }
+        public DiscordClientStatus? ClientStatus { get; }
 
-        internal DiscordUserPresence(Snowflake userId, DiscordApiData data)
+        public DiscordUserPresence(
+            DiscordPartialUser user, 
+            Snowflake guildId,
+            DiscordGame? game, 
+            DiscordUserStatus? status, 
+            IReadOnlyList<DiscordGame>? activities, 
+            DiscordClientStatus? clientStatus)
         {
-            UserId = userId;
+            User = user;
+            GuildId = guildId;
+            Game = game;
+            Status = status;
+            Activities = activities;
+            ClientStatus = clientStatus;
+        }
+
+        internal DiscordUserPresence(JsonElement json, Snowflake guildId)
+        {
+            GuildId = guildId;
+
+            // User
+            User = new DiscordPartialUser(json.GetProperty("user"));
 
             // Game
-            DiscordApiData gameData = data.Get("game");
-            if (gameData != null)
-            {
-                if (gameData.IsNull)
-                    Game = null;
-                else
-                    Game = new DiscordGame(gameData);
-            }
+            JsonElement? gameJson = json.GetPropertyOrNull("game");
+            Game = gameJson == null || gameJson.Value.ValueKind == JsonValueKind.Null
+                ? null
+                : new DiscordGame(gameJson.Value);
 
             // Status
-            string statusStr = data.GetString("status");
-            if (statusStr != null)
+            JsonElement? statusJson = json.GetPropertyOrNull("status");
+
+            if (statusJson != null)
             {
-                DiscordUserStatus? status = Utils.ParseUserStatus(statusStr);
+                string? statusStr = statusJson.Value.GetString();
 
-                if (!status.HasValue)
+                if (statusStr != null)
                 {
-                    // If we don't have a value for the status yet, 
-                    // we at least know that they aren't offline.
-                    Status = DiscordUserStatus.Online;
+                    Status = Utils.ParseUserStatus(statusStr);
 
-                    // However, this should issue a warning.
-                    DiscoreLogger.Global.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {UserId}. " +
-                        $"status = {statusStr}");
+                    if (Status == null)
+                    {
+                        // If we don't have a value for the status yet, 
+                        // we at least know that they aren't offline.
+                        Status = DiscordUserStatus.Online;
+
+                        // However, this should issue a warning.
+                        DiscoreLogger.Global.LogWarning($"[DiscordUserPresence] Failed to deserialize status for user {User.Id}. " +
+                            $"status = {statusStr}");
+                    }
                 }
-                else
-                    Status = status.Value;
             }
 
             // Client status
-            DiscordApiData clientStatusData = data.Get("client_status");
-            if (clientStatusData != null)
-                ClientStatus = new DiscordClientStatus(clientStatusData);
+            JsonElement? clientStatusJson = json.GetPropertyOrNull("client_status");
+            ClientStatus = clientStatusJson == null || clientStatusJson.Value.ValueKind == JsonValueKind.Null
+                ? null
+                : new DiscordClientStatus(clientStatusJson.Value);
 
-            // Activites
-            IList<DiscordApiData> activitiesArray = data.GetArray("activities");
-            if (activitiesArray != null)
-                Activities = activitiesArray.Select(a => new DiscordGame(a)).ToArray();
+            // Activities
+            JsonElement? activitiesJson = json.GetPropertyOrNull("activities");
+            Activities = activitiesJson == null || activitiesJson.Value.ValueKind == JsonValueKind.Null
+                ? null
+                : activitiesJson.Value
+                    .EnumerateArray()
+                    .Select(a => new DiscordGame(a))
+                    .ToArray();
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     /// <summary>
     /// A set of parameters defining the position of an item such as a channel or role.
@@ -32,13 +34,14 @@
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.SetSnowflake("id", Id);
-            data.Set("position", Position);
+            writer.WriteStartObject();
 
-            return data;
+            writer.WriteSnowflake("id", Id);
+            writer.WriteNumber("position", Position);
+
+            writer.WriteEndObject();
         }
     }
 }

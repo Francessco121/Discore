@@ -1,38 +1,48 @@
-﻿namespace Discore
+using System.Text.Json;
+
+namespace Discore
 {
-    public sealed class DiscordEmbedImage
+    public class DiscordEmbedImage
     {
         /// <summary>
-        /// Gets the source url of the image (only http(s)).
+        /// Gets the source url of the image.
         /// </summary>
-        public string Url { get; }
+        public string? Url { get; }
 
         /// <summary>
         /// Gets a proxied url of the image.
         /// </summary>
-        public string ProxyUrl { get; }
+        public string? ProxyUrl { get; }
 
         /// <summary>
         /// Gets the width of the image.
         /// </summary>
-        public int Width { get; }
+        public int? Width { get; }
 
         /// <summary>
         /// Gets the height of the image.
         /// </summary>
-        public int Height { get; }
+        public int? Height { get; }
 
-        internal DiscordEmbedImage(DiscordApiData data)
+        public DiscordEmbedImage(string? url, string? proxyUrl, int? width, int? height)
         {
-            Url = data.GetString("url");
-            ProxyUrl = data.GetString("proxy_url");
-            Width = data.GetInteger("width").Value;
-            Height = data.GetInteger("height").Value;
+            Url = url;
+            ProxyUrl = proxyUrl;
+            Width = width;
+            Height = height;
+        }
+
+        internal DiscordEmbedImage(JsonElement json)
+        {
+            Url = json.GetPropertyOrNull("url")?.GetString();
+            ProxyUrl = json.GetPropertyOrNull("proxy_url")?.GetString();
+            Width = json.GetPropertyOrNull("width")?.GetInt32();
+            Height = json.GetPropertyOrNull("height")?.GetInt32();
         }
 
         public override string ToString()
         {
-            return Url;
+            return Url ?? base.ToString();
         }
     }
 }

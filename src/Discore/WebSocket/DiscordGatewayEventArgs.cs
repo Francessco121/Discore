@@ -1,12 +1,16 @@
-﻿using Discore.Voice;
+using Discore.Voice;
 using System;
+using System.Collections.Generic;
 
 namespace Discore.WebSocket
 {
+    // Note: Event names should follow the pattern {{EventName}}EventArgs
+    // Example: MESSAGE_DELETE -> MessageDeleteEventArgs
+
     public abstract class DiscordGatewayEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the shard of the Gateway connection that fired the event.
+        /// The shard of the Gateway connection that fired the event.
         /// </summary>
         public Shard Shard { get; }
 
@@ -16,14 +20,64 @@ namespace Discore.WebSocket
         }
     }
 
-    public class UserEventArgs : DiscordGatewayEventArgs
+    public class ReadyEventArgs : DiscordGatewayEventArgs
     {
+        public class ShardInfo
+        {
+            /// <summary>
+            /// The shard ID that is associated with the Gateway connection.
+            /// </summary>
+            public int Id { get; }
+
+            /// <summary>
+            /// The total number of shards provided to the Gateway connection.
+            /// </summary>
+            public int Total { get; }
+
+            internal ShardInfo(int id, int total)
+            {
+                Id = id;
+                Total = total;
+            }
+        }
+
         /// <summary>
-        /// Gets the user associated with the event.
+        /// The user of the bot application.
         /// </summary>
         public DiscordUser User { get; }
 
-        internal UserEventArgs(Shard shard, DiscordUser user)
+        /// <summary>
+        /// The IDs of every guild that the bot is in.
+        /// </summary>
+        public Snowflake[] GuildIds { get; }
+
+        /// <summary>
+        /// Information about the shard.
+        /// <para/>
+        /// Will be null if no shard information was provided to the Gateway connection
+        /// (i.e. the total number of shards was 1).
+        /// </summary>
+        public ShardInfo? ShardInformation { get; }
+
+        internal ReadyEventArgs(Shard shard, DiscordUser user, Snowflake[] guildIds, int? shardId, int? totalShards)
+            : base(shard)
+        {
+            User = user;
+            GuildIds = guildIds;
+
+            if (shardId != null && totalShards != null)
+                ShardInformation = new ShardInfo(shardId.Value, totalShards.Value);
+        }
+    }
+
+    public class UserUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The user that was updated (including the updated information).
+        /// </summary>
+        public DiscordUser User { get; }
+
+        internal UserUpdateEventArgs(Shard shard, DiscordUser user)
             : base(shard)
         {
             User = user;
@@ -33,17 +87,19 @@ namespace Discore.WebSocket
     public class TypingStartEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the user that started typing.
+        /// The ID of the user that started typing.
         /// </summary>
         public Snowflake UserId { get; }
         /// <summary>
-        /// Gets the ID of the text channel that the user starting typing in.
+        /// The ID of the text channel that the user starting typing in.
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
         /// Unix time in seconds when the typing started.
         /// </summary>
         public int Timestamp { get; }
+
+        // TODO: add guild_id, member
 
         internal TypingStartEventArgs(Shard shard, Snowflake userId, Snowflake channelId, int timestamp)
             : base(shard)
@@ -54,18 +110,18 @@ namespace Discore.WebSocket
         }
     }
 
-    public class GuildMemberEventArgs : DiscordGatewayEventArgs
+    public class GuildMemberAddEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the guild the member is in.
+        /// The ID of the guild that the user joined.
         /// </summary>
         public Snowflake GuildId { get; }
         /// <summary>
-        /// Gets the member associated with the event.
+        /// The guild-specific user information for the new member.
         /// </summary>
         public DiscordGuildMember Member { get; }
 
-        internal GuildMemberEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member)
+        internal GuildMemberAddEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member)
             : base(shard)
         {
             GuildId = guildId;
@@ -73,16 +129,60 @@ namespace Discore.WebSocket
         }
     }
 
-    public class PresenceEventArgs : GuildMemberEventArgs
+    public class GuildMemberRemoveEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the presence state of the user.
+        /// The ID of the guild that the user left.
+        /// </summary>
+        public Snowflake GuildId { get; }
+        /// <summary>
+        /// The user that left the guild.
+        /// </summary>
+        public DiscordUser User { get; }
+
+        internal GuildMemberRemoveEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
+            : base(shard)
+        {
+            GuildId = guildId;
+            User = user;
+        }
+    }
+
+    public class GuildMemberUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild the member is in.
+        /// </summary>
+        public Snowflake GuildId { get; }
+        /// <summary>
+        /// Partial updated information for the member.
+        /// </summary>
+        public DiscordPartialGuildMember PartialMember { get; }
+
+        internal GuildMemberUpdateEventArgs(Shard shard, Snowflake guildId, DiscordPartialGuildMember partialMember)
+            : base(shard)
+        {
+            GuildId = guildId;
+            PartialMember = partialMember;
+        }
+    }
+
+    public class PresenceUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild the member is in.
+        /// </summary>
+        public Snowflake GuildId { get; }
+
+        /// <summary>
+        /// The presence state of the user.
         /// </summary>
         public DiscordUserPresence Presence { get; }
 
-        internal PresenceEventArgs(Shard shard, Snowflake guildId, DiscordGuildMember member, DiscordUserPresence presence)
-            : base(shard, guildId, member)
+        internal PresenceUpdateEventArgs(Shard shard, Snowflake guildId, DiscordUserPresence presence)
+            : base(shard)
         {
+            GuildId = guildId;
             Presence = presence;
         }
     }
@@ -90,11 +190,11 @@ namespace Discore.WebSocket
     public class GuildMemberChunkEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the guild that the members are in.
+        /// The ID of the guild that the members are in.
         /// </summary>
         public Snowflake GuildId { get; }
         /// <summary>
-        /// Gets a list of all members included in the chunk.
+        /// A list of all members included in the chunk.
         /// </summary>
         public DiscordGuildMember[] Members { get; }
 
@@ -106,18 +206,18 @@ namespace Discore.WebSocket
         }
     }
 
-    public class GuildUserEventArgs : DiscordGatewayEventArgs
+    public class GuildBanAddEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the guild associated with the event.
+        /// The ID of the guild the user was banned from.
         /// </summary>
         public Snowflake GuildId { get; }
         /// <summary>
-        /// Gets the user associated with the event.
+        /// The user that was banned.
         /// </summary>
         public DiscordUser User { get; }
 
-        internal GuildUserEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
+        internal GuildBanAddEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
             : base(shard)
         {
             GuildId = guildId;
@@ -125,82 +225,250 @@ namespace Discore.WebSocket
         }
     }
 
-    public class GuildRoleEventArgs : DiscordGatewayEventArgs
+    public class GuildBanRemoveEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the guild that the role is in.
+        /// The ID of the guild the user was unbanned from.
         /// </summary>
-        public DiscordGuild Guild { get; }
+        public Snowflake GuildId { get; }
         /// <summary>
-        /// Gets the role associated with the event.
+        /// The user that was unbanned.
+        /// </summary>
+        public DiscordUser User { get; }
+
+        internal GuildBanRemoveEventArgs(Shard shard, Snowflake guildId, DiscordUser user)
+            : base(shard)
+        {
+            GuildId = guildId;
+            User = user;
+        }
+    }
+
+    public class GuildRoleCreateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild that the role was created in.
+        /// </summary>
+        public Snowflake GuildId { get; }
+        /// <summary>
+        /// The created role.
         /// </summary>
         public DiscordRole Role { get; }
 
-        internal GuildRoleEventArgs(Shard shard, DiscordGuild guild, DiscordRole role)
+        internal GuildRoleCreateEventArgs(Shard shard, Snowflake guildId, DiscordRole role)
             : base(shard)
         {
-            Guild = guild;
+            GuildId = guildId;
             Role = role;
         }
     }
 
-    public class DMChannelEventArgs : DiscordGatewayEventArgs
+    public class GuildRoleUpdateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the DM channel associated with the event.
+        /// The ID of the guild that the role is in.
         /// </summary>
-        public DiscordDMChannel Channel { get; }
+        public Snowflake GuildId { get; }
+        /// <summary>
+        /// The updated role.
+        /// </summary>
+        public DiscordRole Role { get; }
 
-        internal DMChannelEventArgs(Shard shard, DiscordDMChannel channel)
+        internal GuildRoleUpdateEventArgs(Shard shard, Snowflake guildId, DiscordRole role)
+            : base(shard)
+        {
+            GuildId = guildId;
+            Role = role;
+        }
+    }
+
+    public class GuildRoleDeleteEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild that the role was in.
+        /// </summary>
+        public Snowflake GuildId { get; }
+        /// <summary>
+        /// The ID of the deleted role.
+        /// </summary>
+        public Snowflake RoleId { get; }
+
+        internal GuildRoleDeleteEventArgs(Shard shard, Snowflake guildId, Snowflake roleId)
+            : base(shard)
+        {
+            GuildId = guildId;
+            RoleId = roleId;
+        }
+    }
+
+    public class GuildCreateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// Whether the guild just became available.
+        /// <para/>
+        /// If false, the application just joined the guild for the first time.
+        /// </summary>
+        public bool BecameAvailable { get; }
+
+        /// <summary>
+        /// The guild associated with the event.
+        /// </summary>
+        public DiscordGuild Guild { get; }
+
+        /// <summary>
+        /// Additional metadata about the guild.
+        /// </summary>
+        public DiscordGuildMetadata GuildMetadata { get; }
+
+        /// <summary>
+        /// A list of all guild members.
+        /// </summary>
+        public IReadOnlyList<DiscordGuildMember> Members { get; }
+
+        /// <summary>
+        /// A list of all channels in the guild.
+        /// </summary>
+        public IReadOnlyList<DiscordGuildChannel> Channels { get; }
+
+        /// <summary>
+        /// A list of states of members currently in voice channels.
+        /// </summary>
+        public IReadOnlyList<DiscordVoiceState> VoiceStates { get; }
+
+        /// <summary>
+        /// A list of presence information for each member.
+        /// </summary>
+        public IReadOnlyList<DiscordUserPresence> Presences { get; }
+
+        internal GuildCreateEventArgs(
+            Shard shard,
+            bool becameAvailable,
+            DiscordGuild guild,
+            DiscordGuildMetadata guildMetadata,
+            IReadOnlyList<DiscordGuildMember> members,
+            IReadOnlyList<DiscordGuildChannel> channels,
+            IReadOnlyList<DiscordVoiceState> voiceStates,
+            IReadOnlyList<DiscordUserPresence> presences)
+            : base(shard)
+        {
+            BecameAvailable = becameAvailable;
+            Guild = guild;
+            GuildMetadata = guildMetadata;
+            Members = members;
+            Channels = channels;
+            VoiceStates = voiceStates;
+            Presences = presences;
+        }
+    }
+
+    public class GuildUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The updated guild.
+        /// </summary>
+        public DiscordGuild Guild { get; }
+
+        internal GuildUpdateEventArgs(Shard shard, DiscordGuild guild)
+            : base(shard)
+        {
+            Guild = guild;
+        }
+    }
+
+    public class GuildDeleteEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild.
+        /// </summary>
+        public Snowflake GuildId { get; }
+
+        /// <summary>
+        /// Whether the guild only became unavailable.
+        /// <para/>
+        /// If true, the application was NOT removed from the guild.
+        /// </summary>
+        public bool Unavailable { get; }
+
+        internal GuildDeleteEventArgs(Shard shard, Snowflake guildId, bool unavailable)
+            : base(shard)
+        {
+            GuildId = guildId;
+            Unavailable = unavailable;
+        }
+    }
+
+    public class GuildEmojisUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild where the emojis were updated.
+        /// </summary>
+        public Snowflake GuildId { get; }
+
+        /// <summary>
+        /// The new list of guild emojis.
+        /// </summary>
+        public IReadOnlyList<DiscordEmoji> Emojis { get; }
+
+        internal GuildEmojisUpdateEventArgs(Shard shard, Snowflake guildId, IReadOnlyList<DiscordEmoji> emojis)
+            : base(shard)
+        {
+            GuildId = guildId;
+            Emojis = emojis;
+        }
+    }
+
+    public class GuildIntegrationsUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the guild that had its integrations updated.
+        /// </summary>
+        public Snowflake GuildId { get; }
+
+        internal GuildIntegrationsUpdateEventArgs(Shard shard, Snowflake guildId)
+            : base(shard)
+        {
+            GuildId = guildId;
+        }
+    }
+
+    public class ChannelCreateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The created channel.
+        /// </summary>
+        public DiscordChannel Channel { get; }
+
+        internal ChannelCreateEventArgs(Shard shard, DiscordChannel channel)
             : base(shard)
         {
             Channel = channel;
         }
     }
 
-    public class GuildEventArgs : DiscordGatewayEventArgs
+    public class ChannelUpdateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the guild associated with the event.
+        /// The updated channel.
         /// </summary>
-        public DiscordGuild Guild { get; }
+        public DiscordChannel Channel { get; }
 
-        internal GuildEventArgs(Shard shard, DiscordGuild guild)
+        internal ChannelUpdateEventArgs(Shard shard, DiscordChannel channel)
             : base(shard)
         {
-            Guild = guild;
+            Channel = channel;
         }
     }
 
-    public class GuildIntegrationsEventArgs : DiscordGatewayEventArgs
+    public class ChannelDeleteEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the guild that had its integrations updated.
+        /// The deleted channel.
         /// </summary>
-        public Snowflake GuildId { get; }
+        public DiscordChannel Channel { get; }
 
-        internal GuildIntegrationsEventArgs(Shard shard, Snowflake guildId)
+        internal ChannelDeleteEventArgs(Shard shard, DiscordChannel channel)
             : base(shard)
         {
-            GuildId = guildId;
-        }
-    }
-
-    public class GuildChannelEventArgs : DiscordGatewayEventArgs
-    {
-        /// <summary>
-        /// Gets the ID of the guild the channel is in.
-        /// </summary>
-        public Snowflake GuildId { get; }
-        /// <summary>
-        /// Gets the guild channel associated with the event.
-        /// </summary>
-        public DiscordGuildChannel Channel { get; }
-
-        internal GuildChannelEventArgs(Shard shard, Snowflake guildId, DiscordGuildChannel channel)
-            : base(shard)
-        {
-            GuildId = guildId;
             Channel = channel;
         }
     }
@@ -208,12 +476,11 @@ namespace Discore.WebSocket
     public class WebhooksUpdateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the guild that had a webhook updated.
-        /// <para>This is also the ID of the guild that the webhook's channel is in.</para>
+        /// The ID of the guild that had a webhook updated.
         /// </summary>
         public Snowflake GuildId { get; }
         /// <summary>
-        /// Gets the ID of the channel that had a webhook updated.
+        /// The ID of the channel that had a webhook updated.
         /// </summary>
         public Snowflake ChannelId { get; }
 
@@ -228,11 +495,11 @@ namespace Discore.WebSocket
     public class ChannelPinsUpdateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the text channel that had its pins updated.
+        /// The ID of the text channel that had its pins updated.
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
-        /// Gets the date-time of the newest pin as of this update (or null if there is no longer any pins).
+        /// The date-time of the newest pin as of this update (or null if there is no longer any pins).
         /// </summary>
         public DateTime? LastPinTimestamp { get; }
 
@@ -244,14 +511,14 @@ namespace Discore.WebSocket
         }
     }
 
-    public class MessageEventArgs : DiscordGatewayEventArgs
+    public class MessageCreateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the message associated with the event.
+        /// The created message.
         /// </summary>
         public DiscordMessage Message { get; }
 
-        internal MessageEventArgs(Shard shard, DiscordMessage message)
+        internal MessageCreateEventArgs(Shard shard, DiscordMessage message)
             : base(shard)
         {
             Message = message;
@@ -261,11 +528,11 @@ namespace Discore.WebSocket
     public class MessageUpdateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets a partial message object representing the changes made to the message.
+        /// A partial message object representing the changes made to the message.
         /// </summary>
-        public DiscordMessage PartialMessage { get; }
+        public DiscordPartialMessage PartialMessage { get; }
 
-        internal MessageUpdateEventArgs(Shard shard, DiscordMessage message)
+        internal MessageUpdateEventArgs(Shard shard, DiscordPartialMessage message)
             : base(shard)
         {
             PartialMessage = message;
@@ -275,11 +542,11 @@ namespace Discore.WebSocket
     public class MessageDeleteEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the message that was deleted.
+        /// The ID of the message that was deleted.
         /// </summary>
         public Snowflake MessageId { get; }
         /// <summary>
-        /// Gets the ID of the channel the message was deleted from.
+        /// The ID of the channel the message was deleted from.
         /// </summary>
         public Snowflake ChannelId { get; }
 
@@ -291,26 +558,56 @@ namespace Discore.WebSocket
         }
     }
 
-    public class MessageReactionEventArgs : DiscordGatewayEventArgs
+    public class MessageReactionAddEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the message associated with the reaction.
+        /// The ID of the message associated with the reaction.
         /// </summary>
         public Snowflake MessageId { get; }
         /// <summary>
-        /// Gets the ID of the user who added/removed the reaction.
+        /// The ID of the user who added/removed the reaction.
         /// </summary>
         public Snowflake UserId { get; }
         /// <summary>
-        /// Gets the ID of the channel the message affected is in.
+        /// The ID of the channel the message affected is in.
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
-        /// Gets the emoji associated with the event.
+        /// The emoji associated with the event.
         /// </summary>
         public DiscordReactionEmoji Emoji { get; }
 
-        internal MessageReactionEventArgs(Shard shard, Snowflake messageId, Snowflake channelId,
+        internal MessageReactionAddEventArgs(Shard shard, Snowflake messageId, Snowflake channelId,
+            Snowflake userId, DiscordReactionEmoji emoji)
+            : base(shard)
+        {
+            MessageId = messageId;
+            ChannelId = channelId;
+            UserId = userId;
+            Emoji = emoji;
+        }
+    }
+
+    public class MessageReactionRemoveEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The ID of the message associated with the reaction.
+        /// </summary>
+        public Snowflake MessageId { get; }
+        /// <summary>
+        /// The ID of the user who added/removed the reaction.
+        /// </summary>
+        public Snowflake UserId { get; }
+        /// <summary>
+        /// The ID of the channel the message affected is in.
+        /// </summary>
+        public Snowflake ChannelId { get; }
+        /// <summary>
+        /// The emoji associated with the event.
+        /// </summary>
+        public DiscordReactionEmoji Emoji { get; }
+
+        internal MessageReactionRemoveEventArgs(Shard shard, Snowflake messageId, Snowflake channelId,
             Snowflake userId, DiscordReactionEmoji emoji)
             : base(shard)
         {
@@ -324,11 +621,11 @@ namespace Discore.WebSocket
     public class MessageReactionRemoveAllEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the ID of the message affected.
+        /// The ID of the message affected.
         /// </summary>
         public Snowflake MessageId { get; }
         /// <summary>
-        /// Gets the ID of the channel the message is in.
+        /// The ID of the channel the message is in.
         /// </summary>
         public Snowflake ChannelId { get; }
 
@@ -340,14 +637,14 @@ namespace Discore.WebSocket
         }
     }
 
-    public class VoiceStateEventArgs : DiscordGatewayEventArgs
+    public class VoiceStateUpdateEventArgs : DiscordGatewayEventArgs
     {
         /// <summary>
-        /// Gets the voice state of the user who's voice state changed.
+        /// The voice state of the user who's voice state changed.
         /// </summary>
         public DiscordVoiceState VoiceState { get; }
 
-        internal VoiceStateEventArgs(Shard shard, DiscordVoiceState state) 
+        internal VoiceStateUpdateEventArgs(Shard shard, DiscordVoiceState state) 
             : base(shard)
         {
             VoiceState = state;

@@ -1,13 +1,11 @@
-﻿using Discore.Http;
-using System;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Discore
 {
     /// <summary>
     /// Roles represent a set of permissions attached to a group of users.
     /// </summary>
-    public sealed class DiscordRole : DiscordIdEntity
+    public class DiscordRole : DiscordIdEntity
     {
         /// <summary>
         /// Gets the ID of the guild this role is for.
@@ -42,47 +40,41 @@ namespace Discore
         /// </summary>
         public bool IsMentionable { get; }
 
-        DiscordHttpClient http;
+        // TODO: add tags
 
-        internal DiscordRole(DiscordHttpClient http, Snowflake guildId, DiscordApiData data)
-            : base(data)
+        public DiscordRole(
+            Snowflake id,
+            Snowflake guildId, 
+            string name, 
+            DiscordColor color, 
+            bool isHoisted, 
+            int position, 
+            DiscordPermission permissions, 
+            bool isManaged, 
+            bool isMentionable)
+            : base(id)
         {
-            this.http = http;
-
             GuildId = guildId;
-
-            Name = data.GetString("name");
-            IsHoisted = data.GetBoolean("hoist").Value;
-            Position = data.GetInteger("position").Value;
-            IsManaged = data.GetBoolean("managed").Value;
-            IsMentionable = data.GetBoolean("mentionable").Value;
-
-            int color = data.GetInteger("color").Value;
-            Color = DiscordColor.FromHexadecimal(color);
-
-            long permissions = data.GetInt64("permissions").Value;
-            Permissions = (DiscordPermission)permissions;
+            Name = name;
+            Color = color;
+            IsHoisted = isHoisted;
+            Position = position;
+            Permissions = permissions;
+            IsManaged = isManaged;
+            IsMentionable = isMentionable;
         }
 
-        /// <summary>
-        /// Modifies the settings of this role.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordRole> Modify(ModifyRoleOptions options)
+        internal DiscordRole(JsonElement json, Snowflake guildId)
+            : base(json)
         {
-            return http.ModifyGuildRole(GuildId, Id, options);
-        }
-
-        /// <summary>
-        /// Deletes this role.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Delete()
-        {
-            return http.DeleteGuildRole(GuildId, Id);
+            GuildId = guildId;
+            Name = json.GetProperty("name").GetString()!;
+            Color = DiscordColor.FromHexadecimal(json.GetProperty("color").GetInt32());
+            IsHoisted = json.GetProperty("hoist").GetBoolean();
+            Position = json.GetProperty("position").GetInt32();
+            Permissions = (DiscordPermission)json.GetProperty("permissions").GetUInt64();
+            IsManaged = json.GetProperty("managed").GetBoolean();
+            IsMentionable = json.GetProperty("mentionable").GetBoolean();
         }
 
         public override string ToString()

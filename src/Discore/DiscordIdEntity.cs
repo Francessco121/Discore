@@ -1,4 +1,7 @@
-﻿namespace Discore
+using System;
+using System.Text.Json;
+
+namespace Discore
 {
     /// <summary>
     /// The base class for all Discord entities that contain an ID.
@@ -10,11 +13,17 @@
         /// </summary>
         public Snowflake Id { get; protected set; }
 
+        [Obsolete]
         internal DiscordIdEntity() { }
 
-        internal DiscordIdEntity(DiscordApiData data)
+        internal DiscordIdEntity(Snowflake id)
         {
-            Id = data.GetSnowflake("id").Value;
+            Id = id;
+        }
+
+        internal DiscordIdEntity(JsonElement json)
+        {
+            Id = json.GetProperty("id").GetSnowflake();
         }
 
         public override string ToString()
@@ -26,7 +35,7 @@
         /// Determines whether the specified <see cref="DiscordIdEntity"/> is equal to the current entity.
         /// </summary>
         /// <param name="other">The other <see cref="DiscordIdEntity"/> to check.</param>
-        public bool Equals(DiscordIdEntity other)
+        public bool Equals(DiscordIdEntity? other)
         {
             return Id == other?.Id;
         }
@@ -37,11 +46,10 @@
         /// <param name="obj">The other object to check.</param>
         public override bool Equals(object obj)
         {
-            DiscordIdEntity other = obj as DiscordIdEntity;
-            if (ReferenceEquals(other, null))
-                return false;
-            else
+            if (obj is DiscordIdEntity other)
                 return Equals(other);
+            else
+                return false;
         }
 
         /// <summary>
@@ -52,12 +60,12 @@
             return Id.GetHashCode();
         }
 
-        public static bool operator ==(DiscordIdEntity a, DiscordIdEntity b)
+        public static bool operator ==(DiscordIdEntity? a, DiscordIdEntity? b)
         {
             return a?.Id == b?.Id;
         }
 
-        public static bool operator !=(DiscordIdEntity a, DiscordIdEntity b)
+        public static bool operator !=(DiscordIdEntity? a, DiscordIdEntity? b)
         {
             return a?.Id != b?.Id;
         }

@@ -1,7 +1,9 @@
-﻿using Discore.WebSocket;
+using Discore.WebSocket;
 using Discore.WebSocket.Internal;
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,41 +14,43 @@ namespace Discore.Voice.Internal
         /// <summary>
         /// Called when the socket is closed unexpectedly (meaing our side did not initiate it).
         /// </summary>
-        public event EventHandler OnUnexpectedClose;
+        public event EventHandler? OnUnexpectedClose;
         /// <summary>
         /// Called when the socket is still connected but the heartbeat loop timed out.
         /// </summary>
-        public event EventHandler OnTimedOut;
+        public event EventHandler? OnTimedOut;
         /// <summary>
         /// Called when the speaking state of another user in the voice channel changes.
         /// </summary>
-        public event EventHandler<VoiceSpeakingEventArgs> OnUserSpeaking;
+        public event EventHandler<VoiceSpeakingEventArgs>? OnUserSpeaking;
         /// <summary>
         /// Called when the socket encountered an event requiring a new session.
         /// </summary>
-        public event EventHandler OnNewSessionRequested;
+        public event EventHandler? OnNewSessionRequested;
         /// <summary>
         /// Called when the socket encountered an event requiring a resume.
         /// </summary>
-        public event EventHandler OnResumeRequested;
+        public event EventHandler? OnResumeRequested;
 
         public const int GATEWAY_VERSION = 3;
 
-        CancellationTokenSource heartbeatCancellationSource;
+        CancellationTokenSource? heartbeatCancellationSource;
 
-        DiscoreLogger log;
+        readonly DiscoreLogger log;
 
         bool isDisposed;
 
         bool receivedHeartbeatAck;
         uint heartbeatNonce;
 
+        readonly Dictionary<VoiceOPCode, PayloadCallback> payloadHandlers;
+
         public VoiceWebSocket(string loggingName) 
             : base(loggingName)
         {
             log = new DiscoreLogger(loggingName);
 
-            InitializePayloadHandlers();
+            payloadHandlers = InitializePayloadHandlers();
         }
 
         /// <exception cref="OperationCanceledException"></exception>
@@ -71,6 +75,8 @@ namespace Discore.Voice.Internal
             switch (voiceCloseCode)
             {
                 case VoiceCloseCode.Disconnected:
+                    // Kicked or channel was deleted, don't reconnect
+                    break;
                 case VoiceCloseCode.VoiceServerCrashed:
                     heartbeatCancellationSource?.Cancel();
                     OnResumeRequested?.Invoke(this, EventArgs.Empty);
@@ -96,14 +102,16 @@ namespace Discore.Voice.Internal
             OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
         }
 
-        protected override Task OnPayloadReceived(DiscordApiData payload)
+        protected override Task OnPayloadReceived(JsonDocument payload)
         {
-            VoiceOPCode op = (VoiceOPCode)payload.GetInteger("op").Value;
-            DiscordApiData d = payload.Get("d");
+            JsonElement payloadRoot = payload.RootElement;
 
-            PayloadCallback callback;
+            VoiceOPCode op = (VoiceOPCode)payloadRoot.GetProperty("op").GetInt32();
+            JsonElement d = payloadRoot.GetProperty("d");
+
+            PayloadCallback? callback;
             if (payloadHandlers.TryGetValue(op, out callback))
-                callback(payload, d);
+                callback(payloadRoot, d);
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
 
@@ -114,7 +122,7 @@ namespace Discore.Voice.Internal
         {
             receivedHeartbeatAck = true;
 
-            while (State == WebSocketState.Open && !heartbeatCancellationSource.IsCancellationRequested)
+            while (State == WebSocketState.Open && !heartbeatCancellationSource!.IsCancellationRequested)
             {
                 if (!receivedHeartbeatAck)
                 {
@@ -171,7 +179,7 @@ namespace Discore.Voice.Internal
             {
                 isDisposed = true;
 
-                heartbeatCancellationSource.Dispose();
+                heartbeatCancellationSource?.Dispose();
                 base.Dispose();
             }
         }

@@ -1,10 +1,10 @@
-﻿using Discore.Http;
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildStoreChannel : DiscordGuildChannel
+    public class DiscordGuildStoreChannel : DiscordGuildChannel
     {
         /// <summary>
         /// Gets whether this store channel is NSFW (not-safe-for-work).
@@ -16,28 +16,33 @@ namespace Discore
         /// </summary>
         public Snowflake? ParentId { get; }
 
-        readonly DiscordHttpClient http;
-
-        internal DiscordGuildStoreChannel(DiscordHttpClient http, DiscordApiData data, Snowflake? guildId = null) 
-            : base(http, data, DiscordChannelType.GuildStore, guildId)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
+        public DiscordGuildStoreChannel(
+            Snowflake id,
+            string name, 
+            int position, 
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites, 
+            Snowflake guildId,
+            bool nsfw,
+            Snowflake? parentId) 
+            : base(id,
+                  DiscordChannelType.GuildStore, 
+                  name, 
+                  position, 
+                  permissionOverwrites, 
+                  guildId)
         {
-            this.http = http;
-
-            Nsfw = data.GetBoolean("nsfw") ?? false;
-            ParentId = data.GetSnowflake("parent_id");
+            Nsfw = nsfw;
+            ParentId = parentId;
         }
 
-        /// <summary>
-        /// Modifies this store channel's settings.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
-        /// </summary>
-        /// <param name="options">A set of options to modify the channel with</param>
-        /// <returns>Returns the updated store channel.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildStoreChannel> Modify(GuildStoreChannelOptions options)
+        internal DiscordGuildStoreChannel(JsonElement json, Snowflake? guildId = null)
+            : base(json, DiscordChannelType.GuildStore, guildId)
         {
-            return http.ModifyStoreChannel(Id, options);
+            Nsfw = json.GetPropertyOrNull("nsfw")?.GetBoolean() ?? false;
+            ParentId = json.GetPropertyOrNull("parent_id")?.GetSnowflakeOrNull();
         }
     }
 }

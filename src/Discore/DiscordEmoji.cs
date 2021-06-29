@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmoji : DiscordIdEntity
+    public class DiscordEmoji : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this emoji.
@@ -12,6 +14,7 @@ namespace Discore
         /// Gets the IDs of associated roles with this emoji.
         /// </summary>
         public IReadOnlyList<Snowflake> RoleIds { get; }
+        // TODO: Make full DiscordUser object
         /// <summary>
         /// Gets the ID of the user that created this emoji.
         /// </summary>
@@ -29,22 +32,54 @@ namespace Discore
         /// </summary>
         public bool IsAnimated { get; }
 
-        internal DiscordEmoji(DiscordApiData data)
-            : base(data)
+        // TODO: add available
+
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="roleIds"/> is null.
+        /// </exception>
+        public DiscordEmoji(
+            Snowflake id,
+            string name, 
+            IReadOnlyList<Snowflake> roleIds, 
+            Snowflake? userId, 
+            bool requireColons, 
+            bool isManaged, 
+            bool isAnimated)
+            : base(id)
         {
-            Name = data.GetString("name");
-            UserId = data.LocateSnowflake("user.id");
-            RequireColons = data.GetBoolean("require_colons") ?? false;
-            IsManaged = data.GetBoolean("managed") ?? false;
-            IsAnimated = data.GetBoolean("animated") ?? false;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            RoleIds = roleIds ?? throw new ArgumentNullException(nameof(roleIds));
+            UserId = userId;
+            RequireColons = requireColons;
+            IsManaged = isManaged;
+            IsAnimated = isAnimated;
+        }
 
-            IList<DiscordApiData> roles = data.GetArray("roles");
-            Snowflake[] roleIds = new Snowflake[roles.Count];
+        internal DiscordEmoji(JsonElement json)
+            : base(json)
+        {
+            Name = json.GetProperty("name").GetString()!;
+            UserId = json.GetPropertyOrNull("user")?.GetProperty("id").GetSnowflake();
+            RequireColons = json.GetPropertyOrNull("require_colons")?.GetBoolean() ?? false;
+            IsManaged = json.GetPropertyOrNull("managed")?.GetBoolean() ?? false;
+            IsAnimated = json.GetPropertyOrNull("animated")?.GetBoolean() ?? false;
 
-            for (int i = 0; i < roleIds.Length; i++)
-                roleIds[i] = (roles[i].ToSnowflake().Value);
-            
-            RoleIds = roleIds;
+            JsonElement? rolesJson = json.GetPropertyOrNull("roles");
+
+            if (rolesJson != null)
+            {
+                JsonElement _rolesJson = rolesJson.Value;
+                var roleIds = new Snowflake[_rolesJson.GetArrayLength()];
+
+                for (int i = 0; i < roleIds.Length; i++)
+                    roleIds[i] = _rolesJson[i].GetSnowflake();
+
+                RoleIds = roleIds;
+            }
+            else
+            {
+                RoleIds = Array.Empty<Snowflake>();
+            }
         }
 
         public override string ToString()

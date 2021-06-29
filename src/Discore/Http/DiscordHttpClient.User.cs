@@ -1,5 +1,6 @@
-﻿using Discore.Http.Internal;
+using Discore.Http.Internal;
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -12,8 +13,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetCurrentUser()
         {
-            DiscordApiData data = await rest.Get("users/@me", "users/@me").ConfigureAwait(false);
-            return new DiscordUser(false, data);
+            using JsonDocument? data = await rest.Get("users/@me", "users/@me").ConfigureAwait(false);
+            return new DiscordUser(data!.RootElement, isWebhookUser: false);
         }
 
         /// <summary>
@@ -22,8 +23,8 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetUser(Snowflake id)
         {
-            DiscordApiData data = await rest.Get($"users/{id}", "users/user").ConfigureAwait(false);
-            return new DiscordUser(false, data);
+            using JsonDocument? data = await rest.Get($"users/{id}", "users/user").ConfigureAwait(false);
+            return new DiscordUser(data!.RootElement, isWebhookUser: false);
         }
 
         /// <summary>
@@ -31,16 +32,22 @@ namespace Discore.Http
         /// Parameters left null will leave the properties unchanged.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordUser> ModifyCurrentUser(string username = null, DiscordImageData avatar = null)
+        public async Task<DiscordUser> ModifyCurrentUser(string? username = null, DiscordImageData? avatar = null)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            if (username != null)
-                requestData.Set("username", username);
-            if (avatar != null)
-                requestData.Set("avatar", avatar.ToDataUriScheme());
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
 
-            DiscordApiData returnData = await rest.Patch("users/@me", requestData, "users/@me").ConfigureAwait(false);
-            return returnData.IsNull ? null : new DiscordUser(false, returnData);
+                if (username != null)
+                    writer.WriteString("username", username);
+                if (avatar != null)
+                    writer.WriteString("avatar", avatar.ToDataUriScheme());
+
+                writer.WriteEndObject();
+            });
+
+            using JsonDocument? returnData = await rest.Patch("users/@me", jsonContent: requestData, "users/@me").ConfigureAwait(false);
+            return new DiscordUser(returnData!.RootElement, isWebhookUser: false);
         }
 
         /// <summary>
@@ -50,7 +57,7 @@ namespace Discore.Http
         public async Task<DiscordUserGuild[]> GetCurrentUserGuilds(int? limit = null,
             Snowflake? baseGuildId = null, GuildGetStrategy getStrategy = GuildGetStrategy.After)
         {
-            UrlParametersBuilder paramBuilder = new UrlParametersBuilder();
+            var paramBuilder = new UrlParametersBuilder();
 
             if (baseGuildId.HasValue)
                 paramBuilder.Add(getStrategy.ToString().ToLower(), baseGuildId.ToString());
@@ -58,12 +65,15 @@ namespace Discore.Http
             if (limit.HasValue)
                 paramBuilder.Add("limit", limit.Value.ToString());
 
-            DiscordApiData data = await rest.Get($"users/@me/guilds{paramBuilder.ToQueryString()}", 
+            using JsonDocument? data = await rest.Get($"users/@me/guilds{paramBuilder.ToQueryString()}", 
                 "users/@me/guilds").ConfigureAwait(false);
-            DiscordUserGuild[] guilds = new DiscordUserGuild[data.Values.Count];
+
+            JsonElement values = data!.RootElement;
+
+            var guilds = new DiscordUserGuild[values.GetArrayLength()];
 
             for (int i = 0; i < guilds.Length; i++)
-                guilds[i] = new DiscordUserGuild(data.Values[i]);
+                guilds[i] = new DiscordUserGuild(values[i]);
 
             return guilds;
         }
@@ -78,17 +88,32 @@ namespace Discore.Http
         }
 
         /// <summary>
+        /// Removes the current bot from the specified guild.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task LeaveGuild(DiscordGuild guild)
+        {
+            if (guild == null) throw new ArgumentNullException(nameof(guild));
+
+            return LeaveGuild(guild.Id);
+        }
+
+        /// <summary>
         /// Gets a list of currently opened DM channels for the current bot.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         [Obsolete("Bots are no longer able to get a list of open DM channels per a Discord API update. This method will be removed in a future release.")]
         public async Task<DiscordDMChannel[]> GetUserDMs()
         {
-            DiscordApiData data = await rest.Get("users/@me/channels", "users/@me/channels").ConfigureAwait(false);
-            DiscordDMChannel[] dms = new DiscordDMChannel[data.Values.Count];
+            using JsonDocument? data = await rest.Get("users/@me/channels", "users/@me/channels").ConfigureAwait(false);
+
+            JsonElement values = data!.RootElement;
+            
+            var dms = new DiscordDMChannel[values.GetArrayLength()];
 
             for (int i = 0; i < dms.Length; i++)
-                dms[i] = new DiscordDMChannel(this, data.Values[i]);
+                dms[i] = new DiscordDMChannel(values[i]);
 
             return dms;
         }
@@ -99,12 +124,29 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordDMChannel> CreateDM(Snowflake recipientId)
         {
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.SetSnowflake("recipient_id", recipientId);
+            string requestData = BuildJsonContent(writer =>
+            {
+                writer.WriteStartObject();
+                writer.WriteSnowflake("recipient_id", recipientId);
+                writer.WriteEndObject();
+            });
 
-            DiscordApiData returnData = await rest.Post("users/@me/channels", requestData,
+            using JsonDocument? returnData = await rest.Post("users/@me/channels", jsonContent: requestData,
                 "users/@me/channels").ConfigureAwait(false);
-            return new DiscordDMChannel(this, returnData);
+
+            return new DiscordDMChannel(returnData!.RootElement);
+        }
+
+        /// <summary>
+        /// Opens a DM channel with the specified user.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="DiscordHttpApiException"></exception>
+        public Task<DiscordDMChannel> CreateDM(DiscordUser recipient)
+        {
+            if (recipient == null) throw new ArgumentNullException(nameof(recipient));
+
+            return CreateDM(recipient.Id);
         }
     }
 }

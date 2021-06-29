@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Discore.WebSocket.Internal
 {
@@ -6,9 +6,9 @@ namespace Discore.WebSocket.Internal
     {
         public string Message { get; }
         public ShardFailureReason Reason { get; }
-        public Exception Exception { get; }
+        public Exception? Exception { get; }
 
-        public GatewayFailureData(string message, ShardFailureReason reason, Exception ex)
+        public GatewayFailureData(string message, ShardFailureReason reason, Exception? ex)
         {
             Message = message;
             Reason = reason;

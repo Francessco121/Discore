@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.Json;
 
 namespace Discore.Http
 {
@@ -17,24 +18,24 @@ namespace Discore.Http
             /// Gets or sets the URL of the icon to display in the footer (or null to omit).
             /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
             /// </summary>
-            public string IconUrl { get; set; }
+            public string? IconUrl { get; set; }
 
-            public EmbedFooter(string text, string iconUrl = null)
+            public EmbedFooter(string text, string? iconUrl = null)
             {
                 Text = text;
                 IconUrl = iconUrl;
             }
 
-            internal DiscordApiData Build()
+            internal void Build(Utf8JsonWriter writer)
             {
-                DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+                writer.WriteStartObject();
 
                 if (Text != null)
-                    data.Set("text", Text);
+                    writer.WriteString("text", Text);
                 if (IconUrl != null)
-                    data.Set("icon_url", IconUrl);
+                    writer.WriteString("icon_url", IconUrl);
 
-                return data;
+                writer.WriteEndObject();
             }
         }
 
@@ -43,38 +44,38 @@ namespace Discore.Http
             /// <summary>
             /// Gets or sets the author's name.
             /// </summary>
-            public string Name { get; set; }
+            public string? Name { get; set; }
 
             /// <summary>
             /// Gets or sets the URL to the author (or null to omit).
             /// </summary>
-            public string Url { get; set; }
+            public string? Url { get; set; }
 
             /// <summary>
             /// Gets or sets the URL to the icon of the author (or null to omit).
             /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
             /// </summary>
-            public string IconUrl { get; set; }
+            public string? IconUrl { get; set; }
 
-            public EmbedAuthor(string name, string url = null, string iconUrl = null)
+            public EmbedAuthor(string? name, string? url = null, string? iconUrl = null)
             {
                 Name = name;
                 Url = url;
                 IconUrl = iconUrl;
             }
 
-            internal DiscordApiData Build()
+            internal void Build(Utf8JsonWriter writer)
             {
-                DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+                writer.WriteStartObject();
 
                 if (Name != null)
-                    data.Set("name", Name);
+                    writer.WriteString("name", Name);
                 if (Url != null)
-                    data.Set("url", Url);
+                    writer.WriteString("url", Url);
                 if (IconUrl != null)
-                    data.Set("icon_url", IconUrl);
+                    writer.WriteString("icon_url", IconUrl);
 
-                return data;
+                writer.WriteEndObject();
             }
         }
 
@@ -102,35 +103,35 @@ namespace Discore.Http
                 IsInline = isInline;
             }
 
-            internal DiscordApiData Build()
+            internal void Build(Utf8JsonWriter writer)
             {
-                DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+                writer.WriteStartObject();
 
                 if (Name != null)
-                    data.Set("name", Name);
+                    writer.WriteString("name", Name);
                 if (Value != null)
-                    data.Set("value", Value);
+                    writer.WriteString("value", Value);
                 
-                data.Set("inline", IsInline);
+                writer.WriteBoolean("inline", IsInline);
 
-                return data;
+                writer.WriteEndObject();
             }
         }
 
         /// <summary>
         /// Gets or sets the title of the embed (or null to omit).
         /// </summary>
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         /// <summary>
         /// Gets or sets the description of the embed (or null to omit).
         /// </summary>
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         /// <summary>
         /// Gets or sets the URL that the embed links to (or null to omit).
         /// </summary>
-        public string Url { get; set; }
+        public string? Url { get; set; }
 
         /// <summary>
         /// Gets or sets the timestamp on the embed (or null to omit).
@@ -145,28 +146,28 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the footer of the embed (or null to omit).
         /// </summary>
-        public EmbedFooter Footer { get; set; }
+        public EmbedFooter? Footer { get; set; }
 
         /// <summary>
         /// Gets or sets the URL of the image to include in the embed (or null to omit).
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </summary>
-        public string ImageUrl { get; set; }
+        public string? ImageUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the author of the embed (or null to omit).
         /// </summary>
-        public EmbedAuthor Author { get; set; }
+        public EmbedAuthor? Author { get; set; }
 
         /// <summary>
         /// Gets or sets the URL of the thumbnail for the embed (or null to omit).
         /// </summary>
-        public string ThumbnailUrl { get; set; }
+        public string? ThumbnailUrl { get; set; }
 
         /// <summary>
         /// Gets or sets the fields to include in the embed (or null to omit).
         /// </summary>
-        public IList<EmbedField> Fields { get; set; }
+        public IList<EmbedField>? Fields { get; set; }
 
         /// <summary>
         /// Sets the title of the embed.
@@ -220,7 +221,7 @@ namespace Discore.Http
         /// The URL of the icon to display in the footer.
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </param>
-        public EmbedOptions SetFooter(string text, string iconUrl = null)
+        public EmbedOptions SetFooter(string text, string? iconUrl = null)
         {
             Footer = new EmbedFooter(text, iconUrl);
             return this;
@@ -243,7 +244,7 @@ namespace Discore.Http
         /// The URL of the author's icon.
         /// <para>To use attachments uploaded alongside the embed, use the format: attachment://FILENAME_WITH_EXT</para>
         /// </param>
-        public EmbedOptions SetAuthor(string name, string url = null, string iconUrl = null)
+        public EmbedOptions SetAuthor(string? name, string? url = null, string? iconUrl = null)
         {
             Author = new EmbedAuthor(name, url, iconUrl);
             return this;
@@ -272,53 +273,58 @@ namespace Discore.Http
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            writer.WriteStartObject();
 
             if (Title != null)
-                data.Set("title", Title);
+                writer.WriteString("title", Title);
             if (Description != null)
-                data.Set("description", Description);
+                writer.WriteString("description", Description);
             if (Url != null)
-                data.Set("url", Url);
+                writer.WriteString("url", Url);
             if (Timestamp.HasValue)
-                data.Set("timestamp", Timestamp.Value.ToUniversalTime().ToString("s", CultureInfo.InvariantCulture));
+                writer.WriteString("timestamp", Timestamp.Value.ToUniversalTime().ToString("s", CultureInfo.InvariantCulture));
             if (Color.HasValue)
-                data.Set("color", Color.Value.ToHexadecimal());
+                writer.WriteNumber("color", Color.Value.ToHexadecimal());
 
             if (Footer != null)
-                data.Set("footer", Footer.Build());
+            {
+                writer.WritePropertyName("footer");
+                Footer.Build(writer);
+            }
 
             if (ImageUrl != null)
             {
-                DiscordApiData imageData = new DiscordApiData(DiscordApiDataType.Container);
-                imageData.Set("url", ImageUrl);
-
-                data.Set("image", imageData);
+                writer.WriteStartObject("image");
+                writer.WriteString("url", ImageUrl);
+                writer.WriteEndObject();
             }
 
             if (Author != null)
-                data.Set("author", Author.Build());
+            {
+                writer.WritePropertyName("author");
+                Author.Build(writer);
+            }
 
             if (ThumbnailUrl != null)
             {
-                DiscordApiData thumbnailData = new DiscordApiData(DiscordApiDataType.Container);
-                thumbnailData.Set("url", ThumbnailUrl);
-
-                data.Set("thumbnail", thumbnailData);
+                writer.WriteStartObject("thumbnail");
+                writer.WriteString("url", ThumbnailUrl);
+                writer.WriteEndObject();
             }
 
             if (Fields != null)
             {
-                DiscordApiData fieldArray = new DiscordApiData(DiscordApiDataType.Array);
-                foreach (EmbedField field in Fields)
-                    fieldArray.Values.Add(field.Build());
+                writer.WriteStartArray("fields");
 
-                data.Set("fields", fieldArray);
+                foreach (EmbedField field in Fields)
+                    field.Build(writer);
+
+                writer.WriteEndArray();
             }
 
-            return data;
+            writer.WriteEndObject();
         }
     }
 }

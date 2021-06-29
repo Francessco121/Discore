@@ -1,12 +1,10 @@
-﻿using Discore.Http;
-using Discore.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildMember : DiscordIdEntity
+    public class DiscordGuildMember : DiscordIdEntity
     {
         /// <summary>
         /// Gets the ID of the guild this member is in.
@@ -21,7 +19,7 @@ namespace Discore
         /// <summary>
         /// Gets the guild-wide nickname of the user.
         /// </summary>
-        public string Nickname { get; }
+        public string? Nickname { get; }
 
         /// <summary>
         /// Gets the IDs of all of the roles this member has.
@@ -43,107 +41,54 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        readonly DiscordHttpClient http;
+        // TODO: add premium_since, pending, permissions
 
-        internal DiscordGuildMember(DiscordHttpClient http, MutableGuildMember member)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="user"/> or <paramref name="roleIds"/> is null.
+        /// </exception>
+        public DiscordGuildMember(
+            Snowflake id,
+            Snowflake guildId, 
+            DiscordUser user, 
+            string? nickname, 
+            IReadOnlyList<Snowflake> roleIds, 
+            DateTime joinedAt, 
+            bool isDeaf, 
+            bool isMute)
+            : base(id)
         {
-            this.http = http;
-
-            GuildId = member.GuildId;
-
-            User = member.User.ImmutableEntity;
-
-            Nickname = member.Nickname;
-            JoinedAt = member.JoinedAt;
-            IsDeaf = member.IsDeaf;
-            IsMute = member.IsMute;
-
-            RoleIds = new List<Snowflake>(member.RoleIds);
-
-            Id = member.User.Id;
-        }
-
-        internal DiscordGuildMember(DiscordHttpClient http, DiscordApiData data, Snowflake guildId)
-            // We do not specify the base constructor here because the member ID must be
-            // manually retrieved, as it is actually the user ID rather than a unique one.
-        {
-            this.http = http;
-
             GuildId = guildId;
-
-            Nickname = data.GetString("nick");
-            JoinedAt = data.GetDateTime("joined_at").Value;
-            IsDeaf = data.GetBoolean("deaf") ?? false;
-            IsMute = data.GetBoolean("mute") ?? false;
-
-            IList<DiscordApiData> rolesArray = data.GetArray("roles");
-            Snowflake[] roleIds = new Snowflake[rolesArray.Count];
-
-            for (int i = 0; i < rolesArray.Count; i++)
-                roleIds[i] = rolesArray[i].ToSnowflake().Value;
-
-            RoleIds = roleIds;
-
-            DiscordApiData userData = data.Get("user");
-            User = new DiscordUser(false, userData);
-
-            Id = User.Id;
+            User = user ?? throw new ArgumentNullException(nameof(user));
+            Nickname = nickname;
+            RoleIds = roleIds ?? throw new ArgumentNullException(nameof(roleIds));
+            JoinedAt = joinedAt;
+            IsDeaf = isDeaf;
+            IsMute = isMute;
         }
 
-        /// <summary>
-        /// Modifies the attributes of this member.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Modify(ModifyGuildMemberOptions options)
+        internal DiscordGuildMember(JsonElement json, Snowflake guildId)
+            : base(id: json.GetProperty("user").GetProperty("id").GetSnowflake())
         {
-            return http.ModifyGuildMember(GuildId, Id, options);
-        }
+            GuildId = guildId;
+            Nickname = json.GetPropertyOrNull("nick")?.GetString();
+            JoinedAt = json.GetProperty("joined_at").GetDateTime();
+            IsDeaf = json.GetProperty("deaf").GetBoolean();
+            IsMute = json.GetProperty("mute").GetBoolean();
 
-        /// <summary>
-        /// Removes this user from the guild they are a member of.
-        /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Kick()
-        {
-            return http.RemoveGuildMember(GuildId, Id);
-        }
+            JsonElement rolesJson = json.GetProperty("roles");
+            var roles = new Snowflake[rolesJson.GetArrayLength()];
 
-        /// <summary>
-        /// Bans this user from the guild they are a member of.
-        /// <para>Requires <see cref="DiscordPermission.BanMembers"/>.</para>
-        /// </summary>
-        /// <param name="deleteMessageDays">Number of days to delete messages for (0-7) or null to delete none.</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task Ban(int? deleteMessageDays = null)
-        {
-            return http.CreateGuildBan(GuildId, Id, deleteMessageDays);
-        }
+            for (int i = 0; i < roles.Length; i++)
+                roles[i] = rolesJson[i].GetSnowflake();
 
-        /// <summary>
-        /// Adds a role to this member.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task AddRole(Snowflake roleId)
-        {
-            return http.AddGuildMemberRole(GuildId, Id, roleId);
-        }
+            RoleIds = roles;
 
-        /// <summary>
-        /// Removes a role from this member.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task RemoveRole(Snowflake roleId)
-        {
-            return http.RemoveGuildMemberRole(GuildId, Id, roleId);
+            User = new DiscordUser(json.GetProperty("user"), isWebhookUser: false);
         }
 
         public override string ToString()
         {
-            return Nickname != null ? $"{User.Username} aka. {Nickname}" : User.Username;
+            return Nickname != null ? $"{User} aka. {Nickname}" : User.ToString();
         }
     }
 }

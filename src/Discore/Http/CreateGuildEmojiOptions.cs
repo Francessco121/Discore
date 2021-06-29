@@ -1,16 +1,18 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     public class CreateGuildEmojiOptions
     {
         /// <summary>
         /// Gets or sets the name of the emoji.
         /// </summary>
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Gets or sets the emoji's image.
         /// </summary>
-        public DiscordImageData Image { get; set; }
+        public DiscordImageData? Image { get; set; }
 
         /// <summary>
         /// Sets the name of the emoji.
@@ -30,13 +32,14 @@
             return this;
         }
 
-        internal DiscordApiData Build()
+        internal void Build(Utf8JsonWriter writer)
         {
-            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
-            data.Set("name", Name);
-            data.Set("image", Image.ToDataUriScheme());
+            writer.WriteStartObject();
 
-            return data;
+            writer.WriteString("name", Name);
+            writer.WriteString("image", Image?.ToDataUriScheme());
+
+            writer.WriteEndObject();
         }
     }
 }

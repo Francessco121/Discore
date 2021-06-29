@@ -1,31 +1,30 @@
-﻿using Discore.Http;
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildCategoryChannel : DiscordGuildChannel
+    public class DiscordGuildCategoryChannel : DiscordGuildChannel
     {
-        readonly DiscordHttpClient http;
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
+        public DiscordGuildCategoryChannel(
+            Snowflake id, 
+            string name, 
+            int position, 
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites, 
+            Snowflake guildId) 
+            : base(id, 
+                  DiscordChannelType.GuildCategory, 
+                  name, 
+                  position, 
+                  permissionOverwrites, 
+                  guildId)
+        { }
 
-        internal DiscordGuildCategoryChannel(DiscordHttpClient http, DiscordApiData data, 
-            Snowflake? guildId = null)
-            : base(http, data, DiscordChannelType.GuildCategory, guildId)
-        {
-            this.http = http;
-        }
-
-        /// <summary>
-        /// Modifies this category channel's settings.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
-        /// </summary>
-        /// <param name="options">A set of options to modify the channel with</param>
-        /// <returns>Returns the updated category channel.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildCategoryChannel> Modify(GuildCategoryChannelOptions options)
-        {
-            return http.ModifyCategoryChannel(Id, options);
-        }
+        internal DiscordGuildCategoryChannel(JsonElement json, Snowflake? guildId = null)
+            : base(json, DiscordChannelType.GuildCategory, guildId)
+        { }
     }
 }

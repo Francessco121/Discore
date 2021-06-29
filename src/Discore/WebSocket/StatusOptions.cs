@@ -1,4 +1,4 @@
-﻿namespace Discore.WebSocket
+namespace Discore.WebSocket
 {
     public class StatusOptions
     {
@@ -22,7 +22,7 @@
         /// The "game" the bot is currently playing, or null if the bot
         /// is not "playing" anything. Defaults to null.
         /// </summary>
-        public GameOptions Game { get; set; }
+        public GameOptions? Game { get; set; }
 
         public StatusOptions() { }
 
@@ -62,25 +62,6 @@
         {
             Game = game;
             return this;
-        }
-
-        internal string GetStatusString()
-        {
-            switch (Status)
-            {
-                case DiscordUserStatus.Online:
-                    return "online";
-                case DiscordUserStatus.DoNotDisturb:
-                    return "dnd";
-                case DiscordUserStatus.Idle:
-                    return "idle";
-                case DiscordUserStatus.Invisible:
-                    return "invisible";
-                case DiscordUserStatus.Offline:
-                    return "offline";
-                default:
-                    return null;
-            }
         }
     }
 }

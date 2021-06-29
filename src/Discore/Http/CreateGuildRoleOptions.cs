@@ -1,4 +1,6 @@
-﻿namespace Discore.Http
+using System.Text.Json;
+
+namespace Discore.Http
 {
     /// <summary>
     /// A set of parameters for creating roles when creating a new guild.
@@ -65,12 +67,11 @@
             return this;
         }
 
-        internal override DiscordApiData Build()
+        protected override void BuildAdditionalProperties(Utf8JsonWriter writer)
         {
-            DiscordApiData data = base.Build();
-            data.SetSnowflake("id", TemporaryId);
+            writer.WriteSnowflake("id", TemporaryId);
 
-            return data;
+            base.BuildAdditionalProperties(writer);
         }
     }
 }

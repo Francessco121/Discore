@@ -1,11 +1,10 @@
-﻿using Discore.Http;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace Discore
 {
-    public abstract class DiscordGuildChannel : DiscordChannel
+    public class DiscordGuildChannel : DiscordChannel
     {
         /// <summary>
         /// Gets the name of this channel.
@@ -27,154 +26,50 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        DiscordHttpClient http;
-
-        internal DiscordGuildChannel(DiscordHttpClient http, DiscordApiData data, DiscordChannelType type, 
-            Snowflake? guildId) 
-            : base(http, data, type)
+        /// <exception cref="ArgumentNullException">
+        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
+        /// </exception>
+        public DiscordGuildChannel(
+            Snowflake id,
+            DiscordChannelType type,
+            string name,
+            int position,
+            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
+            Snowflake guildId)
+            : base(id, type)
         {
-            this.http = http;
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Position = position;
+            PermissionOverwrites = permissionOverwrites ?? throw new ArgumentNullException(nameof(permissionOverwrites));
+            GuildId = guildId;
+        }
 
-            GuildId = guildId ?? data.GetSnowflake("guild_id").Value;
-            Name = data.GetString("name");
-            Position = data.GetInteger("position").Value;
+        internal DiscordGuildChannel(JsonElement json, DiscordChannelType type, Snowflake? guildId)
+            : base(json, type)
+        {
+            GuildId = guildId ?? json.GetProperty("guild_id").GetSnowflake();
+            Name = json.GetProperty("name").GetString()!;
+            Position = json.GetProperty("position").GetInt32();
 
-            IList<DiscordApiData> overwrites = data.GetArray("permission_overwrites");
-            Dictionary<Snowflake, DiscordOverwrite> permissionOverwrites = new Dictionary<Snowflake, DiscordOverwrite>();
-
-            for (int i = 0; i < overwrites.Count; i++)
+            JsonElement? overwritesJson = json.GetPropertyOrNull("permission_overwrites");
+            if (overwritesJson != null)
             {
-                DiscordOverwrite overwrite = new DiscordOverwrite(http, Id, overwrites[i]);
-                permissionOverwrites.Add(overwrite.Id, overwrite);
+                JsonElement _overwritesJson = overwritesJson.Value;
+                var overwrites = new Dictionary<Snowflake, DiscordOverwrite>();
+
+                int numOverwrites = _overwritesJson.GetArrayLength();
+                for (int i = 0; i < numOverwrites; i++)
+                {
+                    var overwrite = new DiscordOverwrite(_overwritesJson[i], channelId: Id);
+                    overwrites[overwrite.Id] = overwrite;
+                }
+
+                PermissionOverwrites = overwrites;
             }
-
-            PermissionOverwrites = permissionOverwrites;
-        }
-
-        /// <summary>
-        /// Gets a list of all invites for this channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageChannels"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<IReadOnlyList<DiscordInviteMetadata>> GetInvites()
-        {
-            return http.GetChannelInvites(Id);
-        }
-
-        /// <summary>
-        /// Creates an invite to this guild, through this channel.
-        /// <para>Requires <see cref="DiscordPermission.CreateInstantInvite"/>.</para>
-        /// </summary>
-        /// <param name="maxAge">Duration of invite before expiry, or 0 or null for never.</param>
-        /// <param name="maxUses">Max number of uses or 0 or null for unlimited.</param>
-        /// <param name="temporary">Whether this invite only grants temporary membership.</param>
-        /// <param name="unique">If true, don't try to reuse a similar invite (useful for creating many unique one time use invites).</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordInvite> CreateInvite(TimeSpan? maxAge = null, int? maxUses = null, 
-            bool? temporary = null, bool? unique = null)
-        {
-            return http.CreateChannelInvite(Id, maxAge, maxUses, temporary, unique);
-        }
-
-        /// <summary>
-        /// Adds/edits a guild member permission overwrite for this channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <param name="member">The member this overwrite will change permissions for.</param>
-        /// <param name="allow">Specifically allowed permissions.</param>
-        /// <param name="deny">Specifically denied permissions.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task EditPermissions(DiscordGuildMember member, DiscordPermission allow, DiscordPermission deny)
-        {
-            if (member == null)
-                throw new ArgumentNullException(nameof(member));
-
-            return EditPermissions(member.Id, DiscordOverwriteType.Member, allow, deny);
-        }
-
-        /// <summary>
-        /// Adds/edits a role permission overwrite for this channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <param name="role">The role this overwrite will change permissions for.</param>
-        /// <param name="allow">Specifically allowed permissions.</param>
-        /// <param name="deny">Specifically denied permissions.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task EditPermissions(DiscordRole role, DiscordPermission allow, DiscordPermission deny)
-        {
-            if (role == null)
-                throw new ArgumentNullException(nameof(role));
-
-            return EditPermissions(role.Id, DiscordOverwriteType.Role, allow, deny);
-        }
-
-        /// <summary>
-        /// Adds/edits a guild member or role permission overwrite for this channel.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <param name="memberOrRoleId">The ID of the member or role this overwrite will change permissions for.</param>
-        /// <param name="overwriteType">Whether the permissions should affect a member or role.</param>
-        /// <param name="allow">Specifically allowed permissions.</param>
-        /// <param name="deny">Specifically denied permissions.</param>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task EditPermissions(Snowflake memberOrRoleId, DiscordOverwriteType overwriteType, 
-            DiscordPermission allow, DiscordPermission deny)
-        {
-            return http.EditChannelPermissions(Id, memberOrRoleId, allow, deny, overwriteType);
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite for a guild member.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeletePermission(DiscordGuildMember member)
-        {
-            if (member == null)
-                throw new ArgumentNullException(nameof(member));
-
-            return DeletePermission(member.Id);
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite for a role.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeletePermission(DiscordRole role)
-        {
-            if (role == null)
-                throw new ArgumentNullException(nameof(role));
-
-            return DeletePermission(role.Id);
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException"></exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeletePermission(DiscordOverwrite overwrite)
-        {
-            if (overwrite == null)
-                throw new ArgumentNullException(nameof(overwrite));
-
-            return DeletePermission(overwrite.Id);
-        }
-
-        /// <summary>
-        /// Deletes a permission overwrite.
-        /// <para>Requires <see cref="DiscordPermission.ManageRoles"/>.</para>
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task DeletePermission(Snowflake memberOrRoleId)
-        {
-            return http.DeleteChannelPermission(Id, memberOrRoleId);
+            else
+            {
+                PermissionOverwrites = new Dictionary<Snowflake, DiscordOverwrite>();
+            }
         }
 
         public override string ToString()

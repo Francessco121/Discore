@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 
 namespace Discore
@@ -23,7 +23,7 @@ namespace Discore
         /// <summary>
         /// The channel (if applicable) the permissions were checked against.
         /// </summary>
-        public DiscordGuildChannel Channel { get; }
+        public DiscordGuildChannel? Channel { get; }
 
         /// <summary>
         /// Creates a new <see cref="DiscordPermissionException"/> instance.

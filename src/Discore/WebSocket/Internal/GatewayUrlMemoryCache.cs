@@ -1,11 +1,11 @@
-﻿namespace Discore.WebSocket.Internal
+namespace Discore.WebSocket.Internal
 {
     /// <summary>
     /// A shared memory cache for the Gateway URL to be shared across all Gateway connections in the process.
     /// </summary>
     static class GatewayUrlMemoryCache
     {
-        public static string GatewayUrl { get; private set; }
+        public static string? GatewayUrl { get; private set; }
 
         static readonly object lockObj = new object();
 

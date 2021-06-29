@@ -1,11 +1,13 @@
-﻿namespace Discore.WebSocket.Internal
+using System.Text.Json;
+
+namespace Discore.WebSocket.Internal
 {
     class DispatchEventArgs
     {
         public string EventName { get; }
-        public DiscordApiData Data { get; }
+        public JsonElement Data { get; }
 
-        public DispatchEventArgs(string eventName, DiscordApiData data)
+        public DispatchEventArgs(string eventName, JsonElement data)
         {
             EventName = eventName;
             Data = data;

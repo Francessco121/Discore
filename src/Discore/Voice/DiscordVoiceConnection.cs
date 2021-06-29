@@ -1,4 +1,4 @@
-﻿using Discore.WebSocket;
+using Discore.WebSocket;
 using Discore.WebSocket.Internal;
 using System;
 using System.Collections.Generic;
@@ -18,15 +18,15 @@ namespace Discore.Voice
         /// <summary>
         /// Called when the voice connection first connects or reconnects.
         /// </summary>
-        public event EventHandler<VoiceConnectionEventArgs> OnConnected;
+        public event EventHandler<VoiceConnectionEventArgs>? OnConnected;
         /// <summary>
         /// Called when this voice connection is no longer useable. (eg. disconnected, error, failure to connect).
         /// </summary>
-        public event EventHandler<VoiceConnectionInvalidatedEventArgs> OnInvalidated;
+        public event EventHandler<VoiceConnectionInvalidatedEventArgs>? OnInvalidated;
         /// <summary>
         /// Called when another user in the voice channel this connection is connected to changes their speaking state.
         /// </summary>
-        public event EventHandler<MemberSpeakingEventArgs> OnMemberSpeaking;
+        public event EventHandler<MemberSpeakingEventArgs>? OnMemberSpeaking;
 
         /// <summary>
         /// Gets the shard this connection is managed by.
@@ -64,7 +64,7 @@ namespace Discore.Voice
         /// </summary>
         public bool IsValid => isValid;
         /// <summary>
-        /// Gets or sets the speaking state of this connection.
+        /// Gets the speaking state of this connection.
         /// </summary>
         public bool IsSpeaking => isSpeaking;
         /// <summary>
@@ -75,7 +75,7 @@ namespace Discore.Voice
         {
             get
             {
-                if (!isConnected)
+                if (!isConnected || udpSocket == null)
                     throw new InvalidOperationException("Cannot retrieve bytes to send while not fully connected.");
 
                 return udpSocket.BytesToSend;
@@ -89,14 +89,14 @@ namespace Discore.Voice
         {
             get
             {
-                if (!isConnected)
+                if (!isConnected || udpSocket == null)
                     throw new InvalidOperationException("Cannot retrieve paused state while not fully connected.");
 
                 return udpSocket.IsPaused;
             }
             set
             {
-                if (!isConnected)
+                if (!isConnected || udpSocket == null)
                     throw new InvalidOperationException("Cannot set paused state while not fully connected.");
 
                 udpSocket.IsPaused = value;
@@ -106,18 +106,17 @@ namespace Discore.Voice
         readonly Shard shard;
         readonly Snowflake guildId;
 
-        readonly DiscordShardCache cache;
         readonly Gateway gateway;
 
-        DiscordVoiceState voiceState;
-        DiscoreLogger log;
+        DiscordVoiceState? voiceState;
+        readonly DiscoreLogger log;
 
         bool isDisposed;
         bool isValid;
         bool isConnected;
         bool isConnecting;
 
-        CancellationTokenSource connectingCancellationSource;
+        CancellationTokenSource? connectingCancellationSource;
 
         bool isSpeaking;
 
@@ -126,8 +125,9 @@ namespace Discore.Voice
             this.shard = shard;
             this.guildId = guildId;
 
-            cache = shard.Cache;
             gateway = (Gateway)shard.Gateway;
+
+            log = new DiscoreLogger($"VoiceConnection:{guildId}");
 
             isValid = true;
         }
@@ -141,13 +141,8 @@ namespace Discore.Voice
         /// </summary>
         /// <param name="startMute">Whether the current bot should connect self-muted.</param>
         /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
-        /// <exception cref="DiscordPermissionException">
-        /// Thrown if the current bot does not have permission to connect to the voice channel.
-        /// </exception>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if connect is called more than once, 
-        /// if the voice channel is full and the current bot is not an admin, 
-        /// or if the shard behind this connection isn't running.
+        /// Thrown if connect is called more than once or if the shard behind this connection isn't running.
         /// </exception>
         /// <exception cref="OperationCanceledException">
         /// Thrown if the give cancellation token is cancelled or the Gateway connection is closed while initiating the voice connection.
@@ -164,14 +159,8 @@ namespace Discore.Voice
                     if (!Shard.IsRunning)
                         throw new InvalidOperationException("Voice connection cannot be started while the parent shard is not running!");
 
-                    // Ensure the API user has permission to connect (this is to avoid the 10s timeout (if possible) otherwise).
-                    AssertUserCanJoin(guildId, voiceChannelId);
-
                     // Set state
-                    voiceState = new DiscordVoiceState(guildId, Shard.UserId.Value, voiceChannelId);
-
-                    // Create the logger
-                    log = new DiscoreLogger($"VoiceConnection:{guildId}");
+                    voiceState = new DiscordVoiceState(guildId, Shard.UserId!.Value, voiceChannelId);
 
                     // Initiate the connection
                     isConnecting = true;
@@ -180,19 +169,19 @@ namespace Discore.Voice
                     await gateway.SendVoiceStateUpdatePayload(guildId, voiceChannelId, 
                         startMute, startDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
 
-                    await ConnectionTimeout().ConfigureAwait(false);
+                    await ConnectionTimeout(connectingCancellationSource.Token).ConfigureAwait(false);
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
             }
         }
 
-        async Task ConnectionTimeout()
+        async Task ConnectionTimeout(CancellationToken cancellationToken)
         {
             try
             {
                 // Wait 10s
-                await Task.Delay(10000, connectingCancellationSource.Token).ConfigureAwait(false);
+                await Task.Delay(10000, cancellationToken).ConfigureAwait(false);
 
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
@@ -204,43 +193,6 @@ namespace Discore.Voice
             catch (OperationCanceledException)
             {
                 // connectingCancellationSource was cancelled because we connected successfully.
-            }
-        }
-
-        /// <summary>
-        /// Using the cache, this will attempt to verify that the current bot can
-        /// join the selected voice channel. If the cache does not have the required details,
-        /// this will NOT throw an exception (the handshake timeout will handle invalid permission anyway).
-        /// </summary>
-        /// <exception cref="DiscordPermissionException"></exception>
-        /// <exception cref="InvalidOperationException"></exception>
-        void AssertUserCanJoin(Snowflake guildId, Snowflake voiceChannelId)
-        {
-            DiscordGuildMember member = cache.GetGuildMember(guildId, Shard.UserId.Value);
-            DiscordGuild guild = cache.GetGuild(guildId);
-            DiscordGuildVoiceChannel voiceChannel = cache.GetGuildVoiceChannel(voiceChannelId);
-
-            if (member != null && guild != null && voiceChannel != null)
-            {
-                // Check if the user has permission to connect.
-                DiscordPermissionHelper.AssertPermission(DiscordPermission.Connect, member, guild, voiceChannel);
-
-                // Check if the voice channel has room
-                bool channelHasRoom = false;
-                if (voiceChannel.UserLimit == 0)
-                    channelHasRoom = true;
-                else if (DiscordPermissionHelper.HasPermission(DiscordPermission.Administrator, member, guild, voiceChannel))
-                    channelHasRoom = true;
-                else
-                {
-                    IReadOnlyList<Snowflake> usersInChannel = Shard.Voice.GetUsersInVoiceChannel(voiceChannelId);
-                    if (usersInChannel.Count < voiceChannel.UserLimit)
-                        channelHasRoom = true;
-                }
-                
-                if (!channelHasRoom)
-                    throw new InvalidOperationException("The voice channel is full, and the current bot " +
-                        "does not have the administrator permission.");
             }
         }
 
@@ -293,10 +245,17 @@ namespace Discore.Voice
         /// <para>
         /// This call will not block and users do not need to worry about calling this at a certain rate.
         /// </para>
+        /// <para>
+        /// Does nothing if this connection is invalid.
+        /// </para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="ArgumentOutOfRangeException">
         /// Thrown if the specified number of bytes will exceed the buffer size.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the voice connection is not fully connected yet. Checking <see cref="CanSendVoiceData(int)"/>
+        /// first will avoid this.
         /// </exception>
         public void SendVoiceData(byte[] buffer, int offset, int count)
         {
@@ -305,23 +264,30 @@ namespace Discore.Voice
 
             if (isValid)
             {
+                if (udpSocket == null || !isConnected || isConnecting)
+                    throw new InvalidOperationException("Cannot send voice data before being connected!");
+
                 udpSocket.SendData(buffer, offset, count);
             }
         }
 
         /// <summary>
         /// Sets the speaking state of this connection.
+        /// <para/>
+        /// Does nothing if this connection is invalid.
         /// </summary>
         /// <exception cref="DiscordWebSocketException">Thrown if the state fails to set because of a WebSocket error.</exception>
-        /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the voice connection is not fully connected yet.</exception>
         public Task SetSpeakingAsync(bool speaking)
         {
             if (isValid)
             {
+                if (webSocket == null || udpSocket == null || !isConnected || isConnecting)
+                    throw new InvalidOperationException("Cannot set speaking state before being connected!");
+
                 isSpeaking = speaking;
 
-                if (isConnected && !isConnecting)
-                    return webSocket.SendSpeakingPayload(speaking, udpSocket.Ssrc);
+                return webSocket!.SendSpeakingPayload(speaking, udpSocket!.Ssrc);
             }
 
             return Task.CompletedTask;
@@ -329,11 +295,17 @@ namespace Discore.Voice
 
         /// <summary>
         /// Clears all queued voice data.
+        /// <para/>
+        /// Does nothing if this connection is invalid.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if the voice connection is not fully connected yet.</exception>
         public void ClearVoiceBuffer()
         {
             if (isValid)
             {
+                if (udpSocket == null || !isConnected || isConnecting)
+                    throw new InvalidOperationException("Cannot clear voice data before being connected!");
+
                 udpSocket.ClearVoiceBuffer();
             }
         }
