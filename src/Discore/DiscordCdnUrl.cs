@@ -167,9 +167,9 @@ namespace Discore
 
         public bool Equals(DiscordCdnUrl? other)
         {
-            return other != null &&
+            return !(other is null) &&
                    Type == other.Type &&
-                   ResourceId == other.ResourceId &&
+                   ResourceId.Equals(other.ResourceId) &&
                    FileName == other.FileName &&
                    baseUrl == other.baseUrl;
         }
@@ -181,12 +181,10 @@ namespace Discore
 
         public static bool operator ==(DiscordCdnUrl? left, DiscordCdnUrl? right)
         {
-            if (left != null)
-                return left.Equals(right);
-            else if (right != null)
-                return right.Equals(left);
-            else
-                return true;
+            if (left is null != right is null) return true;
+            if (left is null) return false;
+
+            return left.Equals(right);
         }
 
         public static bool operator !=(DiscordCdnUrl? left, DiscordCdnUrl? right)
