@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordUser : DiscordIdEntity
+    public class DiscordUser : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this user.

@@ -5,7 +5,7 @@ namespace Discore
     /// <summary>
     /// A thumbnail of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public sealed class DiscordEmbedThumbnail
+    public class DiscordEmbedThumbnail
     {
         /// <summary>
         /// Gets the url of the thumbnail.

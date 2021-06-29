@@ -5,7 +5,7 @@ namespace Discore.Voice
     /// <summary>
     /// Used to represent a user's voice connection status.
     /// </summary>
-    public sealed class DiscordVoiceState
+    public class DiscordVoiceState
     {
         /// <summary>
         /// Gets the ID of the guild this voice state is for.

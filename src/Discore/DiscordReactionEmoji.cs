@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordReactionEmoji
+    public class DiscordReactionEmoji
     {
         /// <summary>
         /// Gets the ID of the emoji (if custom emoji).

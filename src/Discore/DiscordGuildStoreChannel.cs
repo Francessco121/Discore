@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildStoreChannel : DiscordGuildChannel
+    public class DiscordGuildStoreChannel : DiscordGuildChannel
     {
         /// <summary>
         /// Gets whether this store channel is NSFW (not-safe-for-work).

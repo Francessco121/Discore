@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordUserPresence
+    public class DiscordUserPresence
     {
         /// <summary>
         /// Gets the user this presence is for.

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildVoiceChannel : DiscordGuildChannel
+    public class DiscordGuildVoiceChannel : DiscordGuildChannel
     {
         /// <summary>
         /// Gets the audio bitrate used for this channel.

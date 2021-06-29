@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordWebhook : DiscordIdEntity
+    public class DiscordWebhook : DiscordIdEntity
     {
         /// <summary> 
         /// Gets the ID of the guild this webhook belongs to.

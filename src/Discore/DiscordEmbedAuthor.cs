@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmbedAuthor
+    public class DiscordEmbedAuthor
     {
         /// <summary>
         /// Gets the name of the author.

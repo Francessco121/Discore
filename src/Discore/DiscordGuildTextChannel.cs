@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildTextChannel : DiscordGuildChannel, ITextChannel
+    public class DiscordGuildTextChannel : DiscordGuildChannel, ITextChannel
     {
         /// <summary>
         /// Gets the topic of this channel.

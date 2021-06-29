@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// A brief version of a guild object.
     /// </summary>
-    public sealed class DiscordUserGuild : DiscordIdEntity
+    public class DiscordUserGuild : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this guild.

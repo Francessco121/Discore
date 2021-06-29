@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmoji : DiscordIdEntity
+    public class DiscordEmoji : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this emoji.

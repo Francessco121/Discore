@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// Representation of the game a user is currently playing.
     /// </summary>
-    public sealed class DiscordGame
+    public class DiscordGame
     {
         /// <summary>
         /// Gets the name of the game.

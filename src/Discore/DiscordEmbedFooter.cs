@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmbedFooter
+    public class DiscordEmbedFooter
     {
         /// <summary>
         /// Gets the footer text.

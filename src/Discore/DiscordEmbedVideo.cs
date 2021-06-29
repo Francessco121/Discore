@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmbedVideo
+    public class DiscordEmbedVideo
     {
         /// <summary>
         /// Gets the source url of the video.

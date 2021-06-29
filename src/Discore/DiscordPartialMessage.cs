@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordPartialMessage : DiscordIdEntity
+    public class DiscordPartialMessage : DiscordIdEntity
     {
         /// <summary>
         /// Gets the ID of the channel this message is in.

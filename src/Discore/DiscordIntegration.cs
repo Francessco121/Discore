@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// A user or guild integration.
     /// </summary>
-    public sealed class DiscordIntegration : DiscordIdEntity
+    public class DiscordIntegration : DiscordIdEntity
     {
         /// <summary>
         /// Gets the name of this integration.

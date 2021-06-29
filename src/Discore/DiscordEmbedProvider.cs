@@ -5,7 +5,7 @@ namespace Discore
     /// <summary>
     /// The web provider of a <see cref="DiscordEmbed"/>.
     /// </summary>
-    public sealed class DiscordEmbedProvider
+    public class DiscordEmbedProvider
     {
         /// <summary>
         /// Gets the name of this provider.

@@ -23,6 +23,7 @@
 - `DiscordHttpRateLimitException.ResetHighPrecision` is now nullable.
 
 ### Additions
+> Note: The 'Breaking Changes' section also contains some additions.
 - Added `Shard.OnDisconnected`.
 - Added public constructor for `DiscordCdnUrl` so it may be reconstructed from deserialization outside of Discore.
 
@@ -31,6 +32,7 @@
 - `Snowflake` now implements `IEquatable<Snowflake>`.
 - `DiscordCdnUrl` now implements `IEquatable<DiscordCdnUrl>`.
 - Removed dependency on `Newtonsoft.Json`.
+- All Discord entity classes were unsealed.
 
 ### Bug Fixes
 - Fixed race condition that occurred when the application is kicked from a voice channel.

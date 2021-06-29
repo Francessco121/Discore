@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildMember : DiscordIdEntity
+    public class DiscordGuildMember : DiscordIdEntity
     {
         /// <summary>
         /// Gets the ID of the guild this member is in.

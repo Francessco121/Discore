@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordInviteChannel
+    public class DiscordInviteChannel
     {
         // TODO: Rename to Id
         /// <summary>

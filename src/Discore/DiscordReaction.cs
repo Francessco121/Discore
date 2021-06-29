@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordReaction
+    public class DiscordReaction
     {
         /// <summary>
         /// Gets the number of times this emoji has been used to react.

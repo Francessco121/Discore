@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildBan
+    public class DiscordGuildBan
     {
         /// <summary>
         /// Gets the reason for the ban or null if there was no reason.

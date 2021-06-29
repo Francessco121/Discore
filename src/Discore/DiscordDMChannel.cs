@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// Direct message channels represent a one-to-one conversation between two users, outside of the scope of guilds.
     /// </summary>
-    public sealed class DiscordDMChannel : DiscordChannel, ITextChannel
+    public class DiscordDMChannel : DiscordChannel, ITextChannel
     {
         /// <summary>
         /// Gets the user on the other end of this channel.

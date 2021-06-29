@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// The account of an integration.
     /// </summary>
-    public sealed class DiscordIntegrationAccount
+    public class DiscordIntegrationAccount
     {
         /// <summary>
         /// Gets the ID of this account.

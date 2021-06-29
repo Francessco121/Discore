@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmbedField
+    public class DiscordEmbedField
     {
         /// <summary>
         /// Gets the name of the field.

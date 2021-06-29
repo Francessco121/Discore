@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordGuildEmbed
+    public class DiscordGuildEmbed
     {
         /// <summary>
         /// Gets whether this embed is enabled.

@@ -5,7 +5,7 @@ namespace Discore.Voice
     /// <summary>
     /// A region for a voice server.
     /// </summary>
-    public sealed class DiscordVoiceRegion
+    public class DiscordVoiceRegion
     {
         /// <summary>
         /// Gets the ID of the region.

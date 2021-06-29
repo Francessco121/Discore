@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Discore.Http
 {
-    public sealed partial class DiscordHttpClient : IDisposable
+    public partial class DiscordHttpClient : IDisposable
     {
         /// <summary> 
         /// Gets or sets whether a single HTTP client should be used for all API requests per 

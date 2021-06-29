@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordClientStatus
+    public class DiscordClientStatus
     {
         /// <summary>
         /// The user's status set for an active desktop (Windows, Linux, Mac) application session.

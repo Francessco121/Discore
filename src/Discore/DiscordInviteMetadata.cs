@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordInviteMetadata : DiscordInvite
+    public class DiscordInviteMetadata : DiscordInvite
     {
         // TODO: move to DiscordInvite
         /// <summary>

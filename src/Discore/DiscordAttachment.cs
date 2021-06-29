@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordAttachment : DiscordIdEntity
+    public class DiscordAttachment : DiscordIdEntity
     {
         /// <summary>
         /// Gets the file name of the attachment.

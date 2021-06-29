@@ -6,7 +6,7 @@ namespace Discore
     /// <summary>
     /// A permission overwrite for a <see cref="DiscordRole"/> or <see cref="DiscordGuildMember"/>.
     /// </summary>
-    public sealed class DiscordOverwrite : DiscordIdEntity
+    public class DiscordOverwrite : DiscordIdEntity
     {
         public Snowflake ChannelId { get; }
 

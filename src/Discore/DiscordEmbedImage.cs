@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public sealed class DiscordEmbedImage
+    public class DiscordEmbedImage
     {
         /// <summary>
         /// Gets the source url of the image.

@@ -7,7 +7,7 @@ namespace Discore
     /// <summary>
     /// Embedded content in a message.
     /// </summary>
-    public sealed class DiscordEmbed
+    public class DiscordEmbed
     {
         /// <summary>
         /// Gets the title of this embed.
