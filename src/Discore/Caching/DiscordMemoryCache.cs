@@ -33,6 +33,7 @@ namespace Discore.Caching
         readonly ConcurrentHashSet<Snowflake> unavailableGuildIds;
 
         readonly Shard shard;
+        readonly DiscoreLogger logger;
 
         /// <summary>
         /// Creates a new Discord entity memory cache.
@@ -42,6 +43,8 @@ namespace Discore.Caching
         public DiscordMemoryCache(Shard shard)
         {
             this.shard = shard ?? throw new ArgumentNullException(nameof(shard));
+
+            logger = new DiscoreLogger($"DiscordMemoryCache#{shard.Id}");
 
             // Set up stores
             guildIds = new ConcurrentHashSet<Snowflake>();
@@ -132,6 +135,8 @@ namespace Discore.Caching
         {
             if (e.IsNewSession)
             {
+                logger.LogVerbose("New shard session, clearing cache...");
+
                 // Shard started a new session, clear cache since the gateway isn't going to repeat
                 // any missing events and the cache is no longer guaranteed to be valid
                 Clear();
@@ -140,12 +145,16 @@ namespace Discore.Caching
 
         private void Shard_OnDisconnected(object sender, ShardEventArgs e)
         {
+            logger.LogVerbose("Shard disconnected, clearing cache...");
+
             // Shard disconnected, clear cache since its no longer guaranteed to be valid
             Clear();
         }
 
         private void Gateway_OnReady(object sender, ReadyEventArgs e)
         {
+            logger.LogVerbose("Gateway ready, caching initial data...");
+
             // Cache user
             CacheUser(e.User);
 
