@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -12,9 +11,6 @@ namespace Discore
         /// Gets the ID of this Discord entity.
         /// </summary>
         public Snowflake Id { get; protected set; }
-
-        [Obsolete]
-        internal DiscordIdEntity() { }
 
         internal DiscordIdEntity(Snowflake id)
         {

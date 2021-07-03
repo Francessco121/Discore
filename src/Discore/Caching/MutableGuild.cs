@@ -15,8 +15,6 @@ namespace Discore.Caching
         public string? RegionId { get; private set; }
         public Snowflake? AfkChannelId { get; private set; }
         public int AfkTimeout { get; private set; }
-        public bool IsEmbedEnabled { get; private set; }
-        public Snowflake? EmbedChannelId { get; private set; }
         public GuildVerificationLevel VerificationLevel { get; private set; }
         public GuildNotificationOption DefaultMessageNotifications { get; private set; }
         public GuildExplicitContentFilterLevel ExplicitContentFilter { get; private set; }
@@ -55,8 +53,6 @@ namespace Discore.Caching
             RegionId = guild.RegionId;
             AfkTimeout = guild.AfkTimeout;
             AfkChannelId = guild.AfkChannelId;
-            IsEmbedEnabled = guild.IsEmbedEnabled;
-            EmbedChannelId = guild.EmbedChannelId;
             OwnerId = guild.OwnerId;
             ApplicationId = guild.ApplicationId;
             IsWidgetEnabled = guild.IsWidgetEnabled;
@@ -103,8 +99,6 @@ namespace Discore.Caching
                 regionId: RegionId!,
                 afkChannelId: AfkChannelId,
                 afkTimeout: AfkTimeout,
-                isEmbedEnabled: IsEmbedEnabled,
-                embedChannelId: EmbedChannelId,
                 verificationLevel: VerificationLevel,
                 defaultMessageNotifications: DefaultMessageNotifications,
                 explicitContentFilter: ExplicitContentFilter,

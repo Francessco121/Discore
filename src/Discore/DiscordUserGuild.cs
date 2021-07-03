@@ -47,7 +47,7 @@ namespace Discore
         {
             Name = json.GetProperty("name").GetString()!;
             IsOwner = json.GetProperty("owner").GetBoolean();
-            Permissions = (DiscordPermission)json.GetProperty("permissions").GetUInt64();
+            Permissions = (DiscordPermission)json.GetProperty("permissions").GetStringUInt64();
 
             string? iconStr = json.GetPropertyOrNull("icon")?.GetString();
             Icon = iconStr == null ? null : DiscordCdnUrl.ForGuildIcon(Id, iconStr);

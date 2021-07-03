@@ -8,10 +8,10 @@ namespace Discore
         /// <summary>
         /// The overwrite is for a role.
         /// </summary>
-        Role,
+        Role = 0,
         /// <summary>
         /// The overwrite is for a guild member.
         /// </summary>
-        Member
+        Member = 1
     }
 }

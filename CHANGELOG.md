@@ -14,6 +14,9 @@
     - `OnGuildAvailable` and `OnGuildUnavailable` were merged into `OnGuildCreate` and `OnGuildDelete`. To see whether the guild availability status changed, use the new `BecameAvailable` and `Unavailable` properties in the event args.
     - `OnDMChannel*` events were removed (bots no longer receive events for DM channels as of Gateway v8).
     - `OnChannel*` events now emit a `DiscordChannel` instead of a `DiscordGuildChannel` (matches the actual Gateway spec).
+- Renamed `DiscordGame` to `DiscordActivity` (to match Gateway v8 changes).
+- Renamed `DiscordGameType` to `DiscordActivityType` (to match Gateway v8 changes).
+- Removed `DiscordUserPresence.Game` (use `Activities.FirstOrDefault()` instead).
 - `DiscordVoiceConnection.SetSpeakingAsync` will now throw an `InvalidOperationException` if called before being fully connected.
 - `DiscordVoiceConnection.ClearVoiceBuffer` will now throw an `InvalidOperationException` if called before being fully connected.
 - `DiscordVoiceConnection.ConnectAsync` no longer checks if the application is allowed to join the voice channel. If the application is not allowed to join the connection will still fail, but it will be attempted.
@@ -22,6 +25,7 @@
 - `DiscordHttpRateLimitException.Reset` is now nullable.
 - `DiscordHttpRateLimitException.ResetHighPrecision` is now nullable.
 - `ShardStartConfig.GatewayLargeThreshold` now defaults to the Gateway's default of 50 (down from 250).
+- Removed `DiscordGuild.IsEmbedEnabled` and `EmbedChannelId` (use `IsWidgetEnabled` and `WidgetChannelId` instead).
 - Removed deprecated `ShardFailureReason.IOError`
 
 ### Additions

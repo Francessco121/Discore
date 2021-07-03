@@ -45,15 +45,6 @@ namespace Discore
         public int AfkTimeout { get; }
 
         /// <summary>
-        /// Gets whether this guild is embeddable as a widget.
-        /// </summary>
-        public bool IsEmbedEnabled { get; }
-        /// <summary>
-        /// Gets the ID of the embedded channel, if this guild is embeddable.
-        /// </summary>
-        public Snowflake? EmbedChannelId { get; }
-
-        /// <summary>
         /// Gets the level of verification required by this guild.
         /// </summary>
         public GuildVerificationLevel VerificationLevel { get; }
@@ -163,8 +154,6 @@ namespace Discore
             string regionId,
             Snowflake? afkChannelId,
             int afkTimeout,
-            bool isEmbedEnabled,
-            Snowflake? embedChannelId,
             GuildVerificationLevel verificationLevel,
             GuildNotificationOption defaultMessageNotifications,
             GuildExplicitContentFilterLevel explicitContentFilter,
@@ -193,8 +182,6 @@ namespace Discore
             RegionId = regionId ?? throw new ArgumentNullException(nameof(regionId));
             AfkChannelId = afkChannelId;
             AfkTimeout = afkTimeout;
-            IsEmbedEnabled = isEmbedEnabled;
-            EmbedChannelId = embedChannelId;
             VerificationLevel = verificationLevel;
             DefaultMessageNotifications = defaultMessageNotifications;
             ExplicitContentFilter = explicitContentFilter;
@@ -223,8 +210,6 @@ namespace Discore
             RegionId = json.GetProperty("region").GetString()!;
             AfkTimeout = json.GetProperty("afk_timeout").GetInt32();
             AfkChannelId = json.GetPropertyOrNull("afk_channel_id")?.GetSnowflakeOrNull();
-            IsEmbedEnabled = json.GetPropertyOrNull("embed_enabled")?.GetBoolean() ?? false;
-            EmbedChannelId = json.GetPropertyOrNull("embed_channel_id")?.GetSnowflakeOrNull();
             OwnerId = json.GetProperty("owner_id").GetSnowflake();
             ApplicationId = json.GetPropertyOrNull("application_id")?.GetSnowflakeOrNull();
             IsWidgetEnabled = json.GetPropertyOrNull("widget_enabled")?.GetBoolean() ?? false;

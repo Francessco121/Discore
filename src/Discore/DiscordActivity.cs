@@ -4,18 +4,18 @@ using System.Text.Json;
 namespace Discore
 {
     /// <summary>
-    /// Representation of the game a user is currently playing.
+    /// Represents an activity a user is currently engaged in.
     /// </summary>
-    public class DiscordGame
+    public class DiscordActivity
     {
         /// <summary>
-        /// Gets the name of the game.
+        /// Gets the name of the activity.
         /// </summary>
         public string Name { get; }
         /// <summary>
-        /// Gets the type of the game.
+        /// Gets the type of activity.
         /// </summary>
-        public DiscordGameType Type { get; }
+        public DiscordActivityType Type { get; }
         /// <summary>
         /// Gets the URL of the stream when the type is set to "Streaming" and the URL is valid.
         /// Otherwise, returns null.
@@ -23,9 +23,9 @@ namespace Discore
         public string? Url { get; }
 
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
-        public DiscordGame(
+        public DiscordActivity(
             string name, 
-            DiscordGameType type, 
+            DiscordActivityType type, 
             string? url)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -33,10 +33,10 @@ namespace Discore
             Url = url;
         }
 
-        internal DiscordGame(JsonElement json)
+        internal DiscordActivity(JsonElement json)
         {
             Name = json.GetProperty("name").GetString()!;
-            Type = (DiscordGameType)json.GetProperty("type").GetInt32();
+            Type = (DiscordActivityType)json.GetProperty("type").GetInt32();
             Url = json.GetPropertyOrNull("url")?.GetString();
         }
 

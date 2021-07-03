@@ -17,11 +17,6 @@ namespace Discore
         public Snowflake GuildId { get; }
 
         /// <summary>
-        /// Gets the game this user is currently playing.
-        /// </summary>
-        public DiscordGame? Game { get; }
-
-        /// <summary>
         /// Gets the current status of this user.
         /// </summary>
         public DiscordUserStatus? Status { get; }
@@ -29,7 +24,7 @@ namespace Discore
         /// <summary>
         /// Gets the user's current activities.
         /// </summary>
-        public IReadOnlyList<DiscordGame>? Activities { get; }
+        public IReadOnlyList<DiscordActivity>? Activities { get; }
 
         /// <summary>
         /// Gets the user's platform-dependent status.
@@ -39,14 +34,12 @@ namespace Discore
         public DiscordUserPresence(
             DiscordPartialUser user, 
             Snowflake guildId,
-            DiscordGame? game, 
             DiscordUserStatus? status, 
-            IReadOnlyList<DiscordGame>? activities, 
+            IReadOnlyList<DiscordActivity>? activities, 
             DiscordClientStatus? clientStatus)
         {
             User = user;
             GuildId = guildId;
-            Game = game;
             Status = status;
             Activities = activities;
             ClientStatus = clientStatus;
@@ -58,12 +51,6 @@ namespace Discore
 
             // User
             User = new DiscordPartialUser(json.GetProperty("user"));
-
-            // Game
-            JsonElement? gameJson = json.GetPropertyOrNull("game");
-            Game = gameJson == null || gameJson.Value.ValueKind == JsonValueKind.Null
-                ? null
-                : new DiscordGame(gameJson.Value);
 
             // Status
             JsonElement? statusJson = json.GetPropertyOrNull("status");
@@ -101,7 +88,7 @@ namespace Discore
                 ? null
                 : activitiesJson.Value
                     .EnumerateArray()
-                    .Select(a => new DiscordGame(a))
+                    .Select(a => new DiscordActivity(a))
                     .ToArray();
         }
     }

@@ -33,6 +33,21 @@ namespace Discore
             return element.GetSnowflake();
         }
 
+        public static ulong GetStringUInt64(this JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Number)
+                return element.GetUInt64();
+            else
+                return ulong.Parse(element.GetString()!);
+        }
+
+        public static ulong? GetStringUInt64OrNull(this JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Null) return null;
+
+            return element.GetStringUInt64();
+        }
+
         public static bool? GetBooleanOrNull(this JsonElement element)
         {
             if (element.ValueKind == JsonValueKind.Null) return null;

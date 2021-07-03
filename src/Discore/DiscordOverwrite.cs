@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -41,12 +40,9 @@ namespace Discore
             : base(json)
         {
             ChannelId = channelId;
-            Allow = (DiscordPermission)json.GetProperty("allow").GetUInt64();
-            Deny = (DiscordPermission)json.GetProperty("deny").GetUInt64();
-
-            DiscordOverwriteType type;
-            if (Enum.TryParse(json.GetProperty("type").GetString()!, out type))
-                Type = type;
+            Type = (DiscordOverwriteType)json.GetProperty("type").GetInt32();
+            Allow = (DiscordPermission)json.GetProperty("allow").GetStringUInt64();
+            Deny = (DiscordPermission)json.GetProperty("deny").GetStringUInt64();
         }
 
         public override string ToString()

@@ -72,7 +72,7 @@ namespace Discore
             Color = DiscordColor.FromHexadecimal(json.GetProperty("color").GetInt32());
             IsHoisted = json.GetProperty("hoist").GetBoolean();
             Position = json.GetProperty("position").GetInt32();
-            Permissions = (DiscordPermission)json.GetProperty("permissions").GetUInt64();
+            Permissions = (DiscordPermission)json.GetProperty("permissions").GetStringUInt64();
             IsManaged = json.GetProperty("managed").GetBoolean();
             IsMentionable = json.GetProperty("mentionable").GetBoolean();
         }
