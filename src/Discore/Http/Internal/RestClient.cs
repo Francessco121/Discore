@@ -15,7 +15,7 @@ namespace Discore.Http.Internal
 
     class RestClient : IDisposable
     {
-        public const string BASE_URL = "https://discord.com/api/v6";
+        public const string BASE_URL = "https://discord.com/api/v8";
 
         public bool RetryOnRateLimit { get; set; } = true;
 
@@ -57,7 +57,6 @@ namespace Discore.Http.Internal
             http.DefaultRequestHeaders.Add("Accept", "application/json");
             http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
             http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
-            http.DefaultRequestHeaders.Add("X-RateLimit-Precision", "millisecond");
 
             return http;
         }
@@ -89,7 +88,7 @@ namespace Discore.Http.Internal
                 catch (JsonException ex)
                 {
                     // JSON was expected, but could not be parsed, we should not continue
-                    throw new DiscordHttpApiException($"Failed to parse response: {ex}", DiscordHttpErrorCode.None, response.StatusCode);
+                    throw new DiscordHttpApiException($"Failed to parse response: {ex}", DiscordHttpErrorCode.None, response.StatusCode, errors: null);
                 }
             }
 
@@ -130,11 +129,20 @@ namespace Discore.Http.Internal
             // Get the message
             string message = data.GetPropertyOrNull("message")?.GetString() ?? "An error occurred.";
 
+            // Get the form errors
+            DiscordHttpErrorObject? errors = null;
+            JsonElement? errorsJson = data.GetPropertyOrNull("errors");
+
+            if (errorsJson != null)
+            {
+                errors = new DiscordHttpErrorObject(errorsJson.Value);
+            }
+
             // Throw the appropriate exception
             if ((int)response.StatusCode == 429 && rateLimitHeaders != null)
-                return new DiscordHttpRateLimitException(rateLimitHeaders, message, errorCode, response.StatusCode);
+                return new DiscordHttpRateLimitException(rateLimitHeaders, message, errorCode, response.StatusCode, errors);
             else
-                return new DiscordHttpApiException(message, errorCode, response.StatusCode);
+                return new DiscordHttpApiException(message, errorCode, response.StatusCode, errors);
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -216,7 +224,7 @@ namespace Discore.Http.Internal
                                 if (rateLimitHeaders.IsGlobal)
                                     globalRateLimitLock.ResetAfter(rateLimitHeaders.RetryAfter!.Value);
                                 else
-                                    routeLock.ResetAfter(rateLimitHeaders.RetryAfter!.Value);
+                                    routeLock.ResetAfter(rateLimitHeaders.ResetAfter!.Value);
 
                                 retry = RetryOnRateLimit && attempts < 20;
 
@@ -229,7 +237,7 @@ namespace Discore.Http.Internal
                                 // If the request succeeded but we are out of calls, set the route lock
                                 // to wait until the reset time.
                                 if (rateLimitHeaders.Remaining == 0)
-                                    routeLock.ResetAt(rateLimitHeaders.Reset!.Value * 1000);
+                                    routeLock.ResetAt(rateLimitHeaders.Reset!.Value);
                             }
 
                             if (rateLimitHeaders.Bucket != null)

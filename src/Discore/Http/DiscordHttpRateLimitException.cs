@@ -1,5 +1,4 @@
 using Discore.Http.Internal;
-using System;
 using System.Net;
 
 namespace Discore.Http
@@ -14,7 +13,8 @@ namespace Discore.Http
         /// </summary>
         public bool IsGlobal { get; }
         /// <summary>
-        /// The maximum number of requests that can be made until the reset time.
+        /// The maximum number of requests that can be made between rate limit resets.
+        /// This is the request count that was exceeded.
         /// <para>Note: Only set if not a global rate limit.</para>
         /// </summary>
         public int? Limit { get; }
@@ -22,30 +22,30 @@ namespace Discore.Http
         /// Epoch time (seconds since 00:00:00 UTC on January 1, 1970) at which the rate limit resets.
         /// <para>Note: Only set if not a global rate limit.</para>
         /// </summary>
-        [Obsolete("Please use ResetHighPrecision instead for millisecond precision.")]
-        public ulong? Reset { get; }
+        public double? Reset { get; }
         /// <summary>
-        /// Epoch time (seconds since 00:00:00 UTC on January 1, 1970) at which the rate limit resets.
+        /// The time in seconds that needs to be waited before sending another request.
+        /// </summary>
+        public double RetryAfter { get; }
+        /// <summary>
+        /// If set, a unique string denoting the rate limit being encountered.
         /// <para>Note: Only set if not a global rate limit.</para>
         /// </summary>
-        public double? ResetHighPrecision { get; }
-        /// <summary>
-        /// The time in milliseconds that needs to be waited before sending another request.
-        /// </summary>
-        public int RetryAfter { get; }
+        public string? Bucket { get; }
 
-        internal DiscordHttpRateLimitException(RateLimitHeaders rateLimitHeaders, 
-            string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode) 
-            : base(message, errorCode, httpCode)
+        internal DiscordHttpRateLimitException(
+            RateLimitHeaders rateLimitHeaders, 
+            string message, 
+            DiscordHttpErrorCode errorCode, 
+            HttpStatusCode httpCode,
+            DiscordHttpErrorObject? errors) 
+            : base(message, errorCode, httpCode, errors)
         {
             IsGlobal = rateLimitHeaders.IsGlobal;
             Limit = rateLimitHeaders.Limit;
-            ResetHighPrecision = rateLimitHeaders.Reset;
-            RetryAfter = rateLimitHeaders.RetryAfter.GetValueOrDefault(); // Should always be set, but just in case.
-
-#pragma warning disable CS0618 // Type or member is obsolete
-            Reset = (ulong?)rateLimitHeaders.Reset;
-#pragma warning restore CS0618 // Type or member is obsolete
+            Reset = rateLimitHeaders.Reset;
+            RetryAfter = rateLimitHeaders.ResetAfter ?? rateLimitHeaders.RetryAfter.GetValueOrDefault(); // Should always be set, but just in case.
+            Bucket = rateLimitHeaders.Bucket;
         }
     }
 }

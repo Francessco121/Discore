@@ -16,12 +16,21 @@ namespace Discore.Http
         /// Gets the HTTP status code associated with the error.
         /// </summary>
         public HttpStatusCode HttpStatusCode { get; }
+        /// <summary>
+        /// Gets the error messages and error codes for each form field, if any.
+        /// </summary>
+        public DiscordHttpErrorObject? Errors { get; }
 
-        internal DiscordHttpApiException(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)
+        internal DiscordHttpApiException(
+            string message, 
+            DiscordHttpErrorCode errorCode, 
+            HttpStatusCode httpCode, 
+            DiscordHttpErrorObject? errors)
             : base(CreateExceptionMessage(message, errorCode, httpCode))
         {
             ErrorCode = errorCode;
             HttpStatusCode = httpCode;
+            Errors = errors;
         }
 
         static string CreateExceptionMessage(string message, DiscordHttpErrorCode errorCode, HttpStatusCode httpCode)

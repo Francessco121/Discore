@@ -10,19 +10,19 @@ namespace Discore.Http.Internal
         /// <summary>
         /// Whether requests should be delayed in order to fulfill the rate-limit.
         /// </summary>
-        public bool RequiresWait => MillisecondsUntilReset > 0;
+        public bool RequiresWait => SecondsUntilReset > 0;
 
         /// <summary>
-        /// The number of milliseconds until the rate-limit is reset and requests can be made again.
+        /// The number of seconds until the rate-limit is reset and requests can be made again.
         /// </summary>
-        public double MillisecondsUntilReset => resetAtEpochMilliseconds - GetMillisecondsSinceEpoch();
+        public double SecondsUntilReset => resetAtEpochSeconds - GetSecondsSinceEpoch();
 
         static readonly DateTime unixEpoch = new DateTime(1970, 1, 1);
 
         /// <summary>
         /// The number of seconds after the Unix Epoch when the rate-limit will reset.
         /// </summary>
-        double resetAtEpochMilliseconds;
+        double resetAtEpochSeconds;
 
         readonly AsyncLock mutex;
 
@@ -37,27 +37,27 @@ namespace Discore.Http.Internal
         /// </summary>
         public Task WaitAsync(CancellationToken cancellationToken)
         {
-            double msDelay = MillisecondsUntilReset;
+            double secondsDelay = SecondsUntilReset;
 
-            return msDelay <= 0 
+            return secondsDelay <= 0 
                 ? Task.CompletedTask 
-                : Task.Delay(TimeSpan.FromMilliseconds(msDelay), cancellationToken);
+                : Task.Delay(TimeSpan.FromSeconds(secondsDelay), cancellationToken);
         }
 
         /// <summary>
-        /// Sets the number of milliseconds after the Unix Epoch that must pass before this rate-limit resets.
+        /// Sets the number of seconds after the Unix Epoch that must pass before this rate-limit resets.
         /// </summary>
-        public void ResetAt(double millisecondsAfterUnixEpoch)
+        public void ResetAt(double secondsAfterUnixEpoch)
         {
-            resetAtEpochMilliseconds = millisecondsAfterUnixEpoch;
+            resetAtEpochSeconds = secondsAfterUnixEpoch;
         }
 
         /// <summary>
-        /// Sets the number of milliseconds that must pass after the current time before this rate-limit resets.
+        /// Sets the number of seconds that must pass after the current time before this rate-limit resets.
         /// </summary>
-        public void ResetAfter(double milliseconds)
+        public void ResetAfter(double seconds)
         {
-            resetAtEpochMilliseconds = GetMillisecondsSinceEpoch() + milliseconds;
+            resetAtEpochSeconds = GetSecondsSinceEpoch() + seconds;
         }
 
         /// <summary>
@@ -74,14 +74,14 @@ namespace Discore.Http.Internal
         public RateLimitLock Clone()
         {
             var clone = new RateLimitLock();
-            clone.resetAtEpochMilliseconds = resetAtEpochMilliseconds;
+            clone.resetAtEpochSeconds = resetAtEpochSeconds;
 
             return clone;
         }
 
-        double GetMillisecondsSinceEpoch()
+        double GetSecondsSinceEpoch()
         {
-            return (DateTime.UtcNow - unixEpoch).TotalMilliseconds;
+            return (DateTime.UtcNow - unixEpoch).TotalSeconds;
         }
     }
 }

@@ -25,6 +25,8 @@
 - `DiscordHttpRateLimitException.Reset` is now nullable.
 - `DiscordHttpRateLimitException.ResetHighPrecision` is now nullable.
 - `ShardStartConfig.GatewayLargeThreshold` now defaults to the Gateway's default of 50 (down from 250).
+- `DiscordHttpErrorCode.TooManyReactions` renamed to `MaximumReactionsReached`.
+- `DiscordHttpRateLimitException.RetryAfter` is now a `double` and includes millisecond precision.
 - Removed `DiscordGuild.IsEmbedEnabled` and `EmbedChannelId` (use `IsWidgetEnabled` and `WidgetChannelId` instead).
 - Removed deprecated `ShardFailureReason.IOError`
 
@@ -35,6 +37,8 @@
 - Added public constructor for `DiscordCdnUrl` so it may be reconstructed from deserialization outside of Discore.
 - Added `ShardFailureReason.InvalidIntents`.
 - Added `ShardFailureReason.DisallowedIntents`.
+- Added `DiscordHttpApiException.Errors`.
+- Added `DiscordHttpRateLimitException.Bucket`.
 
 ### Changes
 - Discore now makes full use of C# 8 null safety!

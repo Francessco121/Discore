@@ -23,7 +23,11 @@ namespace Discore.Http.Internal
         /// </summary>
         public double? Reset { get; }
         /// <summary>
-        /// Retry-After. If set, the time in milliseconds that needs to be waited before sending another request.
+        /// X-RateLimit-Reset-After. Total time in seconds of when the current rate limit bucket will reset.
+        /// </summary>
+        public double? ResetAfter { get; }
+        /// <summary>
+        /// Retry-After. If set, the time in seconds that needs to be waited before sending another request.
         /// </summary>
         public int? RetryAfter { get; }
         /// <summary>
@@ -37,12 +41,13 @@ namespace Discore.Http.Internal
             RetryAfter = retryAfter;
         }
 
-        private RateLimitHeaders(bool isGlobal, int limit, int remaining, double reset, int? retryAfter, string? bucket)
+        private RateLimitHeaders(bool isGlobal, int limit, int remaining, double reset, double resetAfter, int? retryAfter, string? bucket)
         {
             IsGlobal = isGlobal;
             Limit = limit;
             Remaining = remaining;
             Reset = reset;
+            ResetAfter = resetAfter;
             RetryAfter = retryAfter;
             Bucket = bucket;
         }
@@ -71,6 +76,7 @@ namespace Discore.Http.Internal
             {
                 int? limitHeader = null, remainingHeader = null;
                 double? resetTimeHeader = null;
+                double? resetAfterHeader = null;
                 string? bucket = null;
 
                 IEnumerable<string>? limitValues;
@@ -103,16 +109,26 @@ namespace Discore.Http.Internal
                         resetTimeHeader = resetTime;
                 }
 
+                IEnumerable<string>? resetAfterValues;
+                if (headers.TryGetValues("X-RateLimit-Reset-After", out resetAfterValues))
+                {
+                    string resetAfterStr = resetAfterValues.FirstOrDefault();
+
+                    double resetAfter;
+                    if (!string.IsNullOrWhiteSpace(resetAfterStr) && double.TryParse(resetAfterStr, out resetAfter))
+                        resetAfterHeader = resetAfter;
+                }
+
                 IEnumerable<string>? bucketValues;
                 if (headers.TryGetValues("X-RateLimit-Bucket", out bucketValues))
                 {
                     bucket = bucketValues.FirstOrDefault();
                 }
 
-                if (limitHeader.HasValue && remainingHeader.HasValue && resetTimeHeader.HasValue)
+                if (limitHeader.HasValue && remainingHeader.HasValue && resetTimeHeader.HasValue && resetAfterHeader.HasValue)
                 {
                     return new RateLimitHeaders(isGlobal,
-                        limitHeader.Value, remainingHeader.Value, resetTimeHeader.Value, retryAfterHeader, bucket);
+                        limitHeader.Value, remainingHeader.Value, resetTimeHeader.Value, resetAfterHeader.Value, retryAfterHeader, bucket);
                 }
                 else
                 {
