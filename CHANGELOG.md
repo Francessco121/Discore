@@ -28,7 +28,13 @@
 - `ShardStartConfig.GatewayLargeThreshold` now defaults to the Gateway's default of 50 (down from 250).
 - `DiscordHttpErrorCode.TooManyReactions` renamed to `MaximumReactionsReached`.
 - `DiscordHttpRateLimitException.RetryAfter` is now a `double` and includes millisecond precision.
-- Removed `DiscordGuild.IsEmbedEnabled` and `EmbedChannelId` (use `IsWidgetEnabled` and `WidgetChannelId` instead).
+- Guild embeds are replaced with guild widgets (API v8 change):
+    - Removed `DiscordGuild.IsEmbedEnabled` and `EmbedChannelId` (use `IsWidgetEnabled` and `WidgetChannelId` instead).
+    - Renamed `DiscordGuildEmbed` to `DiscordGuildWidgetSettings`.
+    - Renamed `DiscordHttpErrorCode.EmbedDisabled` to `WidgetDisabled`.
+    - Renamed `ModifyGuildEmbedOptions` to `ModifyGuildWidgetOptions`.
+    - Renamed `DiscordHttpClient.GetGuildEmbed` to `GetGuildWidget`.
+    - Renamed `DiscordHttpClient.ModifyGuildEmbed` to `ModifyGuildWidget`.
 - Removed deprecated `ShardFailureReason.IOError`
 
 ### Additions

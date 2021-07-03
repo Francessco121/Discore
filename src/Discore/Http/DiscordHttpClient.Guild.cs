@@ -134,7 +134,7 @@ namespace Discore.Http
         public async Task CreateGuildBan(Snowflake guildId, Snowflake userId, int? deleteMessageDays = null)
         {
             var parameters = new UrlParametersBuilder();
-            parameters["delete-message-days"] = deleteMessageDays?.ToString();
+            parameters["delete_message_days"] = deleteMessageDays?.ToString();
 
             await rest.Put($"guilds/{guildId}/bans/{userId}{parameters.ToQueryString()}",
                 $"guilds/{guildId}/bans/user").ConfigureAwait(false);
@@ -423,12 +423,12 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuildEmbed> GetGuildEmbed(Snowflake guildId)
+        public async Task<DiscordGuildWidgetSettings> GetGuildWidget(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/embed",
-                $"guilds/{guildId}/embed").ConfigureAwait(false);
+            using JsonDocument? data = await rest.Get($"guilds/{guildId}/widget",
+                $"guilds/{guildId}/widget").ConfigureAwait(false);
 
-            return new DiscordGuildEmbed(data!.RootElement, guildId: guildId);
+            return new DiscordGuildWidgetSettings(data!.RootElement, guildId: guildId);
         }
 
         /// <summary>
@@ -437,43 +437,43 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildEmbed> GetGuildEmbed(DiscordGuild guild)
+        public Task<DiscordGuildWidgetSettings> GetGuildWidget(DiscordGuild guild)
         {
             if (guild == null) throw new ArgumentNullException(nameof(guild));
 
-            return GetGuildEmbed(guild.Id);
+            return GetGuildWidget(guild.Id);
         }
 
         /// <summary>
-        /// Modifies the properties of the embed for the specified guild.
+        /// Modifies the properties of the widget for the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordGuildEmbed> ModifyGuildEmbed(Snowflake guildId, ModifyGuildEmbedOptions options)
+        public async Task<DiscordGuildWidgetSettings> ModifyGuildWidget(Snowflake guildId, ModifyGuildWidgetOptions options)
         {
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/embed", jsonContent: requestData,
-                $"guilds/{guildId}/embed").ConfigureAwait(false);
+            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/widget", jsonContent: requestData,
+                $"guilds/{guildId}/widget").ConfigureAwait(false);
 
-            return new DiscordGuildEmbed(returnData!.RootElement, guildId: guildId);
+            return new DiscordGuildWidgetSettings(returnData!.RootElement, guildId: guildId);
         }
 
         /// <summary>
-        /// Modifies the properties of the embed for the specified guild.
+        /// Modifies the properties of the widget for the specified guild.
         /// <para>Requires <see cref="DiscordPermission.ManageGuild"/>.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordGuildEmbed> ModifyGuildEmbed(DiscordGuild guild, ModifyGuildEmbedOptions options)
+        public Task<DiscordGuildWidgetSettings> ModifyGuildWidget(DiscordGuild guild, ModifyGuildWidgetOptions options)
         {
             if (guild == null) throw new ArgumentNullException(nameof(guild));
 
-            return ModifyGuildEmbed(guild.Id, options);
+            return ModifyGuildWidget(guild.Id, options);
         }
     }
 }

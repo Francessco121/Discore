@@ -2,29 +2,29 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public class DiscordGuildEmbed
+    public class DiscordGuildWidgetSettings
     {
         /// <summary>
-        /// Gets whether this embed is enabled.
+        /// Gets whether the widget is enabled.
         /// </summary>
         public bool Enabled { get; }
         /// <summary>
-        /// Gets the embed channel ID.
+        /// Gets the widget channel ID.
         /// </summary>
         public Snowflake? ChannelId { get; }
         /// <summary>
-        /// Gets the ID of the guild this embed is for.
+        /// Gets the ID of the guild this widget is for.
         /// </summary>
         public Snowflake GuildId { get; }
 
-        public DiscordGuildEmbed(bool enabled, Snowflake? channelId, Snowflake guildId)
+        public DiscordGuildWidgetSettings(bool enabled, Snowflake? channelId, Snowflake guildId)
         {
             Enabled = enabled;
             ChannelId = channelId;
             GuildId = guildId;
         }
 
-        internal DiscordGuildEmbed(JsonElement json, Snowflake guildId)
+        internal DiscordGuildWidgetSettings(JsonElement json, Snowflake guildId)
         {
             GuildId = guildId;
 

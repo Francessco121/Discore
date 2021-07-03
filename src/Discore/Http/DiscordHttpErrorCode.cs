@@ -180,7 +180,7 @@ namespace Discore.Http
         /// Cannot execute action on a DM channel.
         /// </summary>
         InvalidDMChannelAction,
-        EmbedDisabled,
+        WidgetDisabled,
         /// <summary>
         /// Cannot edit a message created by a different user.
         /// </summary>
