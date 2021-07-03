@@ -16,6 +16,9 @@ namespace Discore.WebSocket.Internal
         RateLimited,
         SessionTimeout,
         InvalidShard,
-        ShardingRequired
+        ShardingRequired,
+        InvalidApiVersion,
+        InvalidIntents,
+        DisallowedIntents
     }
 }

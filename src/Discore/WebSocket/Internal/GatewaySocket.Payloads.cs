@@ -127,7 +127,12 @@ namespace Discore.WebSocket.Internal
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public async Task SendIdentifyPayload(string token, int largeThreshold, int shardId, int totalShards)
+        public async Task SendIdentifyPayload(
+            string token,
+            GatewayIntent intents,
+            int? largeThreshold, 
+            int shardId, 
+            int totalShards)
         {
             void BuildPayload(Utf8JsonWriter writer)
             {
@@ -135,7 +140,12 @@ namespace Discore.WebSocket.Internal
 
                 writer.WriteString("token", token);
                 writer.WriteBoolean("compress", true);
-                writer.WriteNumber("large_threshold", largeThreshold);
+                writer.WriteNumber("intents", (int)intents);
+
+                if (largeThreshold != null)
+                {
+                    writer.WriteNumber("large_threshold", largeThreshold.Value);
+                }
 
                 if (totalShards > 1)
                 {

@@ -121,6 +121,9 @@ namespace Discore.WebSocket.Internal
                 case GatewayCloseCode.InvalidShard:
                 case GatewayCloseCode.AuthenticationFailed:
                 case GatewayCloseCode.ShardingRequired:
+                case GatewayCloseCode.InvalidApiVersion:
+                case GatewayCloseCode.InvalidIntents:
+                case GatewayCloseCode.DisallowedIntents:
                     // Not safe to reconnect
                     log.LogError($"[{code} ({(int)code})] Unsafe to continue, NOT reconnecting gateway.");
                     OnFatalDisconnection?.Invoke(this, code);

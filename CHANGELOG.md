@@ -21,11 +21,16 @@
 - `DiscordHttpRateLimitException.Limit` is now nullable.
 - `DiscordHttpRateLimitException.Reset` is now nullable.
 - `DiscordHttpRateLimitException.ResetHighPrecision` is now nullable.
+- `ShardStartConfig.GatewayLargeThreshold` now defaults to the Gateway's default of 50 (down from 250).
+- Removed deprecated `ShardFailureReason.IOError`
 
 ### Additions
 > Note: The 'Breaking Changes' section also contains some additions.
+- Added support for Gateway intents.
 - Added `Shard.OnDisconnected`.
 - Added public constructor for `DiscordCdnUrl` so it may be reconstructed from deserialization outside of Discore.
+- Added `ShardFailureReason.InvalidIntents`.
+- Added `ShardFailureReason.DisallowedIntents`.
 
 ### Changes
 - Discore now makes full use of C# 8 null safety!

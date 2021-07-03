@@ -413,12 +413,20 @@ namespace Discore.WebSocket.Internal
                         return;
 
                     if (isConnectionResuming && sessionId != null)
+                    {
                         // Resume
                         await socket.SendResumePayload(botToken, sessionId, lastSequence);
+                    }
                     else
+                    {
                         // Identify
-                        await socket.SendIdentifyPayload(botToken, lastShardStartConfig!.GatewayLargeThreshold, 
-                            shard.Id, totalShards);
+                        await socket.SendIdentifyPayload(
+                            botToken,
+                            lastShardStartConfig!.Intents,
+                            lastShardStartConfig.GatewayLargeThreshold,
+                            shard.Id,
+                            totalShards);
+                    }
                 };
 
                 SubscribeSocketEvents(socket);
@@ -614,6 +622,10 @@ namespace Discore.WebSocket.Internal
                     return ("The shard failed to authenticate.", ShardFailureReason.AuthenticationFailed);
                 case GatewayCloseCode.ShardingRequired:
                     return ("Additional sharding is required.", ShardFailureReason.ShardingRequired);
+                case GatewayCloseCode.InvalidIntents:
+                    return ("An invalid Gateway intent was specified.", ShardFailureReason.InvalidIntents);
+                case GatewayCloseCode.DisallowedIntents:
+                    return ("A disallowed Gateway intent was specified.", ShardFailureReason.DisallowedIntents);
                 default:
                     return ($"An unknown error occured while starting the shard: {closeCode}({(int)closeCode})",
                         ShardFailureReason.Unknown);
