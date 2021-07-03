@@ -7,6 +7,7 @@
 - Caching breaking changes:
     - `DiscordShardCache` has been replaced with the new `Discore.Caching.DiscordMemoryCache`.
     - `Shard.Cache` was removed in favor of making caching optional for Gateway connections. To get built-in caching behavior back, instantiate the new `DiscordMemoryCache` with your `Shard`. The new `DiscordMemoryCache` object has a nearly identical interface to the old `DiscordShardCache`.
+    - DM channels are no longer cached since the Gateway no longer sends 'Channel Create' events for DMs as of v8.
 - `IDiscordGateway` breaking changes:
     - Events have been renamed to be more consistent. All new event names follow the pattern `OnEventName` (e.g. `OnMessageCreated` was renamed to `OnMessageCreate`).
     - Events now emit unique event args per event instead of some events sharing arg types (arg class names now follow the pattern `EventNameEventArgs`).

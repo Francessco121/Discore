@@ -16,7 +16,6 @@ namespace Discore.Caching
     public class DiscordMemoryCache : IDisposable
     {
         readonly CacheDictionary<MutableUser> users;
-        readonly CacheDictionary<MutableDMChannel> dmChannels;
 
         readonly CacheDictionary<MutableGuild> guilds;
         readonly CacheDictionary<DiscordGuildMetadata> guildMetadata;
@@ -53,7 +52,6 @@ namespace Discore.Caching
             guildChannelIds = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
 
             users = new CacheDictionary<MutableUser>();
-            dmChannels = new CacheDictionary<MutableDMChannel>();
 
             guilds = new CacheDictionary<MutableGuild>();
             guildMetadata = new CacheDictionary<DiscordGuildMetadata>();
@@ -364,20 +362,7 @@ namespace Discore.Caching
 
         private void Gateway_OnChannelCreated(object sender, ChannelCreateEventArgs e)
         {
-            if (e.Channel is DiscordDMChannel dmChannel)
-            {
-                // Cache recipient user
-                MutableUser mutableUser = CacheUser(dmChannel.Recipient);
-
-                // Cache DM channel
-                MutableDMChannel? mutableDMChannel;
-                if (!dmChannels.TryGetValue(e.Channel.Id, out mutableDMChannel))
-                {
-                    mutableDMChannel = new MutableDMChannel(e.Channel.Id, mutableUser);
-                    dmChannels[e.Channel.Id] = mutableDMChannel;
-                }
-            }
-            else if (e.Channel is DiscordGuildChannel guildChannel)
+            if (e.Channel is DiscordGuildChannel guildChannel)
             {
                 // Cache guild channel
                 guildChannels[e.Channel.Id] = guildChannel;
@@ -395,16 +380,7 @@ namespace Discore.Caching
 
         private void Gateway_OnChannelDeleted(object sender, ChannelDeleteEventArgs e)
         {
-            if (e.Channel is DiscordDMChannel dmChannel)
-            {
-                // Remove DM channel
-                if (dmChannels.TryRemove(dmChannel.Id, out MutableDMChannel? mutableDMChannel))
-                {
-                    // Clear references
-                    mutableDMChannel.ClearReferences();
-                }
-            }
-            else if (e.Channel is DiscordGuildChannel guildChannel)
+            if (e.Channel is DiscordGuildChannel guildChannel)
             {
                 // Remove guild channel
                 if (guildChannelIds.TryGetValue(guildChannel.GuildId, out ConcurrentHashSet<Snowflake> channelIds))
@@ -552,7 +528,7 @@ namespace Discore.Caching
         /// </summary>
         public IReadOnlyList<Snowflake> GetAllGuildIds()
         {
-            List<Snowflake> ids = new List<Snowflake>(guildIds.Count);
+            var ids = new List<Snowflake>(guildIds.Count);
             foreach (Snowflake id in guildIds)
                 ids.Add(id);
 
@@ -564,7 +540,7 @@ namespace Discore.Caching
         /// </summary>
         public IReadOnlyList<Snowflake> GetUnavailableGuildIds()
         {
-            List<Snowflake> ids = new List<Snowflake>(unavailableGuildIds.Count);
+            var ids = new List<Snowflake>(unavailableGuildIds.Count);
             foreach (Snowflake id in unavailableGuildIds)
                 ids.Add(id);
 
@@ -600,19 +576,7 @@ namespace Discore.Caching
         /// </summary>
         public DiscordChannel? GetChannel(Snowflake channelId)
         {
-            DiscordGuildChannel? guildChannel = guildChannels[channelId];
-            if (guildChannel != null)
-                return guildChannel;
-            else
-                return dmChannels[channelId]?.ImmutableEntity;
-        }
-
-        /// <summary>
-        /// Returns the specified DM channel or, null if it is not currently cached or is not a DM channel.
-        /// </summary>
-        public DiscordDMChannel? GetDMChannel(Snowflake dmChannelId)
-        {
-            return dmChannels[dmChannelId]?.ImmutableEntity;
+            return guildChannels[channelId];
         }
 
         /// <summary>
@@ -622,7 +586,7 @@ namespace Discore.Caching
         {
             if (guildChannelIds.TryGetValue(guildId, out ConcurrentHashSet<Snowflake>? guildChannelsIdSet))
             {
-                List<DiscordGuildChannel> guildChannels = new List<DiscordGuildChannel>();
+                var guildChannels = new List<DiscordGuildChannel>();
                 foreach (Snowflake guildChannelId in guildChannelsIdSet)
                 {
                     DiscordChannel? channel = this.guildChannels[guildChannelId];
@@ -747,7 +711,6 @@ namespace Discore.Caching
             guildChannelIds.Clear();
 
             users.Clear();
-            dmChannels.Clear();
 
             guilds.Clear();
             guildMetadata.Clear();

@@ -19,7 +19,6 @@ namespace Discore.WebSocket.Internal
         public event EventHandler<ChannelUpdateEventArgs>? OnChannelUpdate;
         public event EventHandler<ChannelDeleteEventArgs>? OnChannelDelete;
 
-
         public event EventHandler<GuildCreateEventArgs>? OnGuildCreate;
         public event EventHandler<GuildUpdateEventArgs>? OnGuildUpdate;
         public event EventHandler<GuildDeleteEventArgs>? OnGuildDelete;
@@ -79,6 +78,45 @@ namespace Discore.WebSocket.Internal
 
                 log.LogVerbose($"[{prefix}] trace = {sb}");
             }
+        }
+
+        DiscordChannel DeserializeChannel(JsonElement data)
+        {
+            if (data.HasProperty("guild_id"))
+            {
+                // Guild channel
+                return DeserializeGuildChannel(data, data.GetProperty("guild_id").GetSnowflake());
+            }
+            else
+            {
+                var type = (DiscordChannelType)data.GetProperty("type").GetInt32();
+
+                if (type == DiscordChannelType.DirectMessage)
+                {
+                    // DM channel
+                    return new DiscordDMChannel(data);
+                }
+                else
+                {
+                    // Fallback
+                    return new DiscordChannel(data, type);
+                }
+            }
+        }
+
+        DiscordGuildChannel DeserializeGuildChannel(JsonElement data, Snowflake guildId)
+        {
+            var type = (DiscordChannelType)data.GetProperty("type").GetInt32();
+
+            return type switch
+            {
+                DiscordChannelType.GuildText => new DiscordGuildTextChannel(data, guildId),
+                DiscordChannelType.GuildVoice => new DiscordGuildVoiceChannel(data, guildId),
+                DiscordChannelType.GuildCategory => new DiscordGuildCategoryChannel(data, guildId),
+                DiscordChannelType.GuildNews => new DiscordGuildNewsChannel(data, guildId),
+                DiscordChannelType.GuildStore => new DiscordGuildStoreChannel(data, guildId),
+                _ => new DiscordGuildChannel(data, type, guildId)
+            };
         }
 
         [DispatchEvent("READY")]
@@ -193,24 +231,7 @@ namespace Discore.WebSocket.Internal
 
             for (int i = 0; i < channels.Length; i++)
             {
-                JsonElement channelData = channelsArray[i];
-                DiscordChannelType channelType = (DiscordChannelType)channelData.GetProperty("type").GetInt32();
-
-                DiscordGuildChannel channel;
-                if (channelType == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(channelData, guildId);
-                else if (channelType == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(channelData, guildId);
-                else if (channelType == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(channelData, guildId);
-                else if (channelType == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(channelData, guildId);
-                else if (channelType == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(channelData, guildId);
-                else
-                    channel = new DiscordGuildChannel(channelData, channelType, guildId);
-
-                channels[i] = channel;
+                channels[i] = DeserializeGuildChannel(channelsArray[i], guildId);
             }
 
             // Deserialize voice states
@@ -421,39 +442,8 @@ namespace Discore.WebSocket.Internal
         [DispatchEvent("CHANNEL_CREATE")]
         void HandleChannelCreateEvent(JsonElement data)
         {
-            Snowflake id = data.GetProperty("id").GetSnowflake();
-            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
-
-            DiscordChannel channel;
-
-            if (type == DiscordChannelType.DirectMessage)
-            {
-                // DM channel
-                channel = new DiscordDMChannel(data);
-            }
-            else if (data.HasProperty("guild_id"))
-            {
-                // Guild channel
-                Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
-
-                if (type == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(data, guildId);
-                else
-                    channel = new DiscordGuildChannel(data, type, guildId);
-            }
-            else
-            {
-                // Fallback
-                channel = new DiscordChannel(data, type);
-            }
+            // Deserialize channel
+            DiscordChannel channel = DeserializeChannel(data);
 
             // Fire event
             OnChannelCreate?.Invoke(this, new ChannelCreateEventArgs(shard, channel));
@@ -462,24 +452,8 @@ namespace Discore.WebSocket.Internal
         [DispatchEvent("CHANNEL_UPDATE")]
         void HandleChannelUpdateEvent(JsonElement data)
         {
-            Snowflake id = data.GetProperty("id").GetSnowflake();
-            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
-            Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
-
-            DiscordGuildChannel channel;
-
-            if (type == DiscordChannelType.GuildText)
-                channel = new DiscordGuildTextChannel(data, guildId);
-            else if (type == DiscordChannelType.GuildVoice)
-                channel = new DiscordGuildVoiceChannel(data, guildId);
-            else if (type == DiscordChannelType.GuildCategory)
-                channel = new DiscordGuildCategoryChannel(data, guildId);
-            else if (type == DiscordChannelType.GuildNews)
-                channel = new DiscordGuildNewsChannel(data, guildId);
-            else if (type == DiscordChannelType.GuildStore)
-                channel = new DiscordGuildStoreChannel(data, guildId);
-            else
-                channel = new DiscordGuildChannel(data, type, guildId);
+            // Deserialize channel
+            DiscordChannel channel = DeserializeChannel(data);
 
             // Fire event
             OnChannelUpdate?.Invoke(this, new ChannelUpdateEventArgs(shard, channel));
@@ -488,39 +462,8 @@ namespace Discore.WebSocket.Internal
         [DispatchEvent("CHANNEL_DELETE")]
         void HandleChannelDeleteEvent(JsonElement data)
         {
-            Snowflake id = data.GetProperty("id").GetSnowflake();
-            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
-
-            DiscordChannel channel;
-
-            if (type == DiscordChannelType.DirectMessage)
-            {
-                // DM channel
-                channel = new DiscordDMChannel(data);
-            }
-            else if (data.HasProperty("guild_id"))
-            {
-                // Guild channel
-                Snowflake guildId = data.GetProperty("guild_id").GetSnowflake();
-
-                if (type == DiscordChannelType.GuildText)
-                    channel = new DiscordGuildTextChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildVoice)
-                    channel = new DiscordGuildVoiceChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildCategory)
-                    channel = new DiscordGuildCategoryChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildNews)
-                    channel = new DiscordGuildNewsChannel(data, guildId);
-                else if (type == DiscordChannelType.GuildStore)
-                    channel = new DiscordGuildStoreChannel(data, guildId);
-                else
-                    channel = new DiscordGuildChannel(data, type, guildId);
-            }
-            else
-            {
-                // Fallback
-                channel = new DiscordChannel(data, type);
-            }
+            // Deserialize channel
+            DiscordChannel channel = DeserializeChannel(data);
 
             // Fire event
             OnChannelDelete?.Invoke(this, new ChannelDeleteEventArgs(shard, channel));
