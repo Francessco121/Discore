@@ -63,36 +63,6 @@ namespace Discore
         /// </summary>
         public IReadOnlyList<DiscordEmbedField>? Fields { get; }
 
-        public DiscordEmbed(
-            string? title, 
-            string? type, 
-            string? description, 
-            string? url, 
-            DateTime? timestamp, 
-            int? color, 
-            DiscordEmbedFooter? footer, 
-            DiscordEmbedImage? image, 
-            DiscordEmbedThumbnail? thumbnail, 
-            DiscordEmbedVideo? video, 
-            DiscordEmbedProvider? provider, 
-            DiscordEmbedAuthor? author, 
-            IReadOnlyList<DiscordEmbedField>? fields)
-        {
-            Title = title;
-            Type = type;
-            Description = description;
-            Url = url;
-            Timestamp = timestamp;
-            Color = color;
-            Footer = footer;
-            Image = image;
-            Thumbnail = thumbnail;
-            Video = video;
-            Provider = provider;
-            Author = author;
-            Fields = fields;
-        }
-
         internal DiscordEmbed(JsonElement json)
         {
             Title = json.GetPropertyOrNull("title")?.GetString();

@@ -31,20 +31,6 @@ namespace Discore
         /// </summary>
         public DiscordClientStatus? ClientStatus { get; }
 
-        public DiscordUserPresence(
-            DiscordPartialUser user, 
-            Snowflake guildId,
-            DiscordUserStatus? status, 
-            IReadOnlyList<DiscordActivity>? activities, 
-            DiscordClientStatus? clientStatus)
-        {
-            User = user;
-            GuildId = guildId;
-            Status = status;
-            Activities = activities;
-            ClientStatus = clientStatus;
-        }
-
         internal DiscordUserPresence(JsonElement json, Snowflake guildId)
         {
             GuildId = guildId;

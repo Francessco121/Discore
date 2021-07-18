@@ -59,10 +59,7 @@ namespace Discore
 
         // TODO: Add system, locale, flags, premium_type, public_flags
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="username"/> or <paramref name="discriminator"/> is null.
-        /// </exception>
-        public DiscordUser(
+        internal DiscordUser(
             Snowflake id,
             string username, 
             string discriminator, 

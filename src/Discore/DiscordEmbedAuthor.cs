@@ -24,14 +24,6 @@ namespace Discore
         /// </summary>
         public string? ProxyIconUrl { get; }
 
-        public DiscordEmbedAuthor(string? name, string? url, string? iconUrl, string? proxyIconUrl)
-        {
-            Name = name;
-            Url = url;
-            IconUrl = iconUrl;
-            ProxyIconUrl = proxyIconUrl;
-        }
-
         internal DiscordEmbedAuthor(JsonElement json)
         {
             Name = json.GetPropertyOrNull("name")?.GetString();

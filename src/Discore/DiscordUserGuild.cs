@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -26,21 +25,6 @@ namespace Discore
         public DiscordPermission Permissions { get; }
 
         // TODO: add: features
-
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
-        public DiscordUserGuild(
-            Snowflake id,
-            string name, 
-            DiscordCdnUrl? icon, 
-            bool isOwner, 
-            DiscordPermission permissions)
-            : base(id)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Icon = icon;
-            IsOwner = isOwner;
-            Permissions = permissions;
-        }
 
         internal DiscordUserGuild(JsonElement json)
             : base(json)

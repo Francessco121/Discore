@@ -17,13 +17,6 @@ namespace Discore
         /// </summary>
         public Snowflake GuildId { get; }
 
-        public DiscordGuildWidgetSettings(bool enabled, Snowflake? channelId, Snowflake guildId)
-        {
-            Enabled = enabled;
-            ChannelId = channelId;
-            GuildId = guildId;
-        }
-
         internal DiscordGuildWidgetSettings(JsonElement json, Snowflake guildId)
         {
             GuildId = guildId;

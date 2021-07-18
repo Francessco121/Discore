@@ -43,29 +43,6 @@ namespace Discore
 
         // TODO: add premium_since, pending
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="user"/> or <paramref name="roleIds"/> is null.
-        /// </exception>
-        public DiscordPartialGuildMember(
-            Snowflake id,
-            Snowflake guildId,
-            DiscordUser user,
-            string? nickname,
-            IReadOnlyList<Snowflake> roleIds,
-            DateTime? joinedAt,
-            bool? isDeaf,
-            bool? isMute)
-            : base(id)
-        {
-            GuildId = guildId;
-            User = user ?? throw new ArgumentNullException(nameof(user));
-            Nickname = nickname;
-            RoleIds = roleIds ?? throw new ArgumentNullException(nameof(roleIds));
-            JoinedAt = joinedAt;
-            IsDeaf = isDeaf;
-            IsMute = isMute;
-        }
-
         internal DiscordPartialGuildMember(JsonElement json, Snowflake guildId)
             : base(id: json.GetProperty("user").GetProperty("id").GetSnowflake())
         {

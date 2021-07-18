@@ -140,12 +140,7 @@ namespace Discore
         /// </summary>
         public IReadOnlyDictionary<Snowflake, DiscordEmoji> Emojis { get; }
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="name"/>, <paramref name="regionId"/>,
-        /// <paramref name="preferredLocale"/>, <paramref name="roles"/>,
-        /// or <paramref name="emojis"/> is null.
-        /// </exception>
-        public DiscordGuild(
+        internal DiscordGuild(
             Snowflake id,
             string name,
             DiscordCdnUrl? icon,

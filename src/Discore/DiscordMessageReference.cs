@@ -19,13 +19,6 @@ namespace Discore
         /// </summary>
         public Snowflake? GuildId { get; }
 
-        public DiscordMessageReference(Snowflake? messageId, Snowflake channelId, Snowflake? guildId)
-        {
-            MessageId = messageId;
-            ChannelId = channelId;
-            GuildId = guildId;
-        }
-
         internal DiscordMessageReference(JsonElement json)
         {
             MessageId = json.GetPropertyOrNull("message_id")?.GetSnowflake();

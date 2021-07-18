@@ -22,12 +22,6 @@ namespace Discore
             || ChannelType == DiscordChannelType.GuildNews
             || ChannelType == DiscordChannelType.GuildStore;
 
-        public DiscordChannel(Snowflake id, DiscordChannelType type)
-            : base(id)
-        {
-            ChannelType = type;
-        }
-
         internal DiscordChannel(JsonElement json, DiscordChannelType type)
             : base(json)
         {

@@ -33,21 +33,6 @@ namespace Discore
 
         // TODO: add pending
 
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="roleIds"/> is null.</exception>
-        public DiscordMessageMember(
-            IReadOnlyList<Snowflake> roleIds, 
-            string? nickname, 
-            DateTime joinedAt,
-            bool isDeaf, 
-            bool isMute)
-        {
-            RoleIds = roleIds ?? throw new ArgumentNullException(nameof(roleIds));
-            Nickname = nickname;
-            JoinedAt = joinedAt;
-            IsDeaf = isDeaf;
-            IsMute = isMute;
-        }
-
         internal DiscordMessageMember(JsonElement json)
         {
             Nickname = json.GetPropertyOrNull("nick")?.GetString();

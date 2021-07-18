@@ -21,13 +21,6 @@ namespace Discore
 
         // TODO: add proxy_url
 
-        public DiscordEmbedVideo(string? url, int? width, int? height)
-        {
-            Url = url;
-            Width = width;
-            Height = height;
-        }
-
         internal DiscordEmbedVideo(JsonElement json)
         {
             Url = json.GetPropertyOrNull("url")?.GetString();

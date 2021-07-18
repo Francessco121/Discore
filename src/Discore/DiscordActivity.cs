@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -21,17 +20,6 @@ namespace Discore
         /// Otherwise, returns null.
         /// </summary>
         public string? Url { get; }
-
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="name"/> is null.</exception>
-        public DiscordActivity(
-            string name, 
-            DiscordActivityType type, 
-            string? url)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Type = type;
-            Url = url;
-        }
 
         internal DiscordActivity(JsonElement json)
         {

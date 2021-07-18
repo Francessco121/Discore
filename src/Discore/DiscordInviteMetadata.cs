@@ -42,41 +42,6 @@ namespace Discore
         /// </summary>
         public bool IsRevoked { get; }
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="code"/> or <paramref name="channel"/> is null.
-        /// </exception>
-        public DiscordInviteMetadata(
-            string code,
-            DiscordInviteGuild? guild,
-            DiscordInviteChannel channel,
-            DiscordUser? targetUser,
-            DiscordInviteTargetUserType? targetUserType,
-            int? approximatePresenceCount,
-            int? approximateMemberCount,
-            DiscordUser? inviter, 
-            int uses, 
-            int maxUses, 
-            int maxAge, 
-            bool isTemporary, 
-            DateTime createdAt,
-            bool isRevoked)
-            : base(code: code,
-                  guild: guild,
-                  channel: channel,
-                  targetUser: targetUser,
-                  targetUserType: targetUserType,
-                  approximatePresenceCount: approximatePresenceCount,
-                  approximateMemberCount: approximateMemberCount)
-        {
-            Inviter = inviter;
-            Uses = uses;
-            MaxUses = maxUses;
-            MaxAge = maxAge;
-            IsTemporary = isTemporary;
-            CreatedAt = createdAt;
-            IsRevoked = isRevoked;
-        }
-
         internal DiscordInviteMetadata(JsonElement json)
             : base(json)
         {

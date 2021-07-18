@@ -37,7 +37,7 @@ namespace Discore
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="fileName"/> or <paramref name="baseUrl"/> is null.
         /// </exception>
-        public DiscordCdnUrl(
+        private DiscordCdnUrl(
             DiscordCdnUrlType type, 
             Snowflake? resourceId, 
             string fileName,
@@ -56,7 +56,7 @@ namespace Discore
         public static DiscordCdnUrl ForCustomEmoji(Snowflake emojiId)
         {
             return new DiscordCdnUrl(DiscordCdnUrlType.CustomEmoji, emojiId, emojiId.ToString(),
-                $"{CdnBaseUrl}/emojis/{emojiId}");
+                $"emojis/{emojiId}");
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Discore
             if (iconHash == null) throw new ArgumentNullException(nameof(iconHash));
 
             return new DiscordCdnUrl(DiscordCdnUrlType.GuildIcon, guildId, iconHash,
-                $"{CdnBaseUrl}/icons/{guildId}/{iconHash}");
+                $"icons/{guildId}/{iconHash}");
         }
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Discore
             if (splashHash == null) throw new ArgumentNullException(nameof(splashHash));
 
             return new DiscordCdnUrl(DiscordCdnUrlType.GuildSplash, guildId, splashHash,
-                $"{CdnBaseUrl}/splashes/{guildId}/{splashHash}");
+                $"splashes/{guildId}/{splashHash}");
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace Discore
             if (bannerHash == null) throw new ArgumentNullException(nameof(bannerHash));
 
             return new DiscordCdnUrl(DiscordCdnUrlType.GuildBanner, guildId, bannerHash,
-                $"{CdnBaseUrl}/banners/{guildId}/{bannerHash}");
+                $"banners/{guildId}/{bannerHash}");
         }
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Discore
             string fileName = (discriminatorNum % 5).ToString();
 
             return new DiscordCdnUrl(DiscordCdnUrlType.DefaultUserAvatar, null, fileName,
-                $"{CdnBaseUrl}/embed/avatars/{fileName}");
+                $"embed/avatars/{fileName}");
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace Discore
             if (avatarHash == null) throw new ArgumentNullException(nameof(avatarHash));
 
             return new DiscordCdnUrl(DiscordCdnUrlType.UserAvatar, userId, avatarHash,
-                $"{CdnBaseUrl}/avatars/{userId}/{avatarHash}");
+                $"avatars/{userId}/{avatarHash}");
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Discore
             if (iconHash == null) throw new ArgumentNullException(nameof(iconHash));
 
             return new DiscordCdnUrl(DiscordCdnUrlType.ApplicationIcon, applicationId, iconHash,
-                $"{CdnBaseUrl}/app-icons/{applicationId}/{iconHash}");
+                $"app-icons/{applicationId}/{iconHash}");
         }
 
         /// <summary>

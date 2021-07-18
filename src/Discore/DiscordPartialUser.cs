@@ -21,18 +21,6 @@ namespace Discore
 
         // TODO: Add system, locale, flags, premium_type, public_flags
 
-        public DiscordPartialUser(
-            Snowflake id,
-            string? username,
-            string? discriminator,
-            DiscordCdnUrl? avatar)
-            : base(id)
-        {
-            Username = username;
-            Discriminator = discriminator;
-            Avatar = avatar;
-        }
-
         internal DiscordPartialUser(JsonElement json)
             : base(json)
         {

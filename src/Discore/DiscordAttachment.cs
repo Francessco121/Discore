@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -29,28 +28,6 @@ namespace Discore
         /// Gets the pixel-height of this attachment.
         /// </summary>
         public int? Height { get; }
-
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="fileName"/>, <paramref name="url"/>,
-        /// or <paramref name="proxyUrl"/> is null.
-        /// </exception>
-        public DiscordAttachment(
-            Snowflake id,
-            string fileName, 
-            int size, 
-            string url, 
-            string proxyUrl, 
-            int? width, 
-            int? height)
-            : base(id)
-        {
-            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
-            Size = size;
-            Url = url ?? throw new ArgumentNullException(nameof(url));
-            ProxyUrl = proxyUrl ?? throw new ArgumentNullException(nameof(proxyUrl));
-            Width = width;
-            Height = height;
-        }
 
         internal DiscordAttachment(JsonElement json)
             : base(json)

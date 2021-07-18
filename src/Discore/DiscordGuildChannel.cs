@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text.Json;
 
@@ -25,24 +24,6 @@ namespace Discore
         /// Gets the ID of the guild this channel is in.
         /// </summary>
         public Snowflake GuildId { get; }
-
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
-        /// </exception>
-        public DiscordGuildChannel(
-            Snowflake id,
-            DiscordChannelType type,
-            string name,
-            int position,
-            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
-            Snowflake guildId)
-            : base(id, type)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Position = position;
-            PermissionOverwrites = permissionOverwrites ?? throw new ArgumentNullException(nameof(permissionOverwrites));
-            GuildId = guildId;
-        }
 
         internal DiscordGuildChannel(JsonElement json, DiscordChannelType type, Snowflake? guildId)
             : base(json, type)

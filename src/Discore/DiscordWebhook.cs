@@ -40,24 +40,6 @@ namespace Discore
 
         // TODO: add type, application_id
 
-        public DiscordWebhook(
-            Snowflake id,
-            Snowflake? guildId, 
-            Snowflake channelId, 
-            DiscordUser? user, 
-            string? name, 
-            DiscordCdnUrl? avatar, 
-            string? token)
-            : base(id)
-        {
-            GuildId = guildId;
-            ChannelId = channelId;
-            User = user;
-            Name = name;
-            Avatar = avatar;
-            Token = token;
-        }
-
         internal DiscordWebhook(JsonElement json)
             : base(json)
         {

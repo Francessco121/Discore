@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace Discore
@@ -20,30 +18,6 @@ namespace Discore
         /// Gets the ID of the parent category channel or null if the channel is not in a category.
         /// </summary>
         public Snowflake? ParentId { get; }
-
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
-        /// </exception>
-        public DiscordGuildVoiceChannel(
-            Snowflake id,
-            string name,
-            int position,
-            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
-            Snowflake guildId,
-            int bitrate,
-            int userLimit,
-            Snowflake? parentId)
-            : base(id,
-                  DiscordChannelType.GuildVoice,
-                  name,
-                  position,
-                  permissionOverwrites,
-                  guildId)
-        {
-            Bitrate = bitrate;
-            UserLimit = userLimit;
-            ParentId = parentId;
-        }
 
         internal DiscordGuildVoiceChannel(JsonElement json, Snowflake? guildId = null)
             : base(json, DiscordChannelType.GuildVoice, guildId)

@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -21,14 +20,6 @@ namespace Discore
         /// Use <see cref="Http.DiscordHttpClient.GetChannel{T}(Snowflake)"/> to get an up-to-date ID.
         /// </summary>
         public Snowflake? LastMessageId { get; }
-
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="recipient"/> is null.</exception>
-        public DiscordDMChannel(Snowflake id, DiscordUser recipient, Snowflake? lastMessageId)
-            : base(id, DiscordChannelType.DirectMessage)
-        {
-            Recipient = recipient ?? throw new ArgumentNullException(nameof(recipient));
-            LastMessageId = lastMessageId;
-        }
 
         internal DiscordDMChannel(JsonElement json)
             : base(json, DiscordChannelType.DirectMessage)

@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -19,14 +18,6 @@ namespace Discore
         /// Gets the emoji information of this reaction.
         /// </summary>
         public DiscordReactionEmoji Emoji { get; }
-
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="emoji"/> is null.</exception>
-        public DiscordReaction(int count, bool me, DiscordReactionEmoji emoji)
-        {
-            Count = count;
-            Me = me;
-            Emoji = emoji ?? throw new ArgumentNullException(nameof(emoji));
-        }
 
         internal DiscordReaction(JsonElement json)
         {

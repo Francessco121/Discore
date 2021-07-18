@@ -57,38 +57,6 @@ namespace Discore
 
         // TODO: add enable_emoticons, subscriber_count, revoked, application
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="name"/>, <paramref name="type"/>,
-        /// or <paramref name="account"/> is null.
-        /// </exception>
-        public DiscordIntegration(
-            Snowflake id,
-            string name, 
-            string type, 
-            bool isEnabled, 
-            bool? isSyncing, 
-            Snowflake? roleId, 
-            int? expireBehavior, 
-            int? expireGracePeriod, 
-            DiscordUser? user, 
-            DiscordIntegrationAccount account, 
-            DateTime? syncedAt, 
-            Snowflake? guildId)
-            : base(id)
-        {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Type = type ?? throw new ArgumentNullException(nameof(type));
-            IsEnabled = isEnabled;
-            IsSyncing = isSyncing;
-            RoleId = roleId;
-            ExpireBehavior = expireBehavior;
-            ExpireGracePeriod = expireGracePeriod;
-            User = user;
-            Account = account ?? throw new ArgumentNullException(nameof(account));
-            SyncedAt = syncedAt;
-            GuildId = guildId;
-        }
-
         internal DiscordIntegration(JsonElement json, Snowflake? guildId = null)
             : base(json)
         {

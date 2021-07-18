@@ -22,20 +22,6 @@ namespace Discore
         /// </summary>
         public DiscordPermission Deny { get; }
 
-        public DiscordOverwrite(
-            Snowflake id,
-            Snowflake channelId, 
-            DiscordOverwriteType type, 
-            DiscordPermission allow, 
-            DiscordPermission deny)
-            : base(id)
-        {
-            ChannelId = channelId;
-            Type = type;
-            Allow = allow;
-            Deny = deny;
-        }
-
         internal DiscordOverwrite(JsonElement json, Snowflake channelId)
             : base(json)
         {

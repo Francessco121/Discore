@@ -42,28 +42,6 @@ namespace Discore
 
         // TODO: add tags
 
-        public DiscordRole(
-            Snowflake id,
-            Snowflake guildId, 
-            string name, 
-            DiscordColor color, 
-            bool isHoisted, 
-            int position, 
-            DiscordPermission permissions, 
-            bool isManaged, 
-            bool isMentionable)
-            : base(id)
-        {
-            GuildId = guildId;
-            Name = name;
-            Color = color;
-            IsHoisted = isHoisted;
-            Position = position;
-            Permissions = permissions;
-            IsManaged = isManaged;
-            IsMentionable = isMentionable;
-        }
-
         internal DiscordRole(JsonElement json, Snowflake guildId)
             : base(json)
         {

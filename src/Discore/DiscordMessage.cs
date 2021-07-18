@@ -107,12 +107,7 @@ namespace Discore
 
         // TODO: add guild_id, mentions.member, stickers, referenced_message, interaction
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="author"/>, <paramref name="content"/>,
-        /// <paramref name="mentionedRoleIds"/>, <paramref name="attachments"/>,
-        /// or <paramref name="embeds"/> is null.
-        /// </exception>
-        public DiscordMessage(
+        private DiscordMessage(
             Snowflake id,
             Snowflake channelId, 
             DiscordUser author, 

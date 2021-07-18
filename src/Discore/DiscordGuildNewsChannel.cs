@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Text.Json;
 
 namespace Discore
@@ -30,32 +28,6 @@ namespace Discore
         /// Use <see cref="Http.DiscordHttpClient.GetChannel{T}(Snowflake)"/> to get an up-to-date ID.
         /// </summary>
         public Snowflake? LastMessageId { get; }
-
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="name"/> or <paramref name="permissionOverwrites"/> is null.
-        /// </exception>
-        public DiscordGuildNewsChannel(
-            Snowflake id,
-            string name,
-            int position,
-            IReadOnlyDictionary<Snowflake, DiscordOverwrite> permissionOverwrites,
-            Snowflake guildId,
-            string? topic,
-            bool nsfw,
-            Snowflake? parentId,
-            Snowflake? lastMessageId)
-            : base(id,
-                  DiscordChannelType.GuildNews,
-                  name,
-                  position,
-                  permissionOverwrites,
-                  guildId)
-        {
-            Topic = topic;
-            Nsfw = nsfw;
-            ParentId = parentId;
-            LastMessageId = lastMessageId;
-        }
 
         internal DiscordGuildNewsChannel(JsonElement json, Snowflake? guildId = null)
             : base(json, DiscordChannelType.GuildNews, guildId)

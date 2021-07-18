@@ -16,12 +16,6 @@ namespace Discore
         /// </summary>
         public string? Url { get; }
 
-        public DiscordEmbedProvider(string? name, string? url)
-        {
-            Name = name;
-            Url = url;
-        }
-
         internal DiscordEmbedProvider(JsonElement json)
         {
             Name = json.GetPropertyOrNull("name")?.GetString();

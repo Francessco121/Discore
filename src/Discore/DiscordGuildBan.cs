@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -14,13 +13,6 @@ namespace Discore
         /// Gets the user that was banned.
         /// </summary>
         public DiscordUser User { get; }
-
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="user"/> is null.</exception>
-        public DiscordGuildBan(string? reason, DiscordUser user)
-        {
-            Reason = reason;
-            User = user ?? throw new ArgumentNullException(nameof(user));
-        }
 
         internal DiscordGuildBan(JsonElement json)
         {

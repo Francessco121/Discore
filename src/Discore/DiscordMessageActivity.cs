@@ -15,12 +15,6 @@ namespace Discore
         /// </summary>
         public string? PartyId { get; }
 
-        public DiscordMessageActivity(DiscordMessageActivityType type, string? partyId)
-        {
-            Type = type;
-            PartyId = partyId;
-        }
-
         internal DiscordMessageActivity(JsonElement json)
         {
             Type = (DiscordMessageActivityType)json.GetProperty("type").GetInt32();

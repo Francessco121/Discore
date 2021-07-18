@@ -43,10 +43,7 @@ namespace Discore
 
         // TODO: add premium_since, pending, permissions
 
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="user"/> or <paramref name="roleIds"/> is null.
-        /// </exception>
-        public DiscordGuildMember(
+        internal DiscordGuildMember(
             Snowflake id,
             Snowflake guildId, 
             DiscordUser user, 

@@ -3,7 +3,6 @@
 - Discore now targets .NET Standard 2.1.
 - Discord entities (such as `DiscordMessage`) no longer keep a reference to a `DiscordHttpClient` internally and therefore no longer have methods for modifying the entity.
     - All removed methods were just shortcuts for `DiscordHttpClient` calls and can be migrated by just using a `DiscordHttpClient` instead (ex. `DiscordMessage.Edit()` -> `DiscordHttpClient.EditMessage(DiscordMessage)`).
-    - Because of this change, all Discord entities now have public constructors so that they can be recreated at runtime outside of Discore. This allows new custom caching opportunities for bots allowing them to persist entities to external storage.
 - Caching breaking changes:
     - `DiscordShardCache` has been replaced with the new `Discore.Caching.DiscordMemoryCache`.
     - `Shard.Cache` was removed in favor of making caching optional for Gateway connections. To get built-in caching behavior back, instantiate the new `DiscordMemoryCache` with your `Shard`. The new `DiscordMemoryCache` object has a nearly identical interface to the old `DiscordShardCache`.
@@ -38,10 +37,9 @@
 - Removed deprecated `ShardFailureReason.IOError`
 
 ### Additions
-> Note: The 'Breaking Changes' section also contains some additions.
 - Added support for Gateway intents.
+    - Intents can be specified using `ShardStartConfig.Intents`.
 - Added `Shard.OnDisconnected`.
-- Added public constructor for `DiscordCdnUrl` so it may be reconstructed from deserialization outside of Discore.
 - Added `ShardFailureReason.InvalidIntents`.
 - Added `ShardFailureReason.DisallowedIntents`.
 - Added `DiscordHttpApiException.Errors`.
@@ -52,7 +50,6 @@
 - `Snowflake` now implements `IEquatable<Snowflake>`.
 - `DiscordCdnUrl` now implements `IEquatable<DiscordCdnUrl>`.
 - Removed dependency on `Newtonsoft.Json`.
-- All Discord entity classes were unsealed.
 
 ### Bug Fixes
 - Fixed race condition that occurred when the application is kicked from a voice channel.

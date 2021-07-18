@@ -19,13 +19,6 @@ namespace Discore
         /// </summary>
         public string? Web { get; }
 
-        public DiscordClientStatus(string? desktop, string? mobile, string? web)
-        {
-            Desktop = desktop;
-            Mobile = mobile;
-            Web = web;
-        }
-
         internal DiscordClientStatus(JsonElement json)
         {
             Desktop = json.GetPropertyOrNull("desktop")?.GetString();

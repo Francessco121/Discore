@@ -24,14 +24,6 @@ namespace Discore
         /// </summary>
         public int? Height { get; }
 
-        public DiscordEmbedImage(string? url, string? proxyUrl, int? width, int? height)
-        {
-            Url = url;
-            ProxyUrl = proxyUrl;
-            Width = width;
-            Height = height;
-        }
-
         internal DiscordEmbedImage(JsonElement json)
         {
             Url = json.GetPropertyOrNull("url")?.GetString();

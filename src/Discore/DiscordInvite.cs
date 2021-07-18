@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -42,27 +41,6 @@ namespace Discore
         /// Will be null if not available.
         /// </summary>
         public int? ApproximateMemberCount { get; }
-
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="code"/> or <paramref name="channel"/> is null.
-        /// </exception>
-        public DiscordInvite(
-            string code, 
-            DiscordInviteGuild? guild, 
-            DiscordInviteChannel channel, 
-            DiscordUser? targetUser, 
-            DiscordInviteTargetUserType? targetUserType, 
-            int? approximatePresenceCount, 
-            int? approximateMemberCount)
-        {
-            Code = code ?? throw new ArgumentNullException(nameof(code));
-            Guild = guild;
-            Channel = channel ?? throw new ArgumentNullException(nameof(channel));
-            TargetUser = targetUser;
-            TargetUserType = targetUserType;
-            ApproximatePresenceCount = approximatePresenceCount;
-            ApproximateMemberCount = approximateMemberCount;
-        }
 
         internal DiscordInvite(JsonElement json)
         {

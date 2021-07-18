@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json;
 
 namespace Discore
@@ -22,13 +21,6 @@ namespace Discore
         public string? SplashHash { get; }
 
         // TODO: add splash, banner, description, icon, features, verification_level, vanity_url_code
-
-        public DiscordInviteGuild(Snowflake guildId, string name, string? splashHash)
-        {
-            GuildId = guildId;
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            SplashHash = splashHash;
-        }
 
         internal DiscordInviteGuild(JsonElement json)
         {

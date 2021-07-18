@@ -102,56 +102,6 @@ namespace Discore
 
         // TODO: add guild_id, mentions.member, stickers, referenced_message, interaction
 
-        public DiscordPartialMessage(
-            Snowflake id,
-            Snowflake channelId,
-            DiscordUser? author,
-            DiscordMessageMember? member,
-            string? content,
-            DateTime? timestamp,
-            DateTime? editedTimestamp,
-            bool? textToSpeech,
-            bool? mentionEveryone,
-            IReadOnlyList<DiscordUser>? mentions,
-            IReadOnlyList<Snowflake>? mentionedRoleIds,
-            IReadOnlyList<DiscordChannelMention>? mentionedChannels,
-            IReadOnlyList<DiscordAttachment>? attachments,
-            IReadOnlyList<DiscordEmbed>? embeds,
-            IReadOnlyList<DiscordReaction>? reactions,
-            Snowflake? nonce,
-            bool? isPinned,
-            Snowflake? webhookId,
-            DiscordMessageType? type,
-            DiscordMessageActivity? activity,
-            DiscordMessageApplication? application,
-            DiscordMessageReference? messageReference,
-            DiscordMessageFlags? flags)
-            : base(id)
-        {
-            ChannelId = channelId;
-            Author = author;
-            Member = member;
-            Content = content;
-            Timestamp = timestamp;
-            EditedTimestamp = editedTimestamp;
-            TextToSpeech = textToSpeech;
-            MentionEveryone = mentionEveryone;
-            Mentions = mentions;
-            MentionedRoleIds = mentionedRoleIds;
-            MentionedChannels = mentionedChannels;
-            Attachments = attachments;
-            Embeds = embeds;
-            Reactions = reactions;
-            Nonce = nonce;
-            IsPinned = isPinned;
-            WebhookId = webhookId;
-            Type = type;
-            Activity = activity;
-            Application = application;
-            MessageReference = messageReference;
-            Flags = flags;
-        }
-
         internal DiscordPartialMessage(JsonElement json)
             : base(json)
         {
