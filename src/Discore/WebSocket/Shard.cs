@@ -118,13 +118,19 @@ namespace Discore.WebSocket
         /// The returned task only finishes once the gateway successfully connects (or is canceled), 
         /// and will continue to retry until then.
         /// </summary>
+        /// <param name="intents">
+        /// A bitwise OR of Gateway event groups to subscribe to.
+        /// <para/>
+        /// Gateway events in groups that are not specified here will never be fired.
+        /// For example, to receive 'MessageCreate' events for guild messages, specify <see cref="GatewayIntent.GuildMessages"/>.
+        /// </param>
         /// <exception cref="InvalidOperationException">Thrown if this shard has already been started.</exception>
         /// <exception cref="ObjectDisposedException">Thrown if this shard has been disposed.</exception>
         /// <exception cref="OperationCanceledException"></exception>
         /// <exception cref="ShardStartException">Thrown if the shard fails to start.</exception>
-        public Task StartAsync(CancellationToken? cancellationToken = null)
+        public Task StartAsync(GatewayIntent intents, CancellationToken? cancellationToken = null)
         {
-            return StartAsync(new ShardStartConfig(), cancellationToken);
+            return StartAsync(new ShardStartConfig { Intents = intents }, cancellationToken);
         }
 
         /// <summary>

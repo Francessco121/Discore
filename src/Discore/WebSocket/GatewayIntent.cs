@@ -8,6 +8,7 @@ namespace Discore.WebSocket
     [Flags]
     public enum GatewayIntent
     {
+        None = 0,
         Guilds = 1 << 0,
         GuildMembers = 1 << 1,
         GuildBans = 1 << 2,
