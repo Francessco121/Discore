@@ -1,6 +1,7 @@
 ﻿using Discore.Http.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Discore.Http
@@ -108,11 +109,23 @@ namespace Discore.Http
         /// Returns the number of members that would be kicked from a guild prune operation.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
-        /// <param name="days">The number of days to count prune for (1 or more).</param>
+        /// <param name="days">The number of days to count prune for (1-30).</param>
+        /// <param name="includeRoles">
+        /// By default, prune will not remove users with roles. You can optionally include specific 
+        /// roles in your prune by providing the <paramref name="includeRoles"/> parameter. Any inactive 
+        /// user that has a subset of the provided role(s) will be counted in the prune and users with 
+        /// additional roles will not.
+        /// </param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<int> GetGuildPruneCount(Snowflake guildId, int days)
+        public async Task<int> GetGuildPruneCount(Snowflake guildId, int? days = null, IEnumerable<Snowflake> includeRoles = null)
         {
-            DiscordApiData data = await rest.Get($"guilds/{guildId}/prune?days={days}",
+            UrlParametersBuilder parameters = new UrlParametersBuilder();
+            if (days != null)
+                parameters["days"] = days.Value.ToString();
+            if (includeRoles != null)
+                parameters["include_roles"] = string.Join(",", includeRoles.Select(r => r.ToString()));
+
+            DiscordApiData data = await rest.Get($"guilds/{guildId}/prune{parameters.ToQueryString()}",
                 $"guilds/{guildId}/prune").ConfigureAwait(false);
             return data.GetInteger("pruned").Value;
         }
@@ -122,16 +135,34 @@ namespace Discore.Http
         /// kicking every member that has been offline for the specified number of days.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
-        /// <param name="days">The number of days to prune (1 or more).</param>
+        /// <param name="days">The number of days to prune (1-30).</param>
+        /// <param name="includeRoles">
+        /// By default, prune will not remove users with roles. You can optionally include specific 
+        /// roles in your prune by providing the <paramref name="includeRoles"/> parameter. Any inactive 
+        /// user that has a subset of the provided role(s) will be counted in the prune and users with 
+        /// additional roles will not.
+        /// </param>
+        /// <param name="computePruneCount">
+        /// For large guilds it's recommended to set this to false. When false, this method will always return 0.
+        /// </param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<int> BeginGuildPrune(Snowflake guildId, int days)
+        public async Task<int> BeginGuildPrune(
+            Snowflake guildId, 
+            int? days = null, 
+            IEnumerable<Snowflake> includeRoles = null,
+            bool? computePruneCount = null)
         {
             DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("days", days);
+            if (days != null)
+                requestData.Set("days", days);
+            if (includeRoles != null)
+                requestData.Set("include_roles", includeRoles.Select(r => r.ToString()).ToArray());
+            if (computePruneCount != null)
+                requestData.Set("compute_prune_count", computePruneCount.Value);
 
             DiscordApiData data = await rest.Post($"guilds/{guildId}/prune", requestData,
                 $"guilds/{guildId}/prune").ConfigureAwait(false);
-            return data.GetInteger("pruned").Value;
+            return data.GetInteger("pruned") ?? 0;
         }
 
         /// <summary>
