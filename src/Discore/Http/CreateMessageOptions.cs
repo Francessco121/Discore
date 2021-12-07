@@ -19,6 +19,14 @@
         /// Gets or sets an embed to be sent with the message.
         /// </summary>
         public EmbedOptions Embed { get; set; }
+        /// <summary>
+        /// Gets or sets the allowed mentions for the message.
+        /// </summary>
+        public AllowedMentionsOptions AllowedMentions { get; set; }
+        /// <summary>
+        /// Gets or sets the message to reply to.
+        /// </summary>
+        public MessageReferenceOptions MessageReference { get; set; }
 
         public CreateMessageOptions() { }
 
@@ -61,6 +69,43 @@
         {
             Embed = embed;
             return this;
+        }
+
+        /// <summary>
+        /// Sets which mentions are allowed for the message.
+        /// </summary>
+        public CreateMessageOptions SetAllowedMentions(AllowedMentionsOptions allowedMentions)
+        {
+            AllowedMentions = allowedMentions;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the message to reply to.
+        /// </summary>
+        public CreateMessageOptions SetMessageReference(MessageReferenceOptions messageReference)
+        {
+            MessageReference = messageReference;
+            return this;
+        }
+
+        internal DiscordApiData Build()
+        {
+            DiscordApiData data = new DiscordApiData(DiscordApiDataType.Container);
+            data.Set("content", Content);
+            data.Set("tts", TextToSpeech);
+            data.SetSnowflake("nonce", Nonce);
+
+            if (Embed != null)
+                data.Set("embed", Embed.Build());
+
+            if (AllowedMentions != null)
+                data.Set("allowed_mentions", AllowedMentions.Build());
+
+            if (MessageReference != null)
+                data.Set("message_reference", MessageReference.Build());
+
+            return data;
         }
     }
 }

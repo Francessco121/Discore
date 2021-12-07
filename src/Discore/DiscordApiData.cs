@@ -575,7 +575,14 @@ namespace Discore
 
             List<DiscordApiData> dataList = new List<DiscordApiData>();
             for (int i = 0; i < array.Count; i++)
-                dataList.Add(new DiscordApiData(array[i]));
+            {
+                // Small trick to choose the correct constructor
+                T value = array[i];
+                if (value is Snowflake snowflake)
+                    dataList.Add(new DiscordApiData(snowflake));
+                else
+                    dataList.Add(new DiscordApiData(value));
+            }
 
             DiscordApiData arrayValue = new DiscordApiData(dataList);
             data[key] = arrayValue;

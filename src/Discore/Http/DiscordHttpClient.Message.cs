@@ -70,13 +70,7 @@ namespace Discore.Http
             if (options == null)
                 throw new ArgumentNullException(nameof(options));
 
-            DiscordApiData requestData = new DiscordApiData(DiscordApiDataType.Container);
-            requestData.Set("content", options.Content);
-            requestData.Set("tts", options.TextToSpeech);
-            requestData.SetSnowflake("nonce", options.Nonce);
-
-            if (options.Embed != null)
-                requestData.Set("embed", options.Embed.Build());
+            DiscordApiData requestData = options.Build();
 
             DiscordApiData returnData = await rest.Post($"channels/{channelId}/messages", requestData,
                 $"channels/{channelId}/messages").ConfigureAwait(false);
@@ -137,13 +131,7 @@ namespace Discore.Http
 
                 if (options != null)
                 {
-                    DiscordApiData payloadJson = new DiscordApiData();
-                    payloadJson.Set("content", options.Content);
-                    payloadJson.Set("tts", options.TextToSpeech);
-                    payloadJson.SetSnowflake("nonce", options.Nonce);
-
-                    if (options.Embed != null)
-                        payloadJson.Set("embed", options.Embed.Build());
+                    DiscordApiData payloadJson = options.Build();
 
                     data.Add(new StringContent(payloadJson.SerializeToJson()), "payload_json");
                 }
@@ -157,7 +145,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current bot can be editted.</para>
+        /// <para>Note: only messages created by the current bot can be edited.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
@@ -172,7 +160,7 @@ namespace Discore.Http
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current bot can be editted.</para>
+        /// <para>Note: only messages created by the current bot can be edited.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -186,6 +174,12 @@ namespace Discore.Http
 
             if (options.Embed != null)
                 requestData.Set("embed", options.Embed.Build());
+
+            if (options.AllowedMentions != null)
+                requestData.Set("allowed_mentions", options.AllowedMentions.Build());
+
+            if (options.Flags != null)
+                requestData.Set("flags", (int)options.Flags);
 
             DiscordApiData returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", requestData,
                 $"channels/{channelId}/messages/message").ConfigureAwait(false);
