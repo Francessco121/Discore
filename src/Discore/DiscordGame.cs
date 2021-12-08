@@ -96,7 +96,7 @@ namespace Discore
 
             DiscordApiData assetsData = data.Get("assets");
             if (assetsData != null)
-                Assets = new DiscordActivityAssets(assetsData, ApplicationId ?? Snowflake.None);
+                Assets = new DiscordActivityAssets(assetsData);
 
             DiscordApiData secretsData = data.Get("secrets");
             if (secretsData != null)

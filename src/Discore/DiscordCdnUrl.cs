@@ -125,6 +125,82 @@ namespace Discore
         }
 
         /// <summary>
+        /// Creates a CDN URL builder for an application cover.
+        /// </summary>
+        /// <param name="applicationId">The ID of the application.</param>
+        /// <param name="coverHash">The cover hash for the application.</param>
+        public static DiscordCdnUrl ForApplicationCover(Snowflake applicationId, string coverHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.ApplicationCover, applicationId, coverHash,
+                $"{CdnBaseUrl}/app-icons/{applicationId}/{coverHash}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for an application asset.
+        /// </summary>
+        /// <param name="applicationId">The ID of the application.</param>
+        /// <param name="assetId">The application asset ID.</param>
+        public static DiscordCdnUrl ForApplicationAsset(Snowflake applicationId, string assetId)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.ApplicationAsset, applicationId, assetId,
+                $"{CdnBaseUrl}/app-assets/{applicationId}/{assetId}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for an achievement icon.
+        /// </summary>
+        /// <param name="applicationId">The ID of the application.</param>
+        /// <param name="achievementId">The ID of the achievement.</param>
+        /// <param name="iconHash">The hash for the icon.</param>
+        public static DiscordCdnUrl ForAchievementIcon(Snowflake applicationId, long achievementId, string iconHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.AchievementIcon, applicationId, iconHash,
+                $"{CdnBaseUrl}/app-assets/{applicationId}/achievements/{achievementId}/icons/{iconHash}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for a sticker pack banner.
+        /// </summary>
+        /// <param name="assetId">The asset ID.</param>
+        public static DiscordCdnUrl ForStickerPackBanner(string assetId)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.StickerPackBanner, null, assetId,
+                $"{CdnBaseUrl}/app-assets/710982414301790216/store/{assetId}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for a team icon.
+        /// </summary>
+        /// <param name="teamId">The ID of the team.</param>
+        /// <param name="iconHash">The hash of the team's icon.</param>
+        public static DiscordCdnUrl ForTeamIcon(Snowflake teamId, string iconHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.TeamIcon, teamId, iconHash,
+                $"{CdnBaseUrl}/team-icons/{teamId}/{iconHash}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for a sticker.
+        /// </summary>
+        /// <param name="stickerId">The ID of the sticker.</param>
+        public static DiscordCdnUrl ForSticker(Snowflake stickerId)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.Sticker, stickerId, stickerId.ToString(),
+                $"{CdnBaseUrl}/stickers/{stickerId}");
+        }
+
+        /// <summary>
+        /// Creates a CDN URL builder for a role icon.
+        /// </summary>
+        /// <param name="roleId">The ID of the role.</param>
+        /// <param name="iconHash">The hash of the role's icon.</param>
+        public static DiscordCdnUrl ForRoleIcon(Snowflake roleId, string iconHash)
+        {
+            return new DiscordCdnUrl(DiscordCdnUrlType.RoleIcon, roleId, iconHash,
+                $"{CdnBaseUrl}/role-icons/{roleId}/{iconHash}");
+        }
+
+        /// <summary>
         /// Gets the complete URL with the specified extension and size.
         /// </summary>
         /// <param name="ext">The resource file extension (e.g. png, webp, gif, etc.).</param>
