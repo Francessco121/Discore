@@ -436,11 +436,17 @@ namespace Discore
         /// Returns the number of members that would be kicked from a prune operation.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
-        /// <param name="days">The number of days to count prune for (1 or more).</param>
+        /// <param name="days">The number of days to count prune for (1-30).</param>
+        /// <param name="includeRoles">
+        /// By default, prune will not remove users with roles. You can optionally include specific 
+        /// roles in your prune by providing the <paramref name="includeRoles"/> parameter. Any inactive 
+        /// user that has a subset of the provided role(s) will be counted in the prune and users with 
+        /// additional roles will not.
+        /// </param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<int> GetPruneCount(int days)
+        public Task<int> GetPruneCount(int? days = null, IEnumerable<Snowflake> includeRoles = null)
         {
-            return http.GetGuildPruneCount(Id, days);
+            return http.GetGuildPruneCount(Id, days, includeRoles);
         }
 
         /// <summary>
@@ -448,11 +454,20 @@ namespace Discore
         /// kicking every member that has been offline for the specified number of days.
         /// <para>Requires <see cref="DiscordPermission.KickMembers"/>.</para>
         /// </summary>
-        /// <param name="days">The number of days to prune (1 or more).</param>
+        /// <param name="days">The number of days to prune (1-30).</param>
+        /// <param name="includeRoles">
+        /// By default, prune will not remove users with roles. You can optionally include specific 
+        /// roles in your prune by providing the <paramref name="includeRoles"/> parameter. Any inactive 
+        /// user that has a subset of the provided role(s) will be counted in the prune and users with 
+        /// additional roles will not.
+        /// </param>
+        /// <param name="computePruneCount">
+        /// For large guilds it's recommended to set this to false. When false, this method will always return 0.
+        /// </param>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<int> BeginPrune(int days)
+        public Task<int> BeginPrune(int? days = null, IEnumerable<Snowflake> includeRoles = null, bool? computePruneCount = null)
         {
-            return http.BeginGuildPrune(Id, days);
+            return http.BeginGuildPrune(Id, days, includeRoles, computePruneCount);
         }
 
         /// <summary>
