@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
-    <Copyright>Ethan Lafrenais 2021</Copyright>
+    <Copyright>Copyright (c) 2016-2021 Ethan Lafrenais and contributors</Copyright>
     <Version>4.5.0</Version>
     <AssemblyVersion>4.5.0.0</AssemblyVersion>
     <FileVersion>4.5.0.0</FileVersion>
-    <Authors>Ethan Lafrenais;Tristan Smith</Authors>
+    <Authors>Ethan Lafrenais;Tristan Smith;Discore Contributors</Authors>
     <PackageTags>discord;discord-api;discord-library;dotnet-standard</PackageTags>
     <Description>Discore is a light-weight .NET Standard library designed for creating Discord bots.
 
@@ -19,6 +19,7 @@ Please note: Discore is not an official Discord API library!</Description>
     <PackageReleaseNotes>See https://github.com/Francessco121/Discore/releases/tag/v4.5.0</PackageReleaseNotes>
     <PackageLicenseFile></PackageLicenseFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -54,6 +55,10 @@ Please note: Discore is not an official Discord API library!</Description>
     <PackageReference Include="System.Net.WebSockets.Client" Version="4.3.2" />
     <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/"/>
   </ItemGroup>
 
 </Project>
