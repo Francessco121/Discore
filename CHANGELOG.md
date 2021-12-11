@@ -36,6 +36,7 @@
     - Renamed `DiscordHttpClient.GetGuildEmbed` to `GetGuildWidget`.
     - Renamed `DiscordHttpClient.ModifyGuildEmbed` to `ModifyGuildWidget`.
 - Removed deprecated `ShardFailureReason.IOError`
+- `DiscordHttpClient.BeginGuildPrune` now returns null if `computePruneCount` is true.
 
 ### Additions
 - Added support for Gateway intents.

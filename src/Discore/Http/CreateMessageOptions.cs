@@ -21,6 +21,14 @@ namespace Discore.Http
         /// Gets or sets an embed to be sent with the message.
         /// </summary>
         public EmbedOptions? Embed { get; set; }
+        /// <summary>
+        /// Gets or sets the allowed mentions for the message.
+        /// </summary>
+        public AllowedMentionsOptions? AllowedMentions { get; set; }
+        /// <summary>
+        /// Gets or sets the message to reply to.
+        /// </summary>
+        public MessageReferenceOptions? MessageReference { get; set; }
 
         public CreateMessageOptions() { }
 
@@ -65,6 +73,24 @@ namespace Discore.Http
             return this;
         }
 
+        /// <summary>
+        /// Sets which mentions are allowed for the message.
+        /// </summary>
+        public CreateMessageOptions SetAllowedMentions(AllowedMentionsOptions allowedMentions)
+        {
+            AllowedMentions = allowedMentions;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets the message to reply to.
+        /// </summary>
+        public CreateMessageOptions SetMessageReference(MessageReferenceOptions messageReference)
+        {
+            MessageReference = messageReference;
+            return this;
+        }
+        
         internal void Build(Utf8JsonWriter writer)
         {
             writer.WriteStartObject();
@@ -77,6 +103,18 @@ namespace Discore.Http
             {
                 writer.WritePropertyName("embed");
                 Embed.Build(writer);
+            }
+
+            if (AllowedMentions != null)
+            {
+                writer.WritePropertyName("allowed_mentions");
+                AllowedMentions.Build(writer);
+            }
+
+            if (MessageReference != null)
+            {
+                writer.WritePropertyName("message_reference");
+                MessageReference.Build(writer);
             }
 
             writer.WriteEndObject();

@@ -11,6 +11,13 @@ namespace Discore
         GuildBanner,
         DefaultUserAvatar,
         UserAvatar,
-        ApplicationIcon
+        ApplicationIcon,
+        ApplicationCover,
+        ApplicationAsset,
+        AchievementIcon,
+        StickerPackBanner,
+        TeamIcon,
+        Sticker,
+        RoleIcon
     }
 }
