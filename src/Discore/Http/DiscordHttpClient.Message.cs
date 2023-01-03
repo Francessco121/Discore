@@ -2,7 +2,9 @@ using Discore.Http.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -90,7 +92,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, string content)
         {
-            return CreateMessage(channelId, new CreateMessageOptions(content));
+            return CreateMessageInternal(channelId, new CreateMessageOptions(content));
         }
 
         /// <summary>
@@ -104,7 +106,7 @@ namespace Discore.Http
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
 
-            return CreateMessage(channel.Id, content);
+            return CreateMessageInternal(channel.Id, new CreateMessageOptions(content));
         }
 
         /// <summary>
@@ -115,17 +117,11 @@ namespace Discore.Http
         /// </summary>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> CreateMessage(Snowflake channelId, CreateMessageOptions options)
+        public Task<DiscordMessage> CreateMessage(Snowflake channelId, CreateMessageOptions options)
         {
-            if (options == null)
-                throw new ArgumentNullException(nameof(options));
+            if (options == null) throw new ArgumentNullException(nameof(options));
 
-            string requestData = BuildJsonContent(options.Build);
-
-            using JsonDocument? returnData = await rest.Post($"channels/{channelId}/messages", jsonContent: requestData,
-                $"channels/{channelId}/messages").ConfigureAwait(false);
-
-            return new DiscordMessage(returnData!.RootElement);
+            return CreateMessageInternal(channelId, options);
         }
 
         /// <summary>
@@ -139,138 +135,61 @@ namespace Discore.Http
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, CreateMessageOptions options)
         {
             if (channel == null) throw new ArgumentNullException(nameof(channel));
+            if (options == null) throw new ArgumentNullException(nameof(options));
 
-            return CreateMessage(channel.Id, options);
+            return CreateMessageInternal(channel.Id, options);
         }
 
-        /// <summary>
-        /// Posts a message to a text channel with a file attachment.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="fileData"/> is null, 
-        /// or if <paramref name="fileName"/> is null or only contains whitespace characters.
-        /// </exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(Snowflake channelId, Stream fileData, string fileName,
-            CreateMessageOptions? options = null)
+        async Task<DiscordMessage> CreateMessageInternal(Snowflake channelId, CreateMessageOptions options)
         {
-            if (fileData == null)
-                throw new ArgumentNullException(nameof(fileData));
-
-            return CreateMessage(channelId, new StreamContent(fileData), fileName, options);
-        }
-
-        /// <summary>
-        /// Posts a message to a text channel with a file attachment.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="channel"/> or <paramref name="fileData"/> is null, 
-        /// or if <paramref name="fileName"/> is null or only contains whitespace characters.
-        /// </exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(ITextChannel channel, Stream fileData, string fileName,
-            CreateMessageOptions? options = null)
-        {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
-
-            return CreateMessage(channel.Id, fileData, fileName, options);
-        }
-
-        /// <summary>
-        /// Posts a message to a text channel with a file attachment.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="fileData"/> is null or <paramref name="fileName"/> is null or only contains whitespace characters.
-        /// </exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(Snowflake channelId, ArraySegment<byte> fileData, string fileName,
-            CreateMessageOptions? options = null)
-        {
-            if (fileData == null) throw new ArgumentNullException(nameof(fileData));
-
-            return CreateMessage(channelId, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName, options);
-        }
-
-        /// <summary>
-        /// Posts a message to a text channel with a file attachment.
-        /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
-        /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="channel"/> or <paramref name="fileData"/> is null or <paramref name="fileName"/> is null or only contains whitespace characters.
-        /// </exception>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<DiscordMessage> CreateMessage(ITextChannel channel, ArraySegment<byte> fileData, string fileName,
-            CreateMessageOptions? options = null)
-        {
-            if (channel == null) throw new ArgumentNullException(nameof(channel));
-
-            return CreateMessage(channel.Id, fileData, fileName, options);
-        }
-
-        /// <exception cref="ArgumentNullException"></exception>
-        async Task<DiscordMessage> CreateMessage(Snowflake channelId, HttpContent fileContent, string fileName, 
-            CreateMessageOptions? options)
-        {
-            if (string.IsNullOrWhiteSpace(fileName))
-                // Technically this is also handled when setting the field on the multipart form data
-                throw new ArgumentNullException(nameof(fileName));
-
-            using JsonDocument? returnData = await rest.Send(() =>
+            // Determine if we can make a normal JSON request or if we need multipart form data for file uploads
+            if (options.Attachments == null || !options.Attachments.Any((a) => a.Content != null))
             {
-                var request = new HttpRequestMessage(HttpMethod.Post,
-                    $"{RestClient.BASE_URL}/channels/{channelId}/messages");
+                string requestData = BuildJsonContent(options.Build);
 
-                var data = new MultipartFormDataContent();
-                data.Add(fileContent, "file", fileName);
+                using JsonDocument? returnData = await rest.Post($"channels/{channelId}/messages", jsonContent: requestData,
+                    $"channels/{channelId}/messages").ConfigureAwait(false);
 
-                if (options != null)
+                return new DiscordMessage(returnData!.RootElement);
+            }
+            else
+            {
+                using JsonDocument? returnData = await rest.Send(() =>
                 {
+                    var request = new HttpRequestMessage(HttpMethod.Post,
+                        $"{RestClient.BASE_URL}/channels/{channelId}/messages");
+
+                    var data = new MultipartFormDataContent();
+
+                    foreach (AttachmentOptions attachment in options.Attachments)
+                    {
+                        if (attachment.Content != null)
+                            data.Add(attachment.Content, $"files[{attachment.Id}]", attachment.FileName);
+                    }
+
                     string payloadJson = BuildJsonContent(options.Build);
-                    data.Add(new StringContent(payloadJson), "payload_json");
-                }
+                    data.Add(new StringContent(payloadJson, Encoding.UTF8, "application/json"), "payload_json");
 
-                request.Content = data;
+                    request.Content = data;
 
-                return request;
-            }, $"channels/{channelId}/messages").ConfigureAwait(false);
+                    return request;
+                }, $"channels/{channelId}/messages").ConfigureAwait(false);
 
-            return new DiscordMessage(returnData!.RootElement);
+                return new DiscordMessage(returnData!.RootElement);
+            }
         }
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current bot can be edited.</para>
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
+        public Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
         {
-            string requestData = BuildJsonContent(writer =>
-            {
-                writer.WriteStartObject();
-                writer.WriteString("content", content);
-                writer.WriteEndObject();
-            });
-
-            using JsonDocument? returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
-                $"channels/{channelId}/messages/message").ConfigureAwait(false);
-
-            return new DiscordMessage(returnData!.RootElement);
+            return EditMessageInternal(channelId, messageId, new EditMessageOptions(content));
         }
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
@@ -278,39 +197,71 @@ namespace Discore.Http
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            return EditMessage(message.ChannelId, message.Id, content);
+            return EditMessageInternal(message.ChannelId, message.Id, new EditMessageOptions(content));
         }
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current bot can be edited.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, EditMessageOptions options)
+        public Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, EditMessageOptions options)
         {
-            if (options == null)
-                throw new ArgumentNullException(nameof(options));
+            if (options == null) throw new ArgumentNullException(nameof(options));
 
-            string requestData = BuildJsonContent(options.Build);
-
-            using JsonDocument? returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
-                $"channels/{channelId}/messages/message").ConfigureAwait(false);
-
-            return new DiscordMessage(returnData!.RootElement);
+            return EditMessageInternal(channelId, messageId, options);
         }
 
         /// <summary>
         /// Edits an existing message in a text channel.
-        /// <para>Note: only messages created by the current bot can be editted.</para>
         /// </summary>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(DiscordMessage message, EditMessageOptions options)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
+            if (options == null) throw new ArgumentNullException(nameof(options));
 
-            return EditMessage(message.ChannelId, message.Id, options);
+            return EditMessageInternal(message.ChannelId, message.Id, options);
+        }
+
+        async Task<DiscordMessage> EditMessageInternal(Snowflake channelId, Snowflake messageId, EditMessageOptions options)
+        {
+            // Determine if we can make a normal JSON request or if we need multipart form data for file uploads
+            if (options.Attachments == null || !options.Attachments.Any((a) => a.Content != null))
+            {
+                string requestData = BuildJsonContent(options.Build);
+
+                using JsonDocument? returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
+                    $"channels/{channelId}/messages/message").ConfigureAwait(false);
+
+                return new DiscordMessage(returnData!.RootElement);
+            }
+            else
+            {
+                using JsonDocument? returnData = await rest.Send(() =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Patch,
+                        $"{RestClient.BASE_URL}/channels/{channelId}/messages/{messageId}");
+
+                    var data = new MultipartFormDataContent();
+
+                    foreach (AttachmentOptions attachment in options.Attachments)
+                    {
+                        if (attachment.Content != null)
+                            data.Add(attachment.Content, $"files[{attachment.Id}]", attachment.FileName);
+                    }
+
+                    string payloadJson = BuildJsonContent(options.Build);
+                    data.Add(new StringContent(payloadJson, Encoding.UTF8, "application/json"), "payload_json");
+
+                    request.Content = data;
+
+                    return request;
+                }, $"channels/{channelId}/messages/message").ConfigureAwait(false);
+
+                return new DiscordMessage(returnData!.RootElement);
+            }
         }
 
         /// <summary>

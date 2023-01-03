@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json;
 
 namespace Discore.Http
@@ -10,14 +11,19 @@ namespace Discore.Http
         public string? Content { get; set; }
 
         /// <summary>
-        /// Gets or sets the embed within the message.
+        /// Gets or sets the embeds within the message.
         /// </summary>
-        public EmbedOptions? Embed { get; set; }
+        public IList<EmbedOptions>? Embeds { get; set; }
 
         /// <summary>
         /// Gets or sets the allowed mentions for the message.
         /// </summary>
         public AllowedMentionsOptions? AllowedMentions { get; set; }
+
+        /// <summary>
+        /// Gets or sets file attachments to keep or upload with the message.
+        /// </summary>
+        public IList<AttachmentOptions>? Attachments { get; set; }
 
         /// <summary>
         /// Gets or sets the flags of the message.
@@ -43,11 +49,11 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Sets the embed within the message.
+        /// Sets the embeds within the message.
         /// </summary>
-        public EditMessageOptions SetEmbed(EmbedOptions embed)
+        public EditMessageOptions SetEmbeds(IList<EmbedOptions>? embeds)
         {
-            Embed = embed;
+            Embeds = embeds;
             return this;
         }
 
@@ -57,6 +63,49 @@ namespace Discore.Http
         public EditMessageOptions SetAllowedMentions(AllowedMentionsOptions allowedMentions)
         {
             AllowedMentions = allowedMentions;
+            return this;
+        }
+
+        /// <summary>
+        /// Sets attachments to keep or upload with the message.
+        /// </summary>
+        public EditMessageOptions SetAttachments(IList<AttachmentOptions>? attachments)
+        {
+            Attachments = attachments;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a new attachment or modifies an existing one.
+        /// </summary>
+        public EditMessageOptions AddOrSetAttachment(AttachmentOptions attachment)
+        {
+            Attachments ??= new List<AttachmentOptions>();
+            Attachments.Add(attachment);
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies that an existing attachment with the given ID should not be deleted when
+        /// the message is edited.
+        /// </summary>
+        public EditMessageOptions KeepAttachment(Snowflake id)
+        {
+            Attachments ??= new List<AttachmentOptions>();
+            Attachments.Add(new AttachmentOptions(id));
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies that existing attachments should not be deleted when the message is edited.
+        /// </summary>
+        public EditMessageOptions KeepAttachments(IEnumerable<DiscordAttachment> attachments)
+        {
+            Attachments ??= new List<AttachmentOptions>();
+
+            foreach (DiscordAttachment attachment in attachments)
+                Attachments.Add(new AttachmentOptions(attachment.Id));
+
             return this;
         }
 
@@ -77,16 +126,30 @@ namespace Discore.Http
 
             writer.WriteString("content", Content);
 
-            if (Embed != null)
+            if (Embeds != null)
             {
-                writer.WritePropertyName("embed");
-                Embed.Build(writer);
+                writer.WriteStartArray("embeds");
+
+                foreach (EmbedOptions embed in Embeds)
+                    embed.Build(writer);
+
+                writer.WriteEndArray();
             }
 
             if (AllowedMentions != null)
             {
                 writer.WritePropertyName("allowed_mentions");
                 AllowedMentions.Build(writer);
+            }
+
+            if (Attachments != null)
+            {
+                writer.WriteStartArray("attachments");
+
+                foreach (AttachmentOptions attachment in Attachments)
+                    attachment.Build(writer);
+
+                writer.WriteEndArray();
             }
 
             if (Flags != null)
