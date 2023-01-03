@@ -44,6 +44,7 @@
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.
 - Added support for Gateway intents.
     - Intents can be specified using `ShardStartConfig.Intents` or `Shard.StartAsync(GatewayIntent)`.
+- `DiscordGuildVoiceChannel` now implements `ITextChannel` to support guild voice text chat.
 - Added `Create/EditMessageOptions.Flags`.
 - Added `DiscordAttachment.Description`.
 - Added `DiscordAttachment.ContentType`.
