@@ -99,9 +99,7 @@ namespace Discore.Http
         /// <param name="role">Note: If this is the first role, it will end up as the @everyone role.</param>
         public CreateGuildOptions AddRole(CreateGuildRoleOptions role)
         {
-            if (Roles == null)
-                Roles = new List<CreateGuildRoleOptions>();
-
+            Roles ??= new List<CreateGuildRoleOptions>();
             Roles.Add(role);
             return this;
         }
@@ -111,9 +109,7 @@ namespace Discore.Http
         /// </summary>
         public CreateGuildOptions AddChannel(CreateGuildChannelOptions channel)
         {
-            if (Channels == null)
-                Channels = new List<CreateGuildChannelOptions>();
-
+            Channels ??= new List<CreateGuildChannelOptions>();
             Channels.Add(channel);
             return this;
         }

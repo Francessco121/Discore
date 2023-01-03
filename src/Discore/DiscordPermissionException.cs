@@ -57,14 +57,14 @@ namespace Discore
 
         static string GetPermissions(DiscordPermission permission)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (Enum value in Enum.GetValues(typeof(DiscordPermission)))
                 if (permission.HasFlag(value))
                 {
                     if (sb.Length == 0)
                         sb.Append(value.ToString());
                     else
-                        sb.Append($", {value.ToString()}");
+                        sb.Append($", {value}");
                 }
 
             return sb.ToString();

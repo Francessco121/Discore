@@ -47,7 +47,7 @@ namespace Discore.Http
 
         DiscordChannel DeserializeChannelData(JsonElement data)
         {
-            DiscordChannelType type = (DiscordChannelType)data.GetProperty("type").GetInt32();
+            var type = (DiscordChannelType)data.GetProperty("type").GetInt32();
 
             if (type == DiscordChannelType.DirectMessage)
                 return new DiscordDMChannel(data);

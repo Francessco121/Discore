@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 #pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE0060 // Remove unused parameter
 
 namespace Discore.WebSocket.Internal
 {
@@ -262,4 +263,5 @@ namespace Discore.WebSocket.Internal
     }
 }
 
+#pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning restore IDE0051 // Remove unused private members

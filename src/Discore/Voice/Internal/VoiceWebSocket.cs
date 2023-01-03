@@ -71,7 +71,7 @@ namespace Discore.Voice.Internal
             if (closeStatus == WebSocketCloseStatus.NormalClosure)
                 return;
 
-            VoiceCloseCode voiceCloseCode = (VoiceCloseCode)closeStatus;
+            var voiceCloseCode = (VoiceCloseCode)closeStatus;
             switch (voiceCloseCode)
             {
                 case VoiceCloseCode.Disconnected:
@@ -106,7 +106,7 @@ namespace Discore.Voice.Internal
         {
             JsonElement payloadRoot = payload.RootElement;
 
-            VoiceOPCode op = (VoiceOPCode)payloadRoot.GetProperty("op").GetInt32();
+            var op = (VoiceOPCode)payloadRoot.GetProperty("op").GetInt32();
             JsonElement d = payloadRoot.GetProperty("d");
 
             PayloadCallback? callback;

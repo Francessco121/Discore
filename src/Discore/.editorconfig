@@ -55,6 +55,12 @@ csharp_style_throw_expression = true:suggestion
 # Prefer conditional coalescing operation over null check with delegates
 csharp_style_conditional_delegate_call = true:suggestion
 
+# Prefer simple using statement over blocks
+csharp_prefer_simple_using_statement = true:silent
+
+# Prefer inline out variables
+csharp_style_inlined_variable_declaration = false:silent
+
 # Newline settings
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true

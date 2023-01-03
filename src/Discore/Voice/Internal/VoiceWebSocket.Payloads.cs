@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 #pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE0060 // Remove unused parameter
 
 namespace Discore.Voice.Internal
 {
@@ -29,7 +30,7 @@ namespace Discore.Voice.Internal
 		[Payload(VoiceOPCode.Ready)]
 		void HandleReadyPayload(JsonElement payload, JsonElement data)
         {
-            IPAddress ip = IPAddress.Parse(data.GetProperty("ip").GetString()!);
+            var ip = IPAddress.Parse(data.GetProperty("ip").GetString()!);
             int port = data.GetProperty("port").GetInt32();
             int ssrc = data.GetProperty("ssrc").GetInt32();
 
@@ -228,4 +229,5 @@ namespace Discore.Voice.Internal
     }
 }
 
+#pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning restore IDE0051 // Remove unused private members

@@ -114,7 +114,7 @@ namespace Discore
             }
             else
             {
-                snowflake = default(Snowflake);
+                snowflake = default;
                 return false;
             }
         }

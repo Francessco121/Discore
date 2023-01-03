@@ -66,7 +66,7 @@ namespace Discore.WebSocket.Internal
                 JsonElement _traceArray = traceArray.Value;
                 int numTraces = _traceArray.GetArrayLength();
 
-                StringBuilder sb = new StringBuilder();
+                var sb = new StringBuilder();
 
                 for (int i = 0; i < numTraces; i++)
                 {
@@ -531,7 +531,7 @@ namespace Discore.WebSocket.Internal
             Snowflake messageId = data.GetProperty("message_id").GetSnowflake();
             JsonElement emojiData = data.GetProperty("emoji");
 
-            DiscordReactionEmoji emoji = new DiscordReactionEmoji(emojiData);
+            var emoji = new DiscordReactionEmoji(emojiData);
 
             OnMessageReactionAdd?.Invoke(this, new MessageReactionAddEventArgs(shard, messageId, channelId, userId, emoji));
         }
@@ -544,7 +544,7 @@ namespace Discore.WebSocket.Internal
             Snowflake messageId = data.GetProperty("message_id").GetSnowflake();
             JsonElement emojiData = data.GetProperty("emoji");
 
-            DiscordReactionEmoji emoji = new DiscordReactionEmoji(emojiData);
+            var emoji = new DiscordReactionEmoji(emojiData);
 
             OnMessageReactionRemove?.Invoke(this, new MessageReactionRemoveEventArgs(shard, messageId, channelId, userId, emoji));
         }
@@ -640,7 +640,7 @@ namespace Discore.WebSocket.Internal
                 Snowflake userId = data.GetProperty("user_id").GetSnowflake();
 
                 // Update the voice state
-                DiscordVoiceState voiceState = new DiscordVoiceState(data, guildId: guildId.Value);
+                var voiceState = new DiscordVoiceState(data, guildId: guildId.Value);
                 UpdateMemberVoiceState(voiceState);
 
                 // If this voice state belongs to the current bot,

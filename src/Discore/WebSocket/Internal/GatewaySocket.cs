@@ -94,7 +94,7 @@ namespace Discore.WebSocket.Internal
         {
             JsonElement payloadRoot = payload.RootElement;
 
-            GatewayOPCode op = (GatewayOPCode)payloadRoot.GetProperty("op").GetInt32();
+            var op = (GatewayOPCode)payloadRoot.GetProperty("op").GetInt32();
             JsonElement data = payloadRoot.GetProperty("d");
 
             PayloadCallback? callback;
@@ -115,7 +115,7 @@ namespace Discore.WebSocket.Internal
             // and we should not start reconnecting
             if (areWeDisconnecting) return;
 
-            GatewayCloseCode code = (GatewayCloseCode)closeStatus;
+            var code = (GatewayCloseCode)closeStatus;
             switch (code)
             {
                 case GatewayCloseCode.InvalidShard:

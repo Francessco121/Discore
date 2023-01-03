@@ -466,7 +466,7 @@ namespace Discore.WebSocket.Internal
             }
             else if (messageType == WebSocketMessageType.Binary)
             {
-                using (MemoryStream decompressed = new MemoryStream())
+                using (var decompressed = new MemoryStream())
                 {
                     try
                     {
@@ -474,7 +474,7 @@ namespace Discore.WebSocket.Internal
                         ms.Seek(2, SeekOrigin.Begin);
 
                         // Decompress message
-                        using (DeflateStream deflateStream = new DeflateStream(ms, CompressionMode.Decompress, true))
+                        using (var deflateStream = new DeflateStream(ms, CompressionMode.Decompress, true))
                             await deflateStream.CopyToAsync(decompressed).ConfigureAwait(false);
 
                         decompressed.Position = 0;

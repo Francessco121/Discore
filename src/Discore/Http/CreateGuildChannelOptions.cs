@@ -173,9 +173,7 @@ namespace Discore.Http
         /// </summary>
         public CreateGuildChannelOptions AddPermissionOverwrite(OverwriteOptions overwrite)
         {
-            if (PermissionOverwrites == null)
-                PermissionOverwrites = new List<OverwriteOptions>();
-
+            PermissionOverwrites ??= new List<OverwriteOptions>();
             PermissionOverwrites.Add(overwrite);
             return this;
         }

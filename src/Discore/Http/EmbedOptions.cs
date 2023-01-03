@@ -266,9 +266,7 @@ namespace Discore.Http
         /// <param name="inline">Whether the field should display inline with other inline fields.</param>
         public EmbedOptions AddField(string name, string value, bool inline = false)
         {
-            if (Fields == null)
-                Fields = new List<EmbedField>();
-
+            Fields ??= new List<EmbedField>();
             Fields.Add(new EmbedField(name, value, inline));
             return this;
         }
