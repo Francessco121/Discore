@@ -15,7 +15,7 @@ namespace Discore.Http.Internal
 
     class RestClient : IDisposable
     {
-        public const string BASE_URL = "https://discord.com/api/v8";
+        public const string BASE_URL = "https://discord.com/api/v10";
 
         public bool RetryOnRateLimit { get; set; } = true;
 

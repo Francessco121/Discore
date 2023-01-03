@@ -57,6 +57,7 @@
 
 ### Changes
 - Discore now makes full use of C# 8 null safety!
+- Discore now supports Discord API v10.
 - `Snowflake` now implements `IEquatable<Snowflake>`.
 - `DiscordCdnUrl` now implements `IEquatable<DiscordCdnUrl>`.
 - Removed dependency on `Newtonsoft.Json`.
