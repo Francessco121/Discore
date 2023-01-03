@@ -100,25 +100,6 @@ namespace Discore.Http
         }
 
         /// <summary>
-        /// Gets a list of currently opened DM channels for the current bot.
-        /// </summary>
-        /// <exception cref="DiscordHttpApiException"></exception>
-        [Obsolete("Bots are no longer able to get a list of open DM channels per a Discord API update. This method will be removed in a future release.")]
-        public async Task<DiscordDMChannel[]> GetUserDMs()
-        {
-            using JsonDocument? data = await rest.Get("users/@me/channels", "users/@me/channels").ConfigureAwait(false);
-
-            JsonElement values = data!.RootElement;
-            
-            var dms = new DiscordDMChannel[values.GetArrayLength()];
-
-            for (int i = 0; i < dms.Length; i++)
-                dms[i] = new DiscordDMChannel(values[i]);
-
-            return dms;
-        }
-
-        /// <summary>
         /// Opens a DM channel with the specified user.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
