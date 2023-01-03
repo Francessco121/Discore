@@ -22,21 +22,19 @@ namespace Discore.Http.Internal
         const string DISCORE_URL = "https://github.com/Francessco121/Discore";
         static readonly string discoreVersion;
 
-        readonly string botToken;
-
         static readonly RateLimitLock globalRateLimitLock;
         static readonly ConcurrentDictionary<string, RateLimitLock> routeRateLimitLocks;
         static readonly ConcurrentDictionary<string, string> routesToBuckets;
         static readonly ConcurrentDictionary<string, RateLimitLock> bucketRateLimitLocks;
 
-        readonly HttpClient? globalHttpClient;
+        readonly HttpClient httpClient;
 
         public RestClient(string botToken)
         {
-            this.botToken = botToken;
-
-            if (DiscordHttpClient.UseSingleHttpClient)
-                globalHttpClient = CreateHttpClient();
+            httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+            httpClient.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
         }
 
         static RestClient()
@@ -49,16 +47,6 @@ namespace Discore.Http.Internal
             routeRateLimitLocks = new ConcurrentDictionary<string, RateLimitLock>();
             routesToBuckets = new ConcurrentDictionary<string, string>();
             bucketRateLimitLocks = new ConcurrentDictionary<string, RateLimitLock>();
-        }
-
-        HttpClient CreateHttpClient()
-        {
-            var http = new HttpClient();
-            http.DefaultRequestHeaders.Add("Accept", "application/json");
-            http.DefaultRequestHeaders.Add("User-Agent", $"DiscordBot ({DISCORE_URL}, {discoreVersion})");
-            http.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
-
-            return http;
         }
 
         /// <summary>
@@ -202,17 +190,7 @@ namespace Discore.Http.Internal
                             await globalRateLimitLock.WaitAsync(ct).ConfigureAwait(false);
 
                         // Send request
-                        if (globalHttpClient != null)
-                        {
-                            response = await globalHttpClient.SendAsync(requestCreate(), ct).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            using (HttpClient http = CreateHttpClient())
-                            {
-                                response = await http.SendAsync(requestCreate(), ct).ConfigureAwait(false);
-                            }
-                        }
+                        response = await httpClient.SendAsync(requestCreate(), ct).ConfigureAwait(false);
 
                         // Check rate limit headers
                         rateLimitHeaders = RateLimitHeaders.ParseOrNull(response.Headers);
@@ -365,7 +343,7 @@ namespace Discore.Http.Internal
 
         public void Dispose()
         {
-            globalHttpClient?.Dispose();
+            httpClient.Dispose();
         }
     }
 }

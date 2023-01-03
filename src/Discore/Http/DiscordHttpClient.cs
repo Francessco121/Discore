@@ -8,16 +8,6 @@ namespace Discore.Http
 {
     public partial class DiscordHttpClient : IDisposable
     {
-        /// <summary> 
-        /// Gets or sets whether a single HTTP client should be used for all API requests per 
-        /// <see cref="DiscordHttpClient"/> instance. 
-        /// <para>In rare cases using a single client causes requests to hang until they timeout 
-        /// (believed to be a .NET Core bug).</para>
-        /// <para>This is true by default.</para> 
-        /// <para>Note: This only applies to newly created <see cref="DiscordHttpClient"/> instances.</para> 
-        /// </summary> 
-        public static bool UseSingleHttpClient { get; set; } = true;
-
         /// <summary>
         /// Gets or sets whether to resend requests that get rate-limited.
         /// </summary>

@@ -39,6 +39,7 @@
 - `DiscordHttpClient.BeginGuildPrune` now returns null if `computePruneCount` is true.
 - Renamed `Create/EditMessageOptions.Embed` to `Embeds` to support multiple embeds permessage.
 - `DiscordHttpClient.Create/EditMessage` file attachment overloads have been removed. Instead, please use the new `Attachments` property of `Create/EditMessageOptions`.
+- Removed `DiscordHttpClient.UseSingleHttpClient` (it's no longer needed).
 
 ### Additions
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.
