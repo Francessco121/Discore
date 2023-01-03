@@ -37,10 +37,17 @@
     - Renamed `DiscordHttpClient.ModifyGuildEmbed` to `ModifyGuildWidget`.
 - Removed deprecated `ShardFailureReason.IOError`
 - `DiscordHttpClient.BeginGuildPrune` now returns null if `computePruneCount` is true.
+- Renamed `Create/EditMessageOptions.Embed` to `Embeds` to support multiple embeds permessage.
+- `DiscordHttpClient.Create/EditMessage` file attachment overloads have been removed. Instead, please use the new `Attachments` property of `Create/EditMessageOptions`.
 
 ### Additions
+- Added support for creating and editing messages with multiple embeds and/or multiple attachments.
 - Added support for Gateway intents.
     - Intents can be specified using `ShardStartConfig.Intents` or `Shard.StartAsync(GatewayIntent)`.
+- Added `Create/EditMessageOptions.Flags`.
+- Added `DiscordAttachment.Description`.
+- Added `DiscordAttachment.ContentType`.
+- Added `DiscordAttachment.Ephemeral`.
 - Added `Shard.OnDisconnected`.
 - Added `ShardFailureReason.InvalidIntents`.
 - Added `ShardFailureReason.DisallowedIntents`.
