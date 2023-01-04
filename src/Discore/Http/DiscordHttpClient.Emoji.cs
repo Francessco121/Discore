@@ -14,7 +14,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordEmoji>> ListGuildEmojis(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/emojis",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/emojis",
                 $"guilds/{guildId}/emojis").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -47,7 +47,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordEmoji> GetGuildEmoji(Snowflake guildId, Snowflake emojiId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/emojis/{emojiId}",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/emojis/{emojiId}",
                 $"guilds/{guildId}/emojis/emoji").ConfigureAwait(false);
 
             return new DiscordEmoji(data!.RootElement);
@@ -83,7 +83,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? responseData = await rest.Post($"guilds/{guildId}/emojis", jsonContent: requestData,
+            using JsonDocument? responseData = await api.Post($"guilds/{guildId}/emojis", jsonContent: requestData,
                 $"guilds/{guildId}/emojis").ConfigureAwait(false);
 
             return new DiscordEmoji(responseData!.RootElement);
@@ -123,7 +123,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? responseData = await rest.Patch($"guilds/{guildId}/emojis/{emojiId}", jsonContent: requestData,
+            using JsonDocument? responseData = await api.Patch($"guilds/{guildId}/emojis/{emojiId}", jsonContent: requestData,
                 $"guilds/{guildId}/emojis/emoji").ConfigureAwait(false);
 
             return new DiscordEmoji(responseData!.RootElement);
@@ -159,7 +159,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteGuildEmoji(Snowflake guildId, Snowflake emojiId)
         {
-            await rest.Delete($"guilds/{guildId}/emojis/{emojiId}",
+            await api.Delete($"guilds/{guildId}/emojis/{emojiId}",
                 $"guilds/{guildId}/emojis/emoji").ConfigureAwait(false);
         }
 

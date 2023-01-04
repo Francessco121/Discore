@@ -12,7 +12,6 @@ namespace Discore
         /// Gets the name of this integration.
         /// </summary>
         public string Name { get; }
-        // TODO: maybe make enum
         /// <summary>
         /// Gets the type of this integration.
         /// </summary>
@@ -29,13 +28,12 @@ namespace Discore
         /// Gets the ID of the associated role with this integration.
         /// </summary>
         public Snowflake? RoleId { get; }
-        // TODO: make enum
         /// <summary>
-        /// Gets the expire behavior of this integration.
+        /// Gets the behavior of expiring subscribers.
         /// </summary>
-        public int? ExpireBehavior { get; }
+        public IntegrationExpireBehavior? ExpireBehavior { get; }
         /// <summary>
-        /// Gets the expire grace period of this integration.
+        /// Gets the expire grace period (in days) before expiring subscribers.
         /// </summary>
         public int? ExpireGracePeriod { get; }
         /// <summary>
@@ -65,7 +63,7 @@ namespace Discore
             IsEnabled = json.GetProperty("enabled").GetBoolean();
             IsSyncing = json.GetPropertyOrNull("syncing")?.GetBoolean();
             RoleId = json.GetPropertyOrNull("role_id")?.GetSnowflake();
-            ExpireBehavior = json.GetPropertyOrNull("expire_behavior")?.GetInt32();
+            ExpireBehavior = (IntegrationExpireBehavior?)json.GetPropertyOrNull("expire_behavior")?.GetInt32();
             ExpireGracePeriod = json.GetPropertyOrNull("expire_grace_period")?.GetInt32();
             Account = new DiscordIntegrationAccount(json.GetProperty("account"));
             SyncedAt = json.GetPropertyOrNull("synced_at")?.GetDateTime();

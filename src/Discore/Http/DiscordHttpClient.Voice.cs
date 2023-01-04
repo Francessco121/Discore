@@ -14,7 +14,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> ListVoiceRegions()
         {
-            using JsonDocument? data = await rest.Get("voice/regions", "voice/regions").ConfigureAwait(false);
+            using JsonDocument? data = await api.Get("voice/regions", "voice/regions").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
 
@@ -31,7 +31,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordVoiceRegion>> GetGuildVoiceRegions(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/regions",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/regions",
                 $"guilds/{guildId}/regions").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;

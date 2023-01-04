@@ -10,7 +10,7 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the behavior to follow when the integration subscription lapses.
         /// </summary>
-        public int ExpireBehavior { get; set; }
+        public IntegrationExpireBehavior ExpireBehavior { get; set; }
         /// <summary>
         /// Gets or sets the period (in seconds) where the integration will ignore lapsed subscriptions.
         /// </summary>
@@ -23,7 +23,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the behavior for when the integration subscription lapses.
         /// </summary>
-        public ModifyIntegrationOptions SetExpireBehavior(int expireBehavior)
+        public ModifyIntegrationOptions SetExpireBehavior(IntegrationExpireBehavior expireBehavior)
         {
             ExpireBehavior = expireBehavior;
             return this;
@@ -51,7 +51,7 @@ namespace Discore.Http
         {
             writer.WriteStartObject();
 
-            writer.WriteNumber("expire_behavior", ExpireBehavior);
+            writer.WriteNumber("expire_behavior", (int)ExpireBehavior);
             writer.WriteNumber("expire_grace_period", ExpireGracePeriod);
             writer.WriteBoolean("enable_emoticons", EnableEmoticons);
 

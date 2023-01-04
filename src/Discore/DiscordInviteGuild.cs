@@ -4,11 +4,10 @@ namespace Discore
 {
     public class DiscordInviteGuild
     {
-        // TODO: Rename to Id
         /// <summary>
         /// Gets the ID of the guild this invite is for.
         /// </summary>
-        public Snowflake GuildId { get; }
+        public Snowflake Id { get; }
 
         /// <summary>
         /// Gets the name of the guild.
@@ -24,7 +23,7 @@ namespace Discore
 
         internal DiscordInviteGuild(JsonElement json)
         {
-            GuildId = json.GetProperty("id").GetSnowflake();
+            Id = json.GetProperty("id").GetSnowflake();
             Name = json.GetProperty("name").GetString()!;
             SplashHash = json.GetPropertyOrNull("splash")?.GetString();
         }

@@ -15,19 +15,6 @@ namespace Discore.Voice
         /// Gets the name of the region.
         /// </summary>
         public string Name { get; }
-        // TODO: looks like sample hostname/port were removed
-        /// <summary>
-        /// Gets an example hostname for the region.
-        /// </summary>
-        public string? SampleHostname { get; }
-        /// <summary>
-        /// Gets an example port for the region.
-        /// </summary>
-        public int? SamplePort { get; }
-        /// <summary>
-        /// Gets whether this is a vip-only server.
-        /// </summary>
-        public bool IsVIPOnly { get; }
         /// <summary>
         /// Gets whether this server is the closest to the user's client.
         /// </summary>
@@ -41,37 +28,13 @@ namespace Discore.Voice
         /// </summary>
         public bool IsCustom { get; }
 
-        public DiscordVoiceRegion(
-            string id, 
-            string name, 
-            string? sampleHostname, 
-            int? samplePort, 
-            bool isVIPOnly, 
-            bool isOptimal, 
-            bool isDeprecated, 
-            bool isCustom)
-        {
-            Id = id;
-            Name = name;
-            SampleHostname = sampleHostname;
-            SamplePort = samplePort;
-            IsVIPOnly = isVIPOnly;
-            IsOptimal = isOptimal;
-            IsDeprecated = isDeprecated;
-            IsCustom = isCustom;
-        }
-
         internal DiscordVoiceRegion(JsonElement json)
         {
             Id = json.GetProperty("id").GetString()!;
             Name = json.GetProperty("name").GetString()!;
-            IsVIPOnly = json.GetProperty("vip").GetBoolean();
             IsOptimal = json.GetProperty("optimal").GetBoolean();
             IsDeprecated = json.GetProperty("deprecated").GetBoolean();
             IsCustom = json.GetProperty("custom").GetBoolean();
-
-            SampleHostname = json.GetPropertyOrNull("sample_hostname")?.GetString();
-            SamplePort = json.GetPropertyOrNull("sample_port")?.GetInt32();
         }
 
         /// <summary>

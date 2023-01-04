@@ -29,11 +29,10 @@ namespace Discore
         /// Gets the timestamp of this embed.
         /// </summary>
         public DateTime? Timestamp { get; }
-        // TODO: Should this be a DiscordColor?
         /// <summary>
         /// Gets the color code of this embed.
         /// </summary>
-        public int? Color { get; }
+        public DiscordColor? Color { get; }
         /// <summary>
         /// Gets the footer information.
         /// </summary>
@@ -70,7 +69,10 @@ namespace Discore
             Description = json.GetPropertyOrNull("description")?.GetString();
             Url = json.GetPropertyOrNull("url")?.GetString();
             Timestamp = json.GetPropertyOrNull("timestamp")?.GetDateTime();
-            Color = json.GetPropertyOrNull("color")?.GetInt32();
+
+            int? color = json.GetPropertyOrNull("color")?.GetInt32();
+            if (color != null)
+                Color = DiscordColor.FromHexadecimal(color.Value);
 
             JsonElement? footerJson = json.GetPropertyOrNull("footer");
             if (footerJson != null)

@@ -25,7 +25,7 @@ namespace Discore.Http
             var urlParams = new UrlParametersBuilder();
             urlParams["with_counts"] = withCounts?.ToString() ?? null;
 
-            using JsonDocument? data = await rest.Get($"invites/{inviteCode}{urlParams.ToQueryString()}", "invities/invite").ConfigureAwait(false);
+            using JsonDocument? data = await api.Get($"invites/{inviteCode}{urlParams.ToQueryString()}", "invities/invite").ConfigureAwait(false);
             return new DiscordInvite(data!.RootElement);
         }
 
@@ -43,7 +43,7 @@ namespace Discore.Http
             if (string.IsNullOrWhiteSpace(inviteCode))
                 throw new ArgumentException("Invite code cannot be empty or only contain whitespace characters.", nameof(inviteCode));
 
-            using JsonDocument? data = await rest.Delete($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
+            using JsonDocument? data = await api.Delete($"invites/{inviteCode}", "invities/invite").ConfigureAwait(false);
             return new DiscordInvite(data!.RootElement);
         }
 
@@ -68,7 +68,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetGuildInvites(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/invites",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/invites",
                 $"guilds/{guildId}/invites").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -100,7 +100,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordInviteMetadata>> GetChannelInvites(Snowflake channelId)
         {
-            using JsonDocument? data = await rest.Get($"channels/{channelId}/invites",
+            using JsonDocument? data = await api.Get($"channels/{channelId}/invites",
                 $"channels/{channelId}/invites").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -153,7 +153,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            using JsonDocument? returnData = await rest.Post($"channels/{channelId}/invites", requestData,
+            using JsonDocument? returnData = await api.Post($"channels/{channelId}/invites", requestData,
                 $"channels/{channelId}/invites").ConfigureAwait(false);
 
             return new DiscordInvite(returnData!.RootElement);

@@ -20,7 +20,7 @@ namespace Discore.Http
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            await rest.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
+            await api.Put($"channels/{channelId}/messages/{messageId}/reactions/{emoji.ToUrlEncodedString()}/@me",
                 $"channels/{channelId}/messages/message/reactions/emoji/@me").ConfigureAwait(false);
         }
 
@@ -48,7 +48,7 @@ namespace Discore.Http
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/@me",
+            await api.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji.ToUrlEncodedString()}/@me",
                 $"channels/{channelId}/messages/message/reactions/emoji/@me").ConfigureAwait(false);
         }
 
@@ -75,7 +75,7 @@ namespace Discore.Http
             if (emoji == null)
                 throw new ArgumentNullException(nameof(emoji));
 
-            await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji}/{userId}",
+            await api.Delete($"channels/{channelId}/messages/{messageId}/reactions/{emoji.ToUrlEncodedString()}/{userId}",
                 $"channels/{channelId}/messages/message/reactions/emoji/user").ConfigureAwait(false);
         }
 
@@ -114,8 +114,8 @@ namespace Discore.Http
             if (limit.HasValue)
                 builder.Add("limit", limit.Value.ToString());
 
-            using JsonDocument? data = await rest.Get(
-                $"channels/{channelId}/messages/{messageId}/reactions/{emoji}{builder.ToQueryString()}",
+            using JsonDocument? data = await api.Get(
+                $"channels/{channelId}/messages/{messageId}/reactions/{emoji.ToUrlEncodedString()}{builder.ToQueryString()}",
                 $"channels/{channelId}/messages/message/reactions/emoji").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -154,7 +154,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteAllReactions(Snowflake channelId, Snowflake messageId)
         {
-            await rest.Delete($"channels/{channelId}/messages/{messageId}/reactions",
+            await api.Delete($"channels/{channelId}/messages/{messageId}/reactions",
                 $"channels/{channelId}/messages/message/reactions").ConfigureAwait(false);
         }
 

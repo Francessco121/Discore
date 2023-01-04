@@ -11,13 +11,13 @@ namespace Discore.Caching
         public string? Discriminator { get; private set; }
         public DiscordCdnUrl? Avatar { get; private set; }
         public bool IsBot { get; private set; }
-        public bool? HasTwoFactorAuth { get; private set; }
+        public bool? MfaEnabled { get; private set; }
         public bool? IsVerified { get; private set; }
         public string? Email { get; private set; }
 
         string? lastUsername;
         DiscordCdnUrl? lastAvatar;
-        bool? lastHasTwoFactorAuth;
+        bool? lastMfaEnabled;
         bool? lastIsVerified;
         string? lastEmail;
 
@@ -33,7 +33,7 @@ namespace Discore.Caching
             Discriminator = user.Discriminator;
             Avatar = user.Avatar;
             IsBot = user.IsBot;
-            HasTwoFactorAuth = user.HasTwoFactorAuth;
+            MfaEnabled = user.MfaEnabled;
             IsVerified = user.IsVerified;
             Email = user.Email;
 
@@ -61,7 +61,7 @@ namespace Discore.Caching
 
             bool changed = lastUsername != Username
                 || lastAvatar != Avatar
-                || lastHasTwoFactorAuth != HasTwoFactorAuth
+                || lastMfaEnabled != MfaEnabled
                 || lastIsVerified != IsVerified
                 || lastEmail != Email;
 
@@ -69,7 +69,7 @@ namespace Discore.Caching
             {
                 lastUsername = Username;
                 lastAvatar = Avatar;
-                lastHasTwoFactorAuth = HasTwoFactorAuth;
+                lastMfaEnabled = MfaEnabled;
                 lastIsVerified = IsVerified;
                 lastEmail = Email;
             }
@@ -85,7 +85,7 @@ namespace Discore.Caching
                 discriminator: Discriminator!,
                 avatar: Avatar,
                 isBot: IsBot,
-                hasTwoFactorAuth: HasTwoFactorAuth,
+                mfaEnabled: MfaEnabled,
                 isVerified: IsVerified,
                 email: Email,
                 isWebhookUser: IsWebhookUser);

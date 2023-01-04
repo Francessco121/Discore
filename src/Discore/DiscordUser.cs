@@ -27,14 +27,13 @@ namespace Discore
         /// </summary>
         public bool IsBot { get; }
 
-        // TODO: Rename to MfaEnabled
         /// <summary>
         /// Gets whether this account has two-factor authentication enabled.
         /// <para/>
         /// Will be null if this user was retrieved by an account without access to this information.
         /// </summary>
         [Obsolete("This information is not available to bots.")]
-        public bool? HasTwoFactorAuth { get; }
+        public bool? MfaEnabled { get; }
 
         /// <summary>
         /// Gets whether the email on this account is verified.
@@ -63,9 +62,9 @@ namespace Discore
             Snowflake id,
             string username, 
             string discriminator, 
-            DiscordCdnUrl? avatar, 
-            bool isBot, 
-            bool? hasTwoFactorAuth, 
+            DiscordCdnUrl? avatar,
+            bool isBot,
+            bool? mfaEnabled,
             bool? isVerified, 
             string? email, 
             bool isWebhookUser = false)
@@ -75,7 +74,7 @@ namespace Discore
             Discriminator = discriminator ?? throw new ArgumentNullException(nameof(discriminator));
             Avatar = avatar;
             IsBot = isBot;
-            HasTwoFactorAuth = hasTwoFactorAuth;
+            MfaEnabled = mfaEnabled;
             IsVerified = isVerified;
             Email = email;
             IsWebhookUser = isWebhookUser;
@@ -87,7 +86,7 @@ namespace Discore
             Username = json.GetProperty("username").GetString()!;
             Discriminator = json.GetProperty("discriminator").GetString()!;
             IsBot = json.GetPropertyOrNull("bot")?.GetBoolean() ?? false;
-            HasTwoFactorAuth = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean();
+            MfaEnabled = json.GetPropertyOrNull("mfa_enabled")?.GetBoolean();
             IsVerified = json.GetPropertyOrNull("verified")?.GetBoolean();
             Email = json.GetPropertyOrNull("email")?.GetString();
             IsWebhookUser = isWebhookUser;

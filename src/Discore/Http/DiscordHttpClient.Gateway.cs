@@ -30,7 +30,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<string> GetGateway()
         {
-            using JsonDocument? data = await rest.Get("gateway",
+            using JsonDocument? data = await api.Get("gateway",
                 "gateway").ConfigureAwait(false);
 
             return data!.RootElement.GetProperty("url").GetString()!;
@@ -39,7 +39,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         internal async Task<GatewayBotResponse> GetGatewayBot()
         {
-            using JsonDocument? data = await rest.Get("gateway/bot",
+            using JsonDocument? data = await api.Get("gateway/bot",
                 "gateway/bot").ConfigureAwait(false);
 
             return new GatewayBotResponse(data!.RootElement);

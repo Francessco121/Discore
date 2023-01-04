@@ -14,7 +14,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildMember> GetGuildMember(Snowflake guildId, Snowflake userId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/members/{userId}",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/members/{userId}",
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);
 
             return new DiscordGuildMember(data!.RootElement, guildId);
@@ -48,7 +48,7 @@ namespace Discore.Http
             urlParams["limit"] = limit?.ToString() ?? null;
             urlParams["after"] = after?.Id.ToString() ?? null;
 
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/members{urlParams.ToQueryString()}",
                 $"guilds/{guildId}/members").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -89,7 +89,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            await rest.Patch($"guilds/{guildId}/members/{userId}", jsonContent: requestData,
+            await api.Patch($"guilds/{guildId}/members/{userId}", jsonContent: requestData,
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);
         }
 
@@ -121,7 +121,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/members/@me/nick", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"guilds/{guildId}/members/@me/nick", jsonContent: requestData,
                 $"guilds/{guildId}/members/@me/nick").ConfigureAwait(false);
 
             return returnData!.RootElement.GetProperty("nick").GetString();
@@ -149,7 +149,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task RemoveGuildMember(Snowflake guildId, Snowflake userId)
         {
-            await rest.Delete($"guilds/{guildId}/members/{userId}",
+            await api.Delete($"guilds/{guildId}/members/{userId}",
                 $"guilds/{guildId}/members/user").ConfigureAwait(false);
         }
 

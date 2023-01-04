@@ -116,6 +116,9 @@ namespace Discore.WebSocket
         event EventHandler<MessageUpdateEventArgs>? OnMessageUpdate;
         /// <summary>
         /// Called when a message is deleted.
+        /// <para/>
+        /// If multiple messages are deleted in bulk, this event will be fired for each
+        /// individual message.
         /// </summary>
         event EventHandler<MessageDeleteEventArgs>? OnMessageDelete;
         /// <summary>

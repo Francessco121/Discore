@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json;
+using System.Web;
 
 namespace Discore
 {
@@ -36,9 +37,16 @@ namespace Discore
             Name = json.GetProperty("name").GetString();
         }
 
+        /// <summary>
+        /// Returns this emoji URL encoded such that it can be used in a Discord API URL path.
+        /// </summary>
+        public string ToUrlEncodedString()
+        {
+            return HttpUtility.UrlEncode(ToString());
+        }
+
         public override string ToString()
         {
-            // TODO: This must be URL encoded!
             return (Id.HasValue ? $"{Name}:{Id.Value}" : Name) ?? base.ToString();
         }
     }

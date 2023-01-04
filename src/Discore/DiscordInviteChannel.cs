@@ -4,11 +4,10 @@ namespace Discore
 {
     public class DiscordInviteChannel
     {
-        // TODO: Rename to Id
         /// <summary>
         /// Gets the ID of the channel this invite is for.
         /// </summary>
-        public Snowflake ChannelId { get; }
+        public Snowflake Id { get; }
 
         /// <summary>
         /// Gets the name of the channel.
@@ -22,7 +21,7 @@ namespace Discore
 
         internal DiscordInviteChannel(JsonElement json)
         {
-            ChannelId = json.GetProperty("id").GetSnowflake();
+            Id = json.GetProperty("id").GetSnowflake();
             Name = json.GetProperty("name").GetString()!;
             Type = (DiscordChannelType)json.GetProperty("type").GetInt32();
         }

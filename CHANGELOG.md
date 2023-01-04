@@ -42,6 +42,20 @@
 - Removed `DiscordHttpClient.UseSingleHttpClient` (it's no longer needed).
 - Removed deprecated `DiscordHttpClient.GetUserDMs`.
 - `Shard.OnReconnected` is now fired at the end of reconnection (as probably expected), rather than the start. This is still guaranteed to be fired before `OnReady`.
+- `Create/ModifyGuildOptions.VerificationLevel` is now type `GuildVerificationLevel`.
+- `Create/ModifyGuildOptions.DefaultMessageNotifications` is now type `GuildNotificationOption`.
+- Removed deprecated/removed `DiscordVoiceRegion` properties (`SampleHostname`, `SamplePort`, `IsVIPOnly`).
+- `DiscordEmbed.Color` is now type `DiscordColor`.
+- Renamed `DiscordUser.HasTwoFactorAuth` to `MfaEnabled`.
+- `DiscordIntegration.ExpireBehavior` is type `IntegrationExpireBehavior`.
+- `DiscordInvite` changes:
+    - Renamed `TargetUserType` to `TargetType`.
+    - `Channel` is now nullable.
+    - `Inviter` is now a property of `DiscordInvite` instead of `DiscordInviteMetadata` (should only break reflection).
+- Removed `DiscordInviteMetadata.IsRevoked`.
+- Renamed `DiscordInviteChannel.ChannelId` to `Id`.
+- Renamed `DiscordInviteGuild.GuildId` to `Id`.
+- Renamed `DiscordInviteTargetUserType` to `DiscordInviteTargetType`.
 
 ### Additions
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.

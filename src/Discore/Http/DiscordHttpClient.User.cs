@@ -13,7 +13,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetCurrentUser()
         {
-            using JsonDocument? data = await rest.Get("users/@me", "users/@me").ConfigureAwait(false);
+            using JsonDocument? data = await api.Get("users/@me", "users/@me").ConfigureAwait(false);
             return new DiscordUser(data!.RootElement, isWebhookUser: false);
         }
 
@@ -23,7 +23,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordUser> GetUser(Snowflake id)
         {
-            using JsonDocument? data = await rest.Get($"users/{id}", "users/user").ConfigureAwait(false);
+            using JsonDocument? data = await api.Get($"users/{id}", "users/user").ConfigureAwait(false);
             return new DiscordUser(data!.RootElement, isWebhookUser: false);
         }
 
@@ -46,7 +46,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            using JsonDocument? returnData = await rest.Patch("users/@me", jsonContent: requestData, "users/@me").ConfigureAwait(false);
+            using JsonDocument? returnData = await api.Patch("users/@me", jsonContent: requestData, "users/@me").ConfigureAwait(false);
             return new DiscordUser(returnData!.RootElement, isWebhookUser: false);
         }
 
@@ -65,7 +65,7 @@ namespace Discore.Http
             if (limit.HasValue)
                 paramBuilder.Add("limit", limit.Value.ToString());
 
-            using JsonDocument? data = await rest.Get($"users/@me/guilds{paramBuilder.ToQueryString()}", 
+            using JsonDocument? data = await api.Get($"users/@me/guilds{paramBuilder.ToQueryString()}",
                 "users/@me/guilds").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -84,7 +84,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task LeaveGuild(Snowflake guildId)
         {
-            await rest.Delete($"users/@me/guilds/{guildId}", "users/@me/guilds/guild").ConfigureAwait(false);
+            await api.Delete($"users/@me/guilds/{guildId}", "users/@me/guilds/guild").ConfigureAwait(false);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            using JsonDocument? returnData = await rest.Post("users/@me/channels", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Post("users/@me/channels", jsonContent: requestData,
                 "users/@me/channels").ConfigureAwait(false);
 
             return new DiscordDMChannel(returnData!.RootElement);

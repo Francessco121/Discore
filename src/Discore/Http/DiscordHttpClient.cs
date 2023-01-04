@@ -13,15 +13,15 @@ namespace Discore.Http
         /// </summary>
         public bool RetryWhenRateLimited
         {
-            get => rest.RetryOnRateLimit;
-            set => rest.RetryOnRateLimit = value;
+            get => api.RetryOnRateLimit;
+            set => api.RetryOnRateLimit = value;
         }
 
-        readonly RestClient rest;
+        readonly ApiClient api;
 
         public DiscordHttpClient(string botToken)
         {
-            rest = new RestClient(botToken);
+            api = new ApiClient(botToken);
         }
 
         string BuildJsonContent(Action<Utf8JsonWriter> builder)
@@ -57,7 +57,7 @@ namespace Discore.Http
 
         public void Dispose()
         {
-            rest.Dispose();
+            api.Dispose();
         }
     }
 }

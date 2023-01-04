@@ -11,9 +11,7 @@ using System.Threading.Tasks;
 
 namespace Discore.Http.Internal
 {
-    // TODO: rename to ApiClient
-
-    class RestClient : IDisposable
+    class ApiClient : IDisposable
     {
         public const string BASE_URL = "https://discord.com/api/v10";
 
@@ -29,7 +27,7 @@ namespace Discore.Http.Internal
 
         readonly HttpClient httpClient;
 
-        public RestClient(string botToken)
+        public ApiClient(string botToken)
         {
             httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
@@ -37,7 +35,7 @@ namespace Discore.Http.Internal
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bot {botToken}");
         }
 
-        static RestClient()
+        static ApiClient()
         {
             Version version = Assembly.Load(new AssemblyName("Discore")).GetName().Version;
             // Don't include revision since Discore uses the Major.Minor.Patch semantic.
@@ -53,7 +51,7 @@ namespace Discore.Http.Internal
         /// Note: Consumers of this method become owners of the returned JsonDocument.
         /// </summary>
         /// <exception cref="DiscordHttpApiException"></exception>
-        async Task<JsonDocument?> ParseResponse(HttpResponseMessage response, RateLimitHeaders? rateLimitHeaders, 
+        async Task<JsonDocument?> ParseResponse(HttpResponseMessage response, RateLimitHeaders? rateLimitHeaders,
             CancellationToken cancellationToken)
         {
             // Parse response payload as JSON
@@ -134,20 +132,20 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public async Task<JsonDocument?> Send(Func<HttpRequestMessage> requestCreate, string rateLimitRoute, 
+        public async Task<JsonDocument?> Send(Func<HttpRequestMessage> requestCreate, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
             // Get the rate limit lock for the route
             RateLimitLock? routeLock = null;
-            
+
             if (routesToBuckets.TryGetValue(rateLimitRoute, out string rateLimitBucket))
             {
                 // Use the bucket for the route if it exists
                 routeLock = bucketRateLimitLocks[rateLimitBucket];
             }
-            
+
             if (routeLock == null)
             {
                 // Get or create the rate limit lock for the specified route
@@ -176,7 +174,7 @@ namespace Discore.Http.Internal
 
                     // If the route-specific lock requires a wait, delay before continuing
                     await routeLock.WaitAsync(ct).ConfigureAwait(false);
-                    
+
                     // If we don't already have the global lock and the global rate limit is active, acquire it.
                     if (globalLock == null && globalRateLimitLock.RequiresWait)
                         globalLock = await globalRateLimitLock.LockAsync(ct).ConfigureAwait(false);
@@ -263,7 +261,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Get(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Get(string action, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -273,7 +271,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Post(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Post(string action, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -283,7 +281,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Post(string action, string jsonContent, string rateLimitRoute, 
+        public Task<JsonDocument?> Post(string action, string jsonContent, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -296,7 +294,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Put(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Put(string action, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -306,7 +304,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Put(string action, string jsonContent, string rateLimitRoute, 
+        public Task<JsonDocument?> Put(string action, string jsonContent, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -319,7 +317,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Patch(string action, string jsonContent, string rateLimitRoute, 
+        public Task<JsonDocument?> Patch(string action, string jsonContent, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>
@@ -332,7 +330,7 @@ namespace Discore.Http.Internal
         }
 
         /// <exception cref="DiscordHttpApiException"></exception>
-        public Task<JsonDocument?> Delete(string action, string rateLimitRoute, 
+        public Task<JsonDocument?> Delete(string action, string rateLimitRoute,
             CancellationToken? cancellationToken = null)
         {
             return Send(() =>

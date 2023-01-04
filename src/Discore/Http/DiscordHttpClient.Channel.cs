@@ -23,7 +23,7 @@ namespace Discore.Http
         public async Task<T> GetChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            using JsonDocument? data = await rest.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
+            using JsonDocument? data = await api.Get($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
             return (T)DeserializeChannelData(data!.RootElement);
         }
 
@@ -44,7 +44,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"channels/{textChannelId}", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"channels/{textChannelId}", jsonContent: requestData,
                 $"channels/{textChannelId}").ConfigureAwait(false);
 
             return (DiscordGuildTextChannel)DeserializeChannelData(returnData!.RootElement);
@@ -85,7 +85,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"channels/{voiceChannelId}", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"channels/{voiceChannelId}", jsonContent: requestData,
                 $"channels/{voiceChannelId}").ConfigureAwait(false);
 
             return (DiscordGuildVoiceChannel)DeserializeChannelData(returnData!.RootElement);
@@ -126,7 +126,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"channels/{categoryChannelId}", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"channels/{categoryChannelId}", jsonContent: requestData,
                 $"channels/{categoryChannelId}").ConfigureAwait(false);
 
             return (DiscordGuildCategoryChannel)DeserializeChannelData(returnData!.RootElement);
@@ -167,7 +167,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"channels/{newsChannelId}", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"channels/{newsChannelId}", jsonContent: requestData,
                 $"channels/{newsChannelId}").ConfigureAwait(false);
 
             return (DiscordGuildNewsChannel)DeserializeChannelData(returnData!.RootElement);
@@ -208,7 +208,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"channels/{storeChannelId}", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"channels/{storeChannelId}", jsonContent: requestData,
                 $"channels/{storeChannelId}").ConfigureAwait(false);
 
             return (DiscordGuildStoreChannel)DeserializeChannelData(returnData!.RootElement);
@@ -277,7 +277,7 @@ namespace Discore.Http
         public async Task<T> DeleteChannel<T>(Snowflake channelId)
             where T : DiscordChannel
         {
-            using JsonDocument? data = await rest.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
+            using JsonDocument? data = await api.Delete($"channels/{channelId}", $"channels/{channelId}").ConfigureAwait(false);
             return (T)DeserializeChannelData(data!.RootElement);
         }
 
@@ -298,7 +298,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            await rest.Put($"channels/{channelId}/permissions/{overwriteId}", jsonContent: data,
+            await api.Put($"channels/{channelId}/permissions/{overwriteId}", jsonContent: data,
                 $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
         }
 
@@ -323,7 +323,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteChannelPermission(Snowflake channelId, Snowflake overwriteId)
         {
-            await rest.Delete($"channels/{channelId}/permissions/{overwriteId}",
+            await api.Delete($"channels/{channelId}/permissions/{overwriteId}",
                 $"channels/{channelId}/permissions/permission").ConfigureAwait(false);
         }
 
@@ -349,7 +349,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task TriggerTypingIndicator(Snowflake channelId)
         {
-            await rest.Post($"channels/{channelId}/typing",
+            await api.Post($"channels/{channelId}/typing",
                 $"channels/{channelId}/typing").ConfigureAwait(false);
         }
 
@@ -374,7 +374,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildChannel>> GetGuildChannels(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/channels",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/channels",
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -411,7 +411,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Post($"guilds/{guildId}/channels", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Post($"guilds/{guildId}/channels", jsonContent: requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
 
             return (DiscordGuildChannel)DeserializeChannelData(returnData!.RootElement);
@@ -454,7 +454,7 @@ namespace Discore.Http
                 writer.WriteEndArray();
             });
 
-            await rest.Patch($"guilds/{guildId}/channels", jsonContent: requestData,
+            await api.Patch($"guilds/{guildId}/channels", jsonContent: requestData,
                 $"guilds/{guildId}/channels").ConfigureAwait(false);
         }
 

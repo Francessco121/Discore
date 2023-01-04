@@ -15,7 +15,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuild> GetGuild(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}",
                 $"guilds/{guildId}").ConfigureAwait(false);
 
             return new DiscordGuild(data!.RootElement);
@@ -32,7 +32,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Post("guilds", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Post("guilds", jsonContent: requestData,
                 "guilds").ConfigureAwait(false);
 
             return new DiscordGuild(returnData!.RootElement);
@@ -51,7 +51,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"guilds/{guildId}", jsonContent: requestData,
                 $"guilds/{guildId}").ConfigureAwait(false);
 
             return new DiscordGuild(returnData!.RootElement);
@@ -77,7 +77,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteGuild(Snowflake guildId)
         {
-            await rest.Delete($"guilds/{guildId}",
+            await api.Delete($"guilds/{guildId}",
                 $"guilds/{guildId}").ConfigureAwait(false);
         }
 
@@ -101,7 +101,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordGuildBan>> GetGuildBans(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/bans",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/bans",
                 $"guilds/{guildId}/bans").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -137,7 +137,7 @@ namespace Discore.Http
             var parameters = new UrlParametersBuilder();
             parameters["delete_message_days"] = deleteMessageDays?.ToString();
 
-            await rest.Put($"guilds/{guildId}/bans/{userId}{parameters.ToQueryString()}",
+            await api.Put($"guilds/{guildId}/bans/{userId}{parameters.ToQueryString()}",
                 $"guilds/{guildId}/bans/user").ConfigureAwait(false);
         }
 
@@ -177,7 +177,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task RemoveGuildBan(Snowflake guildId, Snowflake userId)
         {
-            await rest.Delete($"guilds/{guildId}/bans/{userId}",
+            await api.Delete($"guilds/{guildId}/bans/{userId}",
                 $"guilds/{guildId}/bans/user").ConfigureAwait(false);
         }
 
@@ -215,7 +215,7 @@ namespace Discore.Http
             if (includeRoles != null)
                 parameters["include_roles"] = string.Join(",", includeRoles.Select(r => r.ToString()));
 
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/prune{parameters.ToQueryString()}",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/prune{parameters.ToQueryString()}",
                 $"guilds/{guildId}/prune").ConfigureAwait(false);
 
             return data!.RootElement.GetProperty("pruned").GetInt32();
@@ -286,7 +286,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            using JsonDocument? data = await rest.Post($"guilds/{guildId}/prune", jsonContent: requestData,
+            using JsonDocument? data = await api.Post($"guilds/{guildId}/prune", jsonContent: requestData,
                 $"guilds/{guildId}/prune").ConfigureAwait(false);
 
             return data!.RootElement.GetProperty("pruned").GetInt32OrNull();
@@ -327,7 +327,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordIntegration>> GetGuildIntegrations(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/integrations",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/integrations",
                 $"guilds/{guildId}/integrations").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -367,7 +367,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            await rest.Post($"guilds/{guildId}/integrations", jsonContent: requestData,
+            await api.Post($"guilds/{guildId}/integrations", jsonContent: requestData,
                 $"guilds/{guildId}/integrations").ConfigureAwait(false);
         }
 
@@ -399,7 +399,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            await rest.Patch($"guilds/{guildId}/integrations/{integrationId}", jsonContent: requestData,
+            await api.Patch($"guilds/{guildId}/integrations/{integrationId}", jsonContent: requestData,
                 $"guilds/{guildId}/integrations/integration").ConfigureAwait(false);
         }
 
@@ -428,7 +428,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteGuildIntegration(Snowflake guildId, Snowflake integrationId)
         {
-            await rest.Delete($"guilds/{guildId}/integrations/{integrationId}",
+            await api.Delete($"guilds/{guildId}/integrations/{integrationId}",
                 $"guilds/{guildId}/integrations/integration").ConfigureAwait(false);
         }
 
@@ -456,7 +456,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task SyncGuildIntegration(Snowflake guildId, Snowflake integrationId)
         {
-            await rest.Post($"guilds/{guildId}/integrations/{integrationId}/sync",
+            await api.Post($"guilds/{guildId}/integrations/{integrationId}/sync",
                 $"guilds/{guildId}/integrations/integration/sync").ConfigureAwait(false);
         }
 
@@ -484,7 +484,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordGuildWidgetSettings> GetGuildWidget(Snowflake guildId)
         {
-            using JsonDocument? data = await rest.Get($"guilds/{guildId}/widget",
+            using JsonDocument? data = await api.Get($"guilds/{guildId}/widget",
                 $"guilds/{guildId}/widget").ConfigureAwait(false);
 
             return new DiscordGuildWidgetSettings(data!.RootElement, guildId: guildId);
@@ -516,7 +516,7 @@ namespace Discore.Http
 
             string requestData = BuildJsonContent(options.Build);
 
-            using JsonDocument? returnData = await rest.Patch($"guilds/{guildId}/widget", jsonContent: requestData,
+            using JsonDocument? returnData = await api.Patch($"guilds/{guildId}/widget", jsonContent: requestData,
                 $"guilds/{guildId}/widget").ConfigureAwait(false);
 
             return new DiscordGuildWidgetSettings(returnData!.RootElement, guildId: guildId);

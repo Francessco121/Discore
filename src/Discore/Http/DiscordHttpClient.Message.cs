@@ -26,7 +26,7 @@ namespace Discore.Http
             if (limit.HasValue)
                 builder.Add("limit", limit.Value.ToString());
 
-            using JsonDocument? data = await rest.Get($"channels/{channelId}/messages{builder.ToQueryString()}",
+            using JsonDocument? data = await api.Get($"channels/{channelId}/messages{builder.ToQueryString()}",
                 $"channels/{channelId}/messages").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -64,7 +64,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<DiscordMessage> GetChannelMessage(Snowflake channelId, Snowflake messageId)
         {
-            using JsonDocument? data = await rest.Get($"channels/{channelId}/messages/{messageId}",
+            using JsonDocument? data = await api.Get($"channels/{channelId}/messages/{messageId}",
                 $"channels/{channelId}/messages/message").ConfigureAwait(false);
 
             return new DiscordMessage(data!.RootElement);
@@ -146,17 +146,17 @@ namespace Discore.Http
             {
                 string requestData = BuildJsonContent(options.Build);
 
-                using JsonDocument? returnData = await rest.Post($"channels/{channelId}/messages", jsonContent: requestData,
+                using JsonDocument? returnData = await api.Post($"channels/{channelId}/messages", jsonContent: requestData,
                     $"channels/{channelId}/messages").ConfigureAwait(false);
 
                 return new DiscordMessage(returnData!.RootElement);
             }
             else
             {
-                using JsonDocument? returnData = await rest.Send(() =>
+                using JsonDocument? returnData = await api.Send(() =>
                 {
                     var request = new HttpRequestMessage(HttpMethod.Post,
-                        $"{RestClient.BASE_URL}/channels/{channelId}/messages");
+                        $"{ApiClient.BASE_URL}/channels/{channelId}/messages");
 
                     var data = new MultipartFormDataContent();
 
@@ -231,17 +231,17 @@ namespace Discore.Http
             {
                 string requestData = BuildJsonContent(options.Build);
 
-                using JsonDocument? returnData = await rest.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
+                using JsonDocument? returnData = await api.Patch($"channels/{channelId}/messages/{messageId}", jsonContent: requestData,
                     $"channels/{channelId}/messages/message").ConfigureAwait(false);
 
                 return new DiscordMessage(returnData!.RootElement);
             }
             else
             {
-                using JsonDocument? returnData = await rest.Send(() =>
+                using JsonDocument? returnData = await api.Send(() =>
                 {
                     var request = new HttpRequestMessage(HttpMethod.Patch,
-                        $"{RestClient.BASE_URL}/channels/{channelId}/messages/{messageId}");
+                        $"{ApiClient.BASE_URL}/channels/{channelId}/messages/{messageId}");
 
                     var data = new MultipartFormDataContent();
 
@@ -270,7 +270,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeleteMessage(Snowflake channelId, Snowflake messageId)
         {
-            await rest.Delete($"channels/{channelId}/messages/{messageId}",
+            await api.Delete($"channels/{channelId}/messages/{messageId}",
                 $"channels/{channelId}/messages/message/delete").ConfigureAwait(false);
         }
 
@@ -366,7 +366,7 @@ namespace Discore.Http
                 writer.WriteEndObject();
             });
 
-            await rest.Post($"channels/{channelId}/messages/bulk-delete", requestData,
+            await api.Post($"channels/{channelId}/messages/bulk-delete", requestData,
                 $"channels/{channelId}/messages/message/delete/bulk").ConfigureAwait(false);
         }
 
@@ -392,7 +392,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task<IReadOnlyList<DiscordMessage>> GetPinnedMessages(Snowflake channelId)
         {
-            using JsonDocument? data = await rest.Get($"channels/{channelId}/pins",
+            using JsonDocument? data = await api.Get($"channels/{channelId}/pins",
                 $"channels/{channelId}/pins").ConfigureAwait(false);
 
             JsonElement values = data!.RootElement;
@@ -424,7 +424,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task AddPinnedChannelMessage(Snowflake channelId, Snowflake messageId)
         {
-            await rest.Put($"channels/{channelId}/pins/{messageId}",
+            await api.Put($"channels/{channelId}/pins/{messageId}",
                 $"channels/{channelId}/pins/message").ConfigureAwait(false);
         }
 
@@ -448,7 +448,7 @@ namespace Discore.Http
         /// <exception cref="DiscordHttpApiException"></exception>
         public async Task DeletePinnedChannelMessage(Snowflake channelId, Snowflake messageId)
         {
-            await rest.Delete($"channels/{channelId}/pins/{messageId}",
+            await api.Delete($"channels/{channelId}/pins/{messageId}",
                 $"channels/{channelId}/pins/message").ConfigureAwait(false);
         }
 

@@ -24,17 +24,15 @@ namespace Discore.Http
         /// </summary>
         public DiscordImageData? Icon { get; set; }
 
-        // TODO: Why isnt this GuildVerificationLevel
         /// <summary>
         /// Gets or sets the verification level of the guild (or null to use default).
         /// </summary>
-        public int? VerificationLevel { get; set; }
+        public GuildVerificationLevel? VerificationLevel { get; set; }
 
-        // TODO: Why isnt this GuildNotificationOption
         /// <summary>
         /// Gets or sets the default notification level for new members joining the guild (or null to use default).
         /// </summary>
-        public int? DefaultMessageNotificationsLevel { get; set; }
+        public GuildNotificationOption? DefaultMessageNotifications { get; set; }
 
         /// <summary>
         /// Gets or sets the initial roles in the guild (or null to not include any additional roles).
@@ -77,7 +75,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the verification level of the guild.
         /// </summary>
-        public CreateGuildOptions SetVerificationLevel(int verificationLevel)
+        public CreateGuildOptions SetVerificationLevel(GuildVerificationLevel verificationLevel)
         {
             VerificationLevel = verificationLevel;
             return this;
@@ -86,9 +84,9 @@ namespace Discore.Http
         /// <summary>
         /// Sets the default notification level for new members joining the guild.
         /// </summary>
-        public CreateGuildOptions SetDefaultMessageNotificationsLevel(int defaultMessageNotificationsLevel)
+        public CreateGuildOptions SetDefaultMessageNotificationsLevel(GuildNotificationOption defaultMessageNotificationsLevel)
         {
-            DefaultMessageNotificationsLevel = defaultMessageNotificationsLevel;
+            DefaultMessageNotifications = defaultMessageNotificationsLevel;
             return this;
         }
 
@@ -127,10 +125,10 @@ namespace Discore.Http
                 writer.WriteString("icon", Icon.ToDataUriScheme());
 
             if (VerificationLevel.HasValue)
-                writer.WriteNumber("verification_level", VerificationLevel.Value);
+                writer.WriteNumber("verification_level", (int)VerificationLevel.Value);
 
-            if (DefaultMessageNotificationsLevel.HasValue)
-                writer.WriteNumber("default_message_notifications", DefaultMessageNotificationsLevel.Value);
+            if (DefaultMessageNotifications.HasValue)
+                writer.WriteNumber("default_message_notifications", (int)DefaultMessageNotifications.Value);
 
             if (Roles != null)
             {

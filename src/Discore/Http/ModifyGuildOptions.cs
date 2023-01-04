@@ -15,17 +15,15 @@ namespace Discore.Http
         /// Gets or sets the ID of the voice region the guild will use (or null to leave unchanged).
         /// </summary>
         public string? VoiceRegion { get; set; }
-        // TODO: Why isn't this GuildVerificationLevel
         /// <summary>
         /// Gets or sets the required verification level (or null to leave unchanged).
         /// </summary>
-        public int? VerificationLevel { get; set; }
-        // TODO: Why isn't this GuildNotificationOptions
+        public GuildVerificationLevel? VerificationLevel { get; set; }
         /// <summary>
         /// Gets or sets the default message notification setting to be used by new members entering the guild
         /// (or null to leave unchanged).
         /// </summary>
-        public int? DefaultMessageNotifications { get; set; }
+        public GuildNotificationOption? DefaultMessageNotifications { get; set; }
         /// <summary>
         /// Gets or sets the ID of the AFK voice channel (or null to leave unchanged).
         /// <para>Set to <see cref="Snowflake.None"/> to remove the AFK channel.</para>
@@ -78,7 +76,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the required verification level for the guild.
         /// </summary>
-        public ModifyGuildOptions SetVerificationLevel(int verificationLevel)
+        public ModifyGuildOptions SetVerificationLevel(GuildVerificationLevel verificationLevel)
         {
             VerificationLevel = verificationLevel;
             return this;
@@ -87,7 +85,7 @@ namespace Discore.Http
         /// <summary>
         /// Sets the default message notification setting to be used by new members entering the guild.
         /// </summary>
-        public ModifyGuildOptions SetDefaultMessageNotifications(int defualtMessageNotifications)
+        public ModifyGuildOptions SetDefaultMessageNotifications(GuildNotificationOption defualtMessageNotifications)
         {
             DefaultMessageNotifications = defualtMessageNotifications;
             return this;
@@ -160,9 +158,9 @@ namespace Discore.Http
             if (VoiceRegion != null)
                 writer.WriteString("region", VoiceRegion);
             if (VerificationLevel.HasValue)
-                writer.WriteNumber("verification_level", VerificationLevel.Value);
+                writer.WriteNumber("verification_level", (int)VerificationLevel.Value);
             if (DefaultMessageNotifications.HasValue)
-                writer.WriteNumber("default_message_notifications", DefaultMessageNotifications.Value);
+                writer.WriteNumber("default_message_notifications", (int)DefaultMessageNotifications.Value);
             if (AfkChannelId.HasValue)
                 writer.WriteSnowflake("afk_channel_id", AfkChannelId);
             if (AfkTimeout.HasValue)

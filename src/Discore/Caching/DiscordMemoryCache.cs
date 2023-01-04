@@ -8,8 +8,6 @@ using System.Linq;
 
 namespace Discore.Caching
 {
-    // TODO: audit cache invalidation
-
     /// <summary>
     /// A memory cache of Discord entities for a single <see cref="Shard"/>.
     /// </summary>
