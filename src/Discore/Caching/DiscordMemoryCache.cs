@@ -570,14 +570,6 @@ namespace Discore.Caching
         }
 
         /// <summary>
-        /// Returns the specified channel or null if it is not currently cached.
-        /// </summary>
-        public DiscordChannel? GetChannel(Snowflake channelId)
-        {
-            return guildChannels[channelId];
-        }
-
-        /// <summary>
         /// Returns a list of all channels in the given guild or null if the guild is not currently cached.
         /// </summary>
         public IReadOnlyList<DiscordGuildChannel>? GetGuildChannels(Snowflake guildId)
@@ -600,6 +592,14 @@ namespace Discore.Caching
             }
             else
                 return null;
+        }
+
+        /// <summary>
+        /// Returns the specified guild channel or null if it is not currently cached.
+        /// </summary>
+        public DiscordGuildChannel? GetGuildChannel(Snowflake guildChannelId)
+        {
+            return guildChannels[guildChannelId];
         }
 
         /// <summary>
