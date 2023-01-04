@@ -385,7 +385,7 @@ namespace Discore.WebSocket.Internal
                         {
                             // Make sure to disconnect with a non 1000 code to ensure Discord doesn't
                             // force us to make a new session since we are resuming.
-                            await socket.DisconnectAsync(WebSocketCloseStatus.EndpointUnavailable, 
+                            await socket.DisconnectAsync((WebSocketCloseStatus)4000,
                                 "Reconnecting to resume...", cancellationToken).ConfigureAwait(false);
                         }
                         else

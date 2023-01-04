@@ -166,6 +166,7 @@ namespace Discore.WebSocket.Internal
 
             // Get session ID
             sessionId = data.GetProperty("session_id").GetString()!;
+            log.LogVerbose($"[Ready] session_id = {sessionId}");
 
             // Get resume URL
             resumeGatewayUrl = data.GetProperty("resume_gateway_url").GetString()!;
