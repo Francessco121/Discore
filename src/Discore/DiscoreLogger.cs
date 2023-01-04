@@ -103,7 +103,8 @@ namespace Discore
         /// <param name="type">The type of log.</param>
         public void Log(string msg, DiscoreLogLevel type)
         {
-            // TODO: skip as early as possible if there are no listeners to OnLog
+            if (OnLog == null)
+                return;
 
             if (type >= MinimumLevel)
             {
@@ -111,7 +112,7 @@ namespace Discore
                     // Prefix
                     msg = $"[{Prefix}] {msg}";
 
-                try { OnLog?.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogMessage(msg, type, DateTime.Now))); }
+                try { OnLog.Invoke(this, new DiscoreLogEventArgs(new DiscoreLogMessage(msg, type, DateTime.Now))); }
                 // Log methods need to be guaranteed to never throw exceptions.
                 catch { }
             }
