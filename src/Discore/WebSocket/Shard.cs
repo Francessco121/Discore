@@ -34,6 +34,7 @@ namespace Discore.WebSocket
         /// <para>
         /// This can be used to reset things such as the user status,
         /// which is cleared when a new session has been created.
+        /// This event will always be fired before Gateway OnReady.
         /// </para>
         /// </summary>
         public event EventHandler<ShardReconnectedEventArgs>? OnReconnected;

@@ -82,6 +82,7 @@ namespace Discore.WebSocket.Internal
 
         int lastSequence;
         string? sessionId;
+        string? resumeGatewayUrl;
 
         bool isDisposed;
 
@@ -431,9 +432,12 @@ namespace Discore.WebSocket.Internal
 
                 SubscribeSocketEvents(socket);
 
-                // Get the gateway URL if we don't have one
-                string? gatewayUrl = GatewayUrlMemoryCache.GatewayUrl;
+                // Determine gateway URL
+                string? gatewayUrl = resume
+                    ? (resumeGatewayUrl ?? GatewayUrlMemoryCache.GatewayUrl)
+                    : GatewayUrlMemoryCache.GatewayUrl;
 
+                // Get the gateway URL if we don't have one
                 if (gatewayUrl == null)
                 {
                     try
@@ -504,8 +508,16 @@ namespace Discore.WebSocket.Internal
                         $"{wsex.WebSocketErrorCode} ({(int)wsex.WebSocketErrorCode}), {wsex.Message}");
 
                     // Invalidate the cached URL since we failed to connect the socket
-                    log.LogVerbose("[ConnectLoop] Invalidating Gateway URL...");
-                    GatewayUrlMemoryCache.InvalidateUrl();
+                    if (gatewayUrl == GatewayUrlMemoryCache.GatewayUrl)
+                    {
+                        log.LogVerbose("[ConnectLoop] Invalidating Gateway URL...");
+                        GatewayUrlMemoryCache.InvalidateUrl();
+                    }
+                    else
+                    {
+                        log.LogVerbose("[ConnectLoop] Invalidating resume Gateway URL...");
+                        resumeGatewayUrl = null;
+                    }
 
                     // Wait 5s then retry
                     log.LogVerbose("[ConnectLoop] Waiting 5s before retrying...");
@@ -519,17 +531,6 @@ namespace Discore.WebSocket.Internal
             {
                 // If the loop stopped from the token being cancelled, ensure an exception is still thrown.
                 cancellationToken.ThrowIfCancellationRequested();
-            }
-
-            // If this is an automatic reconnection, fire OnReconnected event
-            if (state == GatewayState.Connected)
-            {
-                if (resume)
-                    log.LogInfo("[ConnectLoop:Reconnection] Successfully started a resume.");
-                else
-                    log.LogInfo("[ConnectLoop:Reconnection] Successfully started creating a new session.");
-
-                OnReconnected?.Invoke(this, new GatewayReconnectedEventArgs(!resume));
             }
         }
 
@@ -609,7 +610,9 @@ namespace Discore.WebSocket.Internal
                 }
             }
             else
+            {
                 log.LogWarning($"Missing handler for dispatch event: {eventName}");
+            }
         }
 
         (string message, ShardFailureReason reason) GatewayCloseCodeToReason(GatewayCloseCode closeCode)

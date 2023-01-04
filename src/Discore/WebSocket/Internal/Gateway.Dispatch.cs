@@ -167,6 +167,9 @@ namespace Discore.WebSocket.Internal
             // Get session ID
             sessionId = data.GetProperty("session_id").GetString()!;
 
+            // Get resume URL
+            resumeGatewayUrl = data.GetProperty("resume_gateway_url").GetString()!;
+
             // Get unavailable guilds
             unavailableGuildIds.Clear();
 
@@ -186,6 +189,13 @@ namespace Discore.WebSocket.Internal
             // Signal that the connection is ready
             handshakeCompleteEvent.Set();
 
+            // If this is from an automatic reconnection, fire OnReconnected
+            if (state == GatewayState.Connected)
+            {
+                log.LogInfo("[ConnectLoop:Reconnection] Successfully started a new session.");
+                OnReconnected?.Invoke(this, new GatewayReconnectedEventArgs(isNewSession: true));
+            }
+
             // Fire event
             OnReady?.Invoke(this, new ReadyEventArgs(shard, user, guildIds, _shardId, _totalShards));
         }
@@ -195,6 +205,13 @@ namespace Discore.WebSocket.Internal
         {
             // Signal that the connection is ready
             handshakeCompleteEvent.Set();
+
+            // If this is from an automatic reconnection, fire OnReconnected
+            if (state == GatewayState.Connected)
+            {
+                log.LogInfo("[ConnectLoop:Reconnection] Successfully completed a resume.");
+                OnReconnected?.Invoke(this, new GatewayReconnectedEventArgs(isNewSession: false));
+            }
 
             log.LogInfo("[Resumed] Successfully resumed.");
             LogServerTrace("Resumed", data);

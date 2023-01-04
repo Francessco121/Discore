@@ -19,8 +19,11 @@ namespace Discore.WebSocket
     {
         /// <summary>
         /// Gets whether the shard created a new session.
-        /// A new session means that the bot's user status may have been reset,
-        /// and the cache has been cleared.
+        /// <para/>
+        /// A new session means that the bot's user status may have been reset and any
+        /// cached data is most likely invalid.
+        /// When false, a resume was completed and any missed Gateway have already been
+        /// received. Cached data may be kept when a resume occurs.
         /// </summary>
         public bool IsNewSession { get; }
 

@@ -41,6 +41,7 @@
 - `DiscordHttpClient.Create/EditMessage` file attachment overloads have been removed. Instead, please use the new `Attachments` property of `Create/EditMessageOptions`.
 - Removed `DiscordHttpClient.UseSingleHttpClient` (it's no longer needed).
 - Removed deprecated `DiscordHttpClient.GetUserDMs`.
+- `Shard.OnReconnected` is now fired at the end of reconnection (as probably expected), rather than the start. This is still guaranteed to be fired before `OnReady`.
 
 ### Additions
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.
