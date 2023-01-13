@@ -188,8 +188,7 @@ namespace Discore.WebSocket.Internal
                 writer.WriteEndObject();
             }
 
-            log.LogVerbose($"[Resume] Sending payload...");
-            log.LogVerbose($"[Resume] session_id = {sessionId}");
+            log.LogVerbose("[Resume] Sending payload...");
 
             return SendPayload(GatewayOPCode.Resume, BuildPayload);
         }
