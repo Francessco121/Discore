@@ -64,9 +64,14 @@ namespace Discore.Voice
         /// </summary>
         public bool IsValid => isValid;
         /// <summary>
-        /// Gets the speaking state of this connection.
+        /// Gets whether this connection is currently set to "speaking". 
         /// </summary>
-        public bool IsSpeaking => isSpeaking;
+        /// <seealso cref="SpeakingFlags"/>
+        public bool IsSpeaking => speakingFlags != SpeakingFlag.Off;
+        /// <summary>
+        /// Gets the speaking state of this connection. 
+        /// </summary>
+        public SpeakingFlag SpeakingFlags => speakingFlags;
         /// <summary>
         /// Gets the number of unsent voice data bytes.
         /// </summary>
@@ -118,7 +123,7 @@ namespace Discore.Voice
 
         CancellationTokenSource? connectingCancellationSource;
 
-        bool isSpeaking;
+        SpeakingFlag speakingFlags;
 
         internal DiscordVoiceConnection(Shard shard, Snowflake guildId)
         {
@@ -280,14 +285,26 @@ namespace Discore.Voice
         /// <exception cref="InvalidOperationException">Thrown if the voice connection is not fully connected yet.</exception>
         public Task SetSpeakingAsync(bool speaking)
         {
+            return SetSpeakingAsync(speaking ? SpeakingFlag.Microphone : SpeakingFlag.Off);
+        }
+
+        /// <summary>
+        /// Sets the speaking state of this connection.
+        /// <para/>
+        /// Does nothing if this connection is invalid.
+        /// </summary>
+        /// <exception cref="DiscordWebSocketException">Thrown if the state fails to set because of a WebSocket error.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the voice connection is not fully connected yet.</exception>
+        public Task SetSpeakingAsync(SpeakingFlag flags)
+        {
             if (isValid)
             {
                 if (webSocket == null || udpSocket == null || !isConnected || isConnecting)
                     throw new InvalidOperationException("Cannot set speaking state before being connected!");
 
-                isSpeaking = speaking;
+                speakingFlags = flags;
 
-                return webSocket!.SendSpeakingPayload(speaking, udpSocket!.Ssrc);
+                return webSocket!.SendSpeakingPayload(flags, udpSocket!.Ssrc);
             }
 
             return Task.CompletedTask;

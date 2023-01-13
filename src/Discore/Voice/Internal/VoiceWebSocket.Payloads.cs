@@ -56,10 +56,7 @@ namespace Discore.Voice.Internal
         [Payload(VoiceOPCode.Hello)]
         void HandleHelloPayload(JsonElement payload, JsonElement data)
         {
-            int heartbeatInterval = data.GetProperty("heartbeat_interval").GetInt32();
-
-            // TODO: Remove when Discord's heartbeat_interval bug is fixed
-            heartbeatInterval = (int)Math.Floor(heartbeatInterval * 0.75f);
+            int heartbeatInterval = (int)data.GetProperty("heartbeat_interval").GetDouble();
 
             log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
 
@@ -211,13 +208,13 @@ namespace Discore.Voice.Internal
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public Task SendSpeakingPayload(bool speaking, int ssrc)
+        public Task SendSpeakingPayload(SpeakingFlag flags, int ssrc)
         {
             void BuildPayload(Utf8JsonWriter writer)
             {
                 writer.WriteStartObject();
 
-                writer.WriteBoolean("speaking", speaking);
+                writer.WriteNumber("speaking", (int)flags);
                 writer.WriteNumber("delay", 0);
                 writer.WriteNumber("ssrc", ssrc);
 

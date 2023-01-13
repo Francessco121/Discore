@@ -71,6 +71,7 @@
 - Added `ShardFailureReason.DisallowedIntents`.
 - Added `DiscordHttpApiException.Errors`.
 - Added `DiscordHttpRateLimitException.Bucket`.
+- Added `DiscordVoiceConnection.SetSpeakingAsync` overload to take new `SpeakingFlag` parameter for more specific speaking states.
 
 ### Changes
 - Discore now makes full use of C# 8 null safety!

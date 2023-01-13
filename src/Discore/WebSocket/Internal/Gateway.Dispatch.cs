@@ -689,7 +689,7 @@ namespace Discore.WebSocket.Internal
             if (guildId.HasValue) // Only guild voice channels are supported.
             {
                 string token = data.GetProperty("token").GetString()!;
-                string endpoint = data.GetProperty("endpoint").GetString()!;
+                string? endpoint = data.GetProperty("endpoint").GetString();
 
                 DiscordVoiceConnection? connection;
                 if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))

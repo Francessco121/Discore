@@ -32,7 +32,7 @@ namespace Discore.Voice.Internal
         /// </summary>
         public event EventHandler? OnResumeRequested;
 
-        public const int GATEWAY_VERSION = 3;
+        public const int GATEWAY_VERSION = 4;
 
         CancellationTokenSource? heartbeatCancellationSource;
 

@@ -24,6 +24,7 @@ namespace Discore.Voice
         VoiceUdpSocket? udpSocket;
         string? discoveredIP;
         int? discoveredPort;
+        bool isWaitingForNewServer;
 
         Task? resumeTask;
         CancellationTokenSource? resumeCancellationTokenSource;
@@ -41,11 +42,32 @@ namespace Discore.Voice
             }
         }
 
-        internal async Task OnVoiceServerUpdated(string token, string endPoint)
+        internal async Task OnVoiceServerUpdated(string token, string? endPoint)
         {
             if (isValid)
             {
+                // Save token
                 this.token = token;
+
+                // The endpoint may be null in which case we need to swap servers but
+                // one has not been allocated yet. For now, we should just disconnect
+                // and wait for another voice server update.
+                if (endPoint == null)
+                {
+                    log.LogInfo("Got null endpoint, waiting for new voice server...");
+
+                    if (voiceState != null && isConnected)
+                    {
+                        isWaitingForNewServer = true;
+
+                        await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Waiting for new server...")
+                            .ConfigureAwait(false);
+                        EnsureUdpSocketIsClosed();
+                    }
+
+                    return;
+                }
+
                 // Strip off the port
                 this.endPoint = endPoint.Split(':')[0];
 
@@ -59,18 +81,19 @@ namespace Discore.Voice
 
                     if (isServerSwap)
                     {
-                        await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Reconnecting...").ConfigureAwait(false);
+                        await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Reconnecting...")
+                            .ConfigureAwait(false);
                         EnsureUdpSocketIsClosed();
                     }
                     
                     // Start a new session
                     await DoFullConnect();
 
-                    if (isServerSwap)
+                    if (isServerSwap || isWaitingForNewServer)
                     {
                         // Ensure we send a speaking payload so that moving between voice servers
                         // updates the ssrc correctly.
-                        await webSocket!.SendSpeakingPayload(isSpeaking, ssrc!.Value)
+                        await webSocket!.SendSpeakingPayload(speakingFlags, ssrc!.Value)
                             .ConfigureAwait(false);
                     }
                 }
@@ -405,8 +428,10 @@ namespace Discore.Voice
                 log.LogVerbose("Attempting resume...");
 
                 if (webSocket != null && webSocket.CanBeDisconnected)
-                    await webSocket.DisconnectAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None)
+                {
+                    await webSocket.DisconnectAsync((WebSocketCloseStatus)4000, "", CancellationToken.None)
                         .ConfigureAwait(false);
+                }
 
                 if (heartbeatLoopTask != null)
                 {
