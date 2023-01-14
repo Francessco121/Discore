@@ -76,7 +76,7 @@ namespace Discore.WebSocket.Internal
         /// Called when a close message has been received. 
         /// The socket will be gracefully closed automatically before this call.
         /// </summary>
-        protected abstract void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription); // Successful close
+        protected abstract void OnCloseReceived(WebSocketCloseStatus closeStatus, string? closeDescription); // Successful close
         /// <summary>
         /// Called when either the socket closes or the receive task ends unexpectedly.
         /// The socket may or may not be open when this is called.
@@ -382,8 +382,10 @@ namespace Discore.WebSocket.Internal
                             break;
                         }
                         else
+                        {
                             // Data message, append buffer to memory stream
-                            ms.Write(buffer.Array, 0, result.Count);
+                            ms.Write(buffer.Array!, 0, result.Count);
+                        }
                     }
                     while (socket.State == WebSocketState.Open && !result.EndOfMessage);
 

@@ -109,7 +109,7 @@ namespace Discore.WebSocket.Internal
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
         }
 
-        protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
+        protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string? closeDescription)
         {
             // If we initiated a disconnect, this is just the remote end's acknowledgment
             // and we should not start reconnecting

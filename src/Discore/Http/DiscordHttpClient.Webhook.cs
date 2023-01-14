@@ -391,13 +391,19 @@ namespace Discore.Http
         /// <param name="token">The webhook's token.</param>
         /// <param name="waitAndReturnMessage">Whether to wait for the message to be created 
         /// and have it returned from this method.</param>
-        /// <exception cref="ArgumentException">Thrown if the token is empty or only contains whitespace characters.</exception>
+        /// <exception cref="ArgumentException">
+        /// Thrown if the token is empty or only contains whitespace characters.
+        /// Also thrown if fileData.Array is null.
+        /// </exception>
         /// <exception cref="ArgumentNullException">Thrown if the token is null 
         /// or the file name is null, empty, or only contains whitespace characters.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage?> ExecuteWebhook(Snowflake webhookId, string token, ArraySegment<byte> fileData, string fileName,
             ExecuteWebhookOptions? options = null, bool waitAndReturnMessage = false)
         {
+            if (fileData.Array == null)
+                throw new ArgumentException($"{nameof(fileData)}.Array must not be null.", nameof(fileData));
+
             return ExecuteWebhook(webhookId, token, new ByteArrayContent(fileData.Array, fileData.Offset, fileData.Count), fileName,
                 options, waitAndReturnMessage);
         }

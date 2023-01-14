@@ -89,7 +89,7 @@ namespace Discore.Voice.Internal
                 uint returnedNonce;
 
                 if (data.ValueKind == JsonValueKind.String)
-                    returnedNonce = uint.Parse(data.GetString());
+                    returnedNonce = uint.Parse(data.GetString()!);
                 else
                     returnedNonce = data.GetUInt32();
 

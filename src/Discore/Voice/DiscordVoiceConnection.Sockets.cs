@@ -322,12 +322,12 @@ namespace Discore.Voice
             }
         }
 
-        private void WebSocket_OnUserSpeaking(object sender, VoiceSpeakingEventArgs e)
+        private void WebSocket_OnUserSpeaking(object? sender, VoiceSpeakingEventArgs e)
         {
             OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(guildId, e.UserId, e.IsSpeaking, Shard, this));
         }
 
-        private async void UdpSocket_OnClosedPrematurely(object sender, EventArgs e)
+        private async void UdpSocket_OnClosedPrematurely(object? sender, EventArgs e)
         {
             try
             {
@@ -341,7 +341,7 @@ namespace Discore.Voice
             }
         }
 
-        private async void WebSocket_OnUnexpectedClose(object sender, EventArgs e)
+        private async void WebSocket_OnUnexpectedClose(object? sender, EventArgs e)
         {
             try
             {
@@ -355,7 +355,7 @@ namespace Discore.Voice
             }
         }
 
-        private async void WebSocket_OnTimedOut(object sender, EventArgs e)
+        private async void WebSocket_OnTimedOut(object? sender, EventArgs e)
         {
             try
             {
@@ -369,7 +369,7 @@ namespace Discore.Voice
             }
         }
 
-        private async void WebSocket_OnNewSessionRequested(object sender, EventArgs e)
+        private async void WebSocket_OnNewSessionRequested(object? sender, EventArgs e)
         {
             if (isConnected)
             {
@@ -421,7 +421,7 @@ namespace Discore.Voice
             }
         }
 
-        private async void WebSocket_OnResumeRequested(object sender, EventArgs e)
+        private async void WebSocket_OnResumeRequested(object? sender, EventArgs e)
         {
             if (isConnected)
             {

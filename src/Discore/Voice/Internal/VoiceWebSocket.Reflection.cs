@@ -29,7 +29,7 @@ namespace Discore.Voice.Internal
 
             foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
             {
-                PayloadAttribute attr = method.GetCustomAttribute<PayloadAttribute>();
+                PayloadAttribute? attr = method.GetCustomAttribute<PayloadAttribute>();
                 if (attr != null)
                     payloadHandlers[attr.OPCode] = (PayloadCallback)method.CreateDelegate(payloadType, this);
             }

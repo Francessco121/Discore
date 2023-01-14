@@ -1,6 +1,6 @@
 ## v5.0.0
 ### Breaking Changes
-- Discore now targets .NET Standard 2.1.
+- **Discore now targets .NET 6.0.**
 - Discord entities (such as `DiscordMessage`) no longer keep a reference to a `DiscordHttpClient` internally and therefore no longer have methods for modifying the entity.
     - All removed methods were just shortcuts for `DiscordHttpClient` calls and can be migrated by just using a `DiscordHttpClient` instead (ex. `DiscordMessage.Edit()` -> `DiscordHttpClient.EditMessage(DiscordMessage)`).
 - Caching breaking changes:
@@ -75,8 +75,9 @@
 - Added `DiscordVoiceConnection.SetSpeakingAsync` overload to take new `SpeakingFlag` parameter for more specific speaking states.
 
 ### Changes
-- Discore now makes full use of C# 8 null safety!
-- Discore now supports Discord API v10.
+- Discore now fully annotates [nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types)!
+- Discore now supports Discord API/Gateway v10.
+- Discore now supports voice Gateway v4.
 - `Snowflake` now implements `IEquatable<Snowflake>`.
 - `DiscordCdnUrl` now implements `IEquatable<DiscordCdnUrl>`.
 - Removed dependency on `Newtonsoft.Json`.
@@ -84,4 +85,4 @@
 ### Bug Fixes
 - Fixed race condition that occurred when the application is kicked from a voice channel.
 - Fixed `DiscordWebSocketException` not containing an `InnerException` when one was provided.
-- Internal bug fixes found thanks to null safety.
+- Miscellaneous internal bug fixes found thanks to nullable reference type annotations.

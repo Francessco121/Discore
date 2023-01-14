@@ -111,7 +111,7 @@ namespace Discore
             }
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Title ?? base.ToString();
         }

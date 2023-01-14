@@ -42,10 +42,10 @@ namespace Discore
         /// </summary>
         public string ToUrlEncodedString()
         {
-            return HttpUtility.UrlEncode(ToString());
+            return HttpUtility.UrlEncode(ToString()) ?? "";
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return (Id.HasValue ? $"{Name}:{Id.Value}" : Name) ?? base.ToString();
         }

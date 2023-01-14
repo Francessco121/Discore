@@ -66,7 +66,7 @@ namespace Discore.Voice.Internal
             heartbeatCancellationSource?.Cancel();
         }
 
-        protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string closeDescription)
+        protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string? closeDescription)
         {
             if (closeStatus == WebSocketCloseStatus.NormalClosure)
                 return;

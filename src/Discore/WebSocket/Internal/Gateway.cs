@@ -548,7 +548,7 @@ namespace Discore.WebSocket.Internal
             socket.OnDispatch -= Socket_OnDispatch;
         }
 
-        private void Socket_OnFatalDisconnection(object sender, GatewayCloseCode e)
+        private void Socket_OnFatalDisconnection(object? sender, GatewayCloseCode e)
         {
             if (isDisposed)
                 return;
@@ -563,7 +563,7 @@ namespace Discore.WebSocket.Internal
             OnFailure?.Invoke(this, gatewayFailureData);
         }
 
-        void Socket_OnReconnectionRequired(object sender, ReconnectionEventArgs e)
+        void Socket_OnReconnectionRequired(object? sender, ReconnectionEventArgs e)
         {
             if (isDisposed)
                 return;
@@ -581,7 +581,7 @@ namespace Discore.WebSocket.Internal
             }
         }
 
-        private async void Socket_OnDispatch(object sender, DispatchEventArgs e)
+        private async void Socket_OnDispatch(object? sender, DispatchEventArgs e)
         {
             if (isDisposed)
                 return;

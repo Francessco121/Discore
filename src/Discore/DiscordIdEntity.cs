@@ -40,7 +40,7 @@ namespace Discore
         /// Determines whether the specified object is equal to the current Discord entity.
         /// </summary>
         /// <param name="obj">The other object to check.</param>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is DiscordIdEntity other)
                 return Equals(other);

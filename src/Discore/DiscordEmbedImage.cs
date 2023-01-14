@@ -32,7 +32,7 @@ namespace Discore
             Height = json.GetPropertyOrNull("height")?.GetInt32();
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Url ?? base.ToString();
         }

@@ -173,7 +173,7 @@ namespace Discore.Voice.Internal
 
                     if (read == 70 && discoveringIP)
                     {
-                        HandleIPDiscoveryPacket(buffer.Array);
+                        HandleIPDiscoveryPacket(buffer.Array!);
 
                         // For now, the receive loop is only needed for discovering the IP.
                         // To save from some unneeded calculations, we can end the loop here.
@@ -220,7 +220,7 @@ namespace Discore.Voice.Internal
         #region Sending
         Task SendAsync(ArraySegment<byte> data)
         {
-            return socket.SendAsync(data, SocketFlags.None);
+            return socket!.SendAsync(data, SocketFlags.None);
         }
 
         void Send(byte[] buffer, int offset, int count)

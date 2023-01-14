@@ -22,7 +22,7 @@ namespace Discore
             Url = json.GetPropertyOrNull("url")?.GetString();
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Name ?? base.ToString();
         }

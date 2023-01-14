@@ -32,7 +32,7 @@ namespace Discore.Voice.Internal
         public int Write(byte[] data, int offset, int count)
         {
             if (Count + count > MaxLength)
-                throw new ArgumentOutOfRangeException("Attempt to write to a full buffer!");
+                throw new ArgumentOutOfRangeException(nameof(count), "Attempt to write to a full buffer!");
 
             lock (lockObject)
             {

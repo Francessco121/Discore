@@ -49,7 +49,7 @@ namespace Discore.WebSocket.Internal
 
             foreach (MethodInfo method in gatewayType.GetTypeInfo().GetMethods(BindingFlags.Instance | BindingFlags.NonPublic))
             {
-                DispatchEventAttribute attr = method.GetCustomAttribute<DispatchEventAttribute>();
+                DispatchEventAttribute? attr = method.GetCustomAttribute<DispatchEventAttribute>();
                 if (attr != null)
                 {
                     DispatchCallback dispatchCallback;

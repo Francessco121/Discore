@@ -32,7 +32,7 @@ namespace Discore
             ProxyIconUrl = json.GetPropertyOrNull("proxy_icon_url")?.GetString();
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Name ?? base.ToString();
         }

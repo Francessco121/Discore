@@ -92,12 +92,12 @@ namespace Discore.WebSocket
             Voice = new ShardVoiceManager(this);
         }
 
-        private void Gateway_OnReconnected(object sender, GatewayReconnectedEventArgs e)
+        private void Gateway_OnReconnected(object? sender, GatewayReconnectedEventArgs e)
         {
             OnReconnected?.Invoke(this, new ShardReconnectedEventArgs(this, e.IsNewSession));
         }
 
-        private void Gateway_OnFailure(object sender, GatewayFailureData e)
+        private void Gateway_OnFailure(object? sender, GatewayFailureData e)
         {
             isRunning = false;
             CleanUp();

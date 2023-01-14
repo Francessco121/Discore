@@ -26,7 +26,7 @@ namespace Discore
             Emoji = new DiscordReactionEmoji(json.GetProperty("emoji"));
         }
 
-        public override string ToString()
+        public override string? ToString()
         {
             return Emoji.Name ?? base.ToString();
         }

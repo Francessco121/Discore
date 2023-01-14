@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
@@ -131,7 +132,7 @@ namespace Discore.Http
             }
             else
             {
-                Errors = new DiscordHttpErrorMessage[0];
+                Errors = Array.Empty<DiscordHttpErrorMessage>();
             }
         }
     }

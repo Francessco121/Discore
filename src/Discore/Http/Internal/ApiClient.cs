@@ -37,7 +37,7 @@ namespace Discore.Http.Internal
 
         static ApiClient()
         {
-            Version version = Assembly.Load(new AssemblyName("Discore")).GetName().Version;
+            Version version = Assembly.Load(new AssemblyName("Discore")).GetName().Version!;
             // Don't include revision since Discore uses the Major.Minor.Patch semantic.
             discoreVersion = $"{version.Major}.{version.Minor}.{version.Build}";
 
@@ -140,7 +140,7 @@ namespace Discore.Http.Internal
             // Get the rate limit lock for the route
             RateLimitLock? routeLock = null;
 
-            if (routesToBuckets.TryGetValue(rateLimitRoute, out string rateLimitBucket))
+            if (routesToBuckets.TryGetValue(rateLimitRoute, out string? rateLimitBucket))
             {
                 // Use the bucket for the route if it exists
                 routeLock = bucketRateLimitLocks[rateLimitBucket];

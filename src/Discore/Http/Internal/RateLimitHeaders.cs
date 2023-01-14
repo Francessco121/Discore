@@ -65,7 +65,7 @@ namespace Discore.Http.Internal
             IEnumerable<string>? retryAfterValues;
             if (headers.TryGetValues("Retry-After", out retryAfterValues))
             {
-                string retryAfterStr = retryAfterValues.FirstOrDefault();
+                string? retryAfterStr = retryAfterValues.FirstOrDefault();
 
                 int retryAfter;
                 if (!string.IsNullOrWhiteSpace(retryAfterStr) && int.TryParse(retryAfterStr, out retryAfter))
@@ -82,7 +82,7 @@ namespace Discore.Http.Internal
                 IEnumerable<string>? limitValues;
                 if (headers.TryGetValues("X-RateLimit-Limit", out limitValues))
                 {
-                    string limit = limitValues.FirstOrDefault();
+                    string? limit = limitValues.FirstOrDefault();
 
                     int limitInt;
                     if (!string.IsNullOrWhiteSpace(limit) && int.TryParse(limit, out limitInt))
@@ -92,7 +92,7 @@ namespace Discore.Http.Internal
                 IEnumerable<string>? remainingValues;
                 if (headers.TryGetValues("X-RateLimit-Remaining", out remainingValues))
                 {
-                    string remainingStr = remainingValues.FirstOrDefault();
+                    string? remainingStr = remainingValues.FirstOrDefault();
 
                     int remaining;
                     if (!string.IsNullOrWhiteSpace(remainingStr) && int.TryParse(remainingStr, out remaining))
@@ -102,7 +102,7 @@ namespace Discore.Http.Internal
                 IEnumerable<string>? resetValues;
                 if (headers.TryGetValues("X-RateLimit-Reset", out resetValues))
                 {
-                    string resetTimeStr = resetValues.FirstOrDefault();
+                    string? resetTimeStr = resetValues.FirstOrDefault();
 
                     double resetTime;
                     if (!string.IsNullOrWhiteSpace(resetTimeStr) && double.TryParse(resetTimeStr, out resetTime))
@@ -112,7 +112,7 @@ namespace Discore.Http.Internal
                 IEnumerable<string>? resetAfterValues;
                 if (headers.TryGetValues("X-RateLimit-Reset-After", out resetAfterValues))
                 {
-                    string resetAfterStr = resetAfterValues.FirstOrDefault();
+                    string? resetAfterStr = resetAfterValues.FirstOrDefault();
 
                     double resetAfter;
                     if (!string.IsNullOrWhiteSpace(resetAfterStr) && double.TryParse(resetAfterStr, out resetAfter))
