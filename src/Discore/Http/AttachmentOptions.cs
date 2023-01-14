@@ -7,6 +7,18 @@ using System.Text.Json;
 
 namespace Discore.Http
 {
+    /// <summary>
+    /// Specifies options for uploading a new attachment, editing metadata for an existing one, or keeping
+    /// an existing attachment across a message edit.
+    /// </summary>
+    /// <remarks>
+    /// When uploading new attachments, the attachment must have at least a filename and content.
+    /// <para/>
+    /// When editing existing attachments, the ID must be the ID Discord assigned it (after a previous
+    /// create/edit message call) and filename/content cannot be changed.
+    /// <para/>
+    /// A filename must always be set when content is specified. You cannot upload attachment content without a filename.
+    /// </remarks>
     public class AttachmentOptions
     {
         /// <summary>
@@ -16,6 +28,9 @@ namespace Discore.Http
         /// <summary>
         /// Gets or sets the file name of this attachment.
         /// </summary>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
         public string? FileName { get; set; }
         /// <summary>
         /// Gets or sets the description of this attachment.
@@ -23,9 +38,10 @@ namespace Discore.Http
         public string? Description { get; set; }
         /// <summary>
         /// Gets or sets the actual attachment content to upload.
-        /// Does not need to be set when keeping an existing attachment or only modifying
-        /// other properties like the description.
         /// </summary>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
         public HttpContent? Content { get; set; }
 
         /// <summary>
@@ -43,6 +59,9 @@ namespace Discore.Http
         /// <summary>
         /// Sets the file name of this attachment.
         /// </summary>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
         public AttachmentOptions SetFileName(string? fileName)
         {
             FileName = fileName;
@@ -61,6 +80,9 @@ namespace Discore.Http
         /// <summary>
         /// Sets the actual attachment content to upload.
         /// </summary>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
         public AttachmentOptions SetContent(HttpContent? content)
         {
             Content = content;
@@ -70,6 +92,9 @@ namespace Discore.Http
         /// <summary>
         /// Sets the actual attachment content to upload.
         /// </summary>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
         public AttachmentOptions SetContent(Stream content, string? mediaType = null)
         {
             var streamContent = new StreamContent(content);
@@ -85,8 +110,15 @@ namespace Discore.Http
         /// <summary>
         /// Sets the actual attachment content to upload.
         /// </summary>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="content"/>.Array is null.</exception>
         public AttachmentOptions SetContent(ArraySegment<byte> content, string? mediaType = null)
         {
+            if (content.Array == null)
+                throw new ArgumentException($"{nameof(content)}.Array must not be null.", nameof(content));
+
             var byteContent = new ByteArrayContent(content.Array, content.Offset, content.Count);
 
             if (mediaType != null)
@@ -103,6 +135,9 @@ namespace Discore.Http
         /// <param name="content"></param>
         /// <param name="mediaType">Defaults to text/plain.</param>
         /// <param name="encoding">Defaults to UTF8.</param>
+        /// <remarks>
+        /// Cannot be set when referencing an existing attachment.
+        /// </remarks>
         public AttachmentOptions SetContent(string content, string? mediaType = null, Encoding? encoding = null)
         {
             Content = new StringContent(content, encoding ?? Encoding.UTF8, mediaType ?? "text/plain");

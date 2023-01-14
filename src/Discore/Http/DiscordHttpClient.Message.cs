@@ -88,6 +88,7 @@ namespace Discore.Http
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, string content)
         {
@@ -99,6 +100,7 @@ namespace Discore.Http
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, string content)
@@ -114,6 +116,7 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, CreateMessageOptions options)
@@ -129,6 +132,7 @@ namespace Discore.Http
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// <para>Requires <see cref="DiscordPermission.SendTtsMessages"/> if TTS is enabled on the message.</para>
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="channel"/> or <paramref name="options"/> is null.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, CreateMessageOptions options)
@@ -139,6 +143,7 @@ namespace Discore.Http
             return CreateMessageInternal(channel.Id, options);
         }
 
+        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         async Task<DiscordMessage> CreateMessageInternal(Snowflake channelId, CreateMessageOptions options)
         {
             // Determine if we can make a normal JSON request or if we need multipart form data for file uploads
@@ -162,8 +167,12 @@ namespace Discore.Http
 
                     foreach (AttachmentOptions attachment in options.Attachments)
                     {
-                        if (attachment.Content != null)
-                            data.Add(attachment.Content, $"files[{attachment.Id}]", attachment.FileName);
+                        if (attachment.FileName == null)
+                            throw new ArgumentException($"Attachment {attachment.Id} must have a filename!");
+                        if (attachment.Content == null)
+                            throw new ArgumentException($"Attachment {attachment.Id} must have content!");
+
+                        data.Add(attachment.Content, $"files[{attachment.Id}]", attachment.FileName);
                     }
 
                     string payloadJson = BuildJsonContent(options.Build);
@@ -181,6 +190,7 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
         {
@@ -190,6 +200,7 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(DiscordMessage message, string content)
@@ -202,6 +213,7 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, EditMessageOptions options)
@@ -214,6 +226,7 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
+        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(DiscordMessage message, EditMessageOptions options)
@@ -224,6 +237,7 @@ namespace Discore.Http
             return EditMessageInternal(message.ChannelId, message.Id, options);
         }
 
+        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         async Task<DiscordMessage> EditMessageInternal(Snowflake channelId, Snowflake messageId, EditMessageOptions options)
         {
             // Determine if we can make a normal JSON request or if we need multipart form data for file uploads
@@ -248,7 +262,12 @@ namespace Discore.Http
                     foreach (AttachmentOptions attachment in options.Attachments)
                     {
                         if (attachment.Content != null)
+                        {
+                            if (attachment.FileName == null)
+                                throw new ArgumentException($"Attachment {attachment.Id} has content and therefore must also have a filename!");
+
                             data.Add(attachment.Content, $"files[{attachment.Id}]", attachment.FileName);
+                        }
                     }
 
                     string payloadJson = BuildJsonContent(options.Build);
