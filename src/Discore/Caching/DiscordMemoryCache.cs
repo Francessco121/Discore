@@ -29,6 +29,8 @@ namespace Discore.Caching
         readonly ConcurrentHashSet<Snowflake> guildIds;
         readonly ConcurrentHashSet<Snowflake> unavailableGuildIds;
 
+        readonly ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> voiceChannelUsers;
+
         readonly Shard shard;
         readonly DiscoreLogger logger;
 
@@ -59,6 +61,8 @@ namespace Discore.Caching
             guildMembers = new NestedCacheDictionary<MutableGuildMember>();
             guildPresences = new NestedCacheDictionary<DiscordUserPresence>();
             guildVoiceStates = new NestedCacheDictionary<DiscordVoiceState>();
+
+            voiceChannelUsers = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
 
             // Set up shard events
             shard.OnReconnected += Shard_OnReconnected;
@@ -196,7 +200,7 @@ namespace Discore.Caching
 
             foreach (DiscordVoiceState state in e.VoiceStates)
             {
-                guildVoiceStates[e.Guild.Id, state.UserId] = state;
+                CacheVoiceState(state);
             }
 
             // Cache presences
@@ -244,7 +248,10 @@ namespace Discore.Caching
             if (guildChannelIds.TryRemove(e.GuildId, out ConcurrentHashSet<Snowflake>? channelIds))
             {
                 foreach (Snowflake channelId in channelIds)
+                {
                     guildChannels.TryRemove(channelId, out _);
+                    voiceChannelUsers.TryRemove(channelId, out _);
+                }
             }
 
             // Remove guild from cache
@@ -385,6 +392,10 @@ namespace Discore.Caching
                     channelIds.TryRemove(guildChannel.Id);
 
                 guildChannels.TryRemove(guildChannel.Id, out _);
+
+                // Remove associated voice users
+                if (guildChannel.ChannelType == DiscordChannelType.GuildVoice)
+                    voiceChannelUsers.TryRemove(guildChannel.Id, out _);
             }
         }
 
@@ -439,9 +450,42 @@ namespace Discore.Caching
         private void Gateway_OnVoiceStateUpdated(object sender, VoiceStateUpdateEventArgs e)
         {
             // Cache voice state
-            if (e.VoiceState.GuildId != null)
+            CacheVoiceState(e.VoiceState);
+        }
+
+        void CacheVoiceState(DiscordVoiceState newState)
+        {
+            if (newState.GuildId == null)
+                return;
+
+            // Save previous state
+            DiscordVoiceState? previousState;
+            guildVoiceStates.TryGetValue(newState.GuildId.Value, newState.UserId, out previousState);
+
+            // Update cache with new state
+            guildVoiceStates[newState.GuildId.Value, newState.UserId] = newState;
+
+            // If previously in a voice channel that differs from the new channel (or no longer in a channel),
+            // then remove this user from the voice channel user list.
+            if (previousState != null && previousState.ChannelId.HasValue && previousState.ChannelId != newState.ChannelId)
             {
-                guildVoiceStates[e.VoiceState.GuildId.Value, e.VoiceState.UserId] = e.VoiceState;
+                if (voiceChannelUsers.TryGetValue(previousState.ChannelId.Value, out ConcurrentHashSet<Snowflake>? userList))
+                    userList.TryRemove(newState.UserId);
+            }
+
+            // If user is now in a voice channel, add them to the user list.
+            if (newState.ChannelId.HasValue)
+            {
+                Snowflake voiceChannelId = newState.ChannelId.Value;
+
+                ConcurrentHashSet<Snowflake>? userList;
+                if (!voiceChannelUsers.TryGetValue(voiceChannelId, out userList))
+                {
+                    userList = new ConcurrentHashSet<Snowflake>();
+                    voiceChannelUsers[voiceChannelId] = userList;
+                }
+
+                userList.Add(newState.UserId);
             }
         }
 
@@ -699,6 +743,24 @@ namespace Discore.Caching
         }
 
         /// <summary>
+        /// Gets a list of the IDs of every user currently in the specified voice channel.
+        /// <para>Note: Will return an empty list if the voice channel is not cached.</para>
+        /// </summary>
+        public IReadOnlyList<Snowflake> GetUsersInVoiceChannel(Snowflake voiceChannelId)
+        {
+            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake>? userIds))
+            {
+                var ids = new List<Snowflake>(userIds.Count);
+                foreach (Snowflake id in userIds)
+                    ids.Add(id);
+
+                return ids;
+            }
+            else
+                return Array.Empty<Snowflake>();
+        }
+
+        /// <summary>
         /// Clears the entire cache.
         /// </summary>
         public void Clear()
@@ -718,6 +780,8 @@ namespace Discore.Caching
             guildMembers.Clear();
             guildPresences.Clear();
             guildVoiceStates.Clear();
+
+            voiceChannelUsers.Clear();
         }
     }
 }

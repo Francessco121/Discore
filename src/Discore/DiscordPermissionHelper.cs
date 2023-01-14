@@ -194,22 +194,22 @@ namespace Discore
         /// <param name="member">The guild member to check.</param>
         /// <param name="voiceChannel">The voice channel to check if the member can join.</param>
         /// <param name="guild">The guild the member is in.</param>
-        /// <param name="shard">
-        /// The shard which handles the guild (needed to determine the number of users in the voice channel).
+        /// <param name="usersInVoiceChannel">
+        /// The number of users currently in the <paramref name="voiceChannel"/>. If null, this will
+        /// not be checked and it will be assumed that there is room in the channel.
         /// </param>
         /// <exception cref="ArgumentException">
         /// Thrown if <paramref name="member"/> or <paramref name="voiceChannel"/> is not in the 
         /// specified <paramref name="guild"/>
         /// </exception>
         /// <exception cref="ArgumentNullException">
-        /// Thrown if <paramref name="member"/>, <paramref name="guild"/>, <paramref name="voiceChannel"/>,
-        /// or <paramref name="shard"/> is null.
+        /// Thrown if <paramref name="member"/>, <paramref name="guild"/>, or <paramref name="voiceChannel"/> is null.
         /// </exception>
         public static bool CanJoinVoiceChannel(
             DiscordGuildMember member, 
             DiscordGuildVoiceChannel voiceChannel,
-            DiscordGuild guild, 
-            Shard shard)
+            DiscordGuild guild,
+            int? usersInVoiceChannel = null)
         {
             if (member == null)
                 throw new ArgumentNullException(nameof(member));
@@ -217,8 +217,6 @@ namespace Discore
                 throw new ArgumentNullException(nameof(voiceChannel));
             if (guild == null)
                 throw new ArgumentNullException(nameof(guild));
-            if (shard == null)
-                throw new ArgumentNullException(nameof(shard));
 
             if (voiceChannel.GuildId != member.GuildId)
                 throw new ArgumentException("Voice channel must be in the same guild as this member.");
@@ -230,16 +228,18 @@ namespace Discore
                 return false;
 
             // Check if the voice channel has room
-            bool channelHasRoom = false;
+            bool channelHasRoom;
             if (voiceChannel.UserLimit == 0)
                 channelHasRoom = true;
             else if (HasPermission(DiscordPermission.Administrator, member, guild, voiceChannel))
                 channelHasRoom = true;
             else
             {
-                IReadOnlyList<Snowflake> usersInChannel = shard.Voice.GetUsersInVoiceChannel(voiceChannel.Id);
-                if (usersInChannel.Count < voiceChannel.UserLimit)
+                if (usersInVoiceChannel == null)
+                    // Assume there's room
                     channelHasRoom = true;
+                else
+                    channelHasRoom = usersInVoiceChannel < voiceChannel.UserLimit;
             }
 
             return channelHasRoom;

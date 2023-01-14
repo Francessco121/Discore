@@ -257,8 +257,6 @@ namespace Discore.WebSocket.Internal
             {
                 var state = new DiscordVoiceState(voiceStatesArray[i], guildId: guildId);
                 voiceStates[i] = state;
-
-                UpdateMemberVoiceState(state);
             }
 
             // Deserialize presences
@@ -610,39 +608,6 @@ namespace Discore.WebSocket.Internal
         }
 
         #region Voice
-        /// <summary>
-        /// Handles updating the cache list of members connected to voice channels, as well as updating the voice state.
-        /// </summary>
-        void UpdateMemberVoiceState(DiscordVoiceState newState)
-        {
-            ConcurrentDictionary<Snowflake, DiscordVoiceState> guildVoiceStates;
-            if (!voiceStates.TryGetValue(newState.GuildId!.Value, out guildVoiceStates))
-            {
-                guildVoiceStates = new ConcurrentDictionary<Snowflake, DiscordVoiceState>();
-                voiceStates[newState.GuildId.Value] = guildVoiceStates;
-            }
-
-            // Save previous state
-            DiscordVoiceState? previousState;
-            guildVoiceStates.TryGetValue(newState.UserId, out previousState);
-
-            // Update cache with new state
-            guildVoiceStates[newState.UserId] = newState;
-
-            // If previously in a voice channel that differs from the new channel (or no longer in a channel),
-            // then remove this user from the voice channel user list.
-            if (previousState != null && previousState.ChannelId.HasValue && previousState.ChannelId != newState.ChannelId)
-            {
-                shard.Voice.RemoveUserFromVoiceChannel(previousState.ChannelId.Value, newState.UserId);
-            }
-
-            // If user is now in a voice channel, add them to the user list.
-            if (newState.ChannelId.HasValue)
-            {
-                shard.Voice.AddUserToVoiceChannel(newState.ChannelId.Value, newState.UserId);
-            }
-        }
-
         [DispatchEvent("VOICE_STATE_UPDATE")]
         async Task HandleVoiceStateUpdateEvent(JsonElement data)
         {
@@ -653,7 +618,6 @@ namespace Discore.WebSocket.Internal
 
                 // Update the voice state
                 var voiceState = new DiscordVoiceState(data, guildId: guildId.Value);
-                UpdateMemberVoiceState(voiceState);
 
                 // If this voice state belongs to the current bot,
                 // then we need to notify the connection of the session ID.

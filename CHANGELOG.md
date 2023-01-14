@@ -56,6 +56,7 @@
 - Renamed `DiscordInviteChannel.ChannelId` to `Id`.
 - Renamed `DiscordInviteGuild.GuildId` to `Id`.
 - Renamed `DiscordInviteTargetUserType` to `DiscordInviteTargetType`.
+- Removed `ShardVoiceManager.GetUsersInVoiceChannel` (please use `DiscordMemoryCache.GetUsersInVoiceChannel` instead).
 
 ### Additions
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.

@@ -1,4 +1,3 @@
-using ConcurrentCollections;
 using Discore.WebSocket;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -14,7 +13,6 @@ namespace Discore.Voice
         public ICollection<DiscordVoiceConnection> VoiceConnections => voiceConnections.Values;
 
         readonly ConcurrentDictionary<Snowflake, DiscordVoiceConnection> voiceConnections;
-        readonly ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>> voiceChannelUsers;
 
         readonly Shard shard;
 
@@ -23,25 +21,6 @@ namespace Discore.Voice
             this.shard = shard;
 
             voiceConnections = new ConcurrentDictionary<Snowflake, DiscordVoiceConnection>();
-            voiceChannelUsers = new ConcurrentDictionary<Snowflake, ConcurrentHashSet<Snowflake>>();
-        }
-
-        /// <summary>
-        /// Gets a list of the IDs of every user currently in the specified voice channel.
-        /// <para>Note: Will return an empty list if the voice channel is not found.</para>
-        /// </summary>
-        public IReadOnlyList<Snowflake> GetUsersInVoiceChannel(Snowflake voiceChannelId)
-        {
-            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake>? userIds))
-            {
-                var ids = new List<Snowflake>(userIds.Count);
-                foreach (Snowflake id in userIds)
-                    ids.Add(id);
-
-                return ids;
-            }
-            else
-                return new Snowflake[0];
         }
 
         /// <summary>
@@ -79,28 +58,9 @@ namespace Discore.Voice
             voiceConnections.TryRemove(guildId, out _);
         }
 
-        internal void AddUserToVoiceChannel(Snowflake voiceChannelId, Snowflake userId)
-        {
-            ConcurrentHashSet<Snowflake>? userList;
-            if (!voiceChannelUsers.TryGetValue(voiceChannelId, out userList))
-            {
-                userList = new ConcurrentHashSet<Snowflake>();
-                voiceChannelUsers[voiceChannelId] = userList;
-            }
-
-            userList.Add(userId);
-        }
-
-        internal void RemoveUserFromVoiceChannel(Snowflake voiceChannelId, Snowflake userId)
-        {
-            if (voiceChannelUsers.TryGetValue(voiceChannelId, out ConcurrentHashSet<Snowflake>? userList))
-                userList.TryRemove(userId);
-        }
-
         internal void Clear()
         {
             voiceConnections.Clear();
-            voiceChannelUsers.Clear();
         }
     }
 }
