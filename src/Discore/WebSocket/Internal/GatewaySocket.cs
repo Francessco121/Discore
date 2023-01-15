@@ -35,7 +35,7 @@ namespace Discore.WebSocket.Internal
 
         readonly GatewayRateLimiter identifyRateLimiter;
         readonly GatewayRateLimiter outboundPayloadRateLimiter;
-        readonly GatewayRateLimiter gameStatusUpdateRateLimiter;
+        readonly GatewayRateLimiter presenceUpdateRateLimiter;
 
         readonly Dictionary<GatewayOPCode, PayloadCallback> payloadHandlers;
 
@@ -61,14 +61,14 @@ namespace Discore.WebSocket.Internal
 
         readonly DiscoreLogger log;
 
-        public GatewaySocket(string loggingName, int sequence, 
-            GatewayRateLimiter outboundPayloadRateLimiter, GatewayRateLimiter gameStatusUpdateRateLimiter,
+        public GatewaySocket(string loggingName, int sequence,
+            GatewayRateLimiter outboundPayloadRateLimiter, GatewayRateLimiter presenceUpdateRateLimiter,
             GatewayRateLimiter identifyRateLimiter)
             : base(loggingName)
         {
             this.sequence = sequence;
             this.outboundPayloadRateLimiter = outboundPayloadRateLimiter;
-            this.gameStatusUpdateRateLimiter = gameStatusUpdateRateLimiter;
+            this.presenceUpdateRateLimiter = presenceUpdateRateLimiter;
             this.identifyRateLimiter = identifyRateLimiter;
 
             log = new DiscoreLogger(loggingName);

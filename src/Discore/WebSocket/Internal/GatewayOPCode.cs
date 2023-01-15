@@ -5,7 +5,7 @@ namespace Discore.WebSocket.Internal
         Dispatch = 0,
         Heartbeat,
         Identify,
-        StatusUpdate,
+        PresenceUpdate,
         VoiceStateUpdate,
         VoiceServerPing,
         Resume,

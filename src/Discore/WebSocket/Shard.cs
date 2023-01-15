@@ -32,7 +32,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Called when the internal connection of this shard reconnected to the Discord Gateway.
         /// <para>
-        /// This can be used to reset things such as the user status,
+        /// This can be used to reset things such as the user presence,
         /// which is cleared when a new session has been created.
         /// This event will always be fired before Gateway OnReady.
         /// </para>

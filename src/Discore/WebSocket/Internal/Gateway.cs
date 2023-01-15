@@ -42,7 +42,7 @@ namespace Discore.WebSocket.Internal
         // These two rate limiters are used by the socket itself,
         // but must be saved between creating new sockets.
         readonly GatewayRateLimiter outboundPayloadRateLimiter;
-        readonly GatewayRateLimiter gameStatusUpdateRateLimiter;
+        readonly GatewayRateLimiter presenceUpdateRateLimiter;
 
         /// <summary>
         /// State to be tracked only for the public API of this class.
@@ -106,7 +106,7 @@ namespace Discore.WebSocket.Internal
             // Up-to-date rate limit parameters: https://discord.com/developers/docs/topics/gateway#rate-limiting
             identifyRateLimiter = new GatewayRateLimiter(5, 1); // 1 IDENTIFY per 5 seconds
             outboundPayloadRateLimiter = new GatewayRateLimiter(60, 120); // 120 outbound payloads every 60 seconds
-            gameStatusUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute
+            presenceUpdateRateLimiter = new GatewayRateLimiter(60, 5); // 5 status updates per minute
 
             dispatchHandlers = InitializeDispatchHandlers();
         }
@@ -117,7 +117,7 @@ namespace Discore.WebSocket.Internal
         /// <exception cref="OperationCanceledException">
         /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
         /// </exception>
-        public async Task UpdateStatusAsync(StatusOptions options, 
+        public async Task UpdatePresenceAsync(PresenceOptions options,
             CancellationToken? cancellationToken = null)
         {
             if (options == null)
@@ -129,10 +129,10 @@ namespace Discore.WebSocket.Internal
 
             CancellationToken ct = cancellationToken ?? CancellationToken.None;
 
-            await RepeatTrySendPayload(ct, "UpdateStatus", async () =>
+            await RepeatTrySendPayload(ct, "UpdatePresence", async () =>
             {
                 // Try to send the status update
-                await socket.SendStatusUpdate(options).ConfigureAwait(false);
+                await socket.SendPresenceUpdate(options).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }
 
@@ -406,7 +406,7 @@ namespace Discore.WebSocket.Internal
 
                 // Create a new socket
                 socket = new GatewaySocket($"GatewaySocket#{shard.Id}", lastSequence,
-                    outboundPayloadRateLimiter, gameStatusUpdateRateLimiter, identifyRateLimiter);
+                    outboundPayloadRateLimiter, presenceUpdateRateLimiter, identifyRateLimiter);
 
                 socket.OnHello = async () =>
                 {

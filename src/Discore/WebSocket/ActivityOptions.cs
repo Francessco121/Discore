@@ -1,14 +1,14 @@
 namespace Discore.WebSocket
 {
-    public class GameOptions
+    public class ActivityOptions
     {
         /// <summary>
-        /// The name of the game.
+        /// The name of the activity.
         /// </summary>
         public string? Name { get; set; }
 
         /// <summary>
-        /// The type of the game. Defaults to <see cref="DiscordActivityType.Game"/>.
+        /// The type of activity. Defaults to <see cref="DiscordActivityType.Game"/>.
         /// </summary>
         public DiscordActivityType Type { get; set; } = DiscordActivityType.Game;
 
@@ -18,25 +18,25 @@ namespace Discore.WebSocket
         /// </summary>
         public string? Url { get; set; }
 
-        public GameOptions() { }
-        public GameOptions(string name)
+        public ActivityOptions() { }
+        public ActivityOptions(string name)
         {
             Name = name;
         }
 
         /// <summary>
-        /// Sets the name of the game.
+        /// Sets the name of the activity.
         /// </summary>
-        public GameOptions SetName(string name)
+        public ActivityOptions SetName(string name)
         {
             Name = name;
             return this;
         }
 
         /// <summary>
-        /// Sets the type of game.
+        /// Sets the type of activity.
         /// </summary>
-        public GameOptions SetType(DiscordActivityType type)
+        public ActivityOptions SetType(DiscordActivityType type)
         {
             Type = type;
             return this;
@@ -46,7 +46,7 @@ namespace Discore.WebSocket
         /// Sets the URL of the stream. <see cref="Type"/> must be <see cref="DiscordActivityType.Streaming"/>
         /// for this to take effect.
         /// </summary>
-        public GameOptions SetUrl(string url)
+        public ActivityOptions SetUrl(string url)
         {
             Url = url;
             return this;

@@ -3,11 +3,11 @@ namespace Discore
     public enum DiscordActivityType
     {
         /// <summary>
-        /// Example display: "Playing Overwatch".
+        /// Example display: "Playing Tunic".
         /// </summary>
         Game,
         /// <summary>
-        /// Example display: "Streaming Overwatch".
+        /// Example display: "Streaming Tunic".
         /// </summary>
         Streaming,
         /// <summary>

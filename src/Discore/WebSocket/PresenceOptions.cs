@@ -1,6 +1,8 @@
+using System.Collections.Generic;
+
 namespace Discore.WebSocket
 {
-    public class StatusOptions
+    public class PresenceOptions
     {
         /// <summary>
         /// The status of the bot. Defaults to <see cref="DiscordUserStatus.Online"/>.
@@ -19,17 +21,21 @@ namespace Discore.WebSocket
         public int? AfkSince { get; set; }
 
         /// <summary>
-        /// The "game" the bot is currently playing, or null if the bot
-        /// is not "playing" anything. Defaults to null.
+        /// Each activity the bot is taking part in. If none are specified, then
+        /// the bot will not be shown as doing anything.
+        /// Defaults to null.
         /// </summary>
-        public GameOptions? Game { get; set; }
+        /// <remarks>
+        /// Usually, there will only be zero or one activity.
+        /// </remarks>
+        public IList<ActivityOptions>? Activities { get; set; }
 
-        public StatusOptions() { }
+        public PresenceOptions() { }
 
         /// <summary>
         /// Sets the status of the bot.
         /// </summary>
-        public StatusOptions SetStatus(DiscordUserStatus status)
+        public PresenceOptions SetStatus(DiscordUserStatus status)
         {
             Status = status;
             return this;
@@ -38,7 +44,7 @@ namespace Discore.WebSocket
         /// <summary>
         /// Sets whether the bot is AFK.
         /// </summary>
-        public StatusOptions SetAfk(bool afk)
+        public PresenceOptions SetAfk(bool afk)
         {
             Afk = afk;
             return this;
@@ -48,19 +54,29 @@ namespace Discore.WebSocket
         /// Sets the unix time (in milliseconds) of when the bot went idle,
         /// or null if the bot is not idle.
         /// </summary>
-        public StatusOptions SetAfkSince(int? afkSince)
+        public PresenceOptions SetAfkSince(int? afkSince)
         {
             AfkSince = afkSince;
             return this;
         }
 
         /// <summary>
-        /// Sets the "game" the bot is currently playing, or null if the bot
-        /// is not "playing" anything.
+        /// Sets each activity the bot is taking part in. If none are specified, then
+        /// the bot will not be shown as doing anything.
         /// </summary>
-        public StatusOptions SetGame(GameOptions game)
+        public PresenceOptions SetActivities(IList<ActivityOptions> activities)
         {
-            Game = game;
+            Activities = activities;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an activity that the bot is taking part in.
+        /// </summary>
+        public PresenceOptions AddActivity(ActivityOptions activity)
+        {
+            Activities ??= new List<ActivityOptions>();
+            Activities.Add(activity);
             return this;
         }
     }

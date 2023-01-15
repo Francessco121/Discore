@@ -160,13 +160,13 @@ namespace Discore.WebSocket
         event EventHandler<VoiceStateUpdateEventArgs>? OnVoiceStateUpdate;
 
         /// <summary>
-        /// Updates the status of the bot user.
+        /// Updates the presence/status of the bot user.
         /// <para>Note: This method can only be called 5 times per minute and will wait if this is exceeded.</para>
         /// <para>
         /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
         /// </para>
         /// </summary>
-        /// <param name="options">Options for the new status.</param>
+        /// <param name="options">Options for the new presence.</param>
         /// <param name="cancellationToken">A token used to cancel the update.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="options"/> is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
@@ -178,7 +178,7 @@ namespace Discore.WebSocket
         /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
         /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
         /// </remarks>
-        Task UpdateStatusAsync(StatusOptions options, CancellationToken? cancellationToken = null);
+        Task UpdatePresenceAsync(PresenceOptions options, CancellationToken? cancellationToken = null);
 
         /// <summary>
         /// Requests guild members from the Discord API, this can be used to retrieve offline members in a guild that is considered 

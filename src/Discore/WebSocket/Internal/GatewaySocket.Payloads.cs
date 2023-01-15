@@ -195,7 +195,7 @@ namespace Discore.WebSocket.Internal
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public async Task SendStatusUpdate(StatusOptions options)
+        public async Task SendPresenceUpdate(PresenceOptions options)
         {
             void BuildPayload(Utf8JsonWriter writer)
             {
@@ -205,22 +205,27 @@ namespace Discore.WebSocket.Internal
                 writer.WriteBoolean("afk", options.Afk);
                 writer.WriteString("status", Utils.UserStatusToString(options.Status) ?? "online");
 
-                if (options.Game != null)
+                writer.WriteStartArray("activities");
+                if (options.Activities != null)
                 {
-                    writer.WriteStartObject("game");
-                    writer.WriteString("name", options.Game.Name);
-                    writer.WriteNumber("type", (int)options.Game.Type);
-                    writer.WriteString("url", options.Game.Url);
-                    writer.WriteEndObject();
+                    foreach (ActivityOptions activity in options.Activities)
+                    {
+                        writer.WriteStartObject();
+                        writer.WriteString("name", activity.Name);
+                        writer.WriteNumber("type", (int)activity.Type);
+                        writer.WriteString("url", activity.Url);
+                        writer.WriteEndObject();
+                    }
                 }
+                writer.WriteEndArray();
 
                 writer.WriteEndObject();
             }
 
-            // Check with the game status update limiter
-            await gameStatusUpdateRateLimiter.Invoke().ConfigureAwait(false);
+            // Check with the presence update limiter
+            await presenceUpdateRateLimiter.Invoke().ConfigureAwait(false);
             // Send status update
-            await SendPayload(GatewayOPCode.StatusUpdate, BuildPayload).ConfigureAwait(false);
+            await SendPayload(GatewayOPCode.PresenceUpdate, BuildPayload).ConfigureAwait(false);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
