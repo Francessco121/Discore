@@ -1,4 +1,5 @@
 using Discore.WebSocket;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -36,8 +37,14 @@ namespace Discore.Voice
         /// If a voice connection already exists for the given guild,
         /// a new connection is not created and the existing one is returned.
         /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the shard was not started with the intent <see cref="GatewayIntent.GuildVoiceStates"/>.
+        /// </exception>
         public DiscordVoiceConnection CreateOrGetConnection(Snowflake guildId)
         {
+            if (!shard.Intents.HasFlag(GatewayIntent.GuildVoiceStates))
+                throw new InvalidOperationException("Voice connections cannot be created as the shard was not started with the GUILD_VOICE_STATES intent!");
+
             DiscordVoiceConnection? connection;
             if (voiceConnections.TryGetValue(guildId, out connection))
             {

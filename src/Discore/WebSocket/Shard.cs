@@ -59,6 +59,8 @@ namespace Discore.WebSocket
         /// </summary>
         public ShardVoiceManager Voice { get; }
 
+        internal GatewayIntent Intents { get; private set; }
+
         bool isRunning;
         bool isDisposed;
 
@@ -155,6 +157,8 @@ namespace Discore.WebSocket
             if (!isRunning)
             {
                 isRunning = true;
+
+                Intents = config.Intents;
 
                 CleanUp();
 

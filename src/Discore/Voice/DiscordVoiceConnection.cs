@@ -164,9 +164,6 @@ namespace Discore.Voice
                     if (!Shard.IsRunning)
                         throw new InvalidOperationException("Voice connection cannot be started while the parent shard is not running!");
 
-                    // Set state
-                    voiceState = new DiscordVoiceState(guildId, Shard.UserId!.Value, voiceChannelId);
-
                     // Initiate the connection
                     isConnecting = true;
                     connectingCancellationSource = new CancellationTokenSource();
