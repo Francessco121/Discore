@@ -174,12 +174,9 @@ namespace Discore.Voice
         }
 
         /// <summary>
-        /// Initiates this voice connection.
-        /// <para>
-        /// Note: An <see cref="OperationCanceledException"/> will be thrown if the Gateway 
-        /// connection is closed while initiating.
-        /// </para>
+        /// Initiates this voice connection and connects to a voice channel.
         /// </summary>
+        /// <param name="voiceChannelId">The voice channel to connect to. Must be in the guild that this connection is for.</param>
         /// <param name="startMute">Whether the current bot should connect self-muted.</param>
         /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
         /// <param name="connectionTimeout">The maximum amount of time to wait for connection to complete before timing out.</param>
@@ -379,7 +376,7 @@ namespace Discore.Voice
         /// <remarks>
         /// Do not pass an empty snowflake for the voice channel ID to disconnect. Instead, call <see cref="DisconnectAsync"/>.
         /// </remarks>
-        public async Task UpdateVoiceStateAsync(Snowflake voiceChannelId, bool isMute, bool isDeaf,
+        public async Task UpdateVoiceStateAsync(Snowflake voiceChannelId, bool isMute = false, bool isDeaf = false,
             CancellationToken? cancellationToken = null)
         {
             if (voiceChannelId == Snowflake.None)
