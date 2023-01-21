@@ -88,7 +88,6 @@ namespace Discore.Http
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
-        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(Snowflake channelId, string content)
         {
@@ -100,7 +99,6 @@ namespace Discore.Http
         /// <para>Note: Bot user accounts must connect to the Gateway at least once before being able to send messages.</para>
         /// <para>Requires <see cref="DiscordPermission.SendMessages"/>.</para>
         /// </summary>
-        /// <exception cref="ArgumentException">Thrown if an attachment is missing content or a filename.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> CreateMessage(ITextChannel channel, string content)
@@ -190,7 +188,6 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
-        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(Snowflake channelId, Snowflake messageId, string content)
         {
@@ -200,7 +197,6 @@ namespace Discore.Http
         /// <summary>
         /// Edits an existing message in a text channel.
         /// </summary>
-        /// <exception cref="ArgumentException">Thrown if an attachment has content but no filename.</exception>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="DiscordHttpApiException"></exception>
         public Task<DiscordMessage> EditMessage(DiscordMessage message, string content)

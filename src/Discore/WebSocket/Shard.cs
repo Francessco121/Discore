@@ -143,7 +143,7 @@ namespace Discore.WebSocket
         public async Task StartAsync(ShardStartConfig config, CancellationToken? cancellationToken = null)
         {
             if (isDisposed)
-                throw new ObjectDisposedException(nameof(gateway), "Shard has been disposed.");
+                throw new ObjectDisposedException(GetType().FullName, "Shard has been disposed.");
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
@@ -199,7 +199,7 @@ namespace Discore.WebSocket
         public async Task StopAsync()
         {
             if (isDisposed)
-                throw new ObjectDisposedException(nameof(gateway), "Shard has been disposed.");
+                throw new ObjectDisposedException(GetType().FullName, "Shard has been disposed.");
 
             if (isRunning)
             {
