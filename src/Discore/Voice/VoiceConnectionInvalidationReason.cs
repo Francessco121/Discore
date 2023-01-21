@@ -10,11 +10,6 @@ namespace Discore.Voice
         /// </summary>
         Normal,
         /// <summary>
-        /// The voice connection was disconnected because the bot was removed from the
-        /// guild the voice connection was for.
-        /// </summary>
-        BotRemovedFromGuild,
-        /// <summary>
         /// The voice connection timed out while waiting for a response from the Discord API.
         /// </summary>
         TimedOut,

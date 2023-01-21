@@ -1,5 +1,3 @@
-using Discore.WebSocket;
-
 namespace Discore.Voice
 {
     public class MemberSpeakingEventArgs : VoiceConnectionEventArgs
@@ -17,9 +15,9 @@ namespace Discore.Voice
         /// </summary>
         public bool IsSpeaking { get; }
 
-        internal MemberSpeakingEventArgs(Snowflake guildId, Snowflake userId, bool isSpeaking, Shard shard, 
-            DiscordVoiceConnection connection) 
-            : base(shard, connection)
+        internal MemberSpeakingEventArgs(Snowflake guildId, Snowflake userId, bool isSpeaking,
+            DiscordVoiceConnection connection)
+            : base(connection)
         {
             GuildId = guildId;
             UserId = userId;

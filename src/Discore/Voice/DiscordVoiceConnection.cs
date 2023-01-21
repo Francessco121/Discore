@@ -1,13 +1,18 @@
 using Discore.WebSocket;
-using Discore.WebSocket.Internal;
 using System;
-using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Discore.Voice
 {
+    /// <summary>
+    /// A connection to voice for a single guild.
+    /// </summary>
+    /// <remarks>
+    /// Only one voice connection can exist at a time per guild.
+    /// Voice connections can only be connected to one voice channel at a time.
+    /// </remarks>
     public sealed partial class DiscordVoiceConnection : IDisposable
     {
         /// <summary>
@@ -28,10 +33,6 @@ namespace Discore.Voice
         /// </summary>
         public event EventHandler<MemberSpeakingEventArgs>? OnMemberSpeaking;
 
-        /// <summary>
-        /// Gets the shard this connection is managed by.
-        /// </summary>
-        public Shard Shard => shard;
         /// <summary>
         /// Gets the ID of the guild this voice connection is in.
         /// </summary>
@@ -108,10 +109,10 @@ namespace Discore.Voice
             }
         }
 
-        readonly Shard shard;
         readonly Snowflake guildId;
-
-        readonly Gateway gateway;
+        readonly Snowflake userId;
+        readonly IGatewayVoiceBridge bridge;
+        readonly DefaultGatewayVoiceBridge? defaultBridge;
 
         DiscordVoiceState? voiceState;
         readonly DiscoreLogger log;
@@ -125,12 +126,47 @@ namespace Discore.Voice
 
         SpeakingFlag speakingFlags;
 
-        internal DiscordVoiceConnection(Shard shard, Snowflake guildId)
+        /// <summary>
+        /// Creates a new voice connection for a guild managed by the given shard.
+        /// </summary>
+        /// <param name="shard">The shard that manages the guild.</param>
+        /// <param name="guildId">The guild to connect to.</param>
+        /// <exception cref="ArgumentException">Thrown if the given shard is not running.</exception>
+        public DiscordVoiceConnection(Shard shard, Snowflake guildId)
         {
-            this.shard = shard;
+            // We need to guarantee that the shard user ID is available,
+            // so double-check that the shard is running.
+            if (!shard.IsRunning)
+                throw new ArgumentException("Voice connection cannot be created while the parent shard is not running!");
+
+            defaultBridge = new DefaultGatewayVoiceBridge(shard.Gateway);
+            bridge = defaultBridge;
+            userId = shard.UserId!.Value;
+
             this.guildId = guildId;
 
-            gateway = (Gateway)shard.Gateway;
+            log = new DiscoreLogger($"VoiceConnection:{guildId}");
+
+            isValid = true;
+        }
+
+        /// <summary>
+        /// Creates a new voice connection for a guild.
+        /// </summary>
+        /// <param name="bridge">A bridge between the Gateway connection that serves the guild and this voice connection.</param>
+        /// <param name="userId">The user ID of the application/bot.</param>
+        /// <param name="guildId">The guild to connect to.</param>
+        /// <remarks>
+        /// This constructor should only be used if you are implementing <see cref="IGatewayVoiceBridge"/> yourself to
+        /// create a bridge between your application's voice connections and the Gateway connection. If the voice
+        /// connections live in the same process as the Gateway connection, prefer the simpler constructor that
+        /// takes a shard instance.
+        /// </remarks>
+        public DiscordVoiceConnection(IGatewayVoiceBridge bridge, Snowflake userId, Snowflake guildId)
+        {
+            this.bridge = bridge;
+            this.userId = userId;
+            this.guildId = guildId;
 
             log = new DiscoreLogger($"VoiceConnection:{guildId}");
 
@@ -146,44 +182,59 @@ namespace Discore.Voice
         /// </summary>
         /// <param name="startMute">Whether the current bot should connect self-muted.</param>
         /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
+        /// <param name="connectionTimeout">The maximum amount of time to wait for connection to complete before timing out.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if connect is called more than once or if the shard behind this connection isn't running.
+        /// Thrown if connect is called more than once or if the parent Gateway connection is not valid.
         /// </exception>
         /// <exception cref="OperationCanceledException">
-        /// Thrown if the give cancellation token is cancelled or the Gateway connection is closed while initiating the voice connection.
+        /// Thrown if the give cancellation token is cancelled, the Gateway connection is closed while initiating the voice connection,
+        /// or if the <paramref name="connectionTimeout"/> is passed.
         /// </exception>
-        public async Task ConnectAsync(Snowflake voiceChannelId, 
-            bool startMute = false, bool startDeaf = false, CancellationToken? cancellationToken = null)
+        public async Task ConnectAsync(Snowflake voiceChannelId,
+            bool startMute = false, bool startDeaf = false,
+            TimeSpan? connectionTimeout = null,
+            CancellationToken? cancellationToken = null)
         {
             if (isValid)
             {
                 if (!isConnecting && !IsConnected)
                 {
-                    // We need to guarantee that the shard user ID is available,
-                    // so double-check that the shard is running.
-                    if (!Shard.IsRunning)
-                        throw new InvalidOperationException("Voice connection cannot be started while the parent shard is not running!");
-
                     // Initiate the connection
+                    log.LogInfo($"Connecting to channel {voiceChannelId}...");
+
                     isConnecting = true;
                     connectingCancellationSource = new CancellationTokenSource();
 
-                    await gateway.SendVoiceStateUpdatePayload(guildId, voiceChannelId, 
+                    SubscribeEvents();
+
+                    await bridge.UpdateVoiceStateAsync(guildId, voiceChannelId,
                         startMute, startDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
 
-                    await ConnectionTimeout(connectingCancellationSource.Token).ConfigureAwait(false);
+                    connectionTimeout ??= TimeSpan.FromSeconds(10);
+
+                    await ConnectionTimeout(connectionTimeout.Value, connectingCancellationSource.Token).ConfigureAwait(false);
+
+                    if (isConnected)
+                    {
+                        log.LogInfo("Connected!");
+                    }
+                    else
+                    {
+                        log.LogWarning("Connection timed out.");
+                        throw new OperationCanceledException("Voice connection timed out.");
+                    }
                 }
                 else
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
             }
         }
 
-        async Task ConnectionTimeout(CancellationToken cancellationToken)
+        async Task ConnectionTimeout(TimeSpan timeout, CancellationToken cancellationToken)
         {
             try
             {
-                // Wait 10s
-                await Task.Delay(10000, cancellationToken).ConfigureAwait(false);
+                // Wait
+                await Task.Delay(timeout, cancellationToken).ConfigureAwait(false);
 
                 // If still not connected, timeout and disconnect.
                 if (isConnecting)
@@ -213,18 +264,6 @@ namespace Discore.Voice
 
             await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...", 
                 VoiceConnectionInvalidationReason.Normal, null, cancellationToken).ConfigureAwait(false);
-        }
-
-        /// <exception cref="InvalidOperationException">Thrown if this voice connection is not connected.</exception>
-        /// <exception cref="OperationCanceledException"></exception>
-        internal async Task DisconnectWithReasonAsync(VoiceConnectionInvalidationReason reason, 
-            CancellationToken? cancellationToken = null)
-        {
-            if (!isConnected)
-                throw new InvalidOperationException("The voice connection is not connected!");
-
-            await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Closing normally...",
-                reason, null, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -325,6 +364,35 @@ namespace Discore.Voice
         }
 
         /// <summary>
+        /// Moves channels and/or changes the applications self muted/deafened states.
+        /// </summary>
+        /// <param name="voiceChannelId">
+        /// The ID of the voice channel to move to. Specify the channel the application is already in to stay there.
+        /// </param>
+        /// <param name="isMute">Whether the application is self-mute.</param>
+        /// <param name="isDeaf">Whether the application is self-deafened.</param>
+        /// <param name="cancellationToken">A token used to cancel the request.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="voiceChannelId"/> is an empty snowflake.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the parent Gateway connection is no longer valid.</exception>
+        /// <exception cref="OperationCanceledException">Thrown if the cancellation token is cancelled. </exception>
+        /// <remarks>
+        /// Do not pass an empty snowflake for the voice channel ID to disconnect. Instead, call <see cref="DisconnectAsync"/>.
+        /// </remarks>
+        public async Task UpdateVoiceStateAsync(Snowflake voiceChannelId, bool isMute, bool isDeaf,
+            CancellationToken? cancellationToken = null)
+        {
+            if (voiceChannelId == Snowflake.None)
+                throw new ArgumentException("The voice channel ID must be a valid channel ID.", nameof(voiceChannelId));
+
+            if (isValid)
+            {
+                await bridge.UpdateVoiceStateAsync(guildId, voiceChannelId,
+                    isMute, isDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
         /// Releases all resources used by this voice connection.
         /// <para>Note: this will not invalidate the voice connection.</para>
         /// </summary>
@@ -333,6 +401,8 @@ namespace Discore.Voice
             if (!isDisposed)
             {
                 isDisposed = true;
+
+                defaultBridge?.Dispose();
 
                 connectingCancellationSource?.Dispose();
 

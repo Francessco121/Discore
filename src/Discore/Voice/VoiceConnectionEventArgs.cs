@@ -1,4 +1,3 @@
-using Discore.WebSocket;
 using System;
 
 namespace Discore.Voice
@@ -6,17 +5,12 @@ namespace Discore.Voice
     public class VoiceConnectionEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets the shard that is managing the voice connection.
-        /// </summary>
-        public Shard Shard { get; }
-        /// <summary>
         /// Gets the voice connection that fired the event.
         /// </summary>
         public DiscordVoiceConnection Connection { get; }
 
-        internal VoiceConnectionEventArgs(Shard shard, DiscordVoiceConnection connection)
+        internal VoiceConnectionEventArgs(DiscordVoiceConnection connection)
         {
-            Shard = shard;
             Connection = connection;
         }
     }
@@ -33,9 +27,9 @@ namespace Discore.Voice
         /// </summary>
         public string? ErrorMessage { get; }
 
-        internal VoiceConnectionInvalidatedEventArgs(Shard shard, DiscordVoiceConnection connection,
+        internal VoiceConnectionInvalidatedEventArgs(DiscordVoiceConnection connection,
             VoiceConnectionInvalidationReason reason, string? errorMessage = null)
-            : base(shard, connection)
+            : base(connection)
         {
             Reason = reason;
             ErrorMessage = errorMessage;

@@ -1,6 +1,5 @@
 using Discore.Voice;
 using System;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -55,7 +54,9 @@ namespace Discore.WebSocket.Internal
         public event EventHandler<TypingStartEventArgs>? OnTypingStart;
 
         public event EventHandler<UserUpdateEventArgs>? OnUserUpdate;
+
         public event EventHandler<VoiceStateUpdateEventArgs>? OnVoiceStateUpdate;
+        public event EventHandler<VoiceServerUpdateEventArgs>? OnVoiceServerUpdate;
         #endregion
 
         void LogServerTrace(string prefix, JsonElement data)
@@ -291,7 +292,7 @@ namespace Discore.WebSocket.Internal
         }
 
         [DispatchEvent("GUILD_DELETE")]
-        async Task HandleGuildDeleteEvent(JsonElement data)
+        void HandleGuildDeleteEvent(JsonElement data)
         {
             Snowflake guildId = data.GetProperty("id").GetSnowflake();
             bool unavailable = data.GetPropertyOrNull("unavailable")?.GetBooleanOrNull() ?? false;
@@ -300,19 +301,6 @@ namespace Discore.WebSocket.Internal
             {
                 // Mark guild as unavailable
                 unavailableGuildIds.Add(guildId);
-            }
-            else
-            {
-                // Disconnect the voice connection for this guild if connected.
-                if (shard.Voice.TryGetVoiceConnection(guildId, out DiscordVoiceConnection? voiceConnection)
-                    && voiceConnection.IsConnected)
-                {
-                    var cts = new CancellationTokenSource();
-                    cts.CancelAfter(5000);
-
-                    await voiceConnection.DisconnectWithReasonAsync(VoiceConnectionInvalidationReason.BotRemovedFromGuild, 
-                        cts.Token).ConfigureAwait(false);
-                }
             }
 
             // Fire event
@@ -609,35 +597,12 @@ namespace Discore.WebSocket.Internal
 
         #region Voice
         [DispatchEvent("VOICE_STATE_UPDATE")]
-        async Task HandleVoiceStateUpdateEvent(JsonElement data)
+        void HandleVoiceStateUpdateEvent(JsonElement data)
         {
             Snowflake? guildId = data.GetPropertyOrNull("guild_id")?.GetSnowflake();
             if (guildId.HasValue) // Only guild voice channels are supported.
             {
-                Snowflake userId = data.GetProperty("user_id").GetSnowflake();
-
-                // Update the voice state
                 var voiceState = new DiscordVoiceState(data, guildId: guildId.Value);
-
-                // If this voice state belongs to the current bot,
-                // then we need to notify the connection of the session ID.
-                if (userId == shard.UserId)
-                {
-                    DiscordVoiceConnection? connection;
-                    if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
-                    {
-                        if (voiceState.ChannelId.HasValue)
-                        {
-                            // Notify the connection of the new state
-                            await connection.OnVoiceStateUpdated(voiceState).ConfigureAwait(false);
-                        }
-                        else if (connection.IsConnected)
-                        {
-                            // The user has left the channel, so make sure they are disconnected.
-                            await connection.DisconnectAsync().ConfigureAwait(false);
-                        }
-                    }
-                }
 
                 // Fire event
                 OnVoiceStateUpdate?.Invoke(this, new VoiceStateUpdateEventArgs(shard, voiceState));
@@ -647,20 +612,14 @@ namespace Discore.WebSocket.Internal
         }
 
         [DispatchEvent("VOICE_SERVER_UPDATE")]
-        async Task HandleVoiceServerUpdateEvent(JsonElement data)
+        void HandleVoiceServerUpdateEvent(JsonElement data)
         {
-            Snowflake? guildId = data.GetPropertyOrNull("guild_id")?.GetSnowflake();
-            if (guildId.HasValue) // Only guild voice channels are supported.
-            {
-                string token = data.GetProperty("token").GetString()!;
-                string? endpoint = data.GetProperty("endpoint").GetString();
+            var server = new DiscordVoiceServer(data);
 
-                DiscordVoiceConnection? connection;
-                if (shard.Voice.TryGetVoiceConnection(guildId.Value, out connection))
-                {
-                    // Notify the connection of the server update
-                    await connection.OnVoiceServerUpdated(token, endpoint).ConfigureAwait(false);
-                }
+            if (server.GuildId != null) // Only guild voice channels are supported.
+            {
+                // Fire event
+                OnVoiceServerUpdate?.Invoke(this, new VoiceServerUpdateEventArgs(shard, server));
             }
             else
                 throw new NotImplementedException("Non-guild voice channels are not supported.");

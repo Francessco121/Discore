@@ -54,11 +54,6 @@ namespace Discore.WebSocket
         /// </summary>
         public IDiscordGateway Gateway => gateway;
 
-        /// <summary>
-        /// Gets the voice manager for this shard.
-        /// </summary>
-        public ShardVoiceManager Voice { get; }
-
         internal GatewayIntent Intents { get; private set; }
 
         bool isRunning;
@@ -90,8 +85,6 @@ namespace Discore.WebSocket
             gateway = new Gateway(botToken, this, totalShards);
             gateway.OnFailure += Gateway_OnFailure;
             gateway.OnReconnected += Gateway_OnReconnected;
-
-            Voice = new ShardVoiceManager(this);
         }
 
         private void Gateway_OnReconnected(object? sender, GatewayReconnectedEventArgs e)
@@ -238,8 +231,6 @@ namespace Discore.WebSocket
         void CleanUp()
         {
             UserId = null;
-
-            Voice.Clear();
         }
 
         public void Dispose()

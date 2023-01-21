@@ -48,6 +48,28 @@ namespace Discore.Voice
 
         // TODO: add self_stream, self_video
 
+        public DiscordVoiceState(
+            Snowflake? guildId,
+            Snowflake? channelId,
+            Snowflake userId,
+            string sessionId,
+            bool isServerDeaf = false,
+            bool isServerMute = false,
+            bool isSelfDeaf = false,
+            bool isSelfMute = false,
+            bool isSuppressed = false)
+        {
+            GuildId = guildId;
+            ChannelId = channelId;
+            UserId = userId;
+            SessionId = sessionId;
+            IsServerDeaf = isServerDeaf;
+            IsServerMute = isServerMute;
+            IsSelfDeaf = isSelfDeaf;
+            IsSelfMute = isSelfMute;
+            IsSuppressed = isSuppressed;
+        }
+
         internal DiscordVoiceState(Snowflake guildId, Snowflake userId, Snowflake channelId)
         {
             GuildId = guildId;

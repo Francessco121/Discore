@@ -1,3 +1,4 @@
+using Discore.Voice;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -160,11 +161,19 @@ namespace Discore.WebSocket
         event EventHandler<VoiceStateUpdateEventArgs>? OnVoiceStateUpdate;
 
         /// <summary>
+        /// Called when the voice server for a guild is updated.
+        /// </summary>
+        /// <remarks>
+        /// This is sent when initially connecting to voice and when the current voice 
+        /// instance fails over to a new server.
+        /// <para/>
+        /// Usually, applications do not need to listen for this as <see cref="DiscordVoiceConnection"/> will
+        /// handle it for you.
+        /// </remarks>
+        event EventHandler<VoiceServerUpdateEventArgs>? OnVoiceServerUpdate;
+
+        /// <summary>
         /// Updates the presence/status of the bot user.
-        /// <para>Note: This method can only be called 5 times per minute and will wait if this is exceeded.</para>
-        /// <para>
-        /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
-        /// </para>
         /// </summary>
         /// <param name="options">Options for the new presence.</param>
         /// <param name="cancellationToken">A token used to cancel the update.</param>
@@ -175,6 +184,10 @@ namespace Discore.WebSocket
         /// Thrown if the cancellation token is cancelled or the Gateway's shard is stopped while sending.
         /// </exception>
         /// <remarks>
+        /// <para>Note: This method can only be called 5 times per minute and will wait if this is exceeded.</para>
+        /// <para>
+        /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
+        /// </para>
         /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
         /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
         /// </remarks>
@@ -183,12 +196,6 @@ namespace Discore.WebSocket
         /// <summary>
         /// Requests guild members from the Discord API, this can be used to retrieve offline members in a guild that is considered 
         /// "large". "Large" guilds will not automatically have the offline members available.
-        /// <para>
-        /// Members requested here will be available through the <see cref="OnGuildMembersChunk"/> event.
-        /// </para>
-        /// <para>
-        /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
-        /// </para>
         /// </summary>
         /// <param name="guildId">The ID of the guild to retrieve members from.</param>
         /// <param name="query">Case-insensitive string that the username starts with, or an empty string to request all members.</param>
@@ -201,9 +208,42 @@ namespace Discore.WebSocket
         /// Thrown if the cancellation token is cancelled or the Gateway's shard is stopped while sending.
         /// </exception>
         /// <remarks>
+        /// <para>
+        /// Members requested here will be available through the <see cref="OnGuildMembersChunk"/> event.
+        /// </para>
+        /// <para>
+        /// Note: This method will also throw an <see cref="OperationCanceledException"/> if the Gateway's shard is stopped while sending.
+        /// </para>
         /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
         /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
         /// </remarks>
         Task RequestGuildMembersAsync(Snowflake guildId, string query = "", int limit = 0, CancellationToken? cancellationToken = null);
+
+        /// <summary>
+        /// Joins, moves, or disconnects the application from a voice channel.
+        /// </summary>
+        /// <param name="guildId">
+        /// The ID of the guild containing the voice channel. 
+        /// An application can only be in one voice channel at a time per guild.
+        /// </param>
+        /// <param name="channelId">The ID of the voice channel to join/move to or null to disconnect from voice.</param>
+        /// <param name="isMute">Whether the application is self-mute.</param>
+        /// <param name="isDeaf">Whether the application is self-deafened.</param>
+        /// <param name="cancellationToken">A token used to cancel the request.</param>
+        /// <exception cref="InvalidOperationException">Thrown if the Gateway's shard has not been fully started.</exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the Gateway's shard has been disposed.</exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the Gateway's shard is stopped while sending.
+        /// </exception>
+        /// <remarks>
+        /// Normally, this method does not need to be called directly as <see cref="DiscordVoiceConnection"/>s will call this for you.
+        /// <para/>
+        /// An application can only be in one voice channel at a time per guild.
+        /// <para/>
+        /// This method will wait until the underlying Gateway connection is ready as well as retry if the connection 
+        /// closes unexpectedly until the given cancellation token is cancelled or the Gateway's shard is stopped.
+        /// </remarks>
+        Task UpdateVoiceStateAsync(Snowflake guildId, Snowflake? channelId, bool isMute = false, bool isDeaf = false,
+            CancellationToken? cancellationToken = null);
     }
 }

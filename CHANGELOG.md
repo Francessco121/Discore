@@ -15,6 +15,13 @@
     - `OnDMChannel*` events were removed (bots no longer receive events for DM channels as of Gateway v8).
     - `OnChannel*` events now emit a `DiscordChannel` instead of a `DiscordGuildChannel` (matches the actual Gateway spec).
     - `UpdateStatusAsync` was renamed to `UpdatePresenceAsync`.
+- Voice breaking changes:
+    - Voice connections are now decoupled from `Shard` instances.
+    - Removed `DiscordVoiceConnection.Shard`.
+    - Removed `ShardVoiceManager` (use the new `DiscordVoiceConnection` constructors instead).
+    - Removed `VoiceConnectionEventArgs.Shard`.
+    - Removed `VoiceConnectionInvalidationReason.BotRemovedFromGuild` (this case is now just a normal invalidation).
+    - Removed `Shard.Voice`.
 - `Shard.StartAsync` now requires either a `GatewayIntent` or `ShardStartConfig` argument.
 - Renamed `DiscordGame` to `DiscordActivity` (to match Gateway v8 changes).
 - Renamed `DiscordGameType` to `DiscordActivityType` (to match Gateway v8 changes).
@@ -77,6 +84,10 @@
 - Added `DiscordHttpApiException.Errors`.
 - Added `DiscordHttpRateLimitException.Bucket`.
 - Added `DiscordVoiceConnection.SetSpeakingAsync` overload to take new `SpeakingFlag` parameter for more specific speaking states.
+- Added public `DiscordVoiceConnection` constructors for creating a connection from a shard or a voice bridge.
+- Added a `DiscordVoiceConnection.ConnectAsync` parameter for changing the connection timeout period.
+- Added `IDiscordGateway.OnVoiceServerUpdate` event.
+- Added `IDiscordGateway.UpdateVoiceStateAsync`.
 
 ### Changes
 - Discore now fully annotates [nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types)!

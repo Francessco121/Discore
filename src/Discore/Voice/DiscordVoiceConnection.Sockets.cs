@@ -29,30 +29,66 @@ namespace Discore.Voice
         Task? resumeTask;
         CancellationTokenSource? resumeCancellationTokenSource;
 
-        internal async Task OnVoiceStateUpdated(DiscordVoiceState voiceState)
+        void SubscribeEvents()
         {
-            if (isValid)
-            {
-                this.voiceState = voiceState;
+            bridge.OnVoiceStateUpdate += OnVoiceStateUpdated;
+            bridge.OnVoiceServerUpdate += OnVoiceServerUpdated;
+        }
 
-                if (!isConnected && !isConnecting && token != null && endPoint != null)
+        void UnsubscribeEvents()
+        {
+            bridge.OnVoiceStateUpdate -= OnVoiceStateUpdated;
+            bridge.OnVoiceServerUpdate -= OnVoiceServerUpdated;
+        }
+
+        async void OnVoiceStateUpdated(object? sender, BridgeVoiceStateUpdateEventArgs args)
+        {
+            if (!isValid)
+                return;
+            // Ignore if not for our guild and user
+            if (args.VoiceState.GuildId != guildId || args.VoiceState.UserId != userId)
+                return;
+
+            try
+            {
+                if (args.VoiceState.ChannelId == null)
+                {
+                    // The user has left the channel, so make sure they are disconnected.
+                    if (isConnected)
+                        await DisconnectAsync().ConfigureAwait(false);
+                    return;
+                }
+
+                voiceState = args.VoiceState;
+
+                if (!isConnected && !isConnecting && isValid && token != null && endPoint != null)
                     // Either the token or session ID can be received first,
                     // so we must check if we are ready to start in both cases.
                     await DoFullConnect();
             }
+            catch (Exception ex)
+            {
+                log.LogError($"[OnVoiceStateUpdated] Uncaught exception: {ex}");
+            }
         }
 
-        internal async Task OnVoiceServerUpdated(string token, string? endPoint)
+        async void OnVoiceServerUpdated(object? sender, BridgeVoiceServerUpdateEventArgs args)
         {
-            if (isValid)
+            if (!isValid)
+                return;
+            // Ignore if not for our guild
+            if (args.VoiceServer.GuildId != guildId)
+                return;
+
+            try
             {
                 // Save token
-                this.token = token;
+                token = args.VoiceServer.Token;
 
                 // The endpoint may be null in which case we need to swap servers but
                 // one has not been allocated yet. For now, we should just disconnect
                 // and wait for another voice server update.
-                if (endPoint == null)
+                if (args.VoiceServer.Endpoint == null)
                 {
                     log.LogInfo("Got null endpoint, waiting for new voice server...");
 
@@ -69,7 +105,7 @@ namespace Discore.Voice
                 }
 
                 // Strip off the port
-                this.endPoint = endPoint.Split(':')[0];
+                endPoint = args.VoiceServer.Endpoint.Split(':')[0];
 
                 // Either the token or session ID can be received first,
                 // so we must check if we are ready to start in both cases.
@@ -81,9 +117,17 @@ namespace Discore.Voice
 
                     if (isServerSwap)
                     {
+                        log.LogVerbose("Swapping voice servers...");
+
                         await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Reconnecting...")
                             .ConfigureAwait(false);
                         EnsureUdpSocketIsClosed();
+                    }
+
+                    if (!isValid)
+                    {
+                        log.LogVerbose("Connection no longer valid, cancelling server swap...");
+                        return;
                     }
                     
                     // Start a new session
@@ -98,10 +142,19 @@ namespace Discore.Voice
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                log.LogError($"[OnVoiceServerUpdated] Uncaught exception: {ex}");
+            }
         }
 
         async Task DoFullConnect()
         {
+            if (!isValid || isConnected)
+                return;
+
+            log.LogVerbose("[DoFullConnect] Starting full connect...");
+
             isConnecting = true;
 
             try
@@ -136,7 +189,7 @@ namespace Discore.Voice
                     isConnecting = false;
                     connectingCancellationSource?.Cancel();
 
-                    OnConnected?.Invoke(this, new VoiceConnectionEventArgs(shard, this));
+                    OnConnected?.Invoke(this, new VoiceConnectionEventArgs(this));
                 }
             }
             catch (Exception ex)
@@ -165,6 +218,11 @@ namespace Discore.Voice
 
         async Task DoResume()
         {
+            if (!isValid || isConnected)
+                return;
+
+            log.LogVerbose("[DoResume] Starting resume...");
+
             isConnecting = true;
             resumeCancellationTokenSource = new CancellationTokenSource();
 
@@ -247,6 +305,8 @@ namespace Discore.Voice
         {
             if (isValid)
             {
+                UnsubscribeEvents();
+
                 isValid = false;
                 isConnecting = false;
                 isConnected = false;
@@ -258,9 +318,7 @@ namespace Discore.Voice
 
                 log?.LogVerbose("[Invalidate] Invalidating voice connection...");
 
-                Shard.Voice.RemoveVoiceConnection(guildId);
-
-                OnInvalidated?.Invoke(this, new VoiceConnectionInvalidatedEventArgs(Shard, this, reason, errorMessage));
+                OnInvalidated?.Invoke(this, new VoiceConnectionInvalidatedEventArgs(this, reason, errorMessage));
             }
         }
 
@@ -307,7 +365,7 @@ namespace Discore.Voice
         {
             try
             {
-                await gateway.SendVoiceStateUpdatePayload(guildId, null, false, false, cancellationToken)
+                await bridge.UpdateVoiceStateAsync(guildId, null, false, false, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException oex)
@@ -324,7 +382,7 @@ namespace Discore.Voice
 
         private void WebSocket_OnUserSpeaking(object? sender, VoiceSpeakingEventArgs e)
         {
-            OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(guildId, e.UserId, e.IsSpeaking, Shard, this));
+            OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(guildId, e.UserId, e.IsSpeaking, this));
         }
 
         private async void UdpSocket_OnClosedPrematurely(object? sender, EventArgs e)
@@ -562,8 +620,6 @@ namespace Discore.Voice
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] webSocket must not be null!");
-            if (!shard.UserId.HasValue)
-                throw new InvalidOperationException("[SendVoiceIdentify] shard.UserId must not be null!");
             if (voiceState == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] voiceState must not be null!");
             if (string.IsNullOrEmpty(voiceState.SessionId))
@@ -571,7 +627,7 @@ namespace Discore.Voice
             if (token == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] token must not be null!");
 
-            await webSocket.SendIdentifyPayload(guildId, shard.UserId.Value, voiceState.SessionId, token)
+            await webSocket.SendIdentifyPayload(guildId, userId, voiceState.SessionId, token)
                 .ConfigureAwait(false);
         }
 

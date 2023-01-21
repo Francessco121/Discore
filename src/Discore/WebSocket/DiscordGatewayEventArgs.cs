@@ -650,4 +650,18 @@ namespace Discore.WebSocket
             VoiceState = state;
         }
     }
+
+    public class VoiceServerUpdateEventArgs : DiscordGatewayEventArgs
+    {
+        /// <summary>
+        /// The voice server that changed.
+        /// </summary>
+        public DiscordVoiceServer VoiceServer { get; }
+
+        internal VoiceServerUpdateEventArgs(Shard shard, DiscordVoiceServer server)
+            : base(shard)
+        {
+            VoiceServer = server;
+        }
+    }
 }

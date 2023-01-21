@@ -161,13 +161,24 @@ namespace Discore.WebSocket.Internal
             }).ConfigureAwait(false);
         }
 
-        /// <exception cref="OperationCanceledException">Thrown if the gateway connection is closed while sending.</exception>
-        internal async Task SendVoiceStateUpdatePayload(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf,
-            CancellationToken cancellationToken)
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ObjectDisposedException"></exception>
+        /// <exception cref="OperationCanceledException">
+        /// Thrown if the cancellation token is cancelled or the gateway connection is closed while sending.
+        /// </exception>
+        public async Task UpdateVoiceStateAsync(Snowflake guildId, Snowflake? channelId, bool isMute, bool isDeaf,
+            CancellationToken? cancellationToken = null)
         {
-            await RepeatTrySendPayload(cancellationToken, "RequestGuildMembers", async () =>
+            if (isDisposed)
+                throw new ObjectDisposedException(GetType().FullName);
+            if (socket == null || state != GatewayState.Connected)
+                throw new InvalidOperationException("The gateway is not currently connected!");
+
+            CancellationToken ct = cancellationToken ?? CancellationToken.None;
+
+            await RepeatTrySendPayload(ct, "VoiceStateUpdate", async () =>
             {
-                // Try to send the status update
+                // Try to send the state update
                 await socket!.SendVoiceStateUpdatePayload(guildId, channelId, isMute, isDeaf).ConfigureAwait(false);
             }).ConfigureAwait(false);
         }

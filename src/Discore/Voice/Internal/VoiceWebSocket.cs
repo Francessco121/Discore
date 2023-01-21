@@ -63,7 +63,8 @@ namespace Discore.Voice.Internal
                 .ConfigureAwait(false);
 
             // Cancel the heartbeat loop if it hasn't ended already
-            heartbeatCancellationSource?.Cancel();
+            if (!isDisposed)
+                heartbeatCancellationSource?.Cancel();
         }
 
         protected override void OnCloseReceived(WebSocketCloseStatus closeStatus, string? closeDescription)
@@ -78,12 +79,16 @@ namespace Discore.Voice.Internal
                     // Kicked or channel was deleted, don't reconnect
                     break;
                 case VoiceCloseCode.VoiceServerCrashed:
-                    heartbeatCancellationSource?.Cancel();
+                    if (!isDisposed)
+                        heartbeatCancellationSource?.Cancel();
+
                     OnResumeRequested?.Invoke(this, EventArgs.Empty);
                     break;
                 case VoiceCloseCode.InvalidSession:
                 case VoiceCloseCode.SessionTimeout:
-                    heartbeatCancellationSource?.Cancel();
+                    if (!isDisposed)
+                        heartbeatCancellationSource?.Cancel();
+
                     OnNewSessionRequested?.Invoke(this, EventArgs.Empty);
                     break;
                 default:
