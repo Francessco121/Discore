@@ -12,7 +12,6 @@ namespace Discore.Caching
         public DiscordCdnUrl? Icon { get; private set; }
         public DiscordCdnUrl? Splash { get; private set; }
         public Snowflake OwnerId { get; private set; }
-        public string? RegionId { get; private set; }
         public Snowflake? AfkChannelId { get; private set; }
         public int AfkTimeout { get; private set; }
         public GuildVerificationLevel VerificationLevel { get; private set; }
@@ -50,7 +49,6 @@ namespace Discore.Caching
         public void Update(DiscordGuild guild)
         {
             Name = guild.Name;
-            RegionId = guild.RegionId;
             AfkTimeout = guild.AfkTimeout;
             AfkChannelId = guild.AfkChannelId;
             OwnerId = guild.OwnerId;
@@ -96,7 +94,6 @@ namespace Discore.Caching
                 icon: Icon,
                 splash: Splash,
                 ownerId: OwnerId,
-                regionId: RegionId!,
                 afkChannelId: AfkChannelId,
                 afkTimeout: AfkTimeout,
                 verificationLevel: VerificationLevel,

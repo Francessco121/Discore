@@ -31,11 +31,6 @@ namespace Discore
         public Snowflake OwnerId { get; }
 
         /// <summary>
-        /// Gets the ID of the voice region this guild is using.
-        /// </summary>
-        public string RegionId { get; }
-
-        /// <summary>
         /// Gets the ID of the afk channel in this guild (if set).
         /// </summary>
         public Snowflake? AfkChannelId { get; }
@@ -146,7 +141,6 @@ namespace Discore
             DiscordCdnUrl? icon,
             DiscordCdnUrl? splash,
             Snowflake ownerId,
-            string regionId,
             Snowflake? afkChannelId,
             int afkTimeout,
             GuildVerificationLevel verificationLevel,
@@ -174,7 +168,6 @@ namespace Discore
             Icon = icon;
             Splash = splash;
             OwnerId = ownerId;
-            RegionId = regionId ?? throw new ArgumentNullException(nameof(regionId));
             AfkChannelId = afkChannelId;
             AfkTimeout = afkTimeout;
             VerificationLevel = verificationLevel;
@@ -202,7 +195,6 @@ namespace Discore
             : base(json)
         {
             Name = json.GetProperty("name").GetString()!;
-            RegionId = json.GetProperty("region").GetString()!;
             AfkTimeout = json.GetProperty("afk_timeout").GetInt32();
             AfkChannelId = json.GetPropertyOrNull("afk_channel_id")?.GetSnowflakeOrNull();
             OwnerId = json.GetProperty("owner_id").GetSnowflake();
