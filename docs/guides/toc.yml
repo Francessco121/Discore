@@ -1,0 +1,34 @@
+- name: Getting Started
+  href: getting_started.md
+- name: HTTP API
+  items:
+  - name: HTTP Client
+    href: http/http_client.md
+- name: WebSocket Gateway
+  items:
+  - name: Shards
+    href: gateway/shards.md
+  - name: Gateway Interface
+    href: gateway/gateway_interface.md
+- name: Voice
+  items:
+  - name: Prerequisites
+    href: voice/prerequisites.md
+  - name: Connections
+    href: voice/connections.md
+  - name: Sending Data
+    href: voice/sending.md
+  - name: Bridges
+    href: voice/bridges.md
+- name: Miscellaneous
+  items:
+  - name: Entity Caching
+    href: misc/entity_caching.md
+  - name: Permission Checking
+    href: misc/permission_checking.md
+  - name: Updating Messages
+    href: misc/updating_messages.md
+  - name: Attachments in Embeds
+    href: misc/attachments_in_embeds.md
+  - name: Logging
+    href: misc/logging.md
