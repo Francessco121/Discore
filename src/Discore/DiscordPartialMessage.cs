@@ -11,13 +11,15 @@ namespace Discore
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
+        /// Gets the ID of the guild this message is in.
+        /// </summary>
+        public Snowflake? GuildId { get; }
+        /// <summary>
         /// Gets the author of this message.
         /// </summary>
         public DiscordUser? Author { get; }
         /// <summary>
         /// If this message originated from a guild, gets the member properties of the author.
-        /// <para/>
-        /// Only available if this message originated from a MessageCreate or MessageUpdate Gateway event.
         /// </summary>
         public DiscordMessageMember? Member { get; }
         /// <summary>
@@ -106,6 +108,7 @@ namespace Discore
             : base(json)
         {
             ChannelId = json.GetProperty("channel_id").GetSnowflake();
+            GuildId = json.GetPropertyOrNull("guild_id")?.GetSnowflake();
             Content = json.GetPropertyOrNull("content")?.GetString();
             Timestamp = json.GetPropertyOrNull("timestamp")?.GetDateTimeOrNull();
             EditedTimestamp = json.GetPropertyOrNull("edited_timestamp")?.GetDateTimeOrNull();

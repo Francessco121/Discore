@@ -16,14 +16,22 @@ namespace Discore
         /// </summary>
         public Snowflake ChannelId { get; }
         /// <summary>
+        /// Gets the ID of the guild this message is in.
+        /// </summary>
+        /// <remarks>
+        /// Only available if this message originated from a MessageCreate or MessageUpdate Gateway event.
+        /// </remarks>
+        public Snowflake? GuildId { get; }
+        /// <summary>
         /// Gets the author of this message.
         /// </summary>
         public DiscordUser Author { get; }
         /// <summary>
         /// If this message originated from a guild, gets the member properties of the author.
-        /// <para/>
-        /// Only available if this message originated from a MessageCreate or MessageUpdate Gateway event.
         /// </summary>
+        /// <remarks>
+        /// Only available if this message originated from a MessageCreate or MessageUpdate Gateway event.
+        /// </remarks>
         public DiscordMessageMember? Member { get; }
         /// <summary>
         /// Gets the contents of this message.
@@ -109,7 +117,8 @@ namespace Discore
 
         private DiscordMessage(
             Snowflake id,
-            Snowflake channelId, 
+            Snowflake channelId,
+            Snowflake? guildId,
             DiscordUser author, 
             DiscordMessageMember? member, 
             string content, 
@@ -134,6 +143,7 @@ namespace Discore
             : base(id)
         {
             ChannelId = channelId;
+            GuildId = guildId;
             Author = author ?? throw new ArgumentNullException(nameof(author));
             Member = member;
             Content = content ?? throw new ArgumentNullException(nameof(content));
@@ -161,6 +171,7 @@ namespace Discore
             : base(json)
         {
             ChannelId = json.GetProperty("channel_id").GetSnowflake();
+            GuildId = json.GetPropertyOrNull("guild_id")?.GetSnowflake();
             Content = json.GetProperty("content").GetString()!;
             Timestamp = json.GetProperty("timestamp").GetDateTime();
             EditedTimestamp = json.GetPropertyOrNull("edited_timestamp")?.GetDateTimeOrNull();
@@ -277,6 +288,7 @@ namespace Discore
             return new DiscordMessage(
                 id:                 message.Id,
                 channelId:          message.ChannelId,
+                guildId:            message.GuildId,
                 author:             withPartial.Author ?? message.Author,
                 member:             withPartial.Member ?? message.Member,
                 content:            withPartial.Content ?? message.Content,

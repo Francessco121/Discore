@@ -89,6 +89,7 @@
 - Added a `DiscordVoiceConnection.ConnectAsync` parameter for changing the connection timeout period.
 - Added `IDiscordGateway.OnVoiceServerUpdate` event.
 - Added `IDiscordGateway.UpdateVoiceStateAsync`.
+- Added `DiscordMessage.GuildId`.
 
 ### Changes
 - Discore now fully annotates [nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types)!
