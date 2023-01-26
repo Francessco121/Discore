@@ -29,8 +29,11 @@ Download the [the source code](https://github.com/Francessco121/Discore) and add
 
 ---
 
-## 2. (Optional) Try the Example Bot
+## 2. Try the Example Bot
 If you wish to test your Discore installation, try this example bot. Just enter your bot's user token for the `TOKEN` constant and fire away!
+
+> [!NOTE]
+> Your bot must have the `MessageContent` intent enabled in the [developer portal](https://discord.com/developers/applications)!
 
 ```csharp
 using Discore;
@@ -41,11 +44,11 @@ using System.Threading.Tasks;
 
 namespace DiscorePingPong;
 
-public class Program
+class Program
 {
-    DiscordHttpClient http;
+    DiscordHttpClient? http;
 
-    public static async Task Main()
+    public static async Task Main(string[] args)
     {
         var program = new Program();
         await program.Run();
@@ -59,18 +62,17 @@ public class Program
         http = new DiscordHttpClient(TOKEN);
 
         // Create a single shard.
-        using (var shard = new Shard(TOKEN, 0, 1))
-        {
-            // Subscribe to the message creation event.
-            shard.Gateway.OnMessageCreate += Gateway_OnMessageCreate;
+        using Shard shard = new Shard(TOKEN, 0, 1);
 
-            // Start the shard.
-            await shard.StartAsync();
-            Console.WriteLine("Bot started!");
+        // Subscribe to the message creation event.
+        shard.Gateway.OnMessageCreate += Gateway_OnMessageCreate;
 
-            // Wait for the shard to end before closing the program.
-            await shard.WaitUntilStoppedAsync();
-        }
+        // Start the shard.
+        await shard.StartAsync(GatewayIntent.GuildMessages | GatewayIntent.MessageContent);
+        Console.WriteLine("Bot started!");
+
+        // Wait for the shard to end before closing the program.
+        await shard.WaitUntilStoppedAsync();
     }
 
     async void Gateway_OnMessageCreate(object? sender, MessageCreateEventArgs e)
@@ -87,7 +89,7 @@ public class Program
             try
             {
                 // Reply to the user who posted "!ping".
-                await http.CreateMessage(message.ChannelId, $"<@!{message.Author.Id}> Pong!");
+                await http!.CreateMessage(message.ChannelId, $"<@!{message.Author.Id}> Pong!");
             }
             catch (DiscordHttpApiException) { /* Message failed to send... :( */ }
         }
@@ -96,10 +98,12 @@ public class Program
 ```
 
 ## 3. (Optional) Check out other examples
-Discore has a repository dedicated to sample bots, which [can be found here](https://github.com/Francessco121/Discore.Samples).
+Discore has some full example bots that can be found [in the repository under the examples directory](https://github.com/Francessco121/Discore/tree/v5/examples).
 
 ## 4. Start building your own bot
 All that's left now is to build your bot!
+
+Depending on your application's needs, you will need access to the HTTP API, the real-time WebSocket Gateway, or more likely both.
 
 See the following major sections to learn more:
 - [HTTP Clients](./http/http_client.md)

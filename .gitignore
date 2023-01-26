@@ -4,7 +4,5 @@ bin/
 obj/
 .vs/
 .vscode/
-project.lock.json
 .DS_Store
-token.txt
 *.csproj.user
