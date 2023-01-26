@@ -69,6 +69,8 @@
 - Renamed `DiscordInviteTargetUserType` to `DiscordInviteTargetType`.
 - Removed `ShardVoiceManager.GetUsersInVoiceChannel` (please use `DiscordMemoryCache.GetUsersInVoiceChannel` instead).
 - Removed `DiscordGuild.RegionId` (deprecated).
+- Removed `DiscordPermissionException` (was no longer thrown from any normal APIs).
+- Removed `DiscordPermissionHelper.AssertPermission` (applications should make their own assert helpers using `HasPermission`).
 
 ### Additions
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.
@@ -90,6 +92,10 @@
 - Added `IDiscordGateway.OnVoiceServerUpdate` event.
 - Added `IDiscordGateway.UpdateVoiceStateAsync`.
 - Added `DiscordMessage.GuildId`.
+- Added `IDiscordGuildMember` base interface.
+- Added more flexible `DiscordPermissionHelper.HasPermission` overload.
+- Added `DiscordPermissionHelper.CanJoinVoiceChannel`.
+- Added `DiscordPermissionHelper.PermissionsToString`.
 
 ### Changes
 - Discore now fully annotates [nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types)!
