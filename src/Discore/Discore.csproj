@@ -12,9 +12,9 @@
     <FileVersion>5.0.0.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith;Discore Contributors</Authors>
     <PackageTags>discord;discord-api;discord-library</PackageTags>
-    <Description>Discore is a light-weight .NET library designed for creating Discord bots.
+    <Description>Discore is a light-weight .NET library for creating [Discord](https://discord.com/) bots.
 
-Please note: Discore is not an official Discord API library!</Description>
+Please note: Discore is not an official Discord client library!</Description>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <RepositoryUrl>https://github.com/Francessco121/Discore.git</RepositoryUrl>
