@@ -22,13 +22,13 @@
     href: voice/bridges.md
 - name: Miscellaneous
   items:
+  - name: Embed Attachments
+    href: misc/embed_attachments.md
   - name: Entity Caching
     href: misc/entity_caching.md
-  - name: Permission Checking
-    href: misc/permission_checking.md
-  - name: Updating Messages
-    href: misc/updating_messages.md
-  - name: Attachments in Embeds
-    href: misc/attachments_in_embeds.md
   - name: Logging
     href: misc/logging.md
+  - name: Partial Messages
+    href: misc/partial_messages.md
+  - name: Permission Checking
+    href: misc/permission_checking.md

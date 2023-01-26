@@ -9,7 +9,7 @@ The goal of Discore is to provide a minimal interface to Discord's APIs and to l
 Instead of providing frameworks on top of these APIs, applications using Discore have direct access to:
 - Each individual HTTP API route.
 - Hooks for each real-time WebSocket Gateway event.
-- Voice connections and the ability to send raw PCM voice data to them.
+- Voice connections and the ability to send voice data to them.
 
 **[Getting Started](./guides/getting_started.md)**
 
