@@ -187,8 +187,11 @@ namespace Discore
             Author = new DiscordUser(json.GetProperty("author"), isWebhookUser: WebhookId != null);
 
             // Member
-            JsonElement? memberJson = json.GetPropertyOrNull("member");
-            Member = memberJson == null ? null : new DiscordMessageMember(memberJson.Value);
+            if (GuildId != null)
+            {
+                JsonElement? memberJson = json.GetPropertyOrNull("member");
+                Member = memberJson == null ? null : new DiscordMessageMember(Author.Id, GuildId.Value, memberJson.Value);
+            }
 
             // Activity
             JsonElement? activityJson = json.GetPropertyOrNull("activity");

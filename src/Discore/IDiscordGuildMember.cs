@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
 
 namespace Discore
 {
-    public class DiscordMessageMember : IDiscordGuildMember
+    /// <summary>
+    /// Common properties returned for guild members regardless of API.
+    /// </summary>
+    public interface IDiscordGuildMember
     {
         /// <summary>
-        /// Gets the ID of the member's user.
+        /// Gets the ID of the member.
+        /// This is always the ID of the associated user.
         /// </summary>
-        public Snowflake Id { get; }
+        Snowflake Id { get; }
 
         /// <summary>
         /// Gets the ID of the guild this member is in.
@@ -41,23 +44,6 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        // TODO: add premium_since, pending, permissions, communication_disabled_until
-
-        internal DiscordMessageMember(Snowflake userId, Snowflake guildId, JsonElement json)
-        {
-            Id = userId;
-            Nickname = json.GetPropertyOrNull("nick")?.GetString();
-            JoinedAt = json.GetProperty("joined_at").GetDateTime();
-            IsDeaf = json.GetProperty("deaf").GetBoolean();
-            IsMute = json.GetProperty("mute").GetBoolean();
-
-            JsonElement rolesJson = json.GetProperty("roles");
-            var roles = new Snowflake[rolesJson.GetArrayLength()];
-
-            for (int i = 0; i < roles.Length; i++)
-                roles[i] = rolesJson[i].GetSnowflake();
-
-            RoleIds = roles;
-        }
+        // TODO: add premium_since, avatar, communication_disabled_until
     }
 }

@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Discore
 {
-    public class DiscordGuildMember : DiscordIdEntity
+    public class DiscordGuildMember : DiscordIdEntity, IDiscordGuildMember
     {
         /// <summary>
         /// Gets the ID of the guild this member is in.
@@ -41,7 +41,7 @@ namespace Discore
         /// </summary>
         public bool IsMute { get; }
 
-        // TODO: add premium_since, pending, permissions
+        // TODO: add premium_since, pending, permissions, communication_disabled_until
 
         internal DiscordGuildMember(
             Snowflake id,
