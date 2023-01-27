@@ -13,7 +13,7 @@ Applications using Discore have access to:
 
 **[Getting Started](./guides/getting_started.md)**
 
-**[Example Applications](https://github.com/Francessco121/Discore/tree/v5/examples)**
+**[Sample Applications 🡕](https://github.com/Francessco121/Discore/tree/v5/samples)**
 
 **[API Documentation](./api/index.md)**
 

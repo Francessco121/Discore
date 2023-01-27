@@ -1,7 +1,7 @@
 - name: Guides
   href: guides/
-- name: Examples 🡕
-  href: https://github.com/Francessco121/Discore/tree/v5/examples
+- name: Samples 🡕
+  href: https://github.com/Francessco121/Discore/tree/v5/samples
 - name: API Documentation
   href: api/
   homepage: api/index.md

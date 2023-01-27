@@ -1,5 +1,5 @@
-# Discore.Examples.PingPong
-The simplest example of them all! 
+# Discore.Samples.PingPong
+The simplest bot of them all! 
 
 ## Setup
 1. Enable the `MessageContent` intent for your bot in the [developer portal](https://discord.com/developers/applications).

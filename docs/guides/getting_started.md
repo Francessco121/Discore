@@ -1,7 +1,7 @@
 # Getting Started
 A short guide for getting up and running with Discore.
 
-## 0. Check .NET Version
+## 0. Check .NET version
 **Discore currently targets .NET 6.0.**
 
 Discore targets the most recent LTS version of .NET. Newer versions of .NET are compatible. Notably, .NET Core 3.x and .NET Framework are not supported.
@@ -29,8 +29,8 @@ Download the [the source code](https://github.com/Francessco121/Discore) and add
 
 ---
 
-## 2. Try the Example Bot
-If you wish to test your Discore installation, try this example bot. Just enter your bot's user token for the `TOKEN` constant and fire away!
+## 2. Try the "Ping Pong" bot
+Here's a quick sample bot to get up and running. Just enter your bot's user token for the `TOKEN` constant and fire away!
 
 > [!NOTE]
 > Your bot must have the `MessageContent` intent enabled in the [developer portal](https://discord.com/developers/applications)!
@@ -97,8 +97,8 @@ class Program
 }
 ```
 
-## 3. (Optional) Check out other examples
-Discore has some full example bots that can be found [in the repository under the examples directory](https://github.com/Francessco121/Discore/tree/v5/examples).
+## 3. Check out the samples (optional)
+For additional full bot examples, check out [the samples directory](https://github.com/Francessco121/Discore/tree/v5/samples) in the repository.
 
 ## 4. Start building your own bot
 All that's left now is to build your bot!
