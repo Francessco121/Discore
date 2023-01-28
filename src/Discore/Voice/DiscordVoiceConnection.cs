@@ -210,7 +210,7 @@ namespace Discore.Voice
                     await bridge.UpdateVoiceStateAsync(guildId, voiceChannelId,
                         startMute, startDeaf, cancellationToken ?? CancellationToken.None).ConfigureAwait(false);
 
-                    connectionTimeout ??= TimeSpan.FromSeconds(10);
+                    connectionTimeout ??= TimeSpan.FromSeconds(60);
 
                     await ConnectionTimeout(connectionTimeout.Value, connectingCancellationSource.Token).ConfigureAwait(false);
 
