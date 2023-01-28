@@ -91,6 +91,7 @@
 - Added a `DiscordVoiceConnection.ConnectAsync` parameter for changing the connection timeout period.
 - Added `IDiscordGateway.OnVoiceServerUpdate` event.
 - Added `IDiscordGateway.UpdateVoiceStateAsync`.
+- Added `MemberSpeakingEventArgs.SpeakingFlag`.
 - Added `DiscordMessage.GuildId`.
 - Added `IDiscordGuildMember` base interface.
 - Added more flexible `DiscordPermissionHelper.HasPermission` overload.

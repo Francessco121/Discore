@@ -106,9 +106,9 @@ namespace Discore.Voice.Internal
         {
             Snowflake userId = data.GetProperty("user_id").GetSnowflake();
             int ssrc = data.GetProperty("ssrc").GetInt32();
-            bool isSpeaking = data.GetProperty("speaking").GetBoolean();
+            var speakingFlag = (SpeakingFlag)data.GetProperty("speaking").GetInt32();
 
-            OnUserSpeaking?.Invoke(this, new VoiceSpeakingEventArgs(userId, ssrc, isSpeaking));
+            OnUserSpeaking?.Invoke(this, new VoiceSpeakingEventArgs(userId, ssrc, speakingFlag));
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>

@@ -9,13 +9,13 @@ namespace Discore.Voice.Internal
         /// The user's SSRC.
         /// </summary>
         public int Ssrc { get; }
-        public bool IsSpeaking { get; }
+        public SpeakingFlag SpeakingFlag { get; }
 
-        public VoiceSpeakingEventArgs(Snowflake userId, int ssrc, bool isSpeaking)
+        public VoiceSpeakingEventArgs(Snowflake userId, int ssrc, SpeakingFlag speakingFlag)
         {
             UserId = userId;
             Ssrc = ssrc;
-            IsSpeaking = isSpeaking;
+            SpeakingFlag = speakingFlag;
         }
     }
 }

@@ -382,7 +382,7 @@ namespace Discore.Voice
 
         private void WebSocket_OnUserSpeaking(object? sender, VoiceSpeakingEventArgs e)
         {
-            OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(guildId, e.UserId, e.IsSpeaking, this));
+            OnMemberSpeaking?.Invoke(this, new MemberSpeakingEventArgs(guildId, e.UserId, e.SpeakingFlag, this));
         }
 
         private async void UdpSocket_OnClosedPrematurely(object? sender, EventArgs e)

@@ -11,17 +11,21 @@ namespace Discore.Voice
         /// </summary>
         public Snowflake UserId { get; }
         /// <summary>
+        /// Gets the speaking state of the user.
+        /// </summary>
+        public SpeakingFlag SpeakingFlag { get; }
+        /// <summary>
         /// Gets whether the user is currently speaking.
         /// </summary>
-        public bool IsSpeaking { get; }
+        public bool IsSpeaking => SpeakingFlag != SpeakingFlag.Off;
 
-        internal MemberSpeakingEventArgs(Snowflake guildId, Snowflake userId, bool isSpeaking,
+        internal MemberSpeakingEventArgs(Snowflake guildId, Snowflake userId, SpeakingFlag speakingFlag,
             DiscordVoiceConnection connection)
             : base(connection)
         {
             GuildId = guildId;
             UserId = userId;
-            IsSpeaking = isSpeaking;
+            SpeakingFlag = speakingFlag;
         }
     }
 }
