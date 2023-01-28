@@ -107,7 +107,7 @@ namespace Discore.Voice.Internal
             OnUnexpectedClose?.Invoke(this, EventArgs.Empty);
         }
 
-        protected override Task OnPayloadReceived(JsonDocument payload)
+        protected override async Task OnPayloadReceived(JsonDocument payload)
         {
             JsonElement payloadRoot = payload.RootElement;
 
@@ -116,11 +116,14 @@ namespace Discore.Voice.Internal
 
             PayloadCallback? callback;
             if (payloadHandlers.TryGetValue(op, out callback))
-                callback(payloadRoot, d);
+            {
+                if (callback.Synchronous != null)
+                    callback.Synchronous(payloadRoot, d);
+                else
+                    await callback.Asynchronous!(payloadRoot, d).ConfigureAwait(false);
+            }
             else
                 log.LogWarning($"Missing handler for payload: {op} ({(int)op})");
-
-            return Task.CompletedTask;
         }
 
         public async Task HeartbeatLoop(int heartbeatInterval)

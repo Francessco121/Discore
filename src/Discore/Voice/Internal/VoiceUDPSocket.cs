@@ -1,5 +1,5 @@
+using Nito.AsyncEx;
 using System;
-using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,8 +24,8 @@ namespace Discore.Voice.Internal
 
         public int BytesToSend => sendBuffer.Count;
 
-        public BlockingCollection<IPDiscoveryEventArgs> IPDiscoveryQueue { get; } =
-            new BlockingCollection<IPDiscoveryEventArgs>();
+        public AsyncCollection<IPDiscoveryEventArgs> IPDiscoveryQueue { get; } =
+            new AsyncCollection<IPDiscoveryEventArgs>();
 
         public int Ssrc { get; }
 
@@ -147,7 +147,7 @@ namespace Discore.Voice.Internal
         }
 
         #region Receiving
-        void HandleIPDiscoveryPacket(byte[] data)
+        async Task HandleIPDiscoveryPacket(byte[] data)
         {
             discoveringIP = false;
 
@@ -157,7 +157,7 @@ namespace Discore.Voice.Internal
             // Read port
             int port = (ushort)(data[68] | data[69] << 8);
 
-            IPDiscoveryQueue.Add(new IPDiscoveryEventArgs(ip, port));
+            await IPDiscoveryQueue.AddAsync(new IPDiscoveryEventArgs(ip, port));
         }
 
         async Task ReceiveLoop()
@@ -173,7 +173,7 @@ namespace Discore.Voice.Internal
 
                     if (read == 70 && discoveringIP)
                     {
-                        HandleIPDiscoveryPacket(buffer.Array!);
+                        await HandleIPDiscoveryPacket(buffer.Array!);
 
                         // For now, the receive loop is only needed for discovering the IP.
                         // To save from some unneeded calculations, we can end the loop here.

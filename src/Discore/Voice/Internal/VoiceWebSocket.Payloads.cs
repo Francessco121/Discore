@@ -1,10 +1,9 @@
 using Discore.WebSocket;
+using Nito.AsyncEx;
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,20 +14,20 @@ namespace Discore.Voice.Internal
 {
     partial class VoiceWebSocket
     {
-        public BlockingCollection<int> HelloQueue { get; } =
-            new BlockingCollection<int>();
+        public AsyncCollection<int> HelloQueue { get; } =
+            new AsyncCollection<int>();
 
-        public BlockingCollection<VoiceReadyEventArgs> ReadyQueue { get; } =
-            new BlockingCollection<VoiceReadyEventArgs>();
+        public AsyncCollection<VoiceReadyEventArgs> ReadyQueue { get; } =
+            new AsyncCollection<VoiceReadyEventArgs>();
 
-        public BlockingCollection<VoiceSessionDescriptionEventArgs> SessionDescriptionQueue { get; } =
-            new BlockingCollection<VoiceSessionDescriptionEventArgs>();
+        public AsyncCollection<VoiceSessionDescriptionEventArgs> SessionDescriptionQueue { get; } =
+            new AsyncCollection<VoiceSessionDescriptionEventArgs>();
 
-        public BlockingCollection<object?> ResumedQueue { get; } =
-            new BlockingCollection<object?>();
+        public AsyncCollection<object?> ResumedQueue { get; } =
+            new AsyncCollection<object?>();
 
 		[Payload(VoiceOPCode.Ready)]
-		void HandleReadyPayload(JsonElement payload, JsonElement data)
+        async Task HandleReadyPayload(JsonElement payload, JsonElement data)
         {
             var ip = IPAddress.Parse(data.GetProperty("ip").GetString()!);
             int port = data.GetProperty("port").GetInt32();
@@ -42,32 +41,32 @@ namespace Discore.Voice.Internal
             log.LogVerbose($"[Ready] ssrc = {ssrc}, port = {port}");
 
             // Notify
-            ReadyQueue.Add(new VoiceReadyEventArgs(ip, port, ssrc, modes));
+            await ReadyQueue.AddAsync(new VoiceReadyEventArgs(ip, port, ssrc, modes));
         }
 
         [Payload(VoiceOPCode.Resumed)]
-        void HandleResumedPayload(JsonElement payload, JsonElement data)
+        async Task HandleResumedPayload(JsonElement payload, JsonElement data)
         {
             log.LogVerbose("[Resumed] Resume successful.");
 
-            ResumedQueue.Add(null);
+            await ResumedQueue.AddAsync(null);
         }
 
         [Payload(VoiceOPCode.Hello)]
-        void HandleHelloPayload(JsonElement payload, JsonElement data)
+        async Task HandleHelloPayload(JsonElement payload, JsonElement data)
         {
             int heartbeatInterval = (int)data.GetProperty("heartbeat_interval").GetDouble();
 
             log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
 
-            HelloQueue.Add(heartbeatInterval);
+            await HelloQueue.AddAsync(heartbeatInterval);
 
             // Start heartbeat loop
             heartbeatCancellationSource = new CancellationTokenSource();
         }
 
         [Payload(VoiceOPCode.SessionDescription)]
-		void HandleSessionDescription(JsonElement payload, JsonElement data)
+        async Task HandleSessionDescription(JsonElement payload, JsonElement data)
         {
             JsonElement secretKey = data.GetProperty("secret_key");
             byte[] key = new byte[secretKey.GetArrayLength()];
@@ -78,7 +77,7 @@ namespace Discore.Voice.Internal
 
             log.LogVerbose($"[SessionDescription] mode = {mode}");
 
-            SessionDescriptionQueue.Add(new VoiceSessionDescriptionEventArgs(key, mode));
+            await SessionDescriptionQueue.AddAsync(new VoiceSessionDescriptionEventArgs(key, mode));
         }
 
         [Payload(VoiceOPCode.HeartbeatAck)]

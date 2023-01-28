@@ -159,7 +159,7 @@ namespace Discore.Voice
 
             try
             {
-                var functions = new Func<Task>[]
+                var functions = new Func<CancellationToken, Task>[]
                 {
                     CreateVoiceWebSocket,
                     ConnectVoiceWebSocket,
@@ -175,12 +175,12 @@ namespace Discore.Voice
                     ReceiveSessionDescription
                 };
 
-                foreach (Func<Task> function in functions)
+                foreach (Func<CancellationToken, Task> function in functions)
                 {
                     if (!isValid)
                         throw new TaskCanceledException("Connection was invalidated before completion.");
 
-                    await function();
+                    await function(connectingCancellationSource!.Token);
                 }
 
                 if (!isConnected)
@@ -194,7 +194,10 @@ namespace Discore.Voice
             }
             catch (Exception ex)
             {
-                log.LogError($"[DoFullConnect] Failed to connect: {ex}");
+                if (ex is OperationCanceledException)
+                    log.LogVerbose("[DoFullConnect] Connection timed out.");
+                else
+                    log.LogError($"[DoFullConnect] Failed to connect: {ex}");
 
                 try
                 {
@@ -228,7 +231,7 @@ namespace Discore.Voice
 
             try
             {
-                var functions = new Func<Task>[]
+                var functions = new Func<CancellationToken, Task>[]
                 {
                     CreateVoiceWebSocket,
                     ConnectVoiceWebSocket,
@@ -238,12 +241,12 @@ namespace Discore.Voice
                     BeginHeartbeatLoop,
                 };
 
-                foreach (Func<Task> function in functions)
+                foreach (Func<CancellationToken, Task> function in functions)
                 {
                     if (!isValid || resumeCancellationTokenSource.IsCancellationRequested)
                         throw new TaskCanceledException("Connection was invalidated before completion.");
 
-                    await function();
+                    await function(resumeCancellationTokenSource.Token);
                 }
             }
             catch (Exception ex)
@@ -363,6 +366,9 @@ namespace Discore.Voice
 
         async Task EnsureUserLeftVoiceChannel(CancellationToken cancellationToken)
         {
+            if (isDisposed)
+                return;
+
             try
             {
                 await bridge.UpdateVoiceStateAsync(guildId, null, false, false, cancellationToken)
@@ -525,7 +531,7 @@ namespace Discore.Voice
             }
         }
 
-        Task CreateVoiceWebSocket()
+        Task CreateVoiceWebSocket(CancellationToken ct)
         {
             if (webSocket != null && webSocket.IsConnected)
                 throw new InvalidOperationException("[CreateVoiceWebSocket] webSocket must be null or disconnected!");
@@ -544,7 +550,7 @@ namespace Discore.Voice
             return Task.CompletedTask;
         }
 
-        async Task ConnectVoiceWebSocket()
+        async Task ConnectVoiceWebSocket(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[ConnectVoiceWebSocket] webSocket must not be null!");
@@ -559,7 +565,7 @@ namespace Discore.Voice
             // Connect
             try
             {
-                await webSocket.ConnectAsync(uri, CancellationToken.None)
+                await webSocket.ConnectAsync(uri, ct)
                     .ConfigureAwait(false);
             }
             catch (WebSocketException ex)
@@ -572,7 +578,7 @@ namespace Discore.Voice
             log.LogVerbose("[ConnectVoiceWebSocket] Connected WebSocket.");
         }
 
-        async Task SendVoiceResume()
+        async Task SendVoiceResume(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] webSocket must not be null!");
@@ -587,36 +593,24 @@ namespace Discore.Voice
                 .ConfigureAwait(false);
         }
 
-        Task ReceiveResumed()
+        async Task ReceiveResumed(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveResumed] webSocket must not be null!");
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(5 * 1000);
-
-            return Task.Run(() =>
-            {
-                webSocket.ResumedQueue.Take(tokenSource.Token);
-                log.LogVerbose("[ReceiveResumed] Resume successful!");
-            });
+            await webSocket.ResumedQueue.TakeAsync(ct);
+            log.LogVerbose("[ReceiveResumed] Resume successful!");
         }
 
-        Task ReceiveVoiceHello()
+        async Task ReceiveVoiceHello(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceHello] webSocket must not be null!");
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(5 * 1000);
-
-            return Task.Run(() =>
-            {
-                heartbeatInterval = webSocket.HelloQueue.Take(tokenSource.Token);
-            });
+            heartbeatInterval = await webSocket.HelloQueue.TakeAsync(ct);
         }
 
-        async Task SendVoiceIdentify()
+        async Task SendVoiceIdentify(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[SendVoiceIdentify] webSocket must not be null!");
@@ -631,28 +625,22 @@ namespace Discore.Voice
                 .ConfigureAwait(false);
         }
 
-        Task ReceiveVoiceReady()
+        async Task ReceiveVoiceReady(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceReady] webSocket must not be null!");
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(5 * 1000);
+            VoiceReadyEventArgs readyData = await webSocket.ReadyQueue.TakeAsync(ct);
 
-            return Task.Run(() =>
-            {
-                VoiceReadyEventArgs readyData = webSocket.ReadyQueue.Take(tokenSource.Token);
+            log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, ip = {readyData.IP}, port = {readyData.Port}");
 
-                log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, ip = {readyData.IP}, port = {readyData.Port}");
-
-                udpIP = readyData.IP;
-                udpPort = readyData.Port;
-                ssrc = readyData.Ssrc;
-                encryptionModes = readyData.EncryptionModes;
-            });
+            udpIP = readyData.IP;
+            udpPort = readyData.Port;
+            ssrc = readyData.Ssrc;
+            encryptionModes = readyData.EncryptionModes;
         }
 
-        Task BeginHeartbeatLoop()
+        Task BeginHeartbeatLoop(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[BeginHeartbeatLoop] webSocket must not be null!");
@@ -663,7 +651,7 @@ namespace Discore.Voice
             return Task.CompletedTask;
         }
 
-        Task CreateVoiceUdpSocket()
+        Task CreateVoiceUdpSocket(CancellationToken ct)
         {
             if (udpSocket != null && udpSocket.IsConnected)
                 throw new InvalidOperationException("[CreateVoiceUdpSocket] udpSocket must be null or disconnected!");
@@ -678,7 +666,7 @@ namespace Discore.Voice
             return Task.CompletedTask;
         }
 
-        async Task ConnectVoiceUdpSocket()
+        async Task ConnectVoiceUdpSocket(CancellationToken ct)
         {
             if (udpSocket == null)
                 throw new InvalidOperationException("[ConnectVoiceUdpSocket] udpSocket must not be null!");
@@ -701,7 +689,7 @@ namespace Discore.Voice
             }
         }
 
-        async Task StartIPDiscovery()
+        async Task StartIPDiscovery(CancellationToken ct)
         {
             if (udpSocket == null)
                 throw new InvalidOperationException("[StartIPDiscovery] udpSocket must not be null!");
@@ -718,26 +706,20 @@ namespace Discore.Voice
             }
         }
 
-        Task ReceiveIPDiscovery()
+        async Task ReceiveIPDiscovery(CancellationToken ct)
         {
             if (udpSocket == null)
                 throw new InvalidOperationException("[ReceiveIPDiscovery] udpSocket must not be null!");
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(5 * 1000);
+            IPDiscoveryEventArgs ipData = await udpSocket.IPDiscoveryQueue.TakeAsync(ct);
 
-            return Task.Run(() =>
-            {
-                IPDiscoveryEventArgs ipData = udpSocket.IPDiscoveryQueue.Take(tokenSource.Token);
+            log.LogVerbose($"[ReceiveIPDiscovery] Discovered end-point: {ipData.IP}:{ipData.Port}");
 
-                log.LogVerbose($"[ReceiveIPDiscovery] Discovered end-point: {ipData.IP}:{ipData.Port}");
-
-                discoveredIP = ipData.IP;
-                discoveredPort = ipData.Port;
-            });
+            discoveredIP = ipData.IP;
+            discoveredPort = ipData.Port;
         }
 
-        async Task SendSelectProtocol()
+        async Task SendSelectProtocol(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[SendSelectProtocol] webSocket must not be null!");
@@ -758,25 +740,19 @@ namespace Discore.Voice
             }
         }
 
-        Task ReceiveSessionDescription()
+        async Task ReceiveSessionDescription(CancellationToken ct)
         {
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveSessionDescription] webSocket must not be null!");
             if (udpSocket == null)
                 throw new InvalidOperationException("[ReceiveSessionDescription] udpSocket must not be null!");
 
-            var tokenSource = new CancellationTokenSource();
-            tokenSource.CancelAfter(5 * 1000);
+            VoiceSessionDescriptionEventArgs sessionDescription =
+                await webSocket.SessionDescriptionQueue.TakeAsync(ct);
 
-            return Task.Run(() =>
-            {
-                VoiceSessionDescriptionEventArgs sessionDescription =
-                    webSocket.SessionDescriptionQueue.Take(tokenSource.Token);
+            Debug.Assert(sessionDescription.Mode == "xsalsa20_poly1305");
 
-                Debug.Assert(sessionDescription.Mode == "xsalsa20_poly1305");
-
-                udpSocket.Start(sessionDescription.SecretKey);
-            });
+            udpSocket.Start(sessionDescription.SecretKey);
         }
     }
 }

@@ -179,7 +179,10 @@ namespace Discore.Voice
         /// <param name="voiceChannelId">The voice channel to connect to. Must be in the guild that this connection is for.</param>
         /// <param name="startMute">Whether the current bot should connect self-muted.</param>
         /// <param name="startDeaf">Whether the current bot should connect self-deafened.</param>
-        /// <param name="connectionTimeout">The maximum amount of time to wait for connection to complete before timing out.</param>
+        /// <param name="connectionTimeout">
+        /// The maximum amount of time to wait for connection to complete before timing out.
+        /// Defaults to 60 seconds.
+        /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if connect is called more than once or if the parent Gateway connection is not valid.
         /// </exception>
@@ -217,8 +220,8 @@ namespace Discore.Voice
                     }
                     else
                     {
-                        log.LogWarning("Connection timed out.");
-                        throw new OperationCanceledException("Voice connection timed out.");
+                        log.LogWarning($"Connection timed out after {connectionTimeout}.");
+                        throw new OperationCanceledException($"Voice connection timed out after {connectionTimeout}.");
                     }
                 }
                 else
