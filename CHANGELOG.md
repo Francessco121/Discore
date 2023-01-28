@@ -96,6 +96,7 @@
 - Added more flexible `DiscordPermissionHelper.HasPermission` overload.
 - Added `DiscordPermissionHelper.CanJoinVoiceChannel`.
 - Added `DiscordPermissionHelper.PermissionsToString`.
+- Added `VoiceConnectionInvalidationReason.DllNotFound`.
 
 ### Changes
 - Discore now fully annotates [nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types)!

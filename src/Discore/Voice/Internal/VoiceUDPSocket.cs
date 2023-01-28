@@ -69,6 +69,10 @@ namespace Discore.Voice.Internal
             int frameSize = samplesPerFrame * sampleSize;
 
             sendBuffer = new CircularBuffer((int)Math.Ceiling(BUFFER_LENGTH / (double)FRAME_LENGTH) * frameSize);
+
+            // Init libsodium
+            if (!LibSodium.Init())
+                throw new InvalidOperationException("Failed to initialize libsodium.");
         }
 
         /// <exception cref="InvalidOperationException">Thrown if the socket is already connected.</exception>

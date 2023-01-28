@@ -203,9 +203,18 @@ namespace Discore.Voice
 
                 try
                 {
-                    await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
-                        VoiceConnectionInvalidationReason.Error, "Failed to connect.")
-                        .ConfigureAwait(false);
+                    if (ex is DllNotFoundException dllex)
+                    {
+                        await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
+                            VoiceConnectionInvalidationReason.DllNotFound, dllex.Message)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "An internal client error occured.",
+                            VoiceConnectionInvalidationReason.Error, "Failed to connect.")
+                            .ConfigureAwait(false);
+                    }
                 }
                 catch (Exception closeEx)
                 {

@@ -212,7 +212,8 @@ namespace Discore.Voice
 
                     connectionTimeout ??= TimeSpan.FromSeconds(60);
 
-                    await ConnectionTimeout(connectionTimeout.Value, connectingCancellationSource.Token).ConfigureAwait(false);
+                    bool timedOut = await ConnectionTimeout(connectionTimeout.Value, connectingCancellationSource.Token)
+                        .ConfigureAwait(false);
 
                     if (isConnected)
                     {
@@ -220,16 +221,26 @@ namespace Discore.Voice
                     }
                     else
                     {
-                        log.LogWarning($"Connection timed out after {connectionTimeout}.");
-                        throw new OperationCanceledException($"Voice connection timed out after {connectionTimeout}.");
+                        if (timedOut)
+                        {
+                            log.LogWarning($"Connection timed out after {connectionTimeout}.");
+                            throw new OperationCanceledException($"Voice connection timed out after {connectionTimeout}.");
+                        }
+                        else
+                        {
+                            log.LogWarning("Failed to connect.");
+                            throw new OperationCanceledException("Failed to connect to voice. Please check the invalidation event for more information.");
+                        }
                     }
                 }
                 else
+                {
                     throw new InvalidOperationException("Voice connection is already connecting or is currently connected.");
+                }
             }
         }
 
-        async Task ConnectionTimeout(TimeSpan timeout, CancellationToken cancellationToken)
+        async Task<bool> ConnectionTimeout(TimeSpan timeout, CancellationToken cancellationToken)
         {
             try
             {
@@ -242,10 +253,13 @@ namespace Discore.Voice
                     await CloseAndInvalidate(WebSocketCloseStatus.NormalClosure, "Timed out while completing handshake",
                         VoiceConnectionInvalidationReason.TimedOut, "Timed out while completing handshake.").ConfigureAwait(false);
                 }
+
+                return true;
             }
             catch (OperationCanceledException)
             {
                 // connectingCancellationSource was cancelled because we connected successfully.
+                return false;
             }
         }
 

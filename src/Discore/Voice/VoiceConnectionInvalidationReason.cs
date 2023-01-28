@@ -16,6 +16,10 @@ namespace Discore.Voice
         /// <summary>
         /// The voice connection encountered a fatal error.
         /// </summary>
-        Error
+        Error,
+        /// <summary>
+        /// The DLLs for libopus and/or libsodium could not be found.
+        /// </summary>
+        DllNotFound
     }
 }
