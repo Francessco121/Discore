@@ -1,5 +1,5 @@
 # Discore.Samples.VoiceSending
-This sample provides an example implementation of a bot that plays audio in voice channels. This could be used as base for creating a music bot!
+This sample provides an example implementation of a bot that plays audio in voice channels. This could be used as the base for creating a music bot!
 
 > **Note:** This sample makes use of [FFmpeg](https://ffmpeg.org/) to convert audio to PCM.
 
@@ -19,6 +19,8 @@ Just like the opus and libsodium DLLs, the `.csproj` for this sample can automat
 
 ### 3. Add your bot token
 Create a file named `TOKEN.txt` in this directory containing your bot's token.
+
+> **Note:** Your bot must have the `MessageContent` intent enabled in the [developer portal](https://discord.com/developers/applications)!
 
 ## Usage
 This sample bot responds to 4 commands:
