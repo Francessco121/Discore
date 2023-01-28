@@ -3,7 +3,7 @@
 ## Setup
 
 ### Data Requirements
-When sending voice data to Discord, the data must be in [PCM form](https://en.wikipedia.org/wiki/Pulse-code_modulation). A good tool that can convert many audio formats to PCM is [ffmpeg](https://ffmpeg.org/).
+When sending voice data to Discord, the data must be in [PCM form](https://en.wikipedia.org/wiki/Pulse-code_modulation). A good tool that can convert many audio formats to PCM is [FFmpeg](https://ffmpeg.org/).
 
 ### Speaking State
 Before voice data can be sent, the speaking state of the voice connection must be `true`. When voice data is finished being sent, this can be set back to `false` to indicate it's done.

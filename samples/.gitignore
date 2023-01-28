@@ -1,1 +1,4 @@
 TOKEN.txt
+*.dll
+*.so*
+ffmpeg*

@@ -5,4 +5,4 @@ Each sample contains its own README including setup and usage instructions. Samp
 
 ## Samples
 - [PingPong](./Discore.Samples.PingPong) - The simplest bot! Responds to `!ping` messages.
-
+- [VoiceSending](./Discore.Samples.VoiceSending) - Showcases how to create/manage voice connections and send audio to them via FFmpeg.
