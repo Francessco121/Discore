@@ -157,7 +157,7 @@ namespace Discore.Voice.Internal
             // Read port
             int port = (ushort)(data[68] | data[69] << 8);
 
-            await IPDiscoveryQueue.AddAsync(new IPDiscoveryEventArgs(ip, port));
+            await IPDiscoveryQueue.AddAsync(new IPDiscoveryEventArgs(ip, port)).ConfigureAwait(false);
         }
 
         async Task ReceiveLoop()

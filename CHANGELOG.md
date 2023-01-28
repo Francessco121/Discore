@@ -48,7 +48,7 @@
     - Renamed `DiscordHttpClient.ModifyGuildEmbed` to `ModifyGuildWidget`.
 - Removed deprecated `ShardFailureReason.IOError`
 - `DiscordHttpClient.BeginGuildPrune` now returns null if `computePruneCount` is true.
-- Renamed `Create/EditMessageOptions.Embed` to `Embeds` to support multiple embeds permessage.
+- Renamed `Create/EditMessageOptions.Embed` to `Embeds` to support multiple embeds per message.
 - `DiscordHttpClient.Create/EditMessage` file attachment overloads have been removed. Instead, please use the new `Attachments` property of `Create/EditMessageOptions`.
 - Removed `DiscordHttpClient.UseSingleHttpClient` (it's no longer needed).
 - Removed deprecated `DiscordHttpClient.GetUserDMs`.
@@ -76,7 +76,6 @@
 - Added support for creating and editing messages with multiple embeds and/or multiple attachments.
 - Added support for Gateway intents.
     - Intents can be specified using `ShardStartConfig.Intents` or `Shard.StartAsync(GatewayIntent)`.
-- `DiscordGuildVoiceChannel` now implements `ITextChannel` to support guild voice text chat.
 - Added `Create/EditMessageOptions.Flags`.
 - Added `DiscordAttachment.Description`.
 - Added `DiscordAttachment.ContentType`.
@@ -87,7 +86,7 @@
 - Added `DiscordHttpApiException.Errors`.
 - Added `DiscordHttpRateLimitException.Bucket`.
 - Added `DiscordVoiceConnection.SetSpeakingAsync` overload to take new `SpeakingFlag` parameter for more specific speaking states.
-- Added public `DiscordVoiceConnection` constructors for creating a connection from a shard or a voice bridge.
+- Added `DiscordVoiceConnection` constructors for creating a connection from a shard or a voice bridge.
 - Added a `DiscordVoiceConnection.ConnectAsync` parameter for changing the connection timeout period.
 - Added `IDiscordGateway.OnVoiceServerUpdate` event.
 - Added `IDiscordGateway.UpdateVoiceStateAsync`.
@@ -102,6 +101,7 @@
 - Discore now fully annotates [nullable reference types](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/nullable-reference-types)!
 - Discore now supports Discord API/Gateway v10.
 - Discore now supports voice Gateway v4.
+- `DiscordGuildVoiceChannel` now implements `ITextChannel` to support guild voice text chat.
 - `Snowflake` now implements `IEquatable<Snowflake>`.
 - `DiscordCdnUrl` now implements `IEquatable<DiscordCdnUrl>`.
 - Removed dependency on `Newtonsoft.Json`.

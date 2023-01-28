@@ -598,7 +598,7 @@ namespace Discore.Voice
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveResumed] webSocket must not be null!");
 
-            await webSocket.ResumedQueue.TakeAsync(ct);
+            await webSocket.ResumedQueue.TakeAsync(ct).ConfigureAwait(false);
             log.LogVerbose("[ReceiveResumed] Resume successful!");
         }
 
@@ -607,7 +607,7 @@ namespace Discore.Voice
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceHello] webSocket must not be null!");
 
-            heartbeatInterval = await webSocket.HelloQueue.TakeAsync(ct);
+            heartbeatInterval = await webSocket.HelloQueue.TakeAsync(ct).ConfigureAwait(false);
         }
 
         async Task SendVoiceIdentify(CancellationToken ct)
@@ -630,7 +630,7 @@ namespace Discore.Voice
             if (webSocket == null)
                 throw new InvalidOperationException("[ReceiveVoiceReady] webSocket must not be null!");
 
-            VoiceReadyEventArgs readyData = await webSocket.ReadyQueue.TakeAsync(ct);
+            VoiceReadyEventArgs readyData = await webSocket.ReadyQueue.TakeAsync(ct).ConfigureAwait(false);
 
             log.LogVerbose($"[ReceiveVoiceReady] ssrc = {readyData.Ssrc}, ip = {readyData.IP}, port = {readyData.Port}");
 
@@ -711,7 +711,7 @@ namespace Discore.Voice
             if (udpSocket == null)
                 throw new InvalidOperationException("[ReceiveIPDiscovery] udpSocket must not be null!");
 
-            IPDiscoveryEventArgs ipData = await udpSocket.IPDiscoveryQueue.TakeAsync(ct);
+            IPDiscoveryEventArgs ipData = await udpSocket.IPDiscoveryQueue.TakeAsync(ct).ConfigureAwait(false);
 
             log.LogVerbose($"[ReceiveIPDiscovery] Discovered end-point: {ipData.IP}:{ipData.Port}");
 
@@ -748,7 +748,7 @@ namespace Discore.Voice
                 throw new InvalidOperationException("[ReceiveSessionDescription] udpSocket must not be null!");
 
             VoiceSessionDescriptionEventArgs sessionDescription =
-                await webSocket.SessionDescriptionQueue.TakeAsync(ct);
+                await webSocket.SessionDescriptionQueue.TakeAsync(ct).ConfigureAwait(false);
 
             Debug.Assert(sessionDescription.Mode == "xsalsa20_poly1305");
 

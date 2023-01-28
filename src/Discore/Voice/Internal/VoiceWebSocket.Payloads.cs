@@ -41,7 +41,8 @@ namespace Discore.Voice.Internal
             log.LogVerbose($"[Ready] ssrc = {ssrc}, port = {port}");
 
             // Notify
-            await ReadyQueue.AddAsync(new VoiceReadyEventArgs(ip, port, ssrc, modes));
+            await ReadyQueue.AddAsync(new VoiceReadyEventArgs(ip, port, ssrc, modes))
+                .ConfigureAwait(false);
         }
 
         [Payload(VoiceOPCode.Resumed)]
@@ -49,7 +50,8 @@ namespace Discore.Voice.Internal
         {
             log.LogVerbose("[Resumed] Resume successful.");
 
-            await ResumedQueue.AddAsync(null);
+            await ResumedQueue.AddAsync(null)
+                .ConfigureAwait(false);
         }
 
         [Payload(VoiceOPCode.Hello)]
@@ -59,7 +61,8 @@ namespace Discore.Voice.Internal
 
             log.LogVerbose($"[Hello] heartbeat_interval = {heartbeatInterval}ms");
 
-            await HelloQueue.AddAsync(heartbeatInterval);
+            await HelloQueue.AddAsync(heartbeatInterval)
+                .ConfigureAwait(false);
 
             // Start heartbeat loop
             heartbeatCancellationSource = new CancellationTokenSource();
@@ -77,7 +80,8 @@ namespace Discore.Voice.Internal
 
             log.LogVerbose($"[SessionDescription] mode = {mode}");
 
-            await SessionDescriptionQueue.AddAsync(new VoiceSessionDescriptionEventArgs(key, mode));
+            await SessionDescriptionQueue.AddAsync(new VoiceSessionDescriptionEventArgs(key, mode))
+                .ConfigureAwait(false);
         }
 
         [Payload(VoiceOPCode.HeartbeatAck)]
