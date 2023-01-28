@@ -7,52 +7,78 @@ using System.Threading.Tasks;
 
 namespace Discore.Samples.PingPong;
 
-class Program
+class Program : IDisposable
 {
-    DiscordHttpClient? http;
+    readonly DiscordHttpClient http;
+    readonly Shard shard;
 
     public static async Task Main(string[] args)
     {
-        var program = new Program();
+        // Load the bot token
+        string token = (await File.ReadAllTextAsync("TOKEN.txt")).Trim();
+
+        // Run bot
+        using var program = new Program(token);
         await program.Run();
+    }
+
+    public Program(string token)
+    {
+        // Create an HTTP client
+        http = new DiscordHttpClient(token);
+
+        // Create a single shard
+        shard = new Shard(token, 0, 1);
+
+        // Subscribe to the message creation event
+        shard.Gateway.OnMessageCreate += Gateway_OnMessageCreate;
+    }
+
+    public void Dispose()
+    {
+        // Clean up
+        http.Dispose();
+        shard.Dispose();
     }
 
     public async Task Run()
     {
-        // Get bot token.
-        string token = (await File.ReadAllTextAsync("TOKEN.txt")).Trim();
-
-        // Create an HTTP client.
-        http = new DiscordHttpClient(token);
-
-        // Create a single shard.
-        using Shard shard = new Shard(token, 0, 1);
-
-        // Subscribe to the message creation event.
-        shard.Gateway.OnMessageCreate += Gateway_OnMessageCreate;
-
-        // Start the shard.
+        // Start the shard
         await shard.StartAsync(GatewayIntent.GuildMessages | GatewayIntent.MessageContent);
+
         Console.WriteLine("Bot started!");
 
-        // Wait for the shard to end before closing the program.
+        // Let Ctrl-C stop the shard
+        Console.WriteLine("Press Ctrl-C to stop.");
+
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            e.Cancel = true;
+
+            if (shard.IsRunning)
+            {
+                Console.WriteLine("Stopping...");
+                shard.StopAsync().Wait();
+            }
+        };
+
+        // Wait for the shard to end before closing the program
         await shard.WaitUntilStoppedAsync();
     }
 
     async void Gateway_OnMessageCreate(object? sender, MessageCreateEventArgs e)
     {
-        Shard shard = e.Shard;
         DiscordMessage message = e.Message;
 
         if (message.Author.Id == shard.UserId)
-            // Ignore messages created by our bot.
+            // Ignore messages created by our bot
             return;
 
         if (message.Content == "!ping")
         {
             try
             {
-                // Reply to the user who posted "!ping".
+                // Reply to the user who posted "!ping"
                 await http!.CreateMessage(message.ChannelId, $"<@!{message.Author.Id}> Pong!");
             }
             catch (DiscordHttpApiException) { /* Message failed to send... :( */ }
