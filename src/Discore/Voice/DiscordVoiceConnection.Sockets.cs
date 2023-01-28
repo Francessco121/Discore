@@ -119,6 +119,8 @@ namespace Discore.Voice
                     {
                         log.LogVerbose("Swapping voice servers...");
 
+                        connectingCancellationSource = new CancellationTokenSource();
+
                         await EnsureWebSocketIsClosed(WebSocketCloseStatus.NormalClosure, "Reconnecting...")
                             .ConfigureAwait(false);
                         EnsureUdpSocketIsClosed();
