@@ -27,8 +27,9 @@ jobs:
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.x
-      - run: dotnet tool install -g docfx
-      - run: dotnet run --project build
+      - run: "dotnet build ./src/Discore/Discore.csproj -c Release"
+      - run: "dotnet tool install -g docfx"
+      - run: "dotnet run --project build"
         working-directory: ./docs
       - uses: actions/upload-pages-artifact@v1
         with:
