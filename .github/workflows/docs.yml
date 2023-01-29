@@ -1,31 +1,41 @@
+name: Docs Site
+
 on:
+  # Update docs site for new releases
+  release:
+    types: [published]
+    branches: [master]
+  # Let the workflow be manually triggered
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: read    # read-only repo access
+  pages: write      # for deploying to Pages
+  id-token: write   # to verify deployment
 
+# Only one deployment at a time
 concurrency:
   group: "pages"
   cancel-in-progress: true
 
 jobs:
-  build-docs:
+  # Build docfx site
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 6.x
-      - run: dotnet install -g docfx
+      - run: dotnet tool install -g docfx
       - run: dotnet run --project build
         working-directory: ./docs
       - uses: actions/upload-pages-artifact@v1
         with:
           path: "./docs/_site"
-  publish-docs:
-    needs: build
+  # Publish artifact
+  publish:
+    needs: build-docs
     runs-on: ubuntu-latest
     environment:
       name: github-pages
