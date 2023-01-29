@@ -50,7 +50,7 @@
     "dest": "_site",
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
-    "template": ["default", "templates/discore", "plugins/memberpage.2.59.4/content"],
+    "template": ["default", "memberpage", "templates/discore"],
     "postProcessors": [],
     "markdownEngineName": "markdig",
     "noLangKeyword": false,
@@ -58,8 +58,7 @@
     "cleanupCacheHistory": false,
     "disableGitFeatures": false,
     "globalMetadata": {
-      "_appTitle": "Discore Docs",
-      "_appFooter": " "
+      "_appTitle": "Discore Docs"
     },
     "xrefService": [
       "https://xref.docs.microsoft.com/query?uid={uid}"
