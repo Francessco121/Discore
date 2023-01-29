@@ -35,7 +35,7 @@ jobs:
           path: "./docs/_site"
   # Publish artifact
   publish:
-    needs: build-docs
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
