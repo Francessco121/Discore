@@ -46,49 +46,42 @@ namespace DiscorePingPong;
 
 class Program
 {
-    DiscordHttpClient? http;
+    static DiscordHttpClient? http;
 
     public static async Task Main(string[] args)
     {
-        var program = new Program();
-        await program.Run();
-    }
-
-    public async Task Run()
-    {
         const string TOKEN = "<bot user token goes here>";
 
-        // Create an HTTP client.
+        // Create an HTTP client
         http = new DiscordHttpClient(TOKEN);
 
-        // Create a single shard.
-        using Shard shard = new Shard(TOKEN, 0, 1);
+        // Create a single shard
+        using var shard = new Shard(TOKEN, 0, 1);
 
-        // Subscribe to the message creation event.
-        shard.Gateway.OnMessageCreate += Gateway_OnMessageCreate;
+        // Subscribe to the message creation event
+        shard.Gateway.OnMessageCreate += OnMessageCreate;
 
-        // Start the shard.
+        // Start the shard
         await shard.StartAsync(GatewayIntent.GuildMessages | GatewayIntent.MessageContent);
         Console.WriteLine("Bot started!");
 
-        // Wait for the shard to end before closing the program.
+        // Wait for the shard to stop before closing the program
         await shard.WaitUntilStoppedAsync();
     }
 
-    async void Gateway_OnMessageCreate(object? sender, MessageCreateEventArgs e)
+    static async void OnMessageCreate(object? sender, MessageCreateEventArgs e)
     {
-        Shard shard = e.Shard;
         DiscordMessage message = e.Message;
 
-        if (message.Author.Id == shard.UserId)
-            // Ignore messages created by our bot.
+        if (message.Author.Id == e.Shard.UserId)
+            // Ignore messages created by our bot
             return;
 
         if (message.Content == "!ping")
         {
             try
             {
-                // Reply to the user who posted "!ping".
+                // Reply to the user who posted "!ping"
                 await http!.CreateMessage(message.ChannelId, $"<@!{message.Author.Id}> Pong!");
             }
             catch (DiscordHttpApiException) { /* Message failed to send... :( */ }

@@ -4,6 +4,9 @@ To connect to a voice channel, you first need a Gateway connection. Voice connec
 > [!WARNING]
 > Each guild may only have one active voice connection with your application at a time.
 
+> [!NOTE]
+> Voice connections require the [`OnVoiceStateUpdate`](xref:Discore.WebSocket.IDiscordGateway.OnVoiceStateUpdate) Gateway event and as such the shard must be started with the [`GuildVoiceStates`](xref:Discore.WebSocket.GatewayIntent.GuildVoiceStates) Gateway intent. Voice connections will otherwise never connect!
+
 ## Create a Voice Connection
 To create a voice connection for a guild, simply instantiate a new [`DiscordVoiceConnection`](xref:Discore.Voice.DiscordVoiceConnection):
 
@@ -56,6 +59,9 @@ connection.Dispose();
 ```
 
 This will ensure the connection is closed and release underlying socket resources.
+
+> [!NOTE]
+> When shards are stopped/disposed, their associated `DiscordVoiceConnection`s are not automatically cleaned up. Please make sure you dispose of all active voice connections when attempting to gracefully stop a shard. 
 
 ## Switching Channels
 Once connected, a `DiscordVoiceConnection` can be moved to another voice channel within the same guild by [updating the voice state](xref:Discore.Voice.DiscordVoiceConnection.UpdateVoiceStateAsync*):

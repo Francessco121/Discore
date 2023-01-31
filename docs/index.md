@@ -17,4 +17,4 @@ Applications using Discore have access to:
 
 **[API Documentation](./api/index.md)**
 
-**[Recent Updates](./updates.md)**
+**[Updates](./updates.md)**

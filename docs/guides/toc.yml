@@ -1,5 +1,7 @@
 - name: Getting Started
   href: getting_started.md
+- name: 4.x to 5.x Migration Guide
+  href: 4x_to_5x_migration_guide.md
 - name: HTTP API
   items:
   - name: HTTP Client

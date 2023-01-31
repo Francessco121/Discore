@@ -9,7 +9,7 @@ For more information on this feature [see the Discord documentation](https://dis
 ```csharp
 byte[] file = ...;
 
-await httpClient.CreateMessage(message.ChannelId, new CreateMessageOptions()
+await httpClient.CreateMessage(channelId, new CreateMessageOptions()
     .AddAttachment(new AttachmentOptions(0)
         .SetFileName("filename.png")
         .SetContent(file))

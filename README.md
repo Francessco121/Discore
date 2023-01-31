@@ -13,10 +13,21 @@ Applications using Discore have access to:
 - Voice connections and the ability to send voice data to them.
 
 ## Documentation
-Documentation for the latest stable release can be found [here on GitHub](https://github.com/Francessco121/Discore/wiki).
+Documentation for the latest stable release can be found online:
+- [Discore Docs](https://francessco.us/Discore/)
+    - [Getting started](https://francessco.us/Discore/guides/getting_started.html)
+    - [API documentation](https://francessco.us/Discore/api/index.html)
+    - [Changelog](https://francessco.us/Discore/updates.html)
 
-## Downloading
-Releases are available through [NuGet](https://www.nuget.org/packages/Discore/). These are published alongside a [GitHub release](https://github.com/Francessco121/Discore/releases), which contains the fully detailed change log.
+Sample applications can be found under [the `samples` directory](https://github.com/Francessco121/Discore/tree/v5/samples) in this repository.
+
+To view or edit the documentation offline, please see the wiki for [building the docs site](https://github.com/Francessco121/Discore/wiki/Building-the-docs-site). 
+
+## Issues/Questions
+If you run into a bug, would like to request a feature, or just have a question, please feel free to [open an issue](https://github.com/Francessco121/Discore/issues) or [start a discussion](https://github.com/Francessco121/Discore/discussions). Please prefer the discussions section for questions.
+
+## Contributing
+Contributions are welcome! For small changes, you can just [open a pull request](https://github.com/Francessco121/Discore/pulls). However, for any larger changes please open a related issue (if there isn't one already) to discuss the proposed changes. PRs with more significant changes are less likely to be merged without some prior discussion.
 
 ## Alternatives
 Don't like our approach? Try some other great options:

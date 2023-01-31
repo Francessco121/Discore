@@ -6,7 +6,7 @@ This sample provides an example implementation of a bot that plays audio in voic
 ## Setup
 
 ### 1. Install libopus and libsodium
-Discore requires [libopus](https://opus-codec.org/) and [libsodium](https://doc.libsodium.org/) to send voice data. Please follow the Discore instructions on installing voice dependencies for your operating system.
+Discore requires [libopus](https://opus-codec.org/) and [libsodium](https://doc.libsodium.org/) to send voice data. Please follow the Discore [instructions for installing voice dependencies](https://francessco.us/Discore/guides/voice/prerequisites.html) for your operating system.
 
 #### Note for Windows users
 The `.csproj` for this sample contains MSBuild entries to copy `opus.dll` and `libsodium.dll` to the `bin` directory automatically for you. Instead of installing each DLL into the system path, you may place them in this directory.
