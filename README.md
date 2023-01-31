@@ -6,7 +6,7 @@ Discore is a light-weight [.NET Standard](https://docs.microsoft.com/en-us/dotne
 **Please note:** Discore is **not** an official Discord API library!
 
 ## Documentation
-Documentation for the latest stable release can be found [here on GitHub](https://github.com/Francessco121/Discore/wiki).
+For more information on how to use Discore, see our [documentation here inside of the repository](./docs/README.md).
 
 ## Downloading
 Releases are available through [NuGet](https://www.nuget.org/packages/Discore/). These are published alongside a [GitHub release](https://github.com/Francessco121/Discore/releases), which contains the fully detailed change log.
