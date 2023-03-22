@@ -1,3 +1,6 @@
+## v5.0.1
+- Fixed voice IP discovery.
+
 ## v5.0.0
 ### Breaking Changes
 - **Discore now targets .NET 6.0.**

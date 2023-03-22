@@ -28,8 +28,3 @@ If you run into a bug, would like to request a feature, or just have a question,
 
 ## Contributing
 Contributions are welcome! For small changes, you can just [open a pull request](https://github.com/Francessco121/Discore/pulls). However, for any larger changes please open a related issue (if there isn't one already) to discuss the proposed changes. PRs with more significant changes are less likely to be merged without some prior discussion.
-
-## Alternatives
-Don't like our approach? Try some other great options:
-- [DSharpPlus](https://github.com/DSharpPlus/DSharpPlus)
-- [Discord.Net](https://github.com/discord-net/Discord.Net)

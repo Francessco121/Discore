@@ -7,9 +7,9 @@
     <NoWarn>1591;1573</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Copyright>Copyright (c) 2016-2023 Ethan Lafrenais and contributors</Copyright>
-    <Version>5.0.0</Version>
-    <AssemblyVersion>5.0.0.0</AssemblyVersion>
-    <FileVersion>5.0.0.0</FileVersion>
+    <Version>5.0.1</Version>
+    <AssemblyVersion>5.0.1.0</AssemblyVersion>
+    <FileVersion>5.0.1.0</FileVersion>
     <Authors>Ethan Lafrenais;Tristan Smith;Discore Contributors</Authors>
     <PackageTags>discord;discord-api;discord-library</PackageTags>
     <Description>Discore is a light-weight .NET library for creating Discord bots.
@@ -20,7 +20,7 @@ Please note: Discore is not an official Discord client library!</Description>
     <RepositoryUrl>https://github.com/Francessco121/Discore.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/Francessco121/Discore</PackageProjectUrl>
-    <PackageReleaseNotes>See https://github.com/Francessco121/Discore/releases/tag/v5.0.0</PackageReleaseNotes>
+    <PackageReleaseNotes>See https://github.com/Francessco121/Discore/releases/tag/v5.0.1</PackageReleaseNotes>
     <PackageLicenseFile></PackageLicenseFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>

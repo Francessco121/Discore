@@ -14,12 +14,12 @@ Discore can be added as a project dependency in a few ways:
 #### [.NET CLI](#tab/dotnet-cli)
 Run the following in your `.csproj` directory:
 ```
-dotnet add package Discore --version 5.0.0
+dotnet add package Discore --version 5.0.1
 ```
 #### [PackageReference](#tab/package-reference)
 Add the following to your `.csproj`:
 ```xml
-<PackageReference Include="Discore" Version="5.0.0" />
+<PackageReference Include="Discore" Version="5.0.1" />
 ```
 #### [Source](#tab/source)
 Download the [the source code](https://github.com/Francessco121/Discore) and add `src/Discore/Discore.csproj` as a local project reference.

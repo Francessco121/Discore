@@ -9,7 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Discore/Discore.csproj" />
     <!-- Replace the ProjectReference with this when writing your application! -->
-    <!-- <PackageReference Include="Discore" Version="5.0.0" /> -->
+    <!-- <PackageReference Include="Discore" Version="5.0.1" /> -->
   </ItemGroup>
 
   <ItemGroup>
