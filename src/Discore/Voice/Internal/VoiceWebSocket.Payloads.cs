@@ -31,7 +31,7 @@ namespace Discore.Voice.Internal
         {
             var ip = IPAddress.Parse(data.GetProperty("ip").GetString()!);
             int port = data.GetProperty("port").GetInt32();
-            int ssrc = data.GetProperty("ssrc").GetInt32();
+            uint ssrc = data.GetProperty("ssrc").GetUInt32();
 
             JsonElement modesArray = data.GetProperty("modes");
             string[] modes = new string[modesArray.GetArrayLength()];
@@ -205,13 +205,13 @@ namespace Discore.Voice.Internal
                 writer.WriteEndObject();
             }
 
-            log.LogVerbose($"[SelectProtocol] Sending to {ip}:{port}...");
+            log.LogVerbose($"[SelectProtocol] Using response endpoint {ip}:{port} and requesting encryption mode {encryptionMode}...");
             return SendPayload(VoiceOPCode.SelectProtocol, BuildPayload);
         }
 
         /// <exception cref="DiscordWebSocketException">Thrown if the payload fails to send because of a WebSocket error.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the socket is not connected.</exception>
-        public Task SendSpeakingPayload(SpeakingFlag flags, int ssrc)
+        public Task SendSpeakingPayload(SpeakingFlag flags, uint ssrc)
         {
             void BuildPayload(Utf8JsonWriter writer)
             {

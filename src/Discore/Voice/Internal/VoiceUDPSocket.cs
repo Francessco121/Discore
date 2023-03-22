@@ -1,5 +1,6 @@
 using Nito.AsyncEx;
 using System;
+using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -27,7 +28,7 @@ namespace Discore.Voice.Internal
         public AsyncCollection<IPDiscoveryEventArgs> IPDiscoveryQueue { get; } =
             new AsyncCollection<IPDiscoveryEventArgs>();
 
-        public int Ssrc { get; }
+        public uint Ssrc { get; }
 
         public bool IsPaused { get; set; }
 
@@ -46,7 +47,7 @@ namespace Discore.Voice.Internal
         readonly CircularBuffer sendBuffer;
         readonly DiscoreLogger log;
 
-        public VoiceUdpSocket(string loggingName, int ssrc)
+        public VoiceUdpSocket(string loggingName, uint ssrc)
         {
             log = new DiscoreLogger(loggingName);
 
@@ -155,11 +156,13 @@ namespace Discore.Voice.Internal
         {
             discoveringIP = false;
 
+            // Discovery response packet is the same as the request but followed by the IP and port
+
             // Read IP as null-terminated string
-            string ip = Encoding.UTF8.GetString(data, 4, 70 - 6).TrimEnd('\0');
+            string ip = Encoding.UTF8.GetString(data, index: 8, count: 64).TrimEnd('\0');
 
             // Read port
-            int port = (ushort)(data[68] | data[69] << 8);
+            int port = (ushort)(data[72] | data[73] << 8);
 
             await IPDiscoveryQueue.AddAsync(new IPDiscoveryEventArgs(ip, port)).ConfigureAwait(false);
         }
@@ -175,7 +178,7 @@ namespace Discore.Voice.Internal
                     int read = await socket.ReceiveAsync(buffer, SocketFlags.None)
                         .ConfigureAwait(false);
 
-                    if (read == 70 && discoveringIP)
+                    if (read == 74 && discoveringIP) // IP discovery response packet is exactly 74 bytes long
                     {
                         await HandleIPDiscoveryPacket(buffer.Array!);
 
@@ -218,6 +221,8 @@ namespace Discore.Voice.Internal
                     break;
                 }
             }
+
+            log.LogVerbose("[ReceiveLoop] Exited receive loop.");
         }
         #endregion
 
@@ -235,11 +240,13 @@ namespace Discore.Voice.Internal
         /// <exception cref="SocketException">Thrown if the socket encounters an error while sending data.</exception>
         public Task StartIPDiscoveryAsync()
         {
-            byte[] packet = new byte[70];
-            packet[0] = (byte)(Ssrc >> 24);
-            packet[1] = (byte)(Ssrc >> 16);
-            packet[2] = (byte)(Ssrc >> 8);
-            packet[3] = (byte)(Ssrc >> 0);
+            byte[] packet = new byte[74];
+            Span<byte> span = packet.AsSpan();
+
+            BinaryPrimitives.WriteInt16BigEndian(span[0..2], 1); // Mark as request (type)
+            BinaryPrimitives.WriteInt16BigEndian(span[2..4], 70); // Message length (excluding type and length fields)
+            BinaryPrimitives.WriteUInt32BigEndian(span[4..8], Ssrc); // SSRC
+            // Remainder of packet is empty for requests
 
             discoveringIP = true;
             return SendAsync(new ArraySegment<byte>(packet));

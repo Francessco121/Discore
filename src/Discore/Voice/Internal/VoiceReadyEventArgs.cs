@@ -7,10 +7,10 @@ namespace Discore.Voice.Internal
     {
         public IPAddress IP { get; }
         public int Port { get; }
-        public int Ssrc { get; }
+        public uint Ssrc { get; }
         public string[] EncryptionModes { get; }
 
-        public VoiceReadyEventArgs(IPAddress ip, int port, int ssrc, string[] encryptionModes)
+        public VoiceReadyEventArgs(IPAddress ip, int port, uint ssrc, string[] encryptionModes)
         {
             IP = ip;
             Port = port;

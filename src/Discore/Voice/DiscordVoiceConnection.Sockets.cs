@@ -18,7 +18,7 @@ namespace Discore.Voice
         int? heartbeatInterval;
         IPAddress? udpIP;
         int? udpPort;
-        int? ssrc;
+        uint? ssrc;
         string[]? encryptionModes;
         Task? heartbeatLoopTask;
         VoiceUdpSocket? udpSocket;
@@ -705,6 +705,8 @@ namespace Discore.Voice
             if (udpSocket == null)
                 throw new InvalidOperationException("[StartIPDiscovery] udpSocket must not be null!");
 
+            log.LogVerbose("[StartIPDiscovery] Discovering our IP...");
+
             try
             {
                 await udpSocket.StartIPDiscoveryAsync().ConfigureAwait(false);
@@ -724,7 +726,7 @@ namespace Discore.Voice
 
             IPDiscoveryEventArgs ipData = await udpSocket.IPDiscoveryQueue.TakeAsync(ct).ConfigureAwait(false);
 
-            log.LogVerbose($"[ReceiveIPDiscovery] Discovered end-point: {ipData.IP}:{ipData.Port}");
+            log.LogVerbose($"[ReceiveIPDiscovery] Discovered our endpoint: {ipData.IP}:{ipData.Port}");
 
             discoveredIP = ipData.IP;
             discoveredPort = ipData.Port;
